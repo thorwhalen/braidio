@@ -1,0 +1,205 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.sources &mdash; braidio 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="braidio.tts" href="tts.html" />
+    <link rel="prev" title="braidio.script" href="script.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="script.html">braidio.script</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">braidio.sources</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.sources.ResolvedSegment"><code class="docutils literal notranslate"><span class="pre">ResolvedSegment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.sources.Segment"><code class="docutils literal notranslate"><span class="pre">Segment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.sources.SegmentSource"><code class="docutils literal notranslate"><span class="pre">SegmentSource</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.sources.TimedLine"><code class="docutils literal notranslate"><span class="pre">TimedLine</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.sources.TimedLineSegmentSource"><code class="docutils literal notranslate"><span class="pre">TimedLineSegmentSource</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.sources.cut_quote"><code class="docutils literal notranslate"><span class="pre">cut_quote()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.sources.find_segment"><code class="docutils literal notranslate"><span class="pre">find_segment()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.sources.load_timing"><code class="docutils literal notranslate"><span class="pre">load_timing()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">braidio.sources</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/braidio/sources.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-braidio.sources">
+<span id="braidio-sources"></span><h1>braidio.sources<a class="headerlink" href="#module-braidio.sources" title="Link to this heading"></a></h1>
+<p>Segment sources: resolve a <em>reference</em> to a cuttable <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end]</span></code> window.</p>
+<p>A production weaves in extracted segments of source media. <em>How</em> a reference
+(a lyric quote, an audiobook passage, a news phrase, an SFX cue) maps to a
+concrete <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end]</span></code> span of a source asset is pluggable via the
+<a class="reference internal" href="#braidio.sources.SegmentSource" title="braidio.sources.SegmentSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">SegmentSource</span></code></a> protocol — the weave engine never needs to know it is
+lyrics.</p>
+<p>This module ships one generic implementation: <a class="reference internal" href="#braidio.sources.TimedLineSegmentSource" title="braidio.sources.TimedLineSegmentSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimedLineSegmentSource</span></code></a>,
+a token-F1 matcher over time-aligned lines (<a class="reference internal" href="#braidio.sources.TimedLine" title="braidio.sources.TimedLine"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimedLine</span></code></a>). It answers a
+reference by the best contiguous run of lines — handling exact, sub-line, and
+multi-line references. Consumers bind it to their own timed lines + asset (e.g.
+Hamilton binds LRCLIB line timings + owned song audio).</p>
+<p>Also provides the lower-level resolver (<a class="reference internal" href="#braidio.sources.find_segment" title="braidio.sources.find_segment"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_segment()</span></code></a>, <a class="reference internal" href="#braidio.sources.load_timing" title="braidio.sources.load_timing"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_timing()</span></code></a>)
+and the resolve-and-cut convenience (<a class="reference internal" href="#braidio.sources.cut_quote" title="braidio.sources.cut_quote"><code class="xref py py-func docutils literal notranslate"><span class="pre">cut_quote()</span></code></a>) used directly by the
+Hamilton pilot; new code should prefer the <a class="reference internal" href="#braidio.sources.SegmentSource" title="braidio.sources.SegmentSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">SegmentSource</span></code></a> protocol +
+<a class="reference internal" href="weave.html#braidio.weave.extract_padded" title="braidio.weave.extract_padded"><code class="xref py py-func docutils literal notranslate"><span class="pre">braidio.weave.extract_padded()</span></code></a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.sources.ResolvedSegment">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.sources.</span></span><span class="sig-name descname"><span class="pre">ResolvedSegment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matched_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/sources.html#ResolvedSegment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.sources.ResolvedSegment" title="Link to this definition"></a></dt>
+<dd><p>A cuttable span of a source asset — what a <a class="reference internal" href="#braidio.sources.SegmentSource" title="braidio.sources.SegmentSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">SegmentSource</span></code></a> returns.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.sources.Segment">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.sources.</span></span><span class="sig-name descname"><span class="pre">Segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matched_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/sources.html#Segment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.sources.Segment" title="Link to this definition"></a></dt>
+<dd><p>A resolved window for a reference, with the matched line span.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.sources.SegmentSource">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.sources.</span></span><span class="sig-name descname"><span class="pre">SegmentSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/sources.html#SegmentSource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.sources.SegmentSource" title="Link to this definition"></a></dt>
+<dd><p>Resolve an opaque <code class="docutils literal notranslate"><span class="pre">reference</span></code> to a <a class="reference internal" href="#braidio.sources.ResolvedSegment" title="braidio.sources.ResolvedSegment"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResolvedSegment</span></code></a> (or None).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.sources.TimedLine">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.sources.</span></span><span class="sig-name descname"><span class="pre">TimedLine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/sources.html#TimedLine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.sources.TimedLine" title="Link to this definition"></a></dt>
+<dd><p>A source line with a <code class="docutils literal notranslate"><span class="pre">[start_s,</span> <span class="pre">end_s)</span></code> window (end may be None = tail).</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.sources.TimedLineSegmentSource">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.sources.</span></span><span class="sig-name descname"><span class="pre">TimedLineSegmentSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">lines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#braidio.sources.TimedLine" title="braidio.sources.TimedLine"><span class="pre">TimedLine</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asset_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">song_end_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/sources.html#TimedLineSegmentSource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.sources.TimedLineSegmentSource" title="Link to this definition"></a></dt>
+<dd><p>A <a class="reference internal" href="#braidio.sources.SegmentSource" title="braidio.sources.SegmentSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">SegmentSource</span></code></a> over time-aligned lines + one source asset.</p>
+<p>Binds the generic <a class="reference internal" href="#braidio.sources.find_segment" title="braidio.sources.find_segment"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_segment()</span></code></a> matcher to a concrete asset so the
+weave engine can <code class="docutils literal notranslate"><span class="pre">resolve(reference)</span> <span class="pre">-&gt;</span> <span class="pre">ResolvedSegment</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.sources.cut_quote">
+<span class="sig-prename descclassname"><span class="pre">braidio.sources.</span></span><span class="sig-name descname"><span class="pre">cut_quote</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">audio_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#braidio.sources.TimedLine" title="braidio.sources.TimedLine"><span class="pre">TimedLine</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quote</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_pre_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_post_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.35</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fade_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.04</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">song_end_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#braidio.sources.Segment" title="braidio.sources.Segment"><span class="pre">Segment</span></a></span></span><a class="reference internal" href="../../_modules/braidio/sources.html#cut_quote"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.sources.cut_quote" title="Link to this definition"></a></dt>
+<dd><p>Resolve <code class="docutils literal notranslate"><span class="pre">quote</span></code> → segment and cut it from <code class="docutils literal notranslate"><span class="pre">audio_path</span></code> (pad + fades).</p>
+<p>Convenience combining <a class="reference internal" href="#braidio.sources.find_segment" title="braidio.sources.find_segment"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_segment()</span></code></a> + an ffmpeg cut. Returns the
+resolved <a class="reference internal" href="#braidio.sources.Segment" title="braidio.sources.Segment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Segment</span></code></a> (raises <code class="docutils literal notranslate"><span class="pre">LookupError</span></code> if unmatched). New code
+should prefer a <a class="reference internal" href="#braidio.sources.SegmentSource" title="braidio.sources.SegmentSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">SegmentSource</span></code></a> + <a class="reference internal" href="weave.html#braidio.weave.extract_padded" title="braidio.weave.extract_padded"><code class="xref py py-func docutils literal notranslate"><span class="pre">braidio.weave.extract_padded()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.sources.find_segment">
+<span class="sig-prename descclassname"><span class="pre">braidio.sources.</span></span><span class="sig-name descname"><span class="pre">find_segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#braidio.sources.TimedLine" title="braidio.sources.TimedLine"><span class="pre">TimedLine</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quote</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_span</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">song_end_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#braidio.sources.Segment" title="braidio.sources.Segment"><span class="pre">Segment</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/braidio/sources.html#find_segment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.sources.find_segment" title="Link to this definition"></a></dt>
+<dd><p>Best contiguous run of timed lines matching <code class="docutils literal notranslate"><span class="pre">quote</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>Scores every run <code class="docutils literal notranslate"><span class="pre">lines[i..j]</span></code> (up to <code class="docutils literal notranslate"><span class="pre">max_span</span></code> lines) by token F1
+against the reference’s tokens and returns the highest-scoring run clearing
+<code class="docutils literal notranslate"><span class="pre">min_score</span></code>. Handles single-line, sub-line, and multi-line references.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.sources.load_timing">
+<span class="sig-prename descclassname"><span class="pre">braidio.sources.</span></span><span class="sig-name descname"><span class="pre">load_timing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#braidio.sources.TimedLine" title="braidio.sources.TimedLine"><span class="pre">TimedLine</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/braidio/sources.html#load_timing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.sources.load_timing" title="Link to this definition"></a></dt>
+<dd><p>Load a <code class="docutils literal notranslate"><span class="pre">{lines:</span> <span class="pre">[{index,start_s,end_s,text}]}</span></code> JSON into <a href="#id1"><span class="problematic" id="id2">`</span></a>TimedLine`s.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="script.html" class="btn btn-neutral float-left" title="braidio.script" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tts.html" class="btn btn-neutral float-right" title="braidio.tts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

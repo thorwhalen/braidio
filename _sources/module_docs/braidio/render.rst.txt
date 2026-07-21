@@ -1,0 +1,4 @@
+braidio.render
+==============
+.. automodule:: braidio.render
+   :members:

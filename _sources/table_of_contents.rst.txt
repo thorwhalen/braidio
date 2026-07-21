@@ -6,6 +6,10 @@
    module_docs/braidio/compose
    module_docs/braidio/delivery
    module_docs/braidio/multivoice
+   module_docs/braidio/render
+   module_docs/braidio/rights
+   module_docs/braidio/script
+   module_docs/braidio/sources
    module_docs/braidio/tts
    module_docs/braidio/weave
    module_docs/braidio/weave_config

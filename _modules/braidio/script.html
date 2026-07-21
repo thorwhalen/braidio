@@ -1,0 +1,196 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.script &mdash; braidio 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">braidio.script</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for braidio.script</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Composition model — the ordered beats a render walks.</span>
+
+<span class="sd">A :class:`Script` is an ordered list of beats, each either a :class:`Narration`</span>
+<span class="sd">(spoken, synthesized) or a :class:`SegmentBeat` (a *reference* to a span of</span>
+<span class="sd">source media to resolve and weave in). This is the generic, media-agnostic</span>
+<span class="sd">projection a renderer consumes; how a reference maps to audio is a</span>
+<span class="sd">:class:`braidio.sources.SegmentSource` concern, and what the beats are backed by</span>
+<span class="sd">(lyrics, a graph, hand-authoring) is the consumer&#39;s concern.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
+
+
+<div class="viewcode-block" id="Narration">
+<a class="viewcode-back" href="../../module_docs/braidio/script.html#braidio.Narration">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Narration</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A spoken narration beat (authored, synthesized by TTS).</span>
+
+<span class="sd">    ``published_text`` is an optional rights-safe rewrite the published profile</span>
+<span class="sd">    uses when the default ``text`` quotes forbidden (e.g. copyrighted) content;</span>
+<span class="sd">    leave it ``None`` when the narration is already clean.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># optional delivery hint (future use)</span>
+    <span class="n">published_text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="SegmentBeat">
+<a class="viewcode-back" href="../../module_docs/braidio/script.html#braidio.SegmentBeat">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SegmentBeat</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A span of source media to weave in, addressed by an opaque ``reference``.</span>
+
+<span class="sd">    The renderer resolves ``reference`` → ``[start,end)`` via a</span>
+<span class="sd">    :class:`~braidio.sources.SegmentSource` and cuts it. ``rights`` (e.g.</span>
+<span class="sd">    ``owned-local`` / ``copyrighted`` / ``public-domain``) drives the render</span>
+<span class="sd">    profile; ``published_substitute`` is a transformative narration the</span>
+<span class="sd">    published profile swaps in when the segment&#39;s audio can&#39;t be used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">reference</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">rights</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;owned-local&quot;</span>
+    <span class="n">published_substitute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<span class="n">Beat</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Narration</span><span class="p">,</span> <span class="n">SegmentBeat</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Script">
+<a class="viewcode-back" href="../../module_docs/braidio/script.html#braidio.Script">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Script</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An ordered production script.&quot;&quot;&quot;</span>
+
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">id_slug</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># stable id for this production (e.g. &quot;01&quot;); no media semantics</span>
+    <span class="n">beats</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Beat</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="narration_segments">
+<a class="viewcode-back" href="../../module_docs/braidio/script.html#braidio.narration_segments">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">narration_segments</span><span class="p">(</span><span class="n">script</span><span class="p">:</span> <span class="n">Script</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;All narration (default text) of a script, as sentence-level segments.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.multivoice</span><span class="w"> </span><span class="kn">import</span> <span class="n">split_segments</span>
+
+    <span class="n">segs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">beat</span> <span class="ow">in</span> <span class="n">script</span><span class="o">.</span><span class="n">beats</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">beat</span><span class="p">,</span> <span class="n">Narration</span><span class="p">):</span>
+            <span class="n">segs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">split_segments</span><span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">text</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">segs</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

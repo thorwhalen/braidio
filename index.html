@@ -52,6 +52,10 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/compose.html">braidio.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/delivery.html">braidio.delivery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/sources.html">braidio.sources</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/tts.html">braidio.tts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/weave.html">braidio.weave</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/weave_config.html">braidio.weave_config</a></li>
@@ -88,16 +92,36 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio.html">braidio</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.Delivery"><code class="docutils literal notranslate"><span class="pre">Delivery</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.Narration"><code class="docutils literal notranslate"><span class="pre">Narration</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.PlannedBeat"><code class="docutils literal notranslate"><span class="pre">PlannedBeat</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.Profile"><code class="docutils literal notranslate"><span class="pre">Profile</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.RenderPlan"><code class="docutils literal notranslate"><span class="pre">RenderPlan</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.ResolvedSegment"><code class="docutils literal notranslate"><span class="pre">ResolvedSegment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.RightsPolicy"><code class="docutils literal notranslate"><span class="pre">RightsPolicy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.Script"><code class="docutils literal notranslate"><span class="pre">Script</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.Segment"><code class="docutils literal notranslate"><span class="pre">Segment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.SegmentBeat"><code class="docutils literal notranslate"><span class="pre">SegmentBeat</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.SegmentSource"><code class="docutils literal notranslate"><span class="pre">SegmentSource</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.TimedLine"><code class="docutils literal notranslate"><span class="pre">TimedLine</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.TimedLineSegmentSource"><code class="docutils literal notranslate"><span class="pre">TimedLineSegmentSource</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.TimelineItem"><code class="docutils literal notranslate"><span class="pre">TimelineItem</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.Voice"><code class="docutils literal notranslate"><span class="pre">Voice</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.WeaveConfig"><code class="docutils literal notranslate"><span class="pre">WeaveConfig</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.assign_voices"><code class="docutils literal notranslate"><span class="pre">assign_voices()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.compose_narration"><code class="docutils literal notranslate"><span class="pre">compose_narration()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.content_violations"><code class="docutils literal notranslate"><span class="pre">content_violations()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.cut_quote"><code class="docutils literal notranslate"><span class="pre">cut_quote()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.extract_padded"><code class="docutils literal notranslate"><span class="pre">extract_padded()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.find_segment"><code class="docutils literal notranslate"><span class="pre">find_segment()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.find_verbatim_text"><code class="docutils literal notranslate"><span class="pre">find_verbatim_text()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.group_turns"><code class="docutils literal notranslate"><span class="pre">group_turns()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.layout_starts"><code class="docutils literal notranslate"><span class="pre">layout_starts()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.load_timing"><code class="docutils literal notranslate"><span class="pre">load_timing()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.narrate"><code class="docutils literal notranslate"><span class="pre">narrate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.narration_segments"><code class="docutils literal notranslate"><span class="pre">narration_segments()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.plan_production"><code class="docutils literal notranslate"><span class="pre">plan_production()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.render_multivoice"><code class="docutils literal notranslate"><span class="pre">render_multivoice()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.render_production"><code class="docutils literal notranslate"><span class="pre">render_production()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.resolve_voice_id"><code class="docutils literal notranslate"><span class="pre">resolve_voice_id()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.split_segments"><code class="docutils literal notranslate"><span class="pre">split_segments()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio.html#braidio.weave_timeline"><code class="docutils literal notranslate"><span class="pre">weave_timeline()</span></code></a></li>
@@ -117,6 +141,38 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/multivoice.html#braidio.multivoice.group_turns"><code class="docutils literal notranslate"><span class="pre">group_turns()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/multivoice.html#braidio.multivoice.render_multivoice"><code class="docutils literal notranslate"><span class="pre">render_multivoice()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/multivoice.html#braidio.multivoice.split_segments"><code class="docutils literal notranslate"><span class="pre">split_segments()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/render.html">braidio.render</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/render.html#braidio.render.render_production"><code class="docutils literal notranslate"><span class="pre">render_production()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/rights.html">braidio.rights</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/rights.html#braidio.rights.PlannedBeat"><code class="docutils literal notranslate"><span class="pre">PlannedBeat</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/rights.html#braidio.rights.Profile"><code class="docutils literal notranslate"><span class="pre">Profile</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/rights.html#braidio.rights.RenderPlan"><code class="docutils literal notranslate"><span class="pre">RenderPlan</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/rights.html#braidio.rights.RightsPolicy"><code class="docutils literal notranslate"><span class="pre">RightsPolicy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/rights.html#braidio.rights.content_violations"><code class="docutils literal notranslate"><span class="pre">content_violations()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/rights.html#braidio.rights.find_verbatim_text"><code class="docutils literal notranslate"><span class="pre">find_verbatim_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/rights.html#braidio.rights.plan_production"><code class="docutils literal notranslate"><span class="pre">plan_production()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/script.html">braidio.script</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/script.html#braidio.script.Narration"><code class="docutils literal notranslate"><span class="pre">Narration</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/script.html#braidio.script.Script"><code class="docutils literal notranslate"><span class="pre">Script</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/script.html#braidio.script.SegmentBeat"><code class="docutils literal notranslate"><span class="pre">SegmentBeat</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/script.html#braidio.script.narration_segments"><code class="docutils literal notranslate"><span class="pre">narration_segments()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/sources.html">braidio.sources</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/sources.html#braidio.sources.ResolvedSegment"><code class="docutils literal notranslate"><span class="pre">ResolvedSegment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/sources.html#braidio.sources.Segment"><code class="docutils literal notranslate"><span class="pre">Segment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/sources.html#braidio.sources.SegmentSource"><code class="docutils literal notranslate"><span class="pre">SegmentSource</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/sources.html#braidio.sources.TimedLine"><code class="docutils literal notranslate"><span class="pre">TimedLine</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/sources.html#braidio.sources.TimedLineSegmentSource"><code class="docutils literal notranslate"><span class="pre">TimedLineSegmentSource</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/sources.html#braidio.sources.cut_quote"><code class="docutils literal notranslate"><span class="pre">cut_quote()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/sources.html#braidio.sources.find_segment"><code class="docutils literal notranslate"><span class="pre">find_segment()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/braidio/sources.html#braidio.sources.load_timing"><code class="docutils literal notranslate"><span class="pre">load_timing()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/tts.html">braidio.tts</a><ul>
