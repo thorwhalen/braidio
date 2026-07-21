@@ -16,6 +16,40 @@ Extracted from the Hamilton lyrics-podcast; see that project + issues #18/#28.
 
 from __future__ import annotations
 
+# --- composition model ---
+from braidio.script import (  # noqa: F401
+    Script,
+    Narration,
+    SegmentBeat,
+    Beat,
+    narration_segments,
+)
+
+# --- rights profiles ---
+from braidio.rights import (  # noqa: F401
+    Profile,
+    RightsPolicy,
+    RenderPlan,
+    PlannedBeat,
+    plan_production,
+    find_verbatim_text,
+    content_violations,
+    segment_is_publishable,
+    PUBLISHABLE_CLIP_RIGHTS,
+)
+
+# --- segment sources (reference -> cuttable window) ---
+from braidio.sources import (  # noqa: F401
+    SegmentSource,
+    ResolvedSegment,
+    Segment,
+    TimedLine,
+    TimedLineSegmentSource,
+    find_segment,
+    load_timing,
+    cut_quote,
+)
+
 # --- narration synthesis ---
 from braidio.tts import (  # noqa: F401
     narrate,
@@ -53,6 +87,7 @@ from braidio.weave_config import WeaveConfig, PRESETS  # noqa: F401
 
 # --- composition + weaving (audio) ---
 from braidio.compose import compose_narration  # noqa: F401
+from braidio.render import render_production  # noqa: F401
 from braidio.weave import (  # noqa: F401
     TimelineItem,
     extract_padded,
@@ -62,6 +97,17 @@ from braidio.weave import (  # noqa: F401
 )
 
 __all__ = [
+    # script
+    "Script", "Narration", "SegmentBeat", "Beat", "narration_segments",
+    # rights
+    "Profile", "RightsPolicy", "RenderPlan", "PlannedBeat", "plan_production",
+    "find_verbatim_text", "content_violations", "segment_is_publishable",
+    "PUBLISHABLE_CLIP_RIGHTS",
+    # render
+    "render_production",
+    # sources
+    "SegmentSource", "ResolvedSegment", "Segment", "TimedLine",
+    "TimedLineSegmentSource", "find_segment", "load_timing", "cut_quote",
     # tts
     "narrate", "resolve_voice_id", "DEFAULT_VOICE_ID", "DEFAULT_MODEL_ID",
     "DEFAULT_VOICE_SETTINGS", "VOICE_ENV_VAR",
