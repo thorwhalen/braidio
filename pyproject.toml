@@ -10,11 +10,22 @@ version = "0.0.1"
 description = "Weave narration with extracted media segments into audiovisual productions"
 readme = "README.md"
 requires-python = ">=3.10"
-keywords = []
+keywords = [
+    "audio",
+    "tts",
+    "podcast",
+    "narration",
+    "ffmpeg",
+    "elevenlabs",
+]
 authors = [
     { name = "Thor Whalen" },
 ]
-dependencies = []
+# Functional core deps. Also requires `ffmpeg`/`ffprobe` on PATH (system dep).
+dependencies = [
+    "mixing",
+    "elevenlabs",
+]
 
 [project.license]
 text = "mit"
