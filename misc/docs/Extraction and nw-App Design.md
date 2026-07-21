@@ -92,18 +92,29 @@ proven video sibling registering into the *same* nw registries. A `"visual"`
 
 ## Migration status
 
-Green-gate: Hamilton's full suite + braidio's suite.
+Green-gate: Hamilton's full suite + braidio's suite. **All steps done + merged.**
 
-- ✅ **Steps 1–3 (done, merged):** scaffold braidio; move the zero-coupling core
-  (`weave`, `weave_config`, `delivery`, `compose`, `tts`, `multivoice`).
-  Hamilton's modules are now deprecated shims re-exporting braidio; 49 Hamilton
-  tests + 18 braidio tests green.
-- ⏳ **Steps 4–7 (staged):** `sources.py` (generalize align), `script.py`
-  (generalize EpisodeScript), rights mechanism, `render_production`.
-- ⏳ **Step 8:** split the graph vocabulary (generic bodies → braidio, Genius
-  bodies stay in Hamilton), keeping URIs identical.
-- ⏳ **Step 10:** the nw-app layer (bodies/transforms/project), landing
-  alongside/after nw#9.
+- ✅ **Steps 1–3:** scaffold braidio; move the zero-coupling core (`weave`,
+  `weave_config`, `delivery`, `compose`, `tts`, `multivoice`).
+- ✅ **Steps 4–7:** `sources.py` (SegmentSource protocol + the generic matcher),
+  `script.py` (`Script`/`SegmentBeat`), `rights.py` (`RightsPolicy` + profile
+  filter), `render_production`. braidio is a complete standalone engine.
+- ✅ **Step 8:** graph split — generic bodies (`commentary`/`source`/
+  `audio-clip`/`narrative-beat`/`episode`) live in `braidio/bodies/`; Hamilton
+  keeps its Genius bodies and imports the generics. URIs unchanged.
+- ✅ **Step 10:** the nw-app layer — `braidio/bodies/` (domain + render-provenance
+  schemas registered with lacing), `braidio/kinds.py`, `braidio/project.py`
+  (`Project(nw.Project)`), `braidio/provenance.py` (`record_render` +
+  `stale_after` → **partial re-render**). Guarded so `import braidio` never needs
+  lacing/nw (`braidio.HAS_GRAPH` / `HAS_NW`).
+
+**Remaining (follow-up):** the costed `plan`/`execute` nw **Transform** pipeline
+(each transform delegating to the functional core, recording via
+`record_render`) — the most nw-API-heavy piece, tracked with nw#9. The
+provenance + partial-re-render *value* is already delivered via `record_render` /
+`stale_after`; the Transform pipeline adds cost-gated plan/execute on top.
+
+braidio: 29 tests. Hamilton: 49 tests. Both green.
 
 ## Open decisions (see Hamilton #28)
 

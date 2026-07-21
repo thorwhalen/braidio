@@ -96,7 +96,34 @@ from braidio.weave import (  # noqa: F401
     duration_s,
 )
 
+# --- production kinds (pure) ---
+from braidio.kinds import WeaveKind  # noqa: F401
+
+# --- optional nw-app layer (graph bodies + provenance) --------------------
+# Registers braidio's domain/render body schemas with lacing and exposes the
+# provenance / partial-re-render helpers. Guarded: `import braidio` never needs
+# lacing/nw. `HAS_GRAPH` / `HAS_NW` report what's available.
+HAS_GRAPH = False
+HAS_NW = False
+try:  # needs lacing
+    from braidio import bodies  # noqa: F401  (registers schemas)
+    from braidio.provenance import (  # noqa: F401
+        record_render,
+        stale_after,
+        descendants_of,
+    )
+    HAS_GRAPH = True
+except ImportError:  # pragma: no cover - optional dep
+    pass
+try:  # needs nw
+    from braidio.project import Project  # noqa: F401
+    HAS_NW = True
+except ImportError:  # pragma: no cover - optional dep
+    pass
+
 __all__ = [
+    # production kinds
+    "WeaveKind", "HAS_GRAPH", "HAS_NW",
     # script
     "Script", "Narration", "SegmentBeat", "Beat", "narration_segments",
     # rights
