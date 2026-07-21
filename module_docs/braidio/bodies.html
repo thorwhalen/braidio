@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.delivery &mdash; braidio 0.0.1 documentation</title>
+  <title>braidio.bodies &mdash; braidio 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -24,8 +24,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="braidio.kinds" href="kinds.html" />
-    <link rel="prev" title="braidio.compose" href="compose.html" /> 
+    <link rel="next" title="braidio.bodies._domain" href="bodies/_domain.html" />
+    <link rel="prev" title="braidio" href="../braidio.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,15 +50,12 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../braidio.html">braidio</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">braidio.bodies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bodies/_domain.html">braidio.bodies._domain</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bodies/_tiers.html">braidio.bodies._tiers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compose.html">braidio.compose</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">braidio.delivery</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#braidio.delivery.Delivery"><code class="docutils literal notranslate"><span class="pre">Delivery</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="delivery.html">braidio.delivery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kinds.html">braidio.kinds</a></li>
 <li class="toctree-l1"><a class="reference internal" href="multivoice.html">braidio.multivoice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="project.html">braidio.project</a></li>
@@ -86,9 +83,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">braidio.delivery</li>
+      <li class="breadcrumb-item active">braidio.bodies</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../_sources/module_docs/braidio/delivery.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/module_docs/braidio/bodies.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -96,31 +93,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-braidio.delivery">
-<span id="braidio-delivery"></span><h1>braidio.delivery<a class="headerlink" href="#module-braidio.delivery" title="Link to this heading"></a></h1>
-<p>Narration <em>delivery</em> presets — model + voice settings (issue #10, expressiveness).</p>
-<p>A <a class="reference internal" href="#braidio.delivery.Delivery" title="braidio.delivery.Delivery"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delivery</span></code></a> bundles the ElevenLabs <code class="docutils literal notranslate"><span class="pre">model_id</span></code> and <code class="docutils literal notranslate"><span class="pre">voice_settings</span></code>
-that shape how expressive vs flat a narration reads. The renderer takes one so
-we can A/B the same script under different deliveries and pick what has the most
-relief without editing the script.</p>
-<p>Presets here are a starting point tuned from <code class="docutils literal notranslate"><span class="pre">docs/research/expressive-tts-</span>
-<span class="pre">narration.md</span></code>; refine as we learn what sounds best. The key monotony levers:
-lower <code class="docutils literal notranslate"><span class="pre">stability</span></code> and raise <code class="docutils literal notranslate"><span class="pre">style</span></code> add variation (at some cost in
-consistency); <code class="docutils literal notranslate"><span class="pre">eleven_v3</span></code> adds inline audio tags for real expressive control.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="braidio.delivery.Delivery">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.delivery.</span></span><span class="sig-name descname"><span class="pre">Delivery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voice_settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supports_audio_tags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/delivery.html#Delivery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.delivery.Delivery" title="Link to this definition"></a></dt>
-<dd><p>A named narration delivery: which model + voice settings to synthesize with.</p>
-</dd></dl>
-
+  <section id="braidio-bodies">
+<h1>braidio.bodies<a class="headerlink" href="#braidio-bodies" title="Link to this heading"></a></h1>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="compose.html" class="btn btn-neutral float-left" title="braidio.compose" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="kinds.html" class="btn btn-neutral float-right" title="braidio.kinds" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../braidio.html" class="btn btn-neutral float-left" title="braidio" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="bodies/_domain.html" class="btn btn-neutral float-right" title="braidio.bodies._domain" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

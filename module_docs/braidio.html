@@ -24,7 +24,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="braidio.compose" href="braidio/compose.html" />
+    <link rel="next" title="braidio.bodies" href="braidio/bodies.html" />
     <link rel="prev" title="Welcome to braidio’s documentation!" href="../index.html" /> 
 </head>
 
@@ -70,6 +70,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#braidio.WeaveConfig.with_"><code class="docutils literal notranslate"><span class="pre">WeaveConfig.with_()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.WeaveKind"><code class="docutils literal notranslate"><span class="pre">WeaveKind</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.assign_voices"><code class="docutils literal notranslate"><span class="pre">assign_voices()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.compose_narration"><code class="docutils literal notranslate"><span class="pre">compose_narration()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.content_violations"><code class="docutils literal notranslate"><span class="pre">content_violations()</span></code></a></li>
@@ -90,9 +91,16 @@
 <li class="toctree-l2"><a class="reference internal" href="#braidio.weave_timeline"><code class="docutils literal notranslate"><span class="pre">weave_timeline()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="braidio/bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braidio/bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braidio/bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braidio/bodies/_tiers.html">braidio.bodies._tiers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/compose.html">braidio.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braidio/kinds.html">braidio.kinds</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braidio/project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braidio/provenance.html">braidio.provenance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/render.html">braidio.render</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/rights.html">braidio.rights</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/script.html">braidio.script</a></li>
@@ -262,6 +270,13 @@ weave engine can <code class="docutils literal notranslate"><span class="pre">re
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.WeaveKind">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">WeaveKind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/kinds.html#WeaveKind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.WeaveKind" title="Link to this definition"></a></dt>
+<dd><p>A braidio production kind. <code class="docutils literal notranslate"><span class="pre">COMMENTARY_WEAVE</span></code> = narration woven with
+extracted media segments (audio now, video later).</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="braidio.assign_voices">
 <span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">assign_voices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="braidio/multivoice.html#braidio.multivoice.Voice" title="braidio.multivoice.Voice"><span class="pre">Voice</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avoid_repeats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="braidio/multivoice.html#braidio.multivoice.Voice" title="braidio.multivoice.Voice"><span class="pre">Voice</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/braidio/multivoice.html#assign_voices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.assign_voices" title="Link to this definition"></a></dt>
@@ -418,7 +433,7 @@ parts butt-join with a small crossfade. Returns <code class="docutils literal no
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to braidio’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="braidio/compose.html" class="btn btn-neutral float-right" title="braidio.compose" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="braidio/bodies.html" class="btn btn-neutral float-right" title="braidio.bodies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

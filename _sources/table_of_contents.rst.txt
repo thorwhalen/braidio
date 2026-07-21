@@ -3,9 +3,16 @@
    :caption: Contents:
 
    module_docs/braidio
+   module_docs/braidio/bodies
+   module_docs/braidio/bodies/_domain
+   module_docs/braidio/bodies/_render_nodes
+   module_docs/braidio/bodies/_tiers
    module_docs/braidio/compose
    module_docs/braidio/delivery
+   module_docs/braidio/kinds
    module_docs/braidio/multivoice
+   module_docs/braidio/project
+   module_docs/braidio/provenance
    module_docs/braidio/render
    module_docs/braidio/rights
    module_docs/braidio/script

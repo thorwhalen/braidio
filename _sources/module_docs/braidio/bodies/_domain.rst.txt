@@ -1,0 +1,4 @@
+braidio.bodies._domain
+======================
+.. automodule:: braidio.bodies._domain
+   :members:
