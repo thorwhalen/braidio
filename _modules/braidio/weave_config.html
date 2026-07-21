@@ -1,0 +1,246 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.weave_config &mdash; braidio 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">braidio.weave_config</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for braidio.weave_config</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;WeaveConfig — every editing choice for weaving narration + segments (#20).</span>
+
+<span class="sd">One frozen config object that exposes **all** the knobs (casting, turns, pacing,</span>
+<span class="sd">timing, clip weaving, loudness) so a composer picks combinations rather than</span>
+<span class="sd">inheriting one hardcoded style (the &quot;enable all choices&quot; mandate of #18/#28).</span>
+
+<span class="sd">Defaults come from ``docs/research/podcast-audio-weaving-editing.md``. This</span>
+<span class="sd">module is deliberately **Hamilton-agnostic** — no Genius/LRCLIB/episode imports —</span>
+<span class="sd">so it can move to the reusable weave package unchanged (#19). It references the</span>
+<span class="sd">generic voice pools/ids only.</span>
+
+<span class="sd">The config is designed to serialize cleanly (:meth:`WeaveConfig.to_dict`) into a</span>
+<span class="sd">``render-config`` provenance node (#26), so a render is reproducible from its</span>
+<span class="sd">recorded choices.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Mapping</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.multivoice</span><span class="w"> </span><span class="kn">import</span> <span class="n">POOL_4</span><span class="p">,</span> <span class="n">POOL_MANY</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_VOICE_ID</span>
+
+<span class="c1"># Research-recommended base narration settings (v2-tuned).</span>
+<span class="n">_DEFAULT_VOICE_SETTINGS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
+    <span class="s2">&quot;similarity_boost&quot;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
+    <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
+    <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="WeaveConfig">
+<a class="viewcode-back" href="../../module_docs/braidio/weave_config.html#braidio.WeaveConfig">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">WeaveConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;All editing choices for a narration+segment weave. Frozen + serializable.&quot;&quot;&quot;</span>
+
+    <span class="c1"># --- Casting ------------------------------------------------------------</span>
+    <span class="n">voices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">DEFAULT_VOICE_ID</span><span class="p">,)</span>  <span class="c1"># 1 id = single; &gt;1 = cycled pool</span>
+    <span class="n">pool_label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;single&quot;</span>
+    <span class="n">voice_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">avoid_immediate_repeat</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># --- Delivery (TTS) -----------------------------------------------------</span>
+    <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;eleven_multilingual_v2&quot;</span>
+    <span class="n">voice_settings</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_DEFAULT_VOICE_SETTINGS</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># --- Segmentation / turns ----------------------------------------------</span>
+    <span class="n">segmentation_unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sentence&quot;</span>  <span class="c1"># sentence | clause | paragraph | beat</span>
+    <span class="n">min_turn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># segments a voice speaks before switching</span>
+    <span class="n">max_turn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="c1"># --- Pacing -------------------------------------------------------------</span>
+    <span class="n">speed_base</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">speed_jitter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.04</span>  <span class="c1"># ± per turn</span>
+
+    <span class="c1"># --- Timing between turns ----------------------------------------------</span>
+    <span class="n">crossfade_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.12</span>
+    <span class="n">gap_turn_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># silence between turns (mutually exclusive w/ crossfade)</span>
+    <span class="n">overlap_turn_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># speaker interruption (#22 — not yet rendered)</span>
+
+    <span class="c1"># --- Clip weaving (#21) -------------------------------------------------</span>
+    <span class="n">clip_pre_roll_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.4</span>  <span class="c1"># extend extraction before the words</span>
+    <span class="n">clip_post_roll_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span>  <span class="c1"># …and after — capture words cleanly</span>
+    <span class="n">clip_fade_in_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">clip_fade_out_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span>
+    <span class="n">clip_edge_overlap_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># tuck faded clip edges under narration</span>
+    <span class="n">duck_db</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">15.0</span>  <span class="c1"># duck clip under speech (speech dominant)</span>
+
+    <span class="c1"># --- Global mix ---------------------------------------------------------</span>
+    <span class="n">target_lufs</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">16.0</span>
+    <span class="n">true_peak_dbtp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+    <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">44100</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">voices</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;WeaveConfig.voices must have at least one voice id&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_turn</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_turn</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;require 1 &lt;= min_turn &lt;= max_turn&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_multivoice</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="WeaveConfig.with_">
+<a class="viewcode-back" href="../../module_docs/braidio/weave_config.html#braidio.WeaveConfig.with_">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">changes</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WeaveConfig&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a copy with fields overridden (e.g. ``cfg.with_(min_turn=1)``).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">changes</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WeaveConfig.to_dict">
+<a class="viewcode-back" href="../../module_docs/braidio/weave_config.html#braidio.WeaveConfig.to_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stable serialization for a ``render-config`` provenance node (#26).&quot;&quot;&quot;</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;voices&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voices</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;voice_settings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voice_settings</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+</div>
+
+
+
+<span class="c1"># --- Presets -----------------------------------------------------------------</span>
+
+<span class="n">_POOL_4_IDS</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">POOL_4</span><span class="p">)</span>
+<span class="n">_POOL_MANY_IDS</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">POOL_MANY</span><span class="p">)</span>
+
+<span class="n">SINGLE_NARRATOR</span> <span class="o">=</span> <span class="n">WeaveConfig</span><span class="p">(</span>
+    <span class="n">voices</span><span class="o">=</span><span class="p">(</span><span class="n">DEFAULT_VOICE_ID</span><span class="p">,),</span> <span class="n">pool_label</span><span class="o">=</span><span class="s2">&quot;single&quot;</span>
+<span class="p">)</span>
+
+<span class="n">DOCUMENTARY_LYRICS</span> <span class="o">=</span> <span class="n">WeaveConfig</span><span class="p">(</span>  <span class="c1"># the research default: one narrator, tight turns</span>
+    <span class="n">voices</span><span class="o">=</span><span class="p">(</span><span class="n">DEFAULT_VOICE_ID</span><span class="p">,),</span> <span class="n">pool_label</span><span class="o">=</span><span class="s2">&quot;single&quot;</span><span class="p">,</span> <span class="n">min_turn</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_turn</span><span class="o">=</span><span class="mi">3</span>
+<span class="p">)</span>
+
+<span class="n">PANEL_4</span> <span class="o">=</span> <span class="n">WeaveConfig</span><span class="p">(</span>
+    <span class="n">voices</span><span class="o">=</span><span class="n">_POOL_4_IDS</span><span class="p">,</span> <span class="n">pool_label</span><span class="o">=</span><span class="s2">&quot;panel-4&quot;</span><span class="p">,</span> <span class="n">min_turn</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_turn</span><span class="o">=</span><span class="mi">4</span>
+<span class="p">)</span>
+
+<span class="n">INTERVIEW_MANY</span> <span class="o">=</span> <span class="n">WeaveConfig</span><span class="p">(</span>  <span class="c1"># Hamilton&#39;s chosen default</span>
+    <span class="n">voices</span><span class="o">=</span><span class="n">_POOL_MANY_IDS</span><span class="p">,</span> <span class="n">pool_label</span><span class="o">=</span><span class="s2">&quot;interview-many&quot;</span><span class="p">,</span> <span class="n">min_turn</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_turn</span><span class="o">=</span><span class="mi">4</span>
+<span class="p">)</span>
+
+<span class="n">PRESETS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">WeaveConfig</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;single_narrator&quot;</span><span class="p">:</span> <span class="n">SINGLE_NARRATOR</span><span class="p">,</span>
+    <span class="s2">&quot;documentary_lyrics&quot;</span><span class="p">:</span> <span class="n">DOCUMENTARY_LYRICS</span><span class="p">,</span>
+    <span class="s2">&quot;panel_4&quot;</span><span class="p">:</span> <span class="n">PANEL_4</span><span class="p">,</span>
+    <span class="s2">&quot;interview_many&quot;</span><span class="p">:</span> <span class="n">INTERVIEW_MANY</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
