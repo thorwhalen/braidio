@@ -8,6 +8,7 @@
    module_docs/braidio/bodies/_render_nodes
    module_docs/braidio/bodies/_tiers
    module_docs/braidio/compose
+   module_docs/braidio/conversation
    module_docs/braidio/delivery
    module_docs/braidio/kinds
    module_docs/braidio/multivoice

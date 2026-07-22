@@ -1,0 +1,246 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.conversation &mdash; braidio 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">braidio.conversation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for braidio.conversation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Conversational register: render an exchange as people *talking to each other*.</span>
+
+<span class="sd">The second delivery register beside narration (braidio#1). A</span>
+<span class="sd">:class:`ConversationCast` maps role labels (``&quot;A&quot;``/``&quot;B&quot;``) to contrasting</span>
+<span class="sd">**conversational** ElevenLabs voices. :func:`render_dialogue` synthesizes the</span>
+<span class="sd">whole exchange in **one pass** via :func:`braidio.tts.text_to_dialogue` (eleven_v3)</span>
+<span class="sd">so prosody is conditioned across turns — the key to not sounding narrated.</span>
+<span class="sd">:func:`render_turns_sequential` is the per-line baseline (each turn synthesized</span>
+<span class="sd">alone, then concatenated) used for A/B comparison.</span>
+
+<span class="sd">Casting note: use conversational-labelled voices, not narrator voices; loosen</span>
+<span class="sd">settings so v3 audio tags fire. The scripted exchange itself must carry the</span>
+<span class="sd">disfluency (backchannels, interruptions, fragments) — the model won&#39;t invent it.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="n">narrate</span><span class="p">,</span> <span class="n">text_to_dialogue</span>
+
+<span class="c1"># Curated conversational voices (casual, not narrator).</span>
+<span class="n">JESSICA</span> <span class="o">=</span> <span class="s2">&quot;cgSgspJ2msm6clMCkdW9&quot;</span>  <span class="c1"># playful, bright, warm (F)</span>
+<span class="n">WILL</span> <span class="o">=</span> <span class="s2">&quot;bIHbv24MWmeRgasZH58o&quot;</span>     <span class="c1"># relaxed optimist (M)</span>
+<span class="n">CHRIS</span> <span class="o">=</span> <span class="s2">&quot;iP95p4xoKVk53GoZ742B&quot;</span>    <span class="c1"># charming, down-to-earth (M)</span>
+<span class="n">LAURA</span> <span class="o">=</span> <span class="s2">&quot;FGY2WhTYpPnrIDTdsKH5&quot;</span>    <span class="c1"># enthusiast, quirky attitude (F)</span>
+
+
+<div class="viewcode-block" id="ConversationCast">
+<a class="viewcode-back" href="../../module_docs/braidio/conversation.html#braidio.conversation.ConversationCast">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConversationCast</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Role → voice mapping + model/settings for a conversational exchange.&quot;&quot;&quot;</span>
+
+    <span class="n">roles</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="n">JESSICA</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">:</span> <span class="n">WILL</span><span class="p">})</span>
+    <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;eleven_v3&quot;</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># e.g. {&quot;stability&quot;: &quot;Creative&quot;}</span></div>
+
+
+
+<span class="n">DEFAULT_CAST</span> <span class="o">=</span> <span class="n">ConversationCast</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_require_ffmpeg</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;ffmpeg not found on PATH.&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="render_dialogue">
+<a class="viewcode-back" href="../../module_docs/braidio/conversation.html#braidio.conversation.render_dialogue">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_dialogue</span><span class="p">(</span>
+    <span class="n">turns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+    <span class="n">cast</span><span class="p">:</span> <span class="n">ConversationCast</span> <span class="o">=</span> <span class="n">DEFAULT_CAST</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">output_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mp3_44100_128&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One-pass render of ``turns`` (``[(role, text), …]``) via Text-to-Dialogue.&quot;&quot;&quot;</span>
+    <span class="n">vturns</span> <span class="o">=</span> <span class="p">[(</span><span class="n">cast</span><span class="o">.</span><span class="n">roles</span><span class="p">[</span><span class="n">role</span><span class="p">],</span> <span class="n">text</span><span class="p">)</span> <span class="k">for</span> <span class="n">role</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">turns</span><span class="p">]</span>
+    <span class="n">audio</span> <span class="o">=</span> <span class="n">text_to_dialogue</span><span class="p">(</span>
+        <span class="n">vturns</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">cast</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="n">cast</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">output_format</span><span class="o">=</span><span class="n">output_format</span>
+    <span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">audio</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_concat_with_gaps</span><span class="p">(</span><span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span> <span class="n">out</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">gap_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">44100</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Concatenate audio parts with ``gap_s`` seconds of silence between them.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mixing</span><span class="w"> </span><span class="kn">import</span> <span class="n">concatenate_audio</span>
+
+    <span class="n">_require_ffmpeg</span><span class="p">()</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gap_s</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">concatenate_audio</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span> <span class="n">crossfade</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+    <span class="n">sil</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;_gap.mp3&quot;</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;-y&quot;</span><span class="p">,</span> <span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="s2">&quot;lavfi&quot;</span><span class="p">,</span> <span class="s2">&quot;-i&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;anullsrc=r=</span><span class="si">{</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">:cl=stereo&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">gap_s</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">sil</span><span class="p">)],</span>
+        <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">interleaved</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parts</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span><span class="p">:</span>
+            <span class="n">interleaved</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">sil</span><span class="p">))</span>
+        <span class="n">interleaved</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+    <span class="n">concatenate_audio</span><span class="p">(</span><span class="o">*</span><span class="n">interleaved</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span> <span class="n">crossfade</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<div class="viewcode-block" id="render_turns_sequential">
+<a class="viewcode-back" href="../../module_docs/braidio/conversation.html#braidio.conversation.render_turns_sequential">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_turns_sequential</span><span class="p">(</span>
+    <span class="n">turns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+    <span class="n">cast</span><span class="p">:</span> <span class="n">ConversationCast</span> <span class="o">=</span> <span class="n">DEFAULT_CAST</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">work_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;data/tts/conversation&quot;</span><span class="p">,</span>
+    <span class="n">voice_settings</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">gap_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-line baseline: synthesize each turn alone (its role&#39;s voice) and</span>
+<span class="sd">    concatenate with ``gap_s`` gaps. Prosody is NOT shared across turns — this is</span>
+<span class="sd">    what tends to sound like alternating monologues (the thing to beat).&quot;&quot;&quot;</span>
+    <span class="n">work</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span>
+    <span class="n">work</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">turns</span><span class="p">):</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">narrate</span><span class="p">(</span>
+            <span class="n">text</span><span class="p">,</span> <span class="n">work</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;turn</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">.mp3&quot;</span><span class="p">,</span>
+            <span class="n">voice_id</span><span class="o">=</span><span class="n">cast</span><span class="o">.</span><span class="n">roles</span><span class="p">[</span><span class="n">role</span><span class="p">],</span> <span class="n">model_id</span><span class="o">=</span><span class="n">cast</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span> <span class="n">voice_settings</span><span class="o">=</span><span class="n">voice_settings</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_concat_with_gaps</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">gap_s</span><span class="o">=</span><span class="n">gap_s</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

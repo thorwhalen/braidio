@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bodies/_tiers.html">braidio.bodies._tiers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="delivery.html">braidio.delivery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kinds.html">braidio.kinds</a></li>
 <li class="toctree-l1"><a class="reference internal" href="multivoice.html">braidio.multivoice</a></li>
@@ -67,6 +68,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">braidio.tts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.tts.narrate"><code class="docutils literal notranslate"><span class="pre">narrate()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.tts.resolve_voice_id"><code class="docutils literal notranslate"><span class="pre">resolve_voice_id()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.tts.text_to_dialogue"><code class="docutils literal notranslate"><span class="pre">text_to_dialogue()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="weave.html">braidio.weave</a></li>
@@ -118,6 +120,26 @@ pass <code class="docutils literal notranslate"><span class="pre">refresh=True</
 <dt class="sig sig-object py" id="braidio.tts.resolve_voice_id">
 <span class="sig-prename descclassname"><span class="pre">braidio.tts.</span></span><span class="sig-name descname"><span class="pre">resolve_voice_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voice_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/braidio/tts.html#resolve_voice_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.tts.resolve_voice_id" title="Link to this definition"></a></dt>
 <dd><p>Voice id from arg → <code class="xref py py-data docutils literal notranslate"><span class="pre">VOICE_ENV_VAR</span></code> env → default.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.tts.text_to_dialogue">
+<span class="sig-prename descclassname"><span class="pre">braidio.tts.</span></span><span class="sig-name descname"><span class="pre">text_to_dialogue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">turns</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'eleven_v3'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mp3_44100_128'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="reference internal" href="../../_modules/braidio/tts.html#text_to_dialogue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.tts.text_to_dialogue" title="Link to this definition"></a></dt>
+<dd><p>Synthesize a multi-speaker exchange in ONE pass (ElevenLabs Text-to-Dialogue).</p>
+<p>Unlike per-line <a class="reference internal" href="#braidio.tts.narrate" title="braidio.tts.narrate"><code class="xref py py-func docutils literal notranslate"><span class="pre">narrate()</span></code></a>, this renders the whole conversation together
+so prosody is conditioned across turns — the key to sounding like people
+<em>talking to each other</em> rather than alternating monologues (see braidio#1 /
+<code class="docutils literal notranslate"><span class="pre">docs/research/conversational-vs-narration-tts.md</span></code>). <code class="docutils literal notranslate"><span class="pre">eleven_v3</span></code> only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>turns</strong> – ordered <code class="docutils literal notranslate"><span class="pre">(voice_id,</span> <span class="pre">text)</span></code> pairs (or <code class="docutils literal notranslate"><span class="pre">{&quot;voice_id&quot;,</span> <span class="pre">&quot;text&quot;}</span></code>
+dicts). Keep each request under ~2000 chars total (API limit).</p></li>
+<li><p><strong>settings</strong> – optional model settings dict (e.g. <code class="docutils literal notranslate"><span class="pre">{&quot;stability&quot;:</span> <span class="pre">&quot;Creative&quot;}</span></code>).</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: raw audio bytes in <code class="docutils literal notranslate"><span class="pre">output_format</span></code>.</p>
 </dd></dl>
 
 </section>
