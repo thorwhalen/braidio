@@ -52,11 +52,13 @@ def render_dialogue(
     *,
     out_path: str | Path,
     output_format: str = "mp3_44100_128",
+    seed: int | None = None,
 ) -> Path:
     """One-pass render of ``turns`` (``[(role, text), …]``) via Text-to-Dialogue."""
     vturns = [(cast.roles[role], text) for role, text in turns]
     audio = text_to_dialogue(
-        vturns, model_id=cast.model_id, settings=cast.settings, output_format=output_format
+        vturns, model_id=cast.model_id, settings=cast.settings,
+        seed=seed, output_format=output_format,
     )
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)

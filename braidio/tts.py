@@ -74,6 +74,7 @@ def text_to_dialogue(
     model_id: str = DIALOGUE_MODEL_ID,
     output_format: str = "mp3_44100_128",
     settings: dict | None = None,
+    seed: int | None = None,
     api_key: str | None = None,
 ) -> bytes:
     """Synthesize a multi-speaker exchange in ONE pass (ElevenLabs Text-to-Dialogue).
@@ -104,4 +105,6 @@ def text_to_dialogue(
     kwargs = {"inputs": inputs, "model_id": model_id, "output_format": output_format}
     if settings is not None:
         kwargs["settings"] = settings
+    if seed is not None:
+        kwargs["seed"] = seed
     return b"".join(client.text_to_dialogue.convert(**kwargs))
