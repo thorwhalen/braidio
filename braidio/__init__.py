@@ -53,11 +53,18 @@ from braidio.sources import (  # noqa: F401
 # --- narration synthesis ---
 from braidio.tts import (  # noqa: F401
     narrate,
+    text_to_dialogue,
     resolve_voice_id,
     DEFAULT_VOICE_ID,
     DEFAULT_MODEL_ID,
     DEFAULT_VOICE_SETTINGS,
     VOICE_ENV_VAR,
+)
+from braidio.conversation import (  # noqa: F401
+    ConversationCast,
+    DEFAULT_CAST,
+    render_dialogue,
+    render_turns_sequential,
 )
 from braidio.delivery import (  # noqa: F401
     Delivery,

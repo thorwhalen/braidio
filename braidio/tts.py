@@ -63,3 +63,45 @@ def narrate(
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(audio)
     return out
+
+
+DIALOGUE_MODEL_ID = "eleven_v3"
+
+
+def text_to_dialogue(
+    turns,
+    *,
+    model_id: str = DIALOGUE_MODEL_ID,
+    output_format: str = "mp3_44100_128",
+    settings: dict | None = None,
+    api_key: str | None = None,
+) -> bytes:
+    """Synthesize a multi-speaker exchange in ONE pass (ElevenLabs Text-to-Dialogue).
+
+    Unlike per-line :func:`narrate`, this renders the whole conversation together
+    so prosody is conditioned across turns — the key to sounding like people
+    *talking to each other* rather than alternating monologues (see braidio#1 /
+    ``docs/research/conversational-vs-narration-tts.md``). ``eleven_v3`` only.
+
+    Args:
+        turns: ordered ``(voice_id, text)`` pairs (or ``{"voice_id", "text"}``
+            dicts). Keep each request under ~2000 chars total (API limit).
+        settings: optional model settings dict (e.g. ``{"stability": "Creative"}``).
+
+    Returns: raw audio bytes in ``output_format``.
+    """
+    from elevenlabs.client import ElevenLabs
+
+    client = ElevenLabs(
+        api_key=api_key or os.environ.get("ELEVENLABS_API_KEY") or os.environ.get("ELEVEN_API_KEY")
+    )
+    inputs = []
+    for t in turns:
+        if isinstance(t, (tuple, list)):
+            inputs.append({"voice_id": t[0], "text": t[1]})
+        else:
+            inputs.append({"voice_id": t["voice_id"], "text": t["text"]})
+    kwargs = {"inputs": inputs, "model_id": model_id, "output_format": output_format}
+    if settings is not None:
+        kwargs["settings"] = settings
+    return b"".join(client.text_to_dialogue.convert(**kwargs))
