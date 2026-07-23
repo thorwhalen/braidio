@@ -22,6 +22,33 @@ def test_conversational_api_is_exported():
         assert hasattr(braidio, name), name
 
 
+def test_dialogue_beat_plans_and_scans():
+    """A Dialogue beat plans as a 'dialogue' PlannedBeat (turns preserved,
+    text joined for the published verbatim-scan)."""
+    from braidio import Script, Dialogue, Narration, Profile, plan_production, content_violations
+
+    ep = Script(title="t", id_slug="1", beats=[
+        Dialogue((("A", "hi there friend"), ("B", "hey, good to see you"))),
+        Narration("some narration"),
+    ])
+    plan = plan_production(ep, Profile.PUBLISHED)
+    kinds = [b.kind for b in plan.beats]
+    assert "dialogue" in kinds
+    d = next(b for b in plan.beats if b.kind == "dialogue")
+    assert d.turns == (("A", "hi there friend"), ("B", "hey, good to see you"))
+    assert "hi there friend" in d.content  # joined text for scanning
+
+    # a dialogue that quotes forbidden text verbatim is caught in the published cut
+    bad = Script(title="t", id_slug="1", beats=[
+        Dialogue((("A", "the forbidden secret phrase appears right here now"),)),
+    ])
+    v = content_violations(
+        plan_production(bad, Profile.PUBLISHED),
+        ["the forbidden secret phrase appears right here now"],
+    )
+    assert v and "dialogue" in v[0]
+
+
 def test_dialogue_cache_avoids_second_api_call(tmp_path, monkeypatch):
     """A cache hit returns identical bytes without a second API call; cache=False
     always calls; a changed input misses the cache."""

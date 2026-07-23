@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable, Iterable
 
-from braidio.script import Narration, Script, SegmentBeat
+from braidio.script import Dialogue, Narration, Script, SegmentBeat
 
 # Segment ``rights`` values safe to render in the published cut.
 PUBLISHABLE_CLIP_RIGHTS: frozenset[str] = frozenset({"public-domain"})
@@ -69,10 +69,11 @@ class PlannedBeat:
     the source beat; ``note`` records any substitution/drop reasoning.
     """
 
-    kind: str  # "narration" | "clip"
-    content: str
+    kind: str  # "narration" | "clip" | "dialogue"
+    content: str  # narration/dialogue text (for scanning); clip = the reference
     from_index: int
     note: str = ""
+    turns: tuple | None = None  # (role, text) pairs, for dialogue beats
 
 
 @dataclass
@@ -118,6 +119,17 @@ def plan_production(
                 plan.substituted.append(f"narration[{i}]")
             else:
                 plan.beats.append(PlannedBeat("narration", beat.text, i))
+        elif isinstance(beat, Dialogue):
+            # our commentary → always included; content is the joined text so the
+            # published verbatim-scan can see it; turns carry the render input.
+            plan.beats.append(
+                PlannedBeat(
+                    "dialogue",
+                    " ".join(text for _role, text in beat.turns),
+                    i,
+                    turns=tuple(beat.turns),
+                )
+            )
         else:  # pragma: no cover - exhaustive
             raise TypeError(f"unknown beat type {type(beat).__name__}")
     return plan
@@ -166,10 +178,10 @@ def content_violations(
     for b in plan.beats:
         if b.kind == "clip":
             violations.append(f"beat {b.from_index}: segment audio present in published cut")
-        elif b.kind == "narration":
+        elif b.kind in ("narration", "dialogue"):
             leaks = find_verbatim_text(b.content, forbidden, min_words=min_words)
             if leaks:
                 violations.append(
-                    f"beat {b.from_index}: verbatim forbidden text in narration → {leaks[0]!r}"
+                    f"beat {b.from_index}: verbatim forbidden text in {b.kind} → {leaks[0]!r}"
                 )
     return violations

@@ -45,7 +45,22 @@ class SegmentBeat:
     published_substitute: str | None = None
 
 
-Beat = Union[Narration, SegmentBeat]
+@dataclass(frozen=True)
+class Dialogue:
+    """A multi-speaker commentary exchange (the conversational register).
+
+    ``turns`` is an ordered tuple of ``(role, text)`` pairs (roles like
+    ``"A"``/``"B"`` map to voices via a :class:`~braidio.conversation.ConversationCast`
+    at render time). Rendered in ONE pass via Text-to-Dialogue so it sounds like
+    people talking to each other. This is our own commentary → always publishable
+    (its text is still scanned for forbidden verbatim quotes in the published cut).
+    """
+
+    turns: tuple[tuple[str, str], ...]
+    label: str = ""
+
+
+Beat = Union[Narration, SegmentBeat, Dialogue]
 
 
 @dataclass(frozen=True)

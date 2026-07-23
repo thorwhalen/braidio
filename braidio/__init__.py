@@ -21,6 +21,7 @@ from braidio.script import (  # noqa: F401
     Script,
     Narration,
     SegmentBeat,
+    Dialogue,
     Beat,
     narration_segments,
 )
@@ -132,7 +133,7 @@ __all__ = [
     # production kinds
     "WeaveKind", "HAS_GRAPH", "HAS_NW",
     # script
-    "Script", "Narration", "SegmentBeat", "Beat", "narration_segments",
+    "Script", "Narration", "SegmentBeat", "Dialogue", "Beat", "narration_segments",
     # rights
     "Profile", "RightsPolicy", "RenderPlan", "PlannedBeat", "plan_production",
     "find_verbatim_text", "content_violations", "segment_is_publishable",

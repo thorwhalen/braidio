@@ -19,6 +19,7 @@ from pathlib import Path
 
 from mixing import concatenate_audio
 
+from braidio.conversation import DEFAULT_CAST, ConversationCast, render_dialogue
 from braidio.delivery import V2_TUNED, Delivery
 from braidio.rights import (
     PUBLISHABLE_CLIP_RIGHTS,
@@ -61,6 +62,7 @@ def render_production(
     profile: Profile = Profile.PERSONAL,
     rights: RightsPolicy | None = None,
     delivery: Delivery = V2_TUNED,
+    cast: ConversationCast = DEFAULT_CAST,
     out_path: str | Path | None = None,
     voice_id: str | None = None,
     crossfade_s: float = 0.12,
@@ -110,6 +112,11 @@ def render_production(
                 model_id=delivery.model_id,
                 voice_settings=delivery.voice_settings,
             )
+        elif pb.kind == "dialogue":
+            raw = render_dialogue(
+                list(pb.turns), cast,
+                out_path=Path(tts_dir) / f"{script.id_slug}-{profile.value}-dlg{i:02d}.mp3",
+            )
         else:  # segment
             rs = source.resolve(pb.content)
             if rs is None:
@@ -123,7 +130,8 @@ def render_production(
             _loudnorm(raw, work / f"part{i:02d}.mp3", target_lufs=target_lufs)
             if normalize else raw
         )
-        kinds.append(pb.kind)
+        # dialogue + narration are spoken → treated as "narration" on the timeline
+        kinds.append("clip" if pb.kind == "clip" else "narration")
 
     if woven and "clip" in kinds:
         items = [TimelineItem(k, str(p)) for k, p in zip(kinds, parts)]
