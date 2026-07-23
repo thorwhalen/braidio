@@ -31,11 +31,17 @@ LAURA = "FGY2WhTYpPnrIDTdsKH5"    # enthusiast, quirky attitude (F)
 
 @dataclass(frozen=True)
 class ConversationCast:
-    """Role → voice mapping + model/settings for a conversational exchange."""
+    """Role → voice mapping + model/settings for a conversational exchange.
 
-    roles: dict[str, str] = field(default_factory=lambda: {"A": JESSICA, "B": WILL})
+    Default cast: **Jessica** (playful/bright, F) + **Chris** (charming/
+    down-to-earth, M) — snappier than the "relaxed" voices. ``stability=0.45``
+    is the research sweet spot for a lively but coherent read (never 1.0/Robust,
+    which mutes v3 tags; ~0.1 is too unstable). See braidio#1 + the pacing doc.
+    """
+
+    roles: dict[str, str] = field(default_factory=lambda: {"A": JESSICA, "B": CHRIS})
     model_id: str = "eleven_v3"
-    settings: dict | None = None  # e.g. {"stability": "Creative"}
+    settings: dict | None = field(default_factory=lambda: {"stability": 0.45})
 
 
 DEFAULT_CAST = ConversationCast()
