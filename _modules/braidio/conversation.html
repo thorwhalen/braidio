@@ -127,11 +127,17 @@
 <a class="viewcode-back" href="../../module_docs/braidio/conversation.html#braidio.conversation.ConversationCast">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ConversationCast</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Role → voice mapping + model/settings for a conversational exchange.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Role → voice mapping + model/settings for a conversational exchange.</span>
 
-    <span class="n">roles</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="n">JESSICA</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">:</span> <span class="n">WILL</span><span class="p">})</span>
+<span class="sd">    Default cast: **Jessica** (playful/bright, F) + **Chris** (charming/</span>
+<span class="sd">    down-to-earth, M) — snappier than the &quot;relaxed&quot; voices. ``stability=0.45``</span>
+<span class="sd">    is the research sweet spot for a lively but coherent read (never 1.0/Robust,</span>
+<span class="sd">    which mutes v3 tags; ~0.1 is too unstable). See braidio#1 + the pacing doc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">roles</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="n">JESSICA</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">:</span> <span class="n">CHRIS</span><span class="p">})</span>
     <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;eleven_v3&quot;</span>
-    <span class="n">settings</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># e.g. {&quot;stability&quot;: &quot;Creative&quot;}</span></div>
+    <span class="n">settings</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">})</span></div>
 
 
 
