@@ -20,3 +20,34 @@ def test_cast_is_overridable():
 def test_conversational_api_is_exported():
     for name in ("text_to_dialogue", "render_dialogue", "render_turns_sequential", "ConversationCast"):
         assert hasattr(braidio, name), name
+
+
+def test_dialogue_cache_avoids_second_api_call(tmp_path, monkeypatch):
+    """A cache hit returns identical bytes without a second API call; cache=False
+    always calls; a changed input misses the cache."""
+    import braidio.tts as tts
+
+    calls = {"n": 0}
+
+    class _Convert:
+        def convert(self, **kwargs):
+            calls["n"] += 1
+            return [b"FAKE-DIALOGUE-AUDIO"]
+
+    class _Client:
+        def __init__(self, *a, **k):
+            self.text_to_dialogue = _Convert()
+
+    monkeypatch.setattr("elevenlabs.client.ElevenLabs", _Client)
+
+    turns = [("v1", "hello there"), ("v2", "hey, what's up")]
+    a = tts.text_to_dialogue(turns, cache=tmp_path, seed=1, refresh=True)  # 1 call (seeds cache)
+    b = tts.text_to_dialogue(turns, cache=tmp_path, seed=1)                # cache HIT → 0 calls
+    assert a == b == b"FAKE-DIALOGUE-AUDIO"
+    assert calls["n"] == 1
+
+    tts.text_to_dialogue(turns, cache=False, seed=1)  # cache disabled → always calls
+    assert calls["n"] == 2
+
+    tts.text_to_dialogue([("v1", "different"), ("v2", "text")], cache=tmp_path, seed=1)  # new key → miss
+    assert calls["n"] == 3

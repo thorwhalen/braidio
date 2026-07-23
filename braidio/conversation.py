@@ -59,12 +59,18 @@ def render_dialogue(
     out_path: str | Path,
     output_format: str = "mp3_44100_128",
     seed: int | None = None,
+    cache=True,
+    refresh: bool = False,
 ) -> Path:
-    """One-pass render of ``turns`` (``[(role, text), …]``) via Text-to-Dialogue."""
+    """One-pass render of ``turns`` (``[(role, text), …]``) via Text-to-Dialogue.
+
+    Cached by default (see :func:`braidio.tts.text_to_dialogue`): an unchanged
+    exchange renders instantly on re-run. ``refresh=True`` re-rolls the take.
+    """
     vturns = [(cast.roles[role], text) for role, text in turns]
     audio = text_to_dialogue(
         vturns, model_id=cast.model_id, settings=cast.settings,
-        seed=seed, output_format=output_format,
+        seed=seed, output_format=output_format, cache=cache, refresh=refresh,
     )
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)

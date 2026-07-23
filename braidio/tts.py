@@ -66,6 +66,13 @@ def narrate(
 
 
 DIALOGUE_MODEL_ID = "eleven_v3"
+DIALOGUE_CACHE_ENV_KEY = "BRAIDIO_DIALOGUE_CACHE_DIR"
+
+
+def _dialogue_cache_dir():
+    from mixing import _cache
+
+    return _cache.default_cache_dir("braidio-dialogue", env_key=DIALOGUE_CACHE_ENV_KEY)
 
 
 def text_to_dialogue(
@@ -76,6 +83,8 @@ def text_to_dialogue(
     settings: dict | None = None,
     seed: int | None = None,
     api_key: str | None = None,
+    cache=True,
+    refresh: bool = False,
 ) -> bytes:
     """Synthesize a multi-speaker exchange in ONE pass (ElevenLabs Text-to-Dialogue).
 
@@ -84,27 +93,62 @@ def text_to_dialogue(
     *talking to each other* rather than alternating monologues (see braidio#1 /
     ``docs/research/conversational-vs-narration-tts.md``). ``eleven_v3`` only.
 
+    **Cached** (like :func:`narrate`/``mixing.text_to_speech``): the result is
+    keyed on the SHA-256 of every parameter that affects the audio (turns,
+    voices, model, settings, seed, format). A cache hit returns the *same* bytes
+    instantly — no API call, deterministic master, and the basis for partial
+    re-render (change one exchange → only its key changes). ``cache=True``
+    (default) uses :data:`DIALOGUE_CACHE_ENV_KEY` / the default cache dir;
+    ``cache=False`` disables it; a path uses that dir. ``refresh=True`` forces a
+    re-render (to re-roll a v3 take). Because v3 is nondeterministic, caching a
+    seedless call freezes one random take — pass a ``seed`` for reproducibility.
+
     Args:
-        turns: ordered ``(voice_id, text)`` pairs (or ``{"voice_id", "text"}``
-            dicts). Keep each request under ~2000 chars total (API limit).
-        settings: optional model settings dict (e.g. ``{"stability": "Creative"}``).
+        turns: ordered ``(voice_id, text)`` pairs (or ``{"voice_id", "text"}``).
+            Keep each request under ~2000 chars total (API limit).
+        settings: optional model settings dict (e.g. ``{"stability": 0.45}``).
 
     Returns: raw audio bytes in ``output_format``.
     """
-    from elevenlabs.client import ElevenLabs
+    import json
 
-    client = ElevenLabs(
-        api_key=api_key or os.environ.get("ELEVENLABS_API_KEY") or os.environ.get("ELEVEN_API_KEY")
-    )
+    from mixing import _cache
+
     inputs = []
     for t in turns:
         if isinstance(t, (tuple, list)):
             inputs.append({"voice_id": t[0], "text": t[1]})
         else:
             inputs.append({"voice_id": t["voice_id"], "text": t["text"]})
+
+    cache_dir = _cache.resolve_cache_dir(cache, default_factory=_dialogue_cache_dir)
+    key = None
+    if cache_dir is not None:
+        key = _cache.sha256_key(
+            "text_to_dialogue",
+            json.dumps(inputs, sort_keys=True, ensure_ascii=False),
+            model_id,
+            output_format,
+            json.dumps(settings or {}, sort_keys=True),
+            "" if seed is None else str(seed),
+        )
+        if not refresh:
+            cached = _cache.read_cache(cache_dir, key, suffix=".audio")
+            if cached is not None:
+                return cached
+
+    from elevenlabs.client import ElevenLabs
+
+    client = ElevenLabs(
+        api_key=api_key or os.environ.get("ELEVENLABS_API_KEY") or os.environ.get("ELEVEN_API_KEY")
+    )
     kwargs = {"inputs": inputs, "model_id": model_id, "output_format": output_format}
     if settings is not None:
         kwargs["settings"] = settings
     if seed is not None:
         kwargs["seed"] = seed
-    return b"".join(client.text_to_dialogue.convert(**kwargs))
+    audio = b"".join(client.text_to_dialogue.convert(**kwargs))
+
+    if cache_dir is not None and key is not None:
+        _cache.write_cache(cache_dir, key, audio, suffix=".audio")
+    return audio
