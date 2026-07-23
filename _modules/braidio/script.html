@@ -145,7 +145,25 @@
 
 
 
-<span class="n">Beat</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Narration</span><span class="p">,</span> <span class="n">SegmentBeat</span><span class="p">]</span>
+<div class="viewcode-block" id="Dialogue">
+<a class="viewcode-back" href="../../module_docs/braidio/script.html#braidio.Dialogue">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Dialogue</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A multi-speaker commentary exchange (the conversational register).</span>
+
+<span class="sd">    ``turns`` is an ordered tuple of ``(role, text)`` pairs (roles like</span>
+<span class="sd">    ``&quot;A&quot;``/``&quot;B&quot;`` map to voices via a :class:`~braidio.conversation.ConversationCast`</span>
+<span class="sd">    at render time). Rendered in ONE pass via Text-to-Dialogue so it sounds like</span>
+<span class="sd">    people talking to each other. This is our own commentary → always publishable</span>
+<span class="sd">    (its text is still scanned for forbidden verbatim quotes in the published cut).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">turns</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
+
+
+
+<span class="n">Beat</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Narration</span><span class="p">,</span> <span class="n">SegmentBeat</span><span class="p">,</span> <span class="n">Dialogue</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="Script">
