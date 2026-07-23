@@ -166,6 +166,13 @@
 
 
 <span class="n">DIALOGUE_MODEL_ID</span> <span class="o">=</span> <span class="s2">&quot;eleven_v3&quot;</span>
+<span class="n">DIALOGUE_CACHE_ENV_KEY</span> <span class="o">=</span> <span class="s2">&quot;BRAIDIO_DIALOGUE_CACHE_DIR&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dialogue_cache_dir</span><span class="p">():</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mixing</span><span class="w"> </span><span class="kn">import</span> <span class="n">_cache</span>
+
+    <span class="k">return</span> <span class="n">_cache</span><span class="o">.</span><span class="n">default_cache_dir</span><span class="p">(</span><span class="s2">&quot;braidio-dialogue&quot;</span><span class="p">,</span> <span class="n">env_key</span><span class="o">=</span><span class="n">DIALOGUE_CACHE_ENV_KEY</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="text_to_dialogue">
@@ -178,6 +185,8 @@
     <span class="n">settings</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">refresh</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Synthesize a multi-speaker exchange in ONE pass (ElevenLabs Text-to-Dialogue).</span>
 
@@ -186,30 +195,65 @@
 <span class="sd">    *talking to each other* rather than alternating monologues (see braidio#1 /</span>
 <span class="sd">    ``docs/research/conversational-vs-narration-tts.md``). ``eleven_v3`` only.</span>
 
+<span class="sd">    **Cached** (like :func:`narrate`/``mixing.text_to_speech``): the result is</span>
+<span class="sd">    keyed on the SHA-256 of every parameter that affects the audio (turns,</span>
+<span class="sd">    voices, model, settings, seed, format). A cache hit returns the *same* bytes</span>
+<span class="sd">    instantly — no API call, deterministic master, and the basis for partial</span>
+<span class="sd">    re-render (change one exchange → only its key changes). ``cache=True``</span>
+<span class="sd">    (default) uses :data:`DIALOGUE_CACHE_ENV_KEY` / the default cache dir;</span>
+<span class="sd">    ``cache=False`` disables it; a path uses that dir. ``refresh=True`` forces a</span>
+<span class="sd">    re-render (to re-roll a v3 take). Because v3 is nondeterministic, caching a</span>
+<span class="sd">    seedless call freezes one random take — pass a ``seed`` for reproducibility.</span>
+
 <span class="sd">    Args:</span>
-<span class="sd">        turns: ordered ``(voice_id, text)`` pairs (or ``{&quot;voice_id&quot;, &quot;text&quot;}``</span>
-<span class="sd">            dicts). Keep each request under ~2000 chars total (API limit).</span>
-<span class="sd">        settings: optional model settings dict (e.g. ``{&quot;stability&quot;: &quot;Creative&quot;}``).</span>
+<span class="sd">        turns: ordered ``(voice_id, text)`` pairs (or ``{&quot;voice_id&quot;, &quot;text&quot;}``).</span>
+<span class="sd">            Keep each request under ~2000 chars total (API limit).</span>
+<span class="sd">        settings: optional model settings dict (e.g. ``{&quot;stability&quot;: 0.45}``).</span>
 
 <span class="sd">    Returns: raw audio bytes in ``output_format``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">elevenlabs.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElevenLabs</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 
-    <span class="n">client</span> <span class="o">=</span> <span class="n">ElevenLabs</span><span class="p">(</span>
-        <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ELEVENLABS_API_KEY&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ELEVEN_API_KEY&quot;</span><span class="p">)</span>
-    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mixing</span><span class="w"> </span><span class="kn">import</span> <span class="n">_cache</span>
+
     <span class="n">inputs</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">turns</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
             <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;voice_id&quot;</span><span class="p">:</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]})</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;voice_id&quot;</span><span class="p">:</span> <span class="n">t</span><span class="p">[</span><span class="s2">&quot;voice_id&quot;</span><span class="p">],</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">t</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">]})</span>
+
+    <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">_cache</span><span class="o">.</span><span class="n">resolve_cache_dir</span><span class="p">(</span><span class="n">cache</span><span class="p">,</span> <span class="n">default_factory</span><span class="o">=</span><span class="n">_dialogue_cache_dir</span><span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">_cache</span><span class="o">.</span><span class="n">sha256_key</span><span class="p">(</span>
+            <span class="s2">&quot;text_to_dialogue&quot;</span><span class="p">,</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">model_id</span><span class="p">,</span>
+            <span class="n">output_format</span><span class="p">,</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">settings</span> <span class="ow">or</span> <span class="p">{},</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">seed</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">refresh</span><span class="p">:</span>
+            <span class="n">cached</span> <span class="o">=</span> <span class="n">_cache</span><span class="o">.</span><span class="n">read_cache</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.audio&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cached</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">elevenlabs.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElevenLabs</span>
+
+    <span class="n">client</span> <span class="o">=</span> <span class="n">ElevenLabs</span><span class="p">(</span>
+        <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ELEVENLABS_API_KEY&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ELEVEN_API_KEY&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
     <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;model_id&quot;</span><span class="p">:</span> <span class="n">model_id</span><span class="p">,</span> <span class="s2">&quot;output_format&quot;</span><span class="p">:</span> <span class="n">output_format</span><span class="p">}</span>
     <span class="k">if</span> <span class="n">settings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;settings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">settings</span>
     <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;seed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">seed</span>
-    <span class="k">return</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">text_to_dialogue</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span></div>
+    <span class="n">audio</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">text_to_dialogue</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_cache</span><span class="o">.</span><span class="n">write_cache</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">audio</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.audio&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">audio</span></div>
 
 </pre></div>
 
