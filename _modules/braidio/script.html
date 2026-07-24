@@ -117,11 +117,16 @@
 <span class="sd">    ``published_text`` is an optional rights-safe rewrite the published profile</span>
 <span class="sd">    uses when the default ``text`` quotes forbidden (e.g. copyrighted) content;</span>
 <span class="sd">    leave it ``None`` when the narration is already clean.</span>
+
+<span class="sd">    ``lead_gap_s`` prepends a beat of silence — breathing room before a</span>
+<span class="sd">    register change (e.g. a book-read entering after a conversation), so it</span>
+<span class="sd">    doesn&#39;t feel glued to the previous speaker.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">text</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># optional delivery hint (future use)</span>
-    <span class="n">published_text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># optional delivery hint (e.g. &quot;book-passage&quot;)</span>
+    <span class="n">published_text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">lead_gap_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span></div>
 
 
 
