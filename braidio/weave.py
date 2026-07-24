@@ -76,10 +76,55 @@ def extract_padded(
 
 @dataclass(frozen=True)
 class TimelineItem:
-    """One part on the weave timeline."""
+    """One part on the weave timeline.
+
+    ``placement`` ``"sequential"`` (default — narration, and clean ``before`` /
+    ``after`` clips) lays the part in its own slot. ``"under"`` overlays the part
+    beneath the *following* sequential part (it does not consume its own slot),
+    attenuated by ``duck_db`` — a ducked underlay (a clip talked over, or later a
+    music bed).
+    """
 
     kind: str  # "narration" | "clip"
     path: str
+    placement: str = "sequential"  # "sequential" | "under"
+    duck_db: float = 0.0  # attenuation applied when placement == "under" (e.g. -15)
+
+
+def layout_placed(
+    kinds: list[str],
+    durs: list[float],
+    placements: list[str],
+    *,
+    clip_edge_overlap_s: float,
+    narration_crossfade_s: float,
+) -> list[float]:
+    """Start offset (s) of each part, placement-aware. Pure function.
+
+    Sequential parts advance a running cursor: a clip (or a part following a clip)
+    starts ``clip_edge_overlap_s`` before the cursor so its faded edges tuck under
+    the neighbour; narration-after-narration overlaps by ``narration_crossfade_s``.
+    An ``"under"`` part starts *at* the cursor (concurrent with the next
+    sequential part) and does **not** advance it — so it overlays what follows.
+    Clamped ≥ 0.
+    """
+    starts: list[float] = [0.0] * len(kinds)
+    cursor = 0.0
+    prev_seq_kind: str | None = None
+    for i, kind in enumerate(kinds):
+        if placements[i] == "under":
+            starts[i] = cursor  # overlay the following sequential part; cursor unchanged
+            continue
+        if prev_seq_kind is None:
+            start = 0.0
+        elif kind == "clip" or prev_seq_kind == "clip":
+            start = max(0.0, cursor - clip_edge_overlap_s)
+        else:
+            start = max(0.0, cursor - narration_crossfade_s)
+        starts[i] = start
+        cursor = start + durs[i]
+        prev_seq_kind = kind
+    return starts
 
 
 def layout_starts(
@@ -89,24 +134,13 @@ def layout_starts(
     clip_edge_overlap_s: float,
     narration_crossfade_s: float,
 ) -> list[float]:
-    """Start offset (s) of each part. Pure function of kinds + durations.
-
-    A clip, or a part following a clip, starts ``clip_edge_overlap_s`` before the
-    running cursor (so the clip's faded edges overlap its neighbours);
-    narration-after-narration overlaps by ``narration_crossfade_s``. Clamped ≥ 0.
-    """
-    starts: list[float] = []
-    cursor = 0.0
-    for i, kind in enumerate(kinds):
-        if i == 0:
-            start = 0.0
-        elif kind == "clip" or kinds[i - 1] == "clip":
-            start = max(0.0, cursor - clip_edge_overlap_s)
-        else:
-            start = max(0.0, cursor - narration_crossfade_s)
-        starts.append(start)
-        cursor = start + durs[i]
-    return starts
+    """Start offset (s) of each part (all sequential). Thin wrapper over
+    :func:`layout_placed` — kept for callers that don't use placement."""
+    return layout_placed(
+        kinds, durs, ["sequential"] * len(kinds),
+        clip_edge_overlap_s=clip_edge_overlap_s,
+        narration_crossfade_s=narration_crossfade_s,
+    )
 
 
 def weave_timeline(
@@ -130,27 +164,31 @@ def weave_timeline(
         raise ValueError("weave_timeline needs at least one item")
 
     durs = [duration_s(it.path) for it in items]
-    starts = layout_starts(
-        [it.kind for it in items], durs,
+    starts = layout_placed(
+        [it.kind for it in items], durs, [it.placement for it in items],
         clip_edge_overlap_s=clip_edge_overlap_s,
         narration_crossfade_s=narration_crossfade_s,
     )
 
-    # Build one amix graph: delay each input to its start, then sum.
+    # Build one amix graph: (duck →) delay each input to its start, then sum.
     inputs: list[str] = []
     for it in items:
         inputs += ["-i", it.path]
     filters: list[str] = []
     labels: list[str] = []
-    for i, start in enumerate(starts):
+    for i, (start, it) in enumerate(zip(starts, items)):
         delay_ms = int(round(start * 1000))
         lbl = f"a{i}"
         # normalize every input to stereo @ sample_rate so amix keeps stereo
         # (narration is mono, song clips are stereo) — else it collapses to mono.
-        filters.append(
-            f"[{i}:a]aformat=sample_rates={sample_rate}:channel_layouts=stereo,"
-            f"adelay={delay_ms}:all=1[{lbl}]"
+        chain = (
+            f"[{i}:a]aformat=sample_rates={sample_rate}:channel_layouts=stereo"
         )
+        # ducked underlay: attenuate before delaying so it sits beneath the talk.
+        if it.placement == "under" and it.duck_db:
+            chain += f",volume={it.duck_db}dB"
+        chain += f",adelay={delay_ms}:all=1[{lbl}]"
+        filters.append(chain)
         labels.append(f"[{lbl}]")
     mix = (
         "".join(labels)

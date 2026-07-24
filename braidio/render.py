@@ -92,8 +92,8 @@ def render_production(
     """
     publishable = rights.publishable_clip_rights if rights else PUBLISHABLE_CLIP_RIGHTS
     plan = plan_production(script, profile, publishable_clip_rights=publishable)
-    woven = config is not None and config.clip_edge_overlap_s > 0
     target_lufs = config.target_lufs if config is not None else _DEFAULT_LUFS
+    duck_db = config.duck_db if config is not None else -15.0
 
     out = (
         Path(out_path)
@@ -115,6 +115,7 @@ def render_production(
 
     parts: list[Path] = []
     kinds: list[str] = []
+    placements: list[str] = []  # "sequential" | "under" (per part, for the weave)
     for i, pb in enumerate(plan.beats):
         if pb.kind == "narration":
             orig = script.beats[pb.from_index]
@@ -151,13 +152,24 @@ def render_production(
         )
         # dialogue + narration are spoken → treated as "narration" on the timeline
         kinds.append("clip" if pb.kind == "clip" else "narration")
+        # a "under" clip becomes a ducked underlay; "before"/"after" play clean
+        seg_place = getattr(script.beats[pb.from_index], "placement", "before")
+        placements.append("under" if (pb.kind == "clip" and seg_place == "under") else "sequential")
 
-    if woven and "clip" in kinds:
-        items = [TimelineItem(k, str(p)) for k, p in zip(kinds, parts)]
+    has_under = "under" in placements
+    edge_overlap = config.clip_edge_overlap_s if config is not None else 0.0
+    crossfade = config.crossfade_s if config is not None else crossfade_s
+    woven = "clip" in kinds and (edge_overlap > 0 or has_under)
+
+    if woven:
+        items = [
+            TimelineItem(k, str(p), placement=pl, duck_db=(duck_db if pl == "under" else 0.0))
+            for k, p, pl in zip(kinds, parts, placements)
+        ]
         weave_timeline(
             items, out,
-            clip_edge_overlap_s=config.clip_edge_overlap_s,
-            narration_crossfade_s=config.crossfade_s,
+            clip_edge_overlap_s=edge_overlap,
+            narration_crossfade_s=crossfade,
             target_lufs=target_lufs,
         )
     else:

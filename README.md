@@ -66,10 +66,11 @@ usable with any format. The taxonomy, weaving grammar, exemplar recipes and the
 full template specs are in
 [`misc/docs/research/commentary-formats-and-styles.md`](misc/docs/research/commentary-formats-and-styles.md).
 
-*Render support note:* the cast, per-role voices, narration deliveries, clip
-duck-under weaving and loudness master are applied today. Per-clip
-BEFORE/UNDER/AFTER placement, music beds and scene stings are documented as
-authoring conventions and are on the render-side roadmap (braidio#1).
+*Render support note:* the cast, per-role voices, narration deliveries, loudness
+master, and **per-clip placement** — `SegmentBeat(placement="before" | "under" |
+"after")`, where `under` lays the clip concurrently beneath the talk, ducked —
+are applied today. Music beds and scene stings are documented as authoring
+conventions and remain on the render-side roadmap (braidio#1).
 
 ## Parametrize anything
 

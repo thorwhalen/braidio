@@ -41,6 +41,9 @@ class Narration:
     voice_settings: dict | None = None  # per-beat delivery override (e.g. V2_NARRATOR)
 
 
+CLIP_PLACEMENTS = ("before", "under", "after")
+
+
 @dataclass(frozen=True)
 class SegmentBeat:
     """A span of source media to weave in, addressed by an opaque ``reference``.
@@ -50,12 +53,28 @@ class SegmentBeat:
     ``owned-local`` / ``copyrighted`` / ``public-domain``) drives the render
     profile; ``published_substitute`` is a transformative narration the
     published profile swaps in when the segment's audio can't be used.
+
+    ``placement`` is how the clip sits against the talk (the weaving grammar):
+    ``"before"`` (default) and ``"after"`` play the clip **clean** in its own
+    slot — the set-up→clip and clip→payoff patterns, distinguished by where you
+    order the beat relative to the talk. ``"under"`` plays the clip
+    **concurrently beneath the following talk beat**, ducked by ``duck_db`` —
+    the "host talks over the clip" technique (place the clip *immediately before*
+    the talk it should sit under).
     """
 
     reference: str
     label: str = ""
     rights: str = "owned-local"
     published_substitute: str | None = None
+    placement: str = "before"
+
+    def __post_init__(self) -> None:
+        if self.placement not in CLIP_PLACEMENTS:
+            raise ValueError(
+                f"SegmentBeat.placement must be one of {CLIP_PLACEMENTS}, "
+                f"got {self.placement!r}"
+            )
 
 
 @dataclass(frozen=True)

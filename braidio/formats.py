@@ -16,12 +16,13 @@ The taxonomy + recipes are in
 
 What a :class:`Format` actually drives at render time **today**: the dialogue
 **cast** (role→voice), the **narration voice + delivery**, the **clip
-weave/duck + loudness** (:class:`WeaveConfig`). Fields tagged *(authoring)* —
-``clip_placement``, ``music_bed``, ``roles``, ``scripting`` — are conventions for
-whoever writes (or generates) the ``Script``; per-clip BEFORE/UNDER/AFTER
-placement, music beds and scene stings are documented here but are **roadmap** on
-the render side (braidio#1), not yet mechanically applied. Preset ids mirror the
-standard names so a UI can label them ("Deep Dive", "Song Exploder-style").
+weave/duck + loudness** (:class:`WeaveConfig`). Per-clip placement renders too —
+set it on each ``SegmentBeat(placement=…)``; ``Format.clip_placement`` is the
+recommended *default* for the format. Fields tagged *(authoring)* — ``music_bed``,
+``roles``, ``scripting`` — are conventions for whoever writes (or generates) the
+``Script``; music beds and scene stings are documented here but remain **roadmap**
+on the render side (braidio#1). Preset ids mirror the standard names so a UI can
+label them ("Deep Dive", "Song Exploder-style").
 """
 
 from __future__ import annotations
@@ -67,7 +68,7 @@ class Format:
 
     # --- authoring guidance (documented; render support varies) -------------
     roles: Mapping[str, str] = field(default_factory=dict)  # role → semantic (narrator/host/guest/…)
-    clip_placement: str = "before"  # before | under | after — set-up-first is clearest (authoring)
+    clip_placement: str = "before"  # recommended default SegmentBeat.placement (renders; before|under|after)
     music_bed: str = "light"  # continuous | light | sparse | none (authoring / roadmap)
     scripting: str = ""  # how to author a Script for this format (authoring)
 
