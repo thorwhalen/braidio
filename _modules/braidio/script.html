@@ -139,6 +139,9 @@
 
 
 
+<span class="n">CLIP_PLACEMENTS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;before&quot;</span><span class="p">,</span> <span class="s2">&quot;under&quot;</span><span class="p">,</span> <span class="s2">&quot;after&quot;</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="SegmentBeat">
 <a class="viewcode-back" href="../../module_docs/braidio/script.html#braidio.SegmentBeat">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -150,12 +153,28 @@
 <span class="sd">    ``owned-local`` / ``copyrighted`` / ``public-domain``) drives the render</span>
 <span class="sd">    profile; ``published_substitute`` is a transformative narration the</span>
 <span class="sd">    published profile swaps in when the segment&#39;s audio can&#39;t be used.</span>
+
+<span class="sd">    ``placement`` is how the clip sits against the talk (the weaving grammar):</span>
+<span class="sd">    ``&quot;before&quot;`` (default) and ``&quot;after&quot;`` play the clip **clean** in its own</span>
+<span class="sd">    slot — the set-up→clip and clip→payoff patterns, distinguished by where you</span>
+<span class="sd">    order the beat relative to the talk. ``&quot;under&quot;`` plays the clip</span>
+<span class="sd">    **concurrently beneath the following talk beat**, ducked by ``duck_db`` —</span>
+<span class="sd">    the &quot;host talks over the clip&quot; technique (place the clip *immediately before*</span>
+<span class="sd">    the talk it should sit under).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">reference</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
     <span class="n">rights</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;owned-local&quot;</span>
-    <span class="n">published_substitute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">published_substitute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">placement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;before&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">placement</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CLIP_PLACEMENTS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;SegmentBeat.placement must be one of </span><span class="si">{</span><span class="n">CLIP_PLACEMENTS</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">placement</span><span class="si">!r}</span><span class="s2">&quot;</span>
+            <span class="p">)</span></div>
 
 
 

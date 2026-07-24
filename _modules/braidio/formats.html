@@ -111,12 +111,13 @@
 
 <span class="sd">What a :class:`Format` actually drives at render time **today**: the dialogue</span>
 <span class="sd">**cast** (role→voice), the **narration voice + delivery**, the **clip</span>
-<span class="sd">weave/duck + loudness** (:class:`WeaveConfig`). Fields tagged *(authoring)* —</span>
-<span class="sd">``clip_placement``, ``music_bed``, ``roles``, ``scripting`` — are conventions for</span>
-<span class="sd">whoever writes (or generates) the ``Script``; per-clip BEFORE/UNDER/AFTER</span>
-<span class="sd">placement, music beds and scene stings are documented here but are **roadmap** on</span>
-<span class="sd">the render side (braidio#1), not yet mechanically applied. Preset ids mirror the</span>
-<span class="sd">standard names so a UI can label them (&quot;Deep Dive&quot;, &quot;Song Exploder-style&quot;).</span>
+<span class="sd">weave/duck + loudness** (:class:`WeaveConfig`). Per-clip placement renders too —</span>
+<span class="sd">set it on each ``SegmentBeat(placement=…)``; ``Format.clip_placement`` is the</span>
+<span class="sd">recommended *default* for the format. Fields tagged *(authoring)* — ``music_bed``,</span>
+<span class="sd">``roles``, ``scripting`` — are conventions for whoever writes (or generates) the</span>
+<span class="sd">``Script``; music beds and scene stings are documented here but remain **roadmap**</span>
+<span class="sd">on the render side (braidio#1). Preset ids mirror the standard names so a UI can</span>
+<span class="sd">label them (&quot;Deep Dive&quot;, &quot;Song Exploder-style&quot;).</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -164,7 +165,7 @@
 
     <span class="c1"># --- authoring guidance (documented; render support varies) -------------</span>
     <span class="n">roles</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>  <span class="c1"># role → semantic (narrator/host/guest/…)</span>
-    <span class="n">clip_placement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;before&quot;</span>  <span class="c1"># before | under | after — set-up-first is clearest (authoring)</span>
+    <span class="n">clip_placement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;before&quot;</span>  <span class="c1"># recommended default SegmentBeat.placement (renders; before|under|after)</span>
     <span class="n">music_bed</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;light&quot;</span>  <span class="c1"># continuous | light | sparse | none (authoring / roadmap)</span>
     <span class="n">scripting</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># how to author a Script for this format (authoring)</span>
 
