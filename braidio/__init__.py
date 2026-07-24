@@ -95,6 +95,20 @@ from braidio.multivoice import (  # noqa: F401
 # --- configuration ---
 from braidio.weave_config import WeaveConfig, PRESETS  # noqa: F401
 
+# --- ready-made format templates (standard-named presets) ---
+from braidio.formats import (  # noqa: F401
+    Format,
+    render_format,
+    FORMATS,
+    SOLO_EXPLAINER,
+    DEEP_DIVE,
+    INTERVIEW,
+    SONG_EXPLODER,
+    PANEL,
+    DEBATE,
+    DOCUMENTARY_VO,
+)
+
 # --- composition + weaving (audio) ---
 from braidio.compose import compose_narration  # noqa: F401
 from braidio.render import render_production  # noqa: F401
@@ -157,6 +171,10 @@ __all__ = [
     "assign_voices", "group_turns", "render_multivoice",
     # config
     "WeaveConfig", "PRESETS",
+    # formats (ready-made templates)
+    "Format", "render_format", "FORMATS",
+    "SOLO_EXPLAINER", "DEEP_DIVE", "INTERVIEW", "SONG_EXPLODER",
+    "PANEL", "DEBATE", "DOCUMENTARY_VO",
     # compose + weave
     "compose_narration", "TimelineItem", "extract_padded", "weave_timeline",
     "layout_starts", "duration_s",
