@@ -21,11 +21,16 @@ class Narration:
     ``published_text`` is an optional rights-safe rewrite the published profile
     uses when the default ``text`` quotes forbidden (e.g. copyrighted) content;
     leave it ``None`` when the narration is already clean.
+
+    ``lead_gap_s`` prepends a beat of silence — breathing room before a
+    register change (e.g. a book-read entering after a conversation), so it
+    doesn't feel glued to the previous speaker.
     """
 
     text: str
-    style: str | None = None  # optional delivery hint (future use)
+    style: str | None = None  # optional delivery hint (e.g. "book-passage")
     published_text: str | None = None
+    lead_gap_s: float = 0.0
 
 
 @dataclass(frozen=True)

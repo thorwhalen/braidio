@@ -42,6 +42,18 @@ def _require_ffmpeg() -> None:
         raise RuntimeError("ffmpeg not found on PATH (brew install ffmpeg).")
 
 
+def _lead_gap(src: Path, dst: Path, *, gap_s: float) -> Path:
+    """Prepend ``gap_s`` seconds of silence (breathing room before a beat)."""
+    _require_ffmpeg()
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    ms = int(round(gap_s * 1000))
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(src), "-af", f"adelay={ms}:all=1", str(dst)],
+        check=True, capture_output=True,
+    )
+    return dst
+
+
 def _loudnorm(src: Path, dst: Path, *, target_lufs: float = _DEFAULT_LUFS) -> Path:
     _require_ffmpeg()
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -112,6 +124,11 @@ def render_production(
                 model_id=delivery.model_id,
                 voice_settings=delivery.voice_settings,
             )
+            # breathing room before a register change (Narration.lead_gap_s)
+            orig = script.beats[pb.from_index]
+            gap = getattr(orig, "lead_gap_s", 0.0)
+            if gap and gap > 0:
+                raw = _lead_gap(raw, Path(tts_dir) / f"{script.id_slug}-lead{i:02d}.mp3", gap_s=gap)
         elif pb.kind == "dialogue":
             raw = render_dialogue(
                 list(pb.turns), cast,

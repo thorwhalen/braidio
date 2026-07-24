@@ -15,6 +15,7 @@ disfluency (backchannels, interruptions, fragments) — the model won't invent i
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass, field
@@ -61,11 +62,16 @@ def render_dialogue(
     seed: int | None = None,
     cache=True,
     refresh: bool = False,
+    tighten_gaps_s: float = 0.6,
 ) -> Path:
     """One-pass render of ``turns`` (``[(role, text), …]``) via Text-to-Dialogue.
 
     Cached by default (see :func:`braidio.tts.text_to_dialogue`): an unchanged
     exchange renders instantly on re-run. ``refresh=True`` re-rolls the take.
+
+    ``tighten_gaps_s`` (>0) applies the "R-tight" pass: ffmpeg trims only the
+    over-long dead gaps (silences ≥ this many seconds) that make v3 dialogue
+    feel draggy, while leaving natural short pauses. Set 0 to keep the raw take.
     """
     vturns = [(cast.roles[role], text) for role, text in turns]
     audio = text_to_dialogue(
@@ -75,6 +81,16 @@ def render_dialogue(
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(audio)
+    if tighten_gaps_s and tighten_gaps_s > 0:
+        _require_ffmpeg()
+        tmp = out.parent / (out.stem + "-tight.mp3")
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", str(out),
+             "-af", f"silenceremove=stop_periods=-1:stop_duration={tighten_gaps_s}:stop_threshold=-38dB",
+             str(tmp)],
+            check=True, capture_output=True,
+        )
+        os.replace(tmp, out)
     return out
 
 
