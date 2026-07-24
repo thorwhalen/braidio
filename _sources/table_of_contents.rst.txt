@@ -10,6 +10,7 @@
    module_docs/braidio/compose
    module_docs/braidio/conversation
    module_docs/braidio/delivery
+   module_docs/braidio/formats
    module_docs/braidio/kinds
    module_docs/braidio/multivoice
    module_docs/braidio/project
