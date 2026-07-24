@@ -117,15 +117,16 @@ def render_production(
     kinds: list[str] = []
     for i, pb in enumerate(plan.beats):
         if pb.kind == "narration":
+            orig = script.beats[pb.from_index]
+            beat_voice = getattr(orig, "voice", None) or voice_id  # per-beat override
             raw = narrate(
                 pb.content,
                 Path(tts_dir) / f"{script.id_slug}-{profile.value}-{delivery.name}-beat{i:02d}.mp3",
-                voice_id=voice_id,
+                voice_id=beat_voice,
                 model_id=delivery.model_id,
                 voice_settings=delivery.voice_settings,
             )
             # breathing room before a register change (Narration.lead_gap_s)
-            orig = script.beats[pb.from_index]
             gap = getattr(orig, "lead_gap_s", 0.0)
             if gap and gap > 0:
                 raw = _lead_gap(raw, Path(tts_dir) / f"{script.id_slug}-lead{i:02d}.mp3", gap_s=gap)
