@@ -166,6 +166,39 @@
     <span class="n">note</span><span class="o">=</span><span class="s2">&quot;More variation, more take-to-take variance; may over-emote.&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 
+<span class="c1"># --- role deliveries: a *presenter* (lively) vs a *narrator* (grave) ----------</span>
+<span class="c1"># Two deliveries meant to sit together in one production for tasteful contrast:</span>
+<span class="c1"># the host/presenter reads livelier and a touch quicker; the documentary/book</span>
+<span class="c1"># narrator reads steadier, flatter-styled and a touch slower (gravitas). Assign</span>
+<span class="c1"># per beat via ``Narration.voice_settings`` (see braidio.render).</span>
+
+<span class="n">V2_PRESENTER</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;v2-presenter&quot;</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;eleven_multilingual_v2&quot;</span><span class="p">,</span>
+    <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
+        <span class="s2">&quot;similarity_boost&quot;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
+        <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
+        <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="mf">0.98</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">&quot;Host/presenter commentary — lively (== v2-tuned), for the spine voice.&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">V2_NARRATOR</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;v2-narrator&quot;</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;eleven_multilingual_v2&quot;</span><span class="p">,</span>
+    <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="s2">&quot;similarity_boost&quot;</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
+        <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="mf">0.12</span><span class="p">,</span>
+        <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="mf">0.94</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">&quot;Documentary/book-read narrator — steadier, flatter style, a touch &quot;</span>
+    <span class="s2">&quot;slower for gravitas. Modest contrast against v2-presenter.&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
 <span class="n">V3_NATURAL</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;v3-natural&quot;</span><span class="p">,</span>
     <span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;eleven_v3&quot;</span><span class="p">,</span>
@@ -184,7 +217,10 @@
 
 <span class="n">DELIVERIES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Delivery</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="n">d</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">d</span>
-    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">(</span><span class="n">BASELINE</span><span class="p">,</span> <span class="n">V2_TUNED</span><span class="p">,</span> <span class="n">V2_AGGRESSIVE</span><span class="p">,</span> <span class="n">V3_NATURAL</span><span class="p">,</span> <span class="n">V3_CREATIVE</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="n">BASELINE</span><span class="p">,</span> <span class="n">V2_TUNED</span><span class="p">,</span> <span class="n">V2_AGGRESSIVE</span><span class="p">,</span> <span class="n">V2_PRESENTER</span><span class="p">,</span> <span class="n">V2_NARRATOR</span><span class="p">,</span>
+        <span class="n">V3_NATURAL</span><span class="p">,</span> <span class="n">V3_CREATIVE</span><span class="p">,</span>
+    <span class="p">)</span>
 <span class="p">}</span>
 </pre></div>
 

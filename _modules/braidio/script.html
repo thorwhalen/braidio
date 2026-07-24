@@ -121,13 +121,20 @@
 <span class="sd">    ``lead_gap_s`` prepends a beat of silence — breathing room before a</span>
 <span class="sd">    register change (e.g. a book-read entering after a conversation), so it</span>
 <span class="sd">    doesn&#39;t feel glued to the previous speaker.</span>
+
+<span class="sd">    ``voice`` and ``voice_settings`` are per-beat overrides so one timeline can</span>
+<span class="sd">    carry contrasting roles — e.g. a lively *presenter* and a graver *book</span>
+<span class="sd">    narrator* (different voice, and/or a different delivery preset&#39;s</span>
+<span class="sd">    ``voice_settings``). Both fall back to the render&#39;s production-level defaults</span>
+<span class="sd">    when ``None``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">text</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># optional delivery hint (e.g. &quot;book-passage&quot;)</span>
     <span class="n">published_text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">lead_gap_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="n">voice</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># per-beat voice override (e.g. presenter vs book-narrator)</span></div>
+    <span class="n">voice</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># per-beat voice override (e.g. presenter vs book-narrator)</span>
+    <span class="n">voice_settings</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># per-beat delivery override (e.g. V2_NARRATOR)</span></div>
 
 
 
