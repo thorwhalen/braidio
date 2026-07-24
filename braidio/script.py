@@ -25,6 +25,12 @@ class Narration:
     ``lead_gap_s`` prepends a beat of silence — breathing room before a
     register change (e.g. a book-read entering after a conversation), so it
     doesn't feel glued to the previous speaker.
+
+    ``voice`` and ``voice_settings`` are per-beat overrides so one timeline can
+    carry contrasting roles — e.g. a lively *presenter* and a graver *book
+    narrator* (different voice, and/or a different delivery preset's
+    ``voice_settings``). Both fall back to the render's production-level defaults
+    when ``None``.
     """
 
     text: str
@@ -32,6 +38,7 @@ class Narration:
     published_text: str | None = None
     lead_gap_s: float = 0.0
     voice: str | None = None  # per-beat voice override (e.g. presenter vs book-narrator)
+    voice_settings: dict | None = None  # per-beat delivery override (e.g. V2_NARRATOR)
 
 
 @dataclass(frozen=True)

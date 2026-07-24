@@ -69,6 +69,39 @@ V2_AGGRESSIVE = Delivery(
     note="More variation, more take-to-take variance; may over-emote.",
 )
 
+# --- role deliveries: a *presenter* (lively) vs a *narrator* (grave) ----------
+# Two deliveries meant to sit together in one production for tasteful contrast:
+# the host/presenter reads livelier and a touch quicker; the documentary/book
+# narrator reads steadier, flatter-styled and a touch slower (gravitas). Assign
+# per beat via ``Narration.voice_settings`` (see braidio.render).
+
+V2_PRESENTER = Delivery(
+    name="v2-presenter",
+    model_id="eleven_multilingual_v2",
+    voice_settings={
+        "stability": 0.35,
+        "similarity_boost": 0.75,
+        "style": 0.35,
+        "use_speaker_boost": True,
+        "speed": 0.98,
+    },
+    note="Host/presenter commentary — lively (== v2-tuned), for the spine voice.",
+)
+
+V2_NARRATOR = Delivery(
+    name="v2-narrator",
+    model_id="eleven_multilingual_v2",
+    voice_settings={
+        "stability": 0.5,
+        "similarity_boost": 0.8,
+        "style": 0.12,
+        "use_speaker_boost": True,
+        "speed": 0.94,
+    },
+    note="Documentary/book-read narrator — steadier, flatter style, a touch "
+    "slower for gravitas. Modest contrast against v2-presenter.",
+)
+
 V3_NATURAL = Delivery(
     name="v3-natural",
     model_id="eleven_v3",
@@ -87,5 +120,8 @@ V3_CREATIVE = Delivery(
 
 DELIVERIES: dict[str, Delivery] = {
     d.name: d
-    for d in (BASELINE, V2_TUNED, V2_AGGRESSIVE, V3_NATURAL, V3_CREATIVE)
+    for d in (
+        BASELINE, V2_TUNED, V2_AGGRESSIVE, V2_PRESENTER, V2_NARRATOR,
+        V3_NATURAL, V3_CREATIVE,
+    )
 }

@@ -119,12 +119,13 @@ def render_production(
         if pb.kind == "narration":
             orig = script.beats[pb.from_index]
             beat_voice = getattr(orig, "voice", None) or voice_id  # per-beat override
+            beat_settings = getattr(orig, "voice_settings", None) or delivery.voice_settings
             raw = narrate(
                 pb.content,
                 Path(tts_dir) / f"{script.id_slug}-{profile.value}-{delivery.name}-beat{i:02d}.mp3",
                 voice_id=beat_voice,
                 model_id=delivery.model_id,
-                voice_settings=delivery.voice_settings,
+                voice_settings=beat_settings,
             )
             # breathing room before a register change (Narration.lead_gap_s)
             gap = getattr(orig, "lead_gap_s", 0.0)

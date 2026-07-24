@@ -73,6 +73,8 @@ from braidio.delivery import (  # noqa: F401
     BASELINE,
     V2_TUNED,
     V2_AGGRESSIVE,
+    V2_PRESENTER,
+    V2_NARRATOR,
     V3_NATURAL,
     V3_CREATIVE,
 )
@@ -148,6 +150,7 @@ __all__ = [
     "DEFAULT_VOICE_SETTINGS", "VOICE_ENV_VAR",
     # delivery
     "Delivery", "DELIVERIES", "BASELINE", "V2_TUNED", "V2_AGGRESSIVE",
+    "V2_PRESENTER", "V2_NARRATOR",
     "V3_NATURAL", "V3_CREATIVE",
     # multivoice
     "Voice", "POOL_4", "POOL_MANY", "POOLS", "strip_markup", "split_segments",
