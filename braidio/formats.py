@@ -18,11 +18,12 @@ What a :class:`Format` actually drives at render time **today**: the dialogue
 **cast** (role→voice), the **narration voice + delivery**, the **clip
 weave/duck + loudness** (:class:`WeaveConfig`). Per-clip placement renders too —
 set it on each ``SegmentBeat(placement=…)``; ``Format.clip_placement`` is the
-recommended *default* for the format. Fields tagged *(authoring)* — ``music_bed``,
-``roles``, ``scripting`` — are conventions for whoever writes (or generates) the
-``Script``; music beds and scene stings are documented here but remain **roadmap**
-on the render side (braidio#1). Preset ids mirror the standard names so a UI can
-label them ("Deep Dive", "Song Exploder-style").
+recommended *default* for the format. A **music bed** renders when you pass a
+``bed_asset`` to :func:`render_format` — the format's ``music_bed`` *intensity*
+picks the gain. Fields tagged *(authoring)* — ``roles``, ``scripting`` — are
+conventions for whoever writes (or generates) the ``Script``; scene stings remain
+**roadmap** on the render side (braidio#1). Preset ids mirror the standard names
+so a UI can label them ("Deep Dive", "Song Exploder-style").
 """
 
 from __future__ import annotations
@@ -94,6 +95,7 @@ def render_format(
     source,
     out_path: str | Path | None = None,
     profile: Profile = Profile.PERSONAL,
+    bed_asset: str | None = None,
     **overrides,
 ) -> Path:
     """Render ``script`` under ``fmt``'s defaults; ``overrides`` win over them.
@@ -103,7 +105,12 @@ def render_format(
     override voice/settings per-beat (e.g. a graver book-narrator inside an
     otherwise lively presenter piece — pass ``V2_NARRATOR.voice_settings`` on that
     ``Narration`` beat).
+
+    ``bed_asset`` (a path to an app-supplied instrumental) adds a music bed at the
+    gain implied by ``fmt.music_bed`` (skipped when the format's intensity is
+    ``"none"``); pass ``music_bed=MusicBed(...)`` in ``overrides`` for full control.
     """
+    from braidio.music import bed_for_intensity
     from braidio.render import render_production
 
     kwargs = dict(
@@ -117,6 +124,10 @@ def render_format(
         kwargs["cast"] = fmt.cast
     if fmt.narration_voice is not None:
         kwargs["voice_id"] = fmt.narration_voice
+    if bed_asset is not None:
+        bed = bed_for_intensity(bed_asset, fmt.music_bed)
+        if bed is not None:
+            kwargs["music_bed"] = bed
     kwargs.update(overrides)
     return render_production(script, **kwargs)
 

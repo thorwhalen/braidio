@@ -152,12 +152,16 @@ def weave_timeline(
     target_lufs: float = -16.0,
     true_peak: float = -1.0,
     sample_rate: int = 44100,
+    bed=None,  # optional braidio.music.MusicBed — instrumental underscore under all
 ) -> Path:
     """Place items on a timeline and mix. Clips overlap neighbours by
     ``clip_edge_overlap_s`` (their faded edges tuck under narration); narration
     parts butt-join with a small crossfade. Returns ``out_path``.
 
-    Falls back to a plain concat feel when ``clip_edge_overlap_s == 0``.
+    ``bed`` (a :class:`~braidio.music.MusicBed`) lays an instrumental underscore
+    under the whole production: it's rendered to cover the timeline, attenuated,
+    and mixed in posted by ``bed.lead_in_s``. Falls back to a plain concat feel
+    when ``clip_edge_overlap_s == 0`` and there's nothing to overlay.
     """
     _require_ffmpeg()
     if not items:
@@ -169,6 +173,8 @@ def weave_timeline(
         clip_edge_overlap_s=clip_edge_overlap_s,
         narration_crossfade_s=narration_crossfade_s,
     )
+    out = Path(out_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
 
     # Build one amix graph: (duck →) delay each input to its start, then sum.
     inputs: list[str] = []
@@ -190,15 +196,30 @@ def weave_timeline(
         chain += f",adelay={delay_ms}:all=1[{lbl}]"
         filters.append(chain)
         labels.append(f"[{lbl}]")
+
+    # Optional music bed: prepare it to cover the timeline, then mix it in posted.
+    if bed is not None:
+        from braidio.music import prepare_bed
+
+        total_s = max(s + d for s, d in zip(starts, durs))
+        bed_path = prepare_bed(bed, total_s, out.parent / f"_bed_{out.stem}.mp3", sample_rate=sample_rate)
+        idx = len(items)
+        inputs += ["-i", str(bed_path)]
+        lead_ms = int(round(bed.lead_in_s * 1000))
+        filters.append(
+            f"[{idx}:a]aformat=sample_rates={sample_rate}:channel_layouts=stereo,"
+            f"adelay={lead_ms}:all=1[bed]"
+        )
+        labels.append("[bed]")
+
+    n_inputs = len(labels)
     mix = (
         "".join(labels)
-        + f"amix=inputs={len(items)}:normalize=0:dropout_transition=0[m]"
+        + f"amix=inputs={n_inputs}:normalize=0:dropout_transition=0[m]"
     )
     norm = f"[m]loudnorm=I={target_lufs}:TP={true_peak}:LRA=11[out]"
     filtergraph = ";".join(filters + [mix, norm])
 
-    out = Path(out_path)
-    out.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
         ["ffmpeg", "-y", *inputs, "-filter_complex", filtergraph,
          "-map", "[out]", "-ar", str(sample_rate), "-ac", "2", "-b:a", "192k",

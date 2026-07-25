@@ -79,6 +79,7 @@ def render_production(
     voice_id: str | None = None,
     crossfade_s: float = 0.12,
     normalize: bool = True,
+    music_bed=None,  # optional braidio.music.MusicBed — instrumental underscore
     tts_dir: str | Path = "data/tts",
     clips_dir: str | Path = "data/clips",
     episodes_dir: str | Path = "data/episodes",
@@ -86,9 +87,11 @@ def render_production(
     """Render ``script`` under ``profile`` → a single audio file. Returns the path.
 
     Segment beats are resolved through ``source`` (a :class:`SegmentSource`).
-    When ``config`` has ``clip_edge_overlap_s > 0`` the segments are woven with
-    speech-dominant overlap; otherwise parts are concatenated. ``rights`` (if
-    given) sets which segment rights are publishable.
+    When ``config`` has ``clip_edge_overlap_s > 0``, a clip is ``placement="under"``,
+    or a ``music_bed`` is given, the parts are woven on a timeline; otherwise they
+    are concatenated. ``rights`` (if given) sets which segment rights are
+    publishable. ``music_bed`` lays an instrumental underscore under the whole
+    production (see :class:`braidio.music.MusicBed`).
     """
     publishable = rights.publishable_clip_rights if rights else PUBLISHABLE_CLIP_RIGHTS
     plan = plan_production(script, profile, publishable_clip_rights=publishable)
@@ -159,7 +162,8 @@ def render_production(
     has_under = "under" in placements
     edge_overlap = config.clip_edge_overlap_s if config is not None else 0.0
     crossfade = config.crossfade_s if config is not None else crossfade_s
-    woven = "clip" in kinds and (edge_overlap > 0 or has_under)
+    # a music bed also needs the mix path (even for narration-only productions)
+    woven = music_bed is not None or ("clip" in kinds and (edge_overlap > 0 or has_under))
 
     if woven:
         items = [
@@ -171,6 +175,7 @@ def render_production(
             clip_edge_overlap_s=edge_overlap,
             narration_crossfade_s=crossfade,
             target_lufs=target_lufs,
+            bed=music_bed,
         )
     else:
         concatenate_audio(*[str(p) for p in parts], output=str(out), crossfade=crossfade_s)

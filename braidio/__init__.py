@@ -95,6 +95,13 @@ from braidio.multivoice import (  # noqa: F401
 # --- configuration ---
 from braidio.weave_config import WeaveConfig, PRESETS  # noqa: F401
 
+# --- music bed (instrumental underscore) ---
+from braidio.music import (  # noqa: F401
+    MusicBed,
+    bed_for_intensity,
+    BED_GAIN_BY_INTENSITY,
+)
+
 # --- ready-made format templates (standard-named presets) ---
 from braidio.formats import (  # noqa: F401
     Format,
@@ -171,6 +178,8 @@ __all__ = [
     "assign_voices", "group_turns", "render_multivoice",
     # config
     "WeaveConfig", "PRESETS",
+    # music bed
+    "MusicBed", "bed_for_intensity", "BED_GAIN_BY_INTENSITY",
     # formats (ready-made templates)
     "Format", "render_format", "FORMATS",
     "SOLO_EXPLAINER", "DEEP_DIVE", "INTERVIEW", "SONG_EXPLODER",

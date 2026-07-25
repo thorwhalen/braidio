@@ -67,10 +67,11 @@ full template specs are in
 [`misc/docs/research/commentary-formats-and-styles.md`](misc/docs/research/commentary-formats-and-styles.md).
 
 *Render support note:* the cast, per-role voices, narration deliveries, loudness
-master, and **per-clip placement** — `SegmentBeat(placement="before" | "under" |
+master, **per-clip placement** — `SegmentBeat(placement="before" | "under" |
 "after")`, where `under` lays the clip concurrently beneath the talk, ducked —
-are applied today. Music beds and scene stings are documented as authoring
-conventions and remain on the render-side roadmap (braidio#1).
+and a **music bed** (`MusicBed`, an app-supplied instrumental laid under the whole
+production) are applied today. Scene stings and fade-to-spotlight (dropping the
+bed before a key exhibit) remain on the render-side roadmap (braidio#1).
 
 ## Parametrize anything
 
