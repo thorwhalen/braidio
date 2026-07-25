@@ -13,6 +13,7 @@
    module_docs/braidio/formats
    module_docs/braidio/kinds
    module_docs/braidio/multivoice
+   module_docs/braidio/music
    module_docs/braidio/project
    module_docs/braidio/provenance
    module_docs/braidio/render

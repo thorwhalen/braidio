@@ -57,6 +57,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/music.html">braidio.music</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/project.html">braidio.project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
@@ -176,6 +177,7 @@
     <span class="n">voice_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">crossfade_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.12</span><span class="p">,</span>
     <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">music_bed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># optional braidio.music.MusicBed — instrumental underscore</span>
     <span class="n">tts_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;data/tts&quot;</span><span class="p">,</span>
     <span class="n">clips_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;data/clips&quot;</span><span class="p">,</span>
     <span class="n">episodes_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;data/episodes&quot;</span><span class="p">,</span>
@@ -183,9 +185,11 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Render ``script`` under ``profile`` → a single audio file. Returns the path.</span>
 
 <span class="sd">    Segment beats are resolved through ``source`` (a :class:`SegmentSource`).</span>
-<span class="sd">    When ``config`` has ``clip_edge_overlap_s &gt; 0`` the segments are woven with</span>
-<span class="sd">    speech-dominant overlap; otherwise parts are concatenated. ``rights`` (if</span>
-<span class="sd">    given) sets which segment rights are publishable.</span>
+<span class="sd">    When ``config`` has ``clip_edge_overlap_s &gt; 0``, a clip is ``placement=&quot;under&quot;``,</span>
+<span class="sd">    or a ``music_bed`` is given, the parts are woven on a timeline; otherwise they</span>
+<span class="sd">    are concatenated. ``rights`` (if given) sets which segment rights are</span>
+<span class="sd">    publishable. ``music_bed`` lays an instrumental underscore under the whole</span>
+<span class="sd">    production (see :class:`braidio.music.MusicBed`).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">publishable</span> <span class="o">=</span> <span class="n">rights</span><span class="o">.</span><span class="n">publishable_clip_rights</span> <span class="k">if</span> <span class="n">rights</span> <span class="k">else</span> <span class="n">PUBLISHABLE_CLIP_RIGHTS</span>
     <span class="n">plan</span> <span class="o">=</span> <span class="n">plan_production</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">profile</span><span class="p">,</span> <span class="n">publishable_clip_rights</span><span class="o">=</span><span class="n">publishable</span><span class="p">)</span>
@@ -256,7 +260,8 @@
     <span class="n">has_under</span> <span class="o">=</span> <span class="s2">&quot;under&quot;</span> <span class="ow">in</span> <span class="n">placements</span>
     <span class="n">edge_overlap</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">clip_edge_overlap_s</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.0</span>
     <span class="n">crossfade</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">crossfade_s</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">crossfade_s</span>
-    <span class="n">woven</span> <span class="o">=</span> <span class="s2">&quot;clip&quot;</span> <span class="ow">in</span> <span class="n">kinds</span> <span class="ow">and</span> <span class="p">(</span><span class="n">edge_overlap</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">has_under</span><span class="p">)</span>
+    <span class="c1"># a music bed also needs the mix path (even for narration-only productions)</span>
+    <span class="n">woven</span> <span class="o">=</span> <span class="n">music_bed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="s2">&quot;clip&quot;</span> <span class="ow">in</span> <span class="n">kinds</span> <span class="ow">and</span> <span class="p">(</span><span class="n">edge_overlap</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">has_under</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">woven</span><span class="p">:</span>
         <span class="n">items</span> <span class="o">=</span> <span class="p">[</span>
@@ -268,6 +273,7 @@
             <span class="n">clip_edge_overlap_s</span><span class="o">=</span><span class="n">edge_overlap</span><span class="p">,</span>
             <span class="n">narration_crossfade_s</span><span class="o">=</span><span class="n">crossfade</span><span class="p">,</span>
             <span class="n">target_lufs</span><span class="o">=</span><span class="n">target_lufs</span><span class="p">,</span>
+            <span class="n">bed</span><span class="o">=</span><span class="n">music_bed</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">concatenate_audio</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span> <span class="n">crossfade</span><span class="o">=</span><span class="n">crossfade_s</span><span class="p">)</span>

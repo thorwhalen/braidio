@@ -57,6 +57,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/music.html">braidio.music</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/project.html">braidio.project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
@@ -261,12 +262,16 @@
     <span class="n">target_lufs</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">16.0</span><span class="p">,</span>
     <span class="n">true_peak</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
     <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">44100</span><span class="p">,</span>
+    <span class="n">bed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># optional braidio.music.MusicBed — instrumental underscore under all</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Place items on a timeline and mix. Clips overlap neighbours by</span>
 <span class="sd">    ``clip_edge_overlap_s`` (their faded edges tuck under narration); narration</span>
 <span class="sd">    parts butt-join with a small crossfade. Returns ``out_path``.</span>
 
-<span class="sd">    Falls back to a plain concat feel when ``clip_edge_overlap_s == 0``.</span>
+<span class="sd">    ``bed`` (a :class:`~braidio.music.MusicBed`) lays an instrumental underscore</span>
+<span class="sd">    under the whole production: it&#39;s rendered to cover the timeline, attenuated,</span>
+<span class="sd">    and mixed in posted by ``bed.lead_in_s``. Falls back to a plain concat feel</span>
+<span class="sd">    when ``clip_edge_overlap_s == 0`` and there&#39;s nothing to overlay.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_require_ffmpeg</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">items</span><span class="p">:</span>
@@ -278,6 +283,8 @@
         <span class="n">clip_edge_overlap_s</span><span class="o">=</span><span class="n">clip_edge_overlap_s</span><span class="p">,</span>
         <span class="n">narration_crossfade_s</span><span class="o">=</span><span class="n">narration_crossfade_s</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># Build one amix graph: (duck →) delay each input to its start, then sum.</span>
     <span class="n">inputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -299,15 +306,30 @@
         <span class="n">chain</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;,adelay=</span><span class="si">{</span><span class="n">delay_ms</span><span class="si">}</span><span class="s2">:all=1[</span><span class="si">{</span><span class="n">lbl</span><span class="si">}</span><span class="s2">]&quot;</span>
         <span class="n">filters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
         <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">lbl</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Optional music bed: prepare it to cover the timeline, then mix it in posted.</span>
+    <span class="k">if</span> <span class="n">bed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.music</span><span class="w"> </span><span class="kn">import</span> <span class="n">prepare_bed</span>
+
+        <span class="n">total_s</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="n">d</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">starts</span><span class="p">,</span> <span class="n">durs</span><span class="p">))</span>
+        <span class="n">bed_path</span> <span class="o">=</span> <span class="n">prepare_bed</span><span class="p">(</span><span class="n">bed</span><span class="p">,</span> <span class="n">total_s</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;_bed_</span><span class="si">{</span><span class="n">out</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">.mp3&quot;</span><span class="p">,</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">sample_rate</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+        <span class="n">inputs</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;-i&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">bed_path</span><span class="p">)]</span>
+        <span class="n">lead_ms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">bed</span><span class="o">.</span><span class="n">lead_in_s</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">))</span>
+        <span class="n">filters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">:a]aformat=sample_rates=</span><span class="si">{</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">:channel_layouts=stereo,&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;adelay=</span><span class="si">{</span><span class="n">lead_ms</span><span class="si">}</span><span class="s2">:all=1[bed]&quot;</span>
+        <span class="p">)</span>
+        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;[bed]&quot;</span><span class="p">)</span>
+
+    <span class="n">n_inputs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
     <span class="n">mix</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
-        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;amix=inputs=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span><span class="si">}</span><span class="s2">:normalize=0:dropout_transition=0[m]&quot;</span>
+        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;amix=inputs=</span><span class="si">{</span><span class="n">n_inputs</span><span class="si">}</span><span class="s2">:normalize=0:dropout_transition=0[m]&quot;</span>
     <span class="p">)</span>
     <span class="n">norm</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[m]loudnorm=I=</span><span class="si">{</span><span class="n">target_lufs</span><span class="si">}</span><span class="s2">:TP=</span><span class="si">{</span><span class="n">true_peak</span><span class="si">}</span><span class="s2">:LRA=11[out]&quot;</span>
     <span class="n">filtergraph</span> <span class="o">=</span> <span class="s2">&quot;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span> <span class="o">+</span> <span class="p">[</span><span class="n">mix</span><span class="p">,</span> <span class="n">norm</span><span class="p">])</span>
 
-    <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
-    <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
         <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;-y&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="s2">&quot;-filter_complex&quot;</span><span class="p">,</span> <span class="n">filtergraph</span><span class="p">,</span>
          <span class="s2">&quot;-map&quot;</span><span class="p">,</span> <span class="s2">&quot;[out]&quot;</span><span class="p">,</span> <span class="s2">&quot;-ar&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">sample_rate</span><span class="p">),</span> <span class="s2">&quot;-ac&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;-b:a&quot;</span><span class="p">,</span> <span class="s2">&quot;192k&quot;</span><span class="p">,</span>

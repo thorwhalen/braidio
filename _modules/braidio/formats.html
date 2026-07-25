@@ -57,6 +57,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/music.html">braidio.music</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/project.html">braidio.project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
@@ -113,11 +114,12 @@
 <span class="sd">**cast** (role→voice), the **narration voice + delivery**, the **clip</span>
 <span class="sd">weave/duck + loudness** (:class:`WeaveConfig`). Per-clip placement renders too —</span>
 <span class="sd">set it on each ``SegmentBeat(placement=…)``; ``Format.clip_placement`` is the</span>
-<span class="sd">recommended *default* for the format. Fields tagged *(authoring)* — ``music_bed``,</span>
-<span class="sd">``roles``, ``scripting`` — are conventions for whoever writes (or generates) the</span>
-<span class="sd">``Script``; music beds and scene stings are documented here but remain **roadmap**</span>
-<span class="sd">on the render side (braidio#1). Preset ids mirror the standard names so a UI can</span>
-<span class="sd">label them (&quot;Deep Dive&quot;, &quot;Song Exploder-style&quot;).</span>
+<span class="sd">recommended *default* for the format. A **music bed** renders when you pass a</span>
+<span class="sd">``bed_asset`` to :func:`render_format` — the format&#39;s ``music_bed`` *intensity*</span>
+<span class="sd">picks the gain. Fields tagged *(authoring)* — ``roles``, ``scripting`` — are</span>
+<span class="sd">conventions for whoever writes (or generates) the ``Script``; scene stings remain</span>
+<span class="sd">**roadmap** on the render side (braidio#1). Preset ids mirror the standard names</span>
+<span class="sd">so a UI can label them (&quot;Deep Dive&quot;, &quot;Song Exploder-style&quot;).</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -197,6 +199,7 @@
     <span class="n">source</span><span class="p">,</span>
     <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">profile</span><span class="p">:</span> <span class="n">Profile</span> <span class="o">=</span> <span class="n">Profile</span><span class="o">.</span><span class="n">PERSONAL</span><span class="p">,</span>
+    <span class="n">bed_asset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">overrides</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Render ``script`` under ``fmt``&#39;s defaults; ``overrides`` win over them.</span>
@@ -206,7 +209,12 @@
 <span class="sd">    override voice/settings per-beat (e.g. a graver book-narrator inside an</span>
 <span class="sd">    otherwise lively presenter piece — pass ``V2_NARRATOR.voice_settings`` on that</span>
 <span class="sd">    ``Narration`` beat).</span>
+
+<span class="sd">    ``bed_asset`` (a path to an app-supplied instrumental) adds a music bed at the</span>
+<span class="sd">    gain implied by ``fmt.music_bed`` (skipped when the format&#39;s intensity is</span>
+<span class="sd">    ``&quot;none&quot;``); pass ``music_bed=MusicBed(...)`` in ``overrides`` for full control.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.music</span><span class="w"> </span><span class="kn">import</span> <span class="n">bed_for_intensity</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.render</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_production</span>
 
     <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
@@ -220,6 +228,10 @@
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;cast&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">cast</span>
     <span class="k">if</span> <span class="n">fmt</span><span class="o">.</span><span class="n">narration_voice</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;voice_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">narration_voice</span>
+    <span class="k">if</span> <span class="n">bed_asset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bed</span> <span class="o">=</span> <span class="n">bed_for_intensity</span><span class="p">(</span><span class="n">bed_asset</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">music_bed</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;music_bed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bed</span>
     <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">overrides</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">render_production</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
