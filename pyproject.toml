@@ -10,6 +10,7 @@ version = "0.0.1"
 description = "Weave narration with extracted media segments into audiovisual productions"
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
 keywords = [
     "audio",
     "tts",
@@ -26,9 +27,6 @@ dependencies = [
     "mixing",
     "elevenlabs",
 ]
-
-[project.license]
-text = "mit"
 
 [project.urls]
 Homepage = "https://github.com/thorwhalen/braidio"
