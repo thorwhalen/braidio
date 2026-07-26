@@ -143,48 +143,100 @@ try:  # needs lacing
         stale_after,
         descendants_of,
     )
+
     HAS_GRAPH = True
 except ImportError:  # pragma: no cover - optional dep
     pass
 try:  # needs nw
     from braidio.project import Project  # noqa: F401
+
     HAS_NW = True
 except ImportError:  # pragma: no cover - optional dep
     pass
 
 __all__ = [
     # production kinds
-    "WeaveKind", "HAS_GRAPH", "HAS_NW",
+    "WeaveKind",
+    "HAS_GRAPH",
+    "HAS_NW",
     # script
-    "Script", "Narration", "SegmentBeat", "Dialogue", "Beat", "narration_segments",
+    "Script",
+    "Narration",
+    "SegmentBeat",
+    "Dialogue",
+    "Beat",
+    "narration_segments",
     # rights
-    "Profile", "RightsPolicy", "RenderPlan", "PlannedBeat", "plan_production",
-    "find_verbatim_text", "content_violations", "segment_is_publishable",
+    "Profile",
+    "RightsPolicy",
+    "RenderPlan",
+    "PlannedBeat",
+    "plan_production",
+    "find_verbatim_text",
+    "content_violations",
+    "segment_is_publishable",
     "PUBLISHABLE_CLIP_RIGHTS",
     # render
     "render_production",
     # sources
-    "SegmentSource", "ResolvedSegment", "Segment", "TimedLine",
-    "TimedLineSegmentSource", "find_segment", "load_timing", "cut_quote",
+    "SegmentSource",
+    "ResolvedSegment",
+    "Segment",
+    "TimedLine",
+    "TimedLineSegmentSource",
+    "find_segment",
+    "load_timing",
+    "cut_quote",
     # tts
-    "narrate", "resolve_voice_id", "DEFAULT_VOICE_ID", "DEFAULT_MODEL_ID",
-    "DEFAULT_VOICE_SETTINGS", "VOICE_ENV_VAR",
+    "narrate",
+    "resolve_voice_id",
+    "DEFAULT_VOICE_ID",
+    "DEFAULT_MODEL_ID",
+    "DEFAULT_VOICE_SETTINGS",
+    "VOICE_ENV_VAR",
     # delivery
-    "Delivery", "DELIVERIES", "BASELINE", "V2_TUNED", "V2_AGGRESSIVE",
-    "V2_PRESENTER", "V2_NARRATOR",
-    "V3_NATURAL", "V3_CREATIVE",
+    "Delivery",
+    "DELIVERIES",
+    "BASELINE",
+    "V2_TUNED",
+    "V2_AGGRESSIVE",
+    "V2_PRESENTER",
+    "V2_NARRATOR",
+    "V3_NATURAL",
+    "V3_CREATIVE",
     # multivoice
-    "Voice", "POOL_4", "POOL_MANY", "POOLS", "strip_markup", "split_segments",
-    "assign_voices", "group_turns", "render_multivoice",
+    "Voice",
+    "POOL_4",
+    "POOL_MANY",
+    "POOLS",
+    "strip_markup",
+    "split_segments",
+    "assign_voices",
+    "group_turns",
+    "render_multivoice",
     # config
-    "WeaveConfig", "PRESETS",
+    "WeaveConfig",
+    "PRESETS",
     # music bed
-    "MusicBed", "bed_for_intensity", "BED_GAIN_BY_INTENSITY",
+    "MusicBed",
+    "bed_for_intensity",
+    "BED_GAIN_BY_INTENSITY",
     # formats (ready-made templates)
-    "Format", "render_format", "FORMATS",
-    "SOLO_EXPLAINER", "DEEP_DIVE", "INTERVIEW", "SONG_EXPLODER",
-    "PANEL", "DEBATE", "DOCUMENTARY_VO",
+    "Format",
+    "render_format",
+    "FORMATS",
+    "SOLO_EXPLAINER",
+    "DEEP_DIVE",
+    "INTERVIEW",
+    "SONG_EXPLODER",
+    "PANEL",
+    "DEBATE",
+    "DOCUMENTARY_VO",
     # compose + weave
-    "compose_narration", "TimelineItem", "extract_padded", "weave_timeline",
-    "layout_starts", "duration_s",
+    "compose_narration",
+    "TimelineItem",
+    "extract_padded",
+    "weave_timeline",
+    "layout_starts",
+    "duration_s",
 ]

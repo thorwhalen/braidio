@@ -47,7 +47,9 @@ class SourceBodyV1(BaseModel):
 
     model_config = {"frozen": True, "extra": "forbid"}
 
-    kind: str = Field(..., description="Open source class (e.g. 'founders-online', 'book').")
+    kind: str = Field(
+        ..., description="Open source class (e.g. 'founders-online', 'book')."
+    )
     title: str = Field(..., description="Source title / heading.")
     citation: str = Field(..., description="Human-readable citation string.")
     url: str = Field("", description="Canonical URL, if any.")
@@ -65,10 +67,13 @@ class AudioClipBodyV1(BaseModel):
         ..., description="Id of the source-media/song node this clip cuts."
     )
     label: str = Field(..., description="Human label, e.g. 'opening 8 bars'.")
-    rights: ClipRights = Field(..., description="Rights posture (drives render profile).")
+    rights: ClipRights = Field(
+        ..., description="Rights posture (drives render profile)."
+    )
     gain_db: Optional[float] = Field(None, description="Optional gain (dB) when mixed.")
     fade: Optional[tuple[float, float]] = Field(
-        None, description="Optional (fade_in_s, fade_out_s) applied when this clip plays."
+        None,
+        description="Optional (fade_in_s, fade_out_s) applied when this clip plays.",
     )
 
 
@@ -79,7 +84,9 @@ class NarrativeBeatBodyV1(BaseModel):
 
     beat_id: str = Field(..., description="Zero-padded ordering key (e.g. '0007').")
     text: str = Field(..., description="Spoken narration text.")
-    style: Optional[str] = Field(None, description="Optional delivery/voice style hint.")
+    style: Optional[str] = Field(
+        None, description="Optional delivery/voice style hint."
+    )
     draws_on: tuple[str, ...] = Field(
         default_factory=tuple,
         description="Ids this beat is derived from (commentary / source / clip nodes).",

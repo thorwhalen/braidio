@@ -37,8 +37,12 @@ class SourceMediaBodyV1(BaseModel):
 
     model_config = {"frozen": True, "extra": "forbid"}
 
-    label: str = Field(..., description="Human label for the source (e.g. a song title).")
-    asset_id: str = Field(..., description="lacing Artifact asset_id of the source media.")
+    label: str = Field(
+        ..., description="Human label for the source (e.g. a song title)."
+    )
+    asset_id: str = Field(
+        ..., description="lacing Artifact asset_id of the source media."
+    )
     rights: str = Field("owned-local", description="Rights posture of the source.")
 
 
@@ -58,7 +62,9 @@ class NarrationRenderBodyV1(BaseModel):
     model_config = {"frozen": True, "extra": "forbid"}
 
     cache_key: str = Field(..., description="hash(text, voice, model, settings).")
-    artifact_id: Optional[str] = Field(None, description="lacing Artifact asset_id (once rendered).")
+    artifact_id: Optional[str] = Field(
+        None, description="lacing Artifact asset_id (once rendered)."
+    )
     duration_s: float = Field(0.0, description="Rendered duration, seconds.")
 
 
@@ -67,7 +73,9 @@ class SegmentExtractionBodyV1(BaseModel):
 
     model_config = {"frozen": True, "extra": "forbid"}
 
-    cache_key: str = Field(..., description="hash(source asset, start, end, pads, fades).")
+    cache_key: str = Field(
+        ..., description="hash(source asset, start, end, pads, fades)."
+    )
     start_s: float = Field(..., description="Padded extraction start (seconds).")
     end_s: float = Field(..., description="Padded extraction end (seconds).")
     artifact_id: Optional[str] = Field(None, description="lacing Artifact asset_id.")

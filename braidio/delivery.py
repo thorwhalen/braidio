@@ -121,7 +121,12 @@ V3_CREATIVE = Delivery(
 DELIVERIES: dict[str, Delivery] = {
     d.name: d
     for d in (
-        BASELINE, V2_TUNED, V2_AGGRESSIVE, V2_PRESENTER, V2_NARRATOR,
-        V3_NATURAL, V3_CREATIVE,
+        BASELINE,
+        V2_TUNED,
+        V2_AGGRESSIVE,
+        V2_PRESENTER,
+        V2_NARRATOR,
+        V3_NATURAL,
+        V3_CREATIVE,
     )
 }

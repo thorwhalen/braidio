@@ -194,10 +194,14 @@ Expose **two named registers** in braidio's config, each a self-contained bundle
 # Narration register — keep as-is (a single steady reading voice)
 NARRATION = {
     "model_id": "eleven_multilingual_v2",
-    "api": "text_to_speech",              # existing /v1/text-to-speech/{voice_id}
-    "voice_selection": {"use_case": "narration"},   # ONE voice, held constant
-    "voice_settings": {"stability": 0.5, "similarity_boost": 0.8,
-                       "style": 0.0, "use_speaker_boost": True},
+    "api": "text_to_speech",  # existing /v1/text-to-speech/{voice_id}
+    "voice_selection": {"use_case": "narration"},  # ONE voice, held constant
+    "voice_settings": {
+        "stability": 0.5,
+        "similarity_boost": 0.8,
+        "style": 0.0,
+        "use_speaker_boost": True,
+    },
     "scripting": "verbatim passage, complete sentences",
     "timing": {"inter_gap_ms": 600, "overlap_ms": 0},
 }
@@ -205,15 +209,25 @@ NARRATION = {
 # Conversation register — the new one
 CONVERSATION = {
     "model_id": "eleven_v3",
-    "api": "text_to_dialogue",            # NEW /v1/text-to-dialogue (whole exchange, one call)
-    "voice_selection": {"use_case": "conversational", "cast_size": 2},  # 2+ contrasting voices
-    "voice_settings": {"stability": 0.35, "similarity_boost": 0.75,
-                       "style": 0.3, "use_speaker_boost": True},        # v3: Creative/Natural
+    "api": "text_to_dialogue",  # NEW /v1/text-to-dialogue (whole exchange, one call)
+    "voice_selection": {
+        "use_case": "conversational",
+        "cast_size": 2,
+    },  # 2+ contrasting voices
+    "voice_settings": {
+        "stability": 0.35,
+        "similarity_boost": 0.75,
+        "style": 0.3,
+        "use_speaker_boost": True,
+    },  # v3: Creative/Natural
     "scripting": "short turns, contractions, em-dash interruptions, "
-                 "ellipsis hesitations, 1 audio-tag/turn, backchannel micro-turns",
-    "timing": {"inter_gap_ms": 200, "overlap_ms": 250,   # only on interjections
-               "backchannel_bed_db": -10},
-    "chunk_char_limit": 2000,             # Text to Dialogue hard limit → chunk longer exchanges
+    "ellipsis hesitations, 1 audio-tag/turn, backchannel micro-turns",
+    "timing": {
+        "inter_gap_ms": 200,
+        "overlap_ms": 250,  # only on interjections
+        "backchannel_bed_db": -10,
+    },
+    "chunk_char_limit": 2000,  # Text to Dialogue hard limit → chunk longer exchanges
 }
 ```
 

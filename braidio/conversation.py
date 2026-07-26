@@ -25,9 +25,9 @@ from braidio.tts import narrate, text_to_dialogue
 
 # Curated conversational voices (casual, not narrator).
 JESSICA = "cgSgspJ2msm6clMCkdW9"  # playful, bright, warm (F)
-WILL = "bIHbv24MWmeRgasZH58o"     # relaxed optimist (M)
-CHRIS = "iP95p4xoKVk53GoZ742B"    # charming, down-to-earth (M)
-LAURA = "FGY2WhTYpPnrIDTdsKH5"    # enthusiast, quirky attitude (F)
+WILL = "bIHbv24MWmeRgasZH58o"  # relaxed optimist (M)
+CHRIS = "iP95p4xoKVk53GoZ742B"  # charming, down-to-earth (M)
+LAURA = "FGY2WhTYpPnrIDTdsKH5"  # enthusiast, quirky attitude (F)
 
 
 @dataclass(frozen=True)
@@ -80,9 +80,14 @@ def render_dialogue(
     """
     vturns = [(cast.roles[role], text) for role, text in turns]
     audio = text_to_dialogue(
-        vturns, model_id=cast.model_id, settings=cast.settings,
-        seed=seed, output_format=output_format, api_key=api_key,
-        cache=cache, refresh=refresh,
+        vturns,
+        model_id=cast.model_id,
+        settings=cast.settings,
+        seed=seed,
+        output_format=output_format,
+        api_key=api_key,
+        cache=cache,
+        refresh=refresh,
     )
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -91,16 +96,25 @@ def render_dialogue(
         _require_ffmpeg()
         tmp = out.parent / (out.stem + "-tight.mp3")
         subprocess.run(
-            ["ffmpeg", "-y", "-i", str(out),
-             "-af", f"silenceremove=stop_periods=-1:stop_duration={tighten_gaps_s}:stop_threshold=-38dB",
-             str(tmp)],
-            check=True, capture_output=True,
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(out),
+                "-af",
+                f"silenceremove=stop_periods=-1:stop_duration={tighten_gaps_s}:stop_threshold=-38dB",
+                str(tmp),
+            ],
+            check=True,
+            capture_output=True,
         )
         os.replace(tmp, out)
     return out
 
 
-def _concat_with_gaps(parts: list[Path], out: Path, *, gap_s: float, sample_rate: int = 44100) -> Path:
+def _concat_with_gaps(
+    parts: list[Path], out: Path, *, gap_s: float, sample_rate: int = 44100
+) -> Path:
     """Concatenate audio parts with ``gap_s`` seconds of silence between them."""
     from mixing import concatenate_audio
 
@@ -111,9 +125,19 @@ def _concat_with_gaps(parts: list[Path], out: Path, *, gap_s: float, sample_rate
         return out
     sil = out.parent / "_gap.mp3"
     subprocess.run(
-        ["ffmpeg", "-y", "-f", "lavfi", "-i", f"anullsrc=r={sample_rate}:cl=stereo",
-         "-t", f"{gap_s:.3f}", str(sil)],
-        check=True, capture_output=True,
+        [
+            "ffmpeg",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            f"anullsrc=r={sample_rate}:cl=stereo",
+            "-t",
+            f"{gap_s:.3f}",
+            str(sil),
+        ],
+        check=True,
+        capture_output=True,
     )
     interleaved: list[str] = []
     for i, p in enumerate(parts):
@@ -145,9 +169,12 @@ def render_turns_sequential(
     parts: list[Path] = []
     for i, (role, text) in enumerate(turns):
         raw = narrate(
-            text, work / f"turn{i:02d}-{role}.mp3",
+            text,
+            work / f"turn{i:02d}-{role}.mp3",
             api_key=api_key,
-            voice_id=cast.roles[role], model_id=cast.model_id, voice_settings=voice_settings,
+            voice_id=cast.roles[role],
+            model_id=cast.model_id,
+            voice_settings=voice_settings,
         )
         parts.append(raw)
     out = Path(out_path)

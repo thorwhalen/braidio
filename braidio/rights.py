@@ -106,7 +106,9 @@ def plan_production(
                 plan.beats.append(PlannedBeat("clip", beat.reference, i))
             elif beat.published_substitute:
                 plan.beats.append(
-                    PlannedBeat("narration", beat.published_substitute, i, "segment→substitute")
+                    PlannedBeat(
+                        "narration", beat.published_substitute, i, "segment→substitute"
+                    )
                 )
                 plan.substituted.append(beat.label or beat.reference[:40])
             else:
@@ -114,7 +116,9 @@ def plan_production(
         elif isinstance(beat, Narration):
             if profile is Profile.PUBLISHED and beat.published_text is not None:
                 plan.beats.append(
-                    PlannedBeat("narration", beat.published_text, i, "narration→published_text")
+                    PlannedBeat(
+                        "narration", beat.published_text, i, "narration→published_text"
+                    )
                 )
                 plan.substituted.append(f"narration[{i}]")
             else:
@@ -140,7 +144,11 @@ def plan_production(
 
 def _word_ngrams(text: str, n: int) -> set[tuple[str, ...]]:
     words = [w.lower() for w in _WORD_RE.findall(_strip_markup(text))]
-    return {tuple(words[i : i + n]) for i in range(len(words) - n + 1)} if len(words) >= n else set()
+    return (
+        {tuple(words[i : i + n]) for i in range(len(words) - n + 1)}
+        if len(words) >= n
+        else set()
+    )
 
 
 def find_verbatim_text(
@@ -177,7 +185,9 @@ def content_violations(
     violations: list[str] = []
     for b in plan.beats:
         if b.kind == "clip":
-            violations.append(f"beat {b.from_index}: segment audio present in published cut")
+            violations.append(
+                f"beat {b.from_index}: segment audio present in published cut"
+            )
         elif b.kind in ("narration", "dialogue"):
             leaks = find_verbatim_text(b.content, forbidden, min_words=min_words)
             if leaks:

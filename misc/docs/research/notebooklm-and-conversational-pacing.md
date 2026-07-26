@@ -107,16 +107,18 @@ client = ElevenLabs(api_key=...)
 audio = client.text_to_dialogue.convert(
     model_id="eleven_v3",
     settings=ModelSettingsResponseModel(
-        stability=0.5,        # Natural. Drop to ~0.4 for livelier hosts.
-                              # Do NOT approach 0.0 (rushed) or 1.0 (robotic).
+        stability=0.5,  # Natural. Drop to ~0.4 for livelier hosts.
+        # Do NOT approach 0.0 (rushed) or 1.0 (robotic).
         # speed=...           # OMIT — unsupported on v3.
     ),
-    seed=12345,               # pin for reproducible pacing while tuning scripts
+    seed=12345,  # pin for reproducible pacing while tuning scripts
     apply_text_normalization="auto",
     output_format="mp3_44100_128",
-    inputs=[                  # ALL 8 turns here, ONE call — never per-turn
-        DialogueInput(voice_id=BRIAN,   text="So — [chuckles] you actually tried it?"),
-        DialogueInput(voice_id=CASSIDY, text="I did... [slowly] and it was NOT what I expected."),
+    inputs=[  # ALL 8 turns here, ONE call — never per-turn
+        DialogueInput(voice_id=BRIAN, text="So — [chuckles] you actually tried it?"),
+        DialogueInput(
+            voice_id=CASSIDY, text="I did... [slowly] and it was NOT what I expected."
+        ),
         # ... remaining turns ...
     ],
 )

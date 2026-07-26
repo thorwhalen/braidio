@@ -36,7 +36,9 @@ def duration_s(path: str | Path) -> float:
     _require_ffmpeg()
     r = subprocess.run(
         ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", str(path)],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     )
     return float(json.loads(r.stdout)["format"]["duration"])
 
@@ -65,11 +67,21 @@ def extract_padded(
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
-        ["ffmpeg", "-y", "-ss", f"{start:.3f}", "-i", str(asset_path),
-         "-t", f"{dur:.3f}",
-         "-af", f"afade=t=in:st=0:d={fade_in_s},afade=t=out:st={fo_start:.3f}:d={fade_out_s}",
-         str(out)],
-        check=True, capture_output=True,
+        [
+            "ffmpeg",
+            "-y",
+            "-ss",
+            f"{start:.3f}",
+            "-i",
+            str(asset_path),
+            "-t",
+            f"{dur:.3f}",
+            "-af",
+            f"afade=t=in:st=0:d={fade_in_s},afade=t=out:st={fo_start:.3f}:d={fade_out_s}",
+            str(out),
+        ],
+        check=True,
+        capture_output=True,
     )
     return out
 
@@ -113,7 +125,9 @@ def layout_placed(
     prev_seq_kind: str | None = None
     for i, kind in enumerate(kinds):
         if placements[i] == "under":
-            starts[i] = cursor  # overlay the following sequential part; cursor unchanged
+            starts[i] = (
+                cursor  # overlay the following sequential part; cursor unchanged
+            )
             continue
         if prev_seq_kind is None:
             start = 0.0
@@ -137,7 +151,9 @@ def layout_starts(
     """Start offset (s) of each part (all sequential). Thin wrapper over
     :func:`layout_placed` — kept for callers that don't use placement."""
     return layout_placed(
-        kinds, durs, ["sequential"] * len(kinds),
+        kinds,
+        durs,
+        ["sequential"] * len(kinds),
         clip_edge_overlap_s=clip_edge_overlap_s,
         narration_crossfade_s=narration_crossfade_s,
     )
@@ -169,7 +185,9 @@ def weave_timeline(
 
     durs = [duration_s(it.path) for it in items]
     starts = layout_placed(
-        [it.kind for it in items], durs, [it.placement for it in items],
+        [it.kind for it in items],
+        durs,
+        [it.placement for it in items],
         clip_edge_overlap_s=clip_edge_overlap_s,
         narration_crossfade_s=narration_crossfade_s,
     )
@@ -187,9 +205,7 @@ def weave_timeline(
         lbl = f"a{i}"
         # normalize every input to stereo @ sample_rate so amix keeps stereo
         # (narration is mono, song clips are stereo) — else it collapses to mono.
-        chain = (
-            f"[{i}:a]aformat=sample_rates={sample_rate}:channel_layouts=stereo"
-        )
+        chain = f"[{i}:a]aformat=sample_rates={sample_rate}:channel_layouts=stereo"
         # ducked underlay: attenuate before delaying so it sits beneath the talk.
         if it.placement == "under" and it.duck_db:
             chain += f",volume={it.duck_db}dB"
@@ -202,7 +218,9 @@ def weave_timeline(
         from braidio.music import prepare_bed
 
         total_s = max(s + d for s, d in zip(starts, durs))
-        bed_path = prepare_bed(bed, total_s, out.parent / f"_bed_{out.stem}.mp3", sample_rate=sample_rate)
+        bed_path = prepare_bed(
+            bed, total_s, out.parent / f"_bed_{out.stem}.mp3", sample_rate=sample_rate
+        )
         idx = len(items)
         inputs += ["-i", str(bed_path)]
         lead_ms = int(round(bed.lead_in_s * 1000))
@@ -214,16 +232,29 @@ def weave_timeline(
 
     n_inputs = len(labels)
     mix = (
-        "".join(labels)
-        + f"amix=inputs={n_inputs}:normalize=0:dropout_transition=0[m]"
+        "".join(labels) + f"amix=inputs={n_inputs}:normalize=0:dropout_transition=0[m]"
     )
     norm = f"[m]loudnorm=I={target_lufs}:TP={true_peak}:LRA=11[out]"
     filtergraph = ";".join(filters + [mix, norm])
 
     subprocess.run(
-        ["ffmpeg", "-y", *inputs, "-filter_complex", filtergraph,
-         "-map", "[out]", "-ar", str(sample_rate), "-ac", "2", "-b:a", "192k",
-         str(out)],
-        check=True, capture_output=True,
+        [
+            "ffmpeg",
+            "-y",
+            *inputs,
+            "-filter_complex",
+            filtergraph,
+            "-map",
+            "[out]",
+            "-ar",
+            str(sample_rate),
+            "-ac",
+            "2",
+            "-b:a",
+            "192k",
+            str(out),
+        ],
+        check=True,
+        capture_output=True,
     )
     return out

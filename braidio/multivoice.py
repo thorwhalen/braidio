@@ -122,14 +122,26 @@ def group_turns(
     return turns
 
 
-def _loudnorm(src: Path, dst: Path, *, target_lufs: float = -16.0, true_peak: float = -1.5) -> Path:
+def _loudnorm(
+    src: Path, dst: Path, *, target_lufs: float = -16.0, true_peak: float = -1.5
+) -> Path:
     if shutil.which("ffmpeg") is None:
         raise RuntimeError("ffmpeg not found on PATH.")
     dst.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
-        ["ffmpeg", "-y", "-i", str(src), "-af",
-         f"loudnorm=I={target_lufs}:TP={true_peak}:LRA=11", "-ar", "44100", str(dst)],
-        check=True, capture_output=True,
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(src),
+            "-af",
+            f"loudnorm=I={target_lufs}:TP={true_peak}:LRA=11",
+            "-ar",
+            "44100",
+            str(dst),
+        ],
+        check=True,
+        capture_output=True,
     )
     return dst
 
@@ -192,7 +204,9 @@ def render_multivoice(
     if gap_s > 0:
         _concat_with_gaps(parts, out, gap_s=gap_s)
     else:
-        concatenate_audio(*[str(p) for p in parts], output=str(out), crossfade=crossfade_s)
+        concatenate_audio(
+            *[str(p) for p in parts], output=str(out), crossfade=crossfade_s
+        )
     return list(zip(voices, turns))
 
 
@@ -207,9 +221,19 @@ def _concat_with_gaps(parts: list[Path], out: Path, *, gap_s: float) -> Path:
     # Build via ffmpeg: create a silence file and interleave.
     sil = out.parent / "_gap.mp3"
     subprocess.run(
-        ["ffmpeg", "-y", "-f", "lavfi", "-i",
-         f"anullsrc=r=44100:cl=stereo", "-t", f"{gap_s:.3f}", str(sil)],
-        check=True, capture_output=True,
+        [
+            "ffmpeg",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            f"anullsrc=r=44100:cl=stereo",
+            "-t",
+            f"{gap_s:.3f}",
+            str(sil),
+        ],
+        check=True,
+        capture_output=True,
     )
     interleaved: list[str] = []
     for i, p in enumerate(pieces):

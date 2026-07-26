@@ -39,12 +39,12 @@ from braidio.tts import DEFAULT_VOICE_ID
 from braidio.weave_config import WeaveConfig
 
 # --- extra role voices (from the curated premade pools, distinct timbres) -----
-GEORGE = DEFAULT_VOICE_ID            # warm, captivating storyteller (M) — narrator
-MATILDA = "XrExE9yKIg1WjnnlVkGX"     # professional (F) — neutral moderator
-SARAH = "EXAVITQu4vr4xnSDxMaL"       # mature, reassuring (F)
-CHARLIE = "IKne3meq5aSn9XLyUdCD"     # deep, energetic (M, Australian)
-ERIC = "cjVigY5qzO86Huf0OWal"        # smooth, trustworthy (M)
-BILL = "pqHfZKP75CvOlQylNhV4"        # wise, mature (M)
+GEORGE = DEFAULT_VOICE_ID  # warm, captivating storyteller (M) — narrator
+MATILDA = "XrExE9yKIg1WjnnlVkGX"  # professional (F) — neutral moderator
+SARAH = "EXAVITQu4vr4xnSDxMaL"  # mature, reassuring (F)
+CHARLIE = "IKne3meq5aSn9XLyUdCD"  # deep, energetic (M, Australian)
+ERIC = "cjVigY5qzO86Huf0OWal"  # smooth, trustworthy (M)
+BILL = "pqHfZKP75CvOlQylNhV4"  # wise, mature (M)
 
 
 @dataclass(frozen=True)
@@ -62,13 +62,17 @@ class Format:
     aka: tuple[str, ...] = ()  # alternate names / exemplar shows
 
     # --- rendered defaults --------------------------------------------------
-    cast: ConversationCast | None = None  # Dialogue roles→voices; None = no dialogue spine
+    cast: ConversationCast | None = (
+        None  # Dialogue roles→voices; None = no dialogue spine
+    )
     narration_voice: str | None = None  # default voice for Narration beats
     narration_delivery: Delivery = V2_PRESENTER  # delivery for Narration beats
     weave: WeaveConfig = field(default_factory=WeaveConfig)
 
     # --- authoring guidance (documented; render support varies) -------------
-    roles: Mapping[str, str] = field(default_factory=dict)  # role → semantic (narrator/host/guest/…)
+    roles: Mapping[str, str] = field(
+        default_factory=dict
+    )  # role → semantic (narrator/host/guest/…)
     clip_placement: str = "before"  # recommended default SegmentBeat.placement (renders; before|under|after)
     music_bed: str = "light"  # continuous | light | sparse | none (authoring / roadmap)
     scripting: str = ""  # how to author a Script for this format (authoring)
@@ -159,9 +163,16 @@ SOLO_EXPLAINER = Format(
 DEEP_DIVE = Format(
     id="deep_dive",
     name='Two-Host Conversation ("Deep Dive")',
-    aka=("co-hosted chat", "two-host teaching dialogue", "Switched on Pop", "NotebookLM Deep Dive"),
+    aka=(
+        "co-hosted chat",
+        "two-host teaching dialogue",
+        "Switched on Pop",
+        "NotebookLM Deep Dive",
+    ),
     summary="Two complementary hosts talk it through; one teaches, one probes.",
-    cast=ConversationCast(roles={"host_a": JESSICA, "host_b": CHRIS}, settings={"stability": 0.45}),
+    cast=ConversationCast(
+        roles={"host_a": JESSICA, "host_b": CHRIS}, settings={"stability": 0.45}
+    ),
     narration_voice=GEORGE,  # for optional bridges between segments
     narration_delivery=V2_NARRATOR,
     weave=WeaveConfig(),
@@ -181,11 +192,16 @@ INTERVIEW = Format(
     name="Interview (Host + Guest)",
     aka=("host + subject", "Q&A"),
     summary="Host questions a guest to elicit their first-person account.",
-    cast=ConversationCast(roles={"host": JESSICA, "guest": CHRIS}, settings={"stability": 0.45}),
+    cast=ConversationCast(
+        roles={"host": JESSICA, "guest": CHRIS}, settings={"stability": 0.45}
+    ),
     narration_voice=GEORGE,  # optional chapter bridges only
     narration_delivery=V2_NARRATOR,
     weave=WeaveConfig(),
-    roles={"host": "curious interviewer", "guest": "first-person authority (the center)"},
+    roles={
+        "host": "curious interviewer",
+        "guest": "first-person authority (the center)",
+    },
     clip_placement="before",
     music_bed="light",
     scripting=(
@@ -221,7 +237,12 @@ PANEL = Format(
     aka=("roundtable", "Pop Culture Happy Hour"),
     summary="A moderator routes a group of distinct voices around a shared topic.",
     cast=ConversationCast(
-        roles={"moderator": MATILDA, "panelist_1": CHARLIE, "panelist_2": SARAH, "panelist_3": ERIC},
+        roles={
+            "moderator": MATILDA,
+            "panelist_1": CHARLIE,
+            "panelist_2": SARAH,
+            "panelist_3": ERIC,
+        },
         settings={"stability": 0.45},
     ),
     narration_voice=GEORGE,
@@ -229,7 +250,8 @@ PANEL = Format(
     weave=WeaveConfig(),
     roles={
         "moderator": "neutral routing voice (spine + traffic control)",
-        "panelist_1": "distinct viewpoint", "panelist_2": "distinct viewpoint",
+        "panelist_1": "distinct viewpoint",
+        "panelist_2": "distinct viewpoint",
         "panelist_3": "distinct viewpoint",
     },
     clip_placement="before",
@@ -255,7 +277,8 @@ DEBATE = Format(
     weave=WeaveConfig(),
     roles={
         "moderator": "neutral; frames + routes, never argues",
-        "proposition": "advocate A", "opposition": "advocate B",
+        "proposition": "advocate A",
+        "opposition": "advocate B",
     },
     clip_placement="before",  # evidence entered by a side, then argued (clips may be re-used across sides)
     music_bed="sparse",  # phase stings (open / rebuttal / close) keep structure legible
@@ -272,13 +295,16 @@ DOCUMENTARY_VO = Format(
     name='Documentary Voice-Over (expository "Voice of God")',
     aka=("expository documentary", "This American Life", "99% Invisible"),
     summary="An authoritative narrator drives; interviews, clips and actuality illustrate beneath.",
-    cast=ConversationCast(roles={"guest": CHRIS, "expert": LAURA}, settings={"stability": 0.45}),
+    cast=ConversationCast(
+        roles={"guest": CHRIS, "expert": LAURA}, settings={"stability": 0.45}
+    ),
     narration_voice=GEORGE,  # omniscient narrator — the top, driest layer
     narration_delivery=V2_NARRATOR,
     weave=WeaveConfig(min_turn=1, max_turn=3),
     roles={
         "narrator": "omniscient, authoritative — the spine, top layer",
-        "guest": "first-person testimony", "expert": "borrowed-credibility interpretation",
+        "guest": "first-person testimony",
+        "expert": "borrowed-credibility interpretation",
     },
     clip_placement="before",  # narration states → clip/interview demonstrates → narration bridges
     music_bed="continuous",  # scored; announce scoring early; stings/swells mark scenes
@@ -295,6 +321,12 @@ DOCUMENTARY_VO = Format(
 FORMATS: dict[str, Format] = {
     f.id: f
     for f in (
-        SOLO_EXPLAINER, DEEP_DIVE, INTERVIEW, SONG_EXPLODER, PANEL, DEBATE, DOCUMENTARY_VO,
+        SOLO_EXPLAINER,
+        DEEP_DIVE,
+        INTERVIEW,
+        SONG_EXPLODER,
+        PANEL,
+        DEBATE,
+        DOCUMENTARY_VO,
     )
 }

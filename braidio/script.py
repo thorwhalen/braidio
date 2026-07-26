@@ -37,7 +37,9 @@ class Narration:
     style: str | None = None  # optional delivery hint (e.g. "book-passage")
     published_text: str | None = None
     lead_gap_s: float = 0.0
-    voice: str | None = None  # per-beat voice override (e.g. presenter vs book-narrator)
+    voice: str | None = (
+        None  # per-beat voice override (e.g. presenter vs book-narrator)
+    )
     voice_settings: dict | None = None  # per-beat delivery override (e.g. V2_NARRATOR)
 
 

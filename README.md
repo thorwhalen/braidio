@@ -83,15 +83,26 @@ from braidio import Script, Dialogue, Narration, SegmentBeat, WeaveConfig
 from braidio.conversation import ConversationCast, JESSICA, CHRIS
 from braidio import V2_NARRATOR, render_production
 
-script = Script(title="…", id_slug="01", beats=[
-    Dialogue((("A", "First thing that gets me…"), ("B", "right — but isn't that…"))),
-    SegmentBeat("the lyric being discussed", label="hook"),
-    Narration("Here's how the book tells it —",
-               voice_settings=V2_NARRATOR.voice_settings),  # graver, per-beat
-])
-render_production(script, source=my_source,
-                  cast=ConversationCast(roles={"A": JESSICA, "B": CHRIS}),
-                  config=WeaveConfig(), out_path="out.mp3")
+script = Script(
+    title="…",
+    id_slug="01",
+    beats=[
+        Dialogue(
+            (("A", "First thing that gets me…"), ("B", "right — but isn't that…"))
+        ),
+        SegmentBeat("the lyric being discussed", label="hook"),
+        Narration(
+            "Here's how the book tells it —", voice_settings=V2_NARRATOR.voice_settings
+        ),  # graver, per-beat
+    ],
+)
+render_production(
+    script,
+    source=my_source,
+    cast=ConversationCast(roles={"A": JESSICA, "B": CHRIS}),
+    config=WeaveConfig(),
+    out_path="out.mp3",
+)
 ```
 
 ## What it deliberately does *not* do

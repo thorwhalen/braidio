@@ -26,10 +26,7 @@ _KNOWN_VOICES.setdefault(
 
 
 def _pool_from_config(config: WeaveConfig) -> list[Voice]:
-    return [
-        _KNOWN_VOICES.get(vid, Voice(vid, vid[:6], "?"))
-        for vid in config.voices
-    ]
+    return [_KNOWN_VOICES.get(vid, Voice(vid, vid[:6], "?")) for vid in config.voices]
 
 
 def compose_narration(

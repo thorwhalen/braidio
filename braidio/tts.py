@@ -147,7 +147,9 @@ def text_to_dialogue(
     from elevenlabs.client import ElevenLabs
 
     client = ElevenLabs(
-        api_key=api_key or os.environ.get("ELEVENLABS_API_KEY") or os.environ.get("ELEVEN_API_KEY")
+        api_key=api_key
+        or os.environ.get("ELEVENLABS_API_KEY")
+        or os.environ.get("ELEVEN_API_KEY")
     )
     kwargs = {"inputs": inputs, "model_id": model_id, "output_format": output_format}
     if settings is not None:

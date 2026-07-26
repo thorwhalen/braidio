@@ -231,9 +231,16 @@ def cut_quote(
     fade_out_start = max(0.0, dur - fade_s)
     subprocess.run(
         [
-            "ffmpeg", "-y", "-ss", f"{start:.3f}", "-i", str(audio_path),
-            "-t", f"{dur:.3f}",
-            "-af", f"afade=t=in:st=0:d={fade_s},afade=t=out:st={fade_out_start:.3f}:d={fade_s}",
+            "ffmpeg",
+            "-y",
+            "-ss",
+            f"{start:.3f}",
+            "-i",
+            str(audio_path),
+            "-t",
+            f"{dur:.3f}",
+            "-af",
+            f"afade=t=in:st=0:d={fade_s},afade=t=out:st={fade_out_start:.3f}:d={fade_s}",
             str(out),
         ],
         check=True,

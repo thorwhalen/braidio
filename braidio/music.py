@@ -67,7 +67,9 @@ def _require_ffmpeg() -> None:
         raise RuntimeError("ffmpeg not found on PATH (brew install ffmpeg).")
 
 
-def prepare_bed(bed: MusicBed, target_s: float, out_path: str | Path, *, sample_rate: int = 44100) -> Path:
+def prepare_bed(
+    bed: MusicBed, target_s: float, out_path: str | Path, *, sample_rate: int = 44100
+) -> Path:
     """Render ``bed`` to a ready-to-mix underscore of length ``target_s - lead_in_s``.
 
     Seeks to ``bed.start_s`` (looping if needed), trims to the covered length, and
@@ -91,8 +93,19 @@ def prepare_bed(bed: MusicBed, target_s: float, out_path: str | Path, *, sample_
         f"aformat=sample_rates={sample_rate}:channel_layouts=stereo"
     )
     subprocess.run(
-        ["ffmpeg", "-y", *pre_input, "-i", str(bed.asset_path), "-t", f"{length:.3f}",
-         "-af", af, str(out)],
-        check=True, capture_output=True,
+        [
+            "ffmpeg",
+            "-y",
+            *pre_input,
+            "-i",
+            str(bed.asset_path),
+            "-t",
+            f"{length:.3f}",
+            "-af",
+            af,
+            str(out),
+        ],
+        check=True,
+        capture_output=True,
     )
     return out

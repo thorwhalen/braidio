@@ -49,7 +49,8 @@ def _lead_gap(src: Path, dst: Path, *, gap_s: float) -> Path:
     ms = int(round(gap_s * 1000))
     subprocess.run(
         ["ffmpeg", "-y", "-i", str(src), "-af", f"adelay={ms}:all=1", str(dst)],
-        check=True, capture_output=True,
+        check=True,
+        capture_output=True,
     )
     return dst
 
@@ -58,10 +59,19 @@ def _loudnorm(src: Path, dst: Path, *, target_lufs: float = _DEFAULT_LUFS) -> Pa
     _require_ffmpeg()
     dst.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
-        ["ffmpeg", "-y", "-i", str(src),
-         "-af", f"loudnorm=I={target_lufs}:TP={_TRUE_PEAK}:LRA=11",
-         "-ar", "44100", str(dst)],
-        check=True, capture_output=True,
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(src),
+            "-af",
+            f"loudnorm=I={target_lufs}:TP={_TRUE_PEAK}:LRA=11",
+            "-ar",
+            "44100",
+            str(dst),
+        ],
+        check=True,
+        capture_output=True,
     )
     return dst
 
@@ -119,8 +129,10 @@ def render_production(
     # extraction pads: from config when present, else small defaults
     if config is not None:
         pre, post, fi, fo = (
-            config.clip_pre_roll_s, config.clip_post_roll_s,
-            config.clip_fade_in_s, config.clip_fade_out_s,
+            config.clip_pre_roll_s,
+            config.clip_post_roll_s,
+            config.clip_fade_in_s,
+            config.clip_fade_out_s,
         )
     else:
         pre, post, fi, fo = 0.15, 0.35, 0.04, 0.04
@@ -132,10 +144,13 @@ def render_production(
         if pb.kind == "narration":
             orig = script.beats[pb.from_index]
             beat_voice = getattr(orig, "voice", None) or voice_id  # per-beat override
-            beat_settings = getattr(orig, "voice_settings", None) or delivery.voice_settings
+            beat_settings = (
+                getattr(orig, "voice_settings", None) or delivery.voice_settings
+            )
             raw = narrate(
                 pb.content,
-                Path(tts_dir) / f"{script.id_slug}-{profile.value}-{delivery.name}-beat{i:02d}.mp3",
+                Path(tts_dir)
+                / f"{script.id_slug}-{profile.value}-{delivery.name}-beat{i:02d}.mp3",
                 api_key=api_key,
                 voice_id=beat_voice,
                 model_id=delivery.model_id,
@@ -144,12 +159,16 @@ def render_production(
             # breathing room before a register change (Narration.lead_gap_s)
             gap = getattr(orig, "lead_gap_s", 0.0)
             if gap and gap > 0:
-                raw = _lead_gap(raw, Path(tts_dir) / f"{script.id_slug}-lead{i:02d}.mp3", gap_s=gap)
+                raw = _lead_gap(
+                    raw, Path(tts_dir) / f"{script.id_slug}-lead{i:02d}.mp3", gap_s=gap
+                )
         elif pb.kind == "dialogue":
             raw = render_dialogue(
-                list(pb.turns), cast,
+                list(pb.turns),
+                cast,
                 api_key=api_key,
-                out_path=Path(tts_dir) / f"{script.id_slug}-{profile.value}-dlg{i:02d}.mp3",
+                out_path=Path(tts_dir)
+                / f"{script.id_slug}-{profile.value}-dlg{i:02d}.mp3",
             )
         else:  # segment
             rs = source.resolve(pb.content)
@@ -157,37 +176,53 @@ def render_production(
                 raise LookupError(f"segment did not resolve: {pb.content[:50]!r}")
             raw = Path(clips_dir) / f"{script.id_slug}-seg{i:02d}.mp3"
             extract_padded(
-                rs.asset_path, rs.start_s, rs.end_s, raw,
-                pre_roll_s=pre, post_roll_s=post, fade_in_s=fi, fade_out_s=fo,
+                rs.asset_path,
+                rs.start_s,
+                rs.end_s,
+                raw,
+                pre_roll_s=pre,
+                post_roll_s=post,
+                fade_in_s=fi,
+                fade_out_s=fo,
             )
         parts.append(
             _loudnorm(raw, work / f"part{i:02d}.mp3", target_lufs=target_lufs)
-            if normalize else raw
+            if normalize
+            else raw
         )
         # dialogue + narration are spoken → treated as "narration" on the timeline
         kinds.append("clip" if pb.kind == "clip" else "narration")
         # a "under" clip becomes a ducked underlay; "before"/"after" play clean
         seg_place = getattr(script.beats[pb.from_index], "placement", "before")
-        placements.append("under" if (pb.kind == "clip" and seg_place == "under") else "sequential")
+        placements.append(
+            "under" if (pb.kind == "clip" and seg_place == "under") else "sequential"
+        )
 
     has_under = "under" in placements
     edge_overlap = config.clip_edge_overlap_s if config is not None else 0.0
     crossfade = config.crossfade_s if config is not None else crossfade_s
     # a music bed also needs the mix path (even for narration-only productions)
-    woven = music_bed is not None or ("clip" in kinds and (edge_overlap > 0 or has_under))
+    woven = music_bed is not None or (
+        "clip" in kinds and (edge_overlap > 0 or has_under)
+    )
 
     if woven:
         items = [
-            TimelineItem(k, str(p), placement=pl, duck_db=(duck_db if pl == "under" else 0.0))
+            TimelineItem(
+                k, str(p), placement=pl, duck_db=(duck_db if pl == "under" else 0.0)
+            )
             for k, p, pl in zip(kinds, parts, placements)
         ]
         weave_timeline(
-            items, out,
+            items,
+            out,
             clip_edge_overlap_s=edge_overlap,
             narration_crossfade_s=crossfade,
             target_lufs=target_lufs,
             bed=music_bed,
         )
     else:
-        concatenate_audio(*[str(p) for p in parts], output=str(out), crossfade=crossfade_s)
+        concatenate_audio(
+            *[str(p) for p in parts], output=str(out), crossfade=crossfade_s
+        )
     return out

@@ -54,7 +54,9 @@ def _node(store, tier: str, uri: str, body: dict, *, derived_from=()) -> UUID:
     return aid
 
 
-def record_render(store, *, weave_config: dict, beats: list[dict], profile: str = "personal") -> dict:
+def record_render(
+    store, *, weave_config: dict, beats: list[dict], profile: str = "personal"
+) -> dict:
     """Write the provenance graph for one render into ``store``.
 
     ``beats`` is an ordered list of dicts, each either::
@@ -74,30 +76,55 @@ def record_render(store, *, weave_config: dict, beats: list[dict], profile: str 
         src = b["source_id"]
         if b["kind"] == "narration":
             va = _node(
-                store, "voice-assignments", VOICE_ASSIGNMENT_V1,
-                {"voice_id": b.get("voice_id", ""), "pool_label": b.get("pool_label", "single"),
-                 "seed": int(b.get("seed", 0))},
-                derived_from=[src, cfg],  # depends on the beat AND the config (pool/seed)
+                store,
+                "voice-assignments",
+                VOICE_ASSIGNMENT_V1,
+                {
+                    "voice_id": b.get("voice_id", ""),
+                    "pool_label": b.get("pool_label", "single"),
+                    "seed": int(b.get("seed", 0)),
+                },
+                derived_from=[
+                    src,
+                    cfg,
+                ],  # depends on the beat AND the config (pool/seed)
             )
             nid = _node(
-                store, "narration-renders", NARRATION_RENDER_V1,
-                {"cache_key": b["cache_key"], "artifact_id": b.get("artifact_id"),
-                 "duration_s": float(b.get("duration_s", 0.0))},
+                store,
+                "narration-renders",
+                NARRATION_RENDER_V1,
+                {
+                    "cache_key": b["cache_key"],
+                    "artifact_id": b.get("artifact_id"),
+                    "duration_s": float(b.get("duration_s", 0.0)),
+                },
                 derived_from=[src, va, cfg],
             )
             members.append(nid)
         else:  # segment
             sid = _node(
-                store, "segment-extractions", SEGMENT_EXTRACTION_V1,
-                {"cache_key": b["cache_key"], "start_s": float(b.get("start_s", 0.0)),
-                 "end_s": float(b.get("end_s", 1.0)), "artifact_id": b.get("artifact_id")},
+                store,
+                "segment-extractions",
+                SEGMENT_EXTRACTION_V1,
+                {
+                    "cache_key": b["cache_key"],
+                    "start_s": float(b.get("start_s", 0.0)),
+                    "end_s": float(b.get("end_s", 1.0)),
+                    "artifact_id": b.get("artifact_id"),
+                },
                 derived_from=[src, cfg],
             )
             members.append(sid)
     episode = _node(
-        store, "episode-renders", EPISODE_RENDER_V1,
-        {"profile": profile, "ordered_member_ids": tuple(str(m) for m in members),
-         "artifact_id": None, "duration_s": 0.0},
+        store,
+        "episode-renders",
+        EPISODE_RENDER_V1,
+        {
+            "profile": profile,
+            "ordered_member_ids": tuple(str(m) for m in members),
+            "artifact_id": None,
+            "duration_s": 0.0,
+        },
         derived_from=[*members, cfg],
     )
     return {"config": cfg, "members": members, "episode": episode}

@@ -101,17 +101,13 @@ class WeaveConfig:
 _POOL_4_IDS = tuple(v.id for v in POOL_4)
 _POOL_MANY_IDS = tuple(v.id for v in POOL_MANY)
 
-SINGLE_NARRATOR = WeaveConfig(
-    voices=(DEFAULT_VOICE_ID,), pool_label="single"
-)
+SINGLE_NARRATOR = WeaveConfig(voices=(DEFAULT_VOICE_ID,), pool_label="single")
 
 DOCUMENTARY_LYRICS = WeaveConfig(  # the research default: one narrator, tight turns
     voices=(DEFAULT_VOICE_ID,), pool_label="single", min_turn=1, max_turn=3
 )
 
-PANEL_4 = WeaveConfig(
-    voices=_POOL_4_IDS, pool_label="panel-4", min_turn=2, max_turn=4
-)
+PANEL_4 = WeaveConfig(voices=_POOL_4_IDS, pool_label="panel-4", min_turn=2, max_turn=4)
 
 INTERVIEW_MANY = WeaveConfig(  # Hamilton's chosen default
     voices=_POOL_MANY_IDS, pool_label="interview-many", min_turn=2, max_turn=4
