@@ -57,6 +57,7 @@ def render_dialogue(
     turns: list[tuple[str, str]],
     cast: ConversationCast = DEFAULT_CAST,
     *,
+    api_key: str | None = None,
     out_path: str | Path,
     output_format: str = "mp3_44100_128",
     seed: int | None = None,
@@ -69,6 +70,10 @@ def render_dialogue(
     Cached by default (see :func:`braidio.tts.text_to_dialogue`): an unchanged
     exchange renders instantly on re-run. ``refresh=True`` re-rolls the take.
 
+    ``api_key`` is an optional per-request ElevenLabs key threaded to
+    :func:`braidio.tts.text_to_dialogue`; ``None`` (default) keeps the
+    ``$ELEVENLABS_API_KEY`` fallback.
+
     ``tighten_gaps_s`` (>0) applies the "R-tight" pass: ffmpeg trims only the
     over-long dead gaps (silences ≥ this many seconds) that make v3 dialogue
     feel draggy, while leaving natural short pauses. Set 0 to keep the raw take.
@@ -76,7 +81,8 @@ def render_dialogue(
     vturns = [(cast.roles[role], text) for role, text in turns]
     audio = text_to_dialogue(
         vturns, model_id=cast.model_id, settings=cast.settings,
-        seed=seed, output_format=output_format, cache=cache, refresh=refresh,
+        seed=seed, output_format=output_format, api_key=api_key,
+        cache=cache, refresh=refresh,
     )
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -122,6 +128,7 @@ def render_turns_sequential(
     turns: list[tuple[str, str]],
     cast: ConversationCast = DEFAULT_CAST,
     *,
+    api_key: str | None = None,
     out_path: str | Path,
     work_dir: str | Path = "data/tts/conversation",
     voice_settings: dict | None = None,
@@ -129,13 +136,17 @@ def render_turns_sequential(
 ) -> Path:
     """Per-line baseline: synthesize each turn alone (its role's voice) and
     concatenate with ``gap_s`` gaps. Prosody is NOT shared across turns — this is
-    what tends to sound like alternating monologues (the thing to beat)."""
+    what tends to sound like alternating monologues (the thing to beat).
+
+    ``api_key`` is threaded to :func:`braidio.tts.narrate`; ``None`` (default)
+    keeps the ``$ELEVENLABS_API_KEY`` fallback."""
     work = Path(work_dir)
     work.mkdir(parents=True, exist_ok=True)
     parts: list[Path] = []
     for i, (role, text) in enumerate(turns):
         raw = narrate(
             text, work / f"turn{i:02d}-{role}.mp3",
+            api_key=api_key,
             voice_id=cast.roles[role], model_id=cast.model_id, voice_settings=voice_settings,
         )
         parts.append(raw)

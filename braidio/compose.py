@@ -37,6 +37,7 @@ def compose_narration(
     config: WeaveConfig,
     *,
     out_path: str | Path,
+    api_key: str | None = None,
     work_dir: str | Path = "data/tts/compose",
 ) -> list[tuple[Voice, str]]:
     """Render ``segments`` under ``config`` → ``out_path``.
@@ -44,11 +45,16 @@ def compose_narration(
     Single-voice and multi-voice go through the same turn-based path (a single
     voice is just a one-voice pool). Returns the ``(voice, turn_text)``
     assignment for reporting / provenance.
+
+    ``api_key`` is an optional per-request ElevenLabs key threaded to
+    :func:`braidio.multivoice.render_multivoice` (and thence every synthesized
+    turn); ``None`` (default) keeps the ``$ELEVENLABS_API_KEY`` fallback.
     """
     return render_multivoice(
         segments,
         _pool_from_config(config),
         out_path=out_path,
+        api_key=api_key,
         work_dir=work_dir,
         seed=config.voice_seed,
         min_turn=config.min_turn,
