@@ -139,6 +139,7 @@ def render_multivoice(
     pool: list[Voice],
     *,
     out_path: str | Path,
+    api_key: str | None = None,
     work_dir: str | Path = "data/tts/multivoice",
     seed: int = 7,
     min_turn: int = 2,
@@ -159,6 +160,10 @@ def render_multivoice(
     with a jittered speed even within a speaker. ``gap_s`` inserts silence
     between turns (0 = none). Returns ``[(voice, turn_text), …]`` for reporting.
 
+    ``api_key`` is an optional per-request ElevenLabs key threaded to every
+    :func:`braidio.tts.narrate` call; ``None`` (default) keeps the
+    ``$ELEVENLABS_API_KEY`` fallback.
+
     NOTE: overlapping/interrupting speakers and clip ducking are separate,
     upcoming parameters (tracked as issues) — this renders turns sequentially.
     """
@@ -176,6 +181,7 @@ def render_multivoice(
         raw = narrate(
             turn,
             work / f"turn{i:03d}-{v.name}.mp3",
+            api_key=api_key,
             voice_id=v.id,
             model_id=model_id,
             voice_settings={**settings, "speed": speed},

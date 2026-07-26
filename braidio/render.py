@@ -70,6 +70,7 @@ def render_production(
     script: Script,
     *,
     source: SegmentSource,
+    api_key: str | None = None,
     config: WeaveConfig | None = None,
     profile: Profile = Profile.PERSONAL,
     rights: RightsPolicy | None = None,
@@ -92,6 +93,14 @@ def render_production(
     are concatenated. ``rights`` (if given) sets which segment rights are
     publishable. ``music_bed`` lays an instrumental underscore under the whole
     production (see :class:`braidio.music.MusicBed`).
+
+    ``api_key`` is an optional per-request ElevenLabs key threaded to every
+    synthesized beat — both narration (:func:`braidio.tts.narrate`) and dialogue
+    (:func:`braidio.conversation.render_dialogue`). When ``None`` (default) each
+    synthesizer falls back to ``$ELEVENLABS_API_KEY`` (unchanged behavior); an
+    explicit key lets a caller (e.g. a per-user BYO-key request) override the
+    environment without mutating it. Segment beats never call ElevenLabs, so the
+    key does not touch them.
     """
     publishable = rights.publishable_clip_rights if rights else PUBLISHABLE_CLIP_RIGHTS
     plan = plan_production(script, profile, publishable_clip_rights=publishable)
@@ -127,6 +136,7 @@ def render_production(
             raw = narrate(
                 pb.content,
                 Path(tts_dir) / f"{script.id_slug}-{profile.value}-{delivery.name}-beat{i:02d}.mp3",
+                api_key=api_key,
                 voice_id=beat_voice,
                 model_id=delivery.model_id,
                 voice_settings=beat_settings,
@@ -138,6 +148,7 @@ def render_production(
         elif pb.kind == "dialogue":
             raw = render_dialogue(
                 list(pb.turns), cast,
+                api_key=api_key,
                 out_path=Path(tts_dir) / f"{script.id_slug}-{profile.value}-dlg{i:02d}.mp3",
             )
         else:  # segment

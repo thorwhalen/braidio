@@ -40,6 +40,7 @@ def narrate(
     text: str,
     out_path: str | Path,
     *,
+    api_key: str | None = None,
     voice_id: str | None = None,
     model_id: str = DEFAULT_MODEL_ID,
     voice_settings: dict | None = None,
@@ -50,10 +51,16 @@ def narrate(
 
     Caching is handled by ``mixing.text_to_speech`` (keyed on text+voice+model);
     pass ``refresh=True`` to regenerate.
+
+    ``api_key`` is an optional per-request ElevenLabs key: when given it wins
+    over the environment; when ``None`` (default) resolution falls back to
+    ``$ELEVENLABS_API_KEY`` (unchanged behavior). This is what lets a caller
+    thread a per-user BYO key without touching the process environment.
     """
     audio = text_to_speech(
         text,
         resolve_voice_id(voice_id),
+        api_key=api_key,
         model_id=model_id,
         output_format=output_format,
         voice_settings=voice_settings or DEFAULT_VOICE_SETTINGS,
