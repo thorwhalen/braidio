@@ -55,6 +55,31 @@ def _lead_gap(src: Path, dst: Path, *, gap_s: float) -> Path:
     return dst
 
 
+def _end_tail(path: Path, *, fade_s: float, silence_s: float) -> None:
+    """Soften the ending: a short fade on the last ``fade_s`` + ``silence_s`` of
+    trailing silence, so the production *lands* instead of cutting dead.
+
+    Cosmetic post-step: if the output can't be probed/re-encoded (e.g. a mocked
+    file in tests), it's skipped rather than failing the whole render.
+    """
+    _require_ffmpeg()
+    from braidio.weave import duration_s
+
+    try:
+        dur = duration_s(path)
+        fo_start = max(0.0, dur - fade_s)
+        tmp = path.with_name(path.stem + "-tail.mp3")
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", str(path), "-af",
+             f"afade=t=out:st={fo_start:.3f}:d={fade_s},apad=pad_dur={silence_s}",
+             str(tmp)],
+            check=True, capture_output=True,
+        )
+        tmp.replace(path)
+    except (subprocess.CalledProcessError, ValueError, KeyError):
+        pass  # not a real/probeable audio file — leave it untailed
+
+
 def _loudnorm(src: Path, dst: Path, *, target_lufs: float = _DEFAULT_LUFS) -> Path:
     _require_ffmpeg()
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -91,6 +116,8 @@ def render_production(
     crossfade_s: float = 0.12,
     normalize: bool = True,
     music_bed=None,  # optional braidio.music.MusicBed — instrumental underscore
+    end_fade_s: float = 0.35,  # soft landing: fade the last bit + trailing silence
+    end_silence_s: float = 0.7,
     tts_dir: str | Path = "data/tts",
     clips_dir: str | Path = "data/clips",
     episodes_dir: str | Path = "data/episodes",
@@ -134,8 +161,10 @@ def render_production(
             config.clip_fade_in_s,
             config.clip_fade_out_s,
         )
+        clip_min_len = config.clip_min_len_s
     else:
         pre, post, fi, fo = 0.15, 0.35, 0.04, 0.04
+        clip_min_len = 2.2
 
     parts: list[Path] = []
     kinds: list[str] = []
@@ -184,6 +213,7 @@ def render_production(
                 post_roll_s=post,
                 fade_in_s=fi,
                 fade_out_s=fo,
+                min_len_s=clip_min_len,
             )
         parts.append(
             _loudnorm(raw, work / f"part{i:02d}.mp3", target_lufs=target_lufs)
@@ -225,4 +255,7 @@ def render_production(
         concatenate_audio(
             *[str(p) for p in parts], output=str(out), crossfade=crossfade_s
         )
+    # soft landing so the production doesn't cut dead on the last word
+    if end_silence_s > 0 or end_fade_s > 0:
+        _end_tail(out, fade_s=end_fade_s, silence_s=end_silence_s)
     return out

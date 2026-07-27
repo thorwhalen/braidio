@@ -53,17 +53,31 @@ def extract_padded(
     post_roll_s: float = 0.3,
     fade_in_s: float = 0.5,
     fade_out_s: float = 0.8,
+    min_len_s: float = 2.2,
 ) -> Path:
     """Extract ``[start_s-pre_roll, end_s+post_roll]`` with in/out fades.
 
     The target words sit in the middle; the padded, faded head/tail are the
     parts that overlap (tuck under) neighbouring narration in the weave.
+
+    Two guards keep **short** clips from sounding like they just swell in and
+    out (no steady body):
+    - the tail is extended so the clip is at least ``min_len_s`` long, giving the
+      fade somewhere to breathe;
+    - the fades are **adaptive** — capped to a fraction of the clip so they never
+      swallow it (a 1.5 s clip gets ~0.3 s fades, not 0.5 s + 0.8 s).
     """
     _require_ffmpeg()
     start = max(0.0, start_s - pre_roll_s)
     end = end_s + post_roll_s
+    # give a very short clip a steady body: extend the tail to a floor length
+    if end - start < min_len_s:
+        end = start + min_len_s
     dur = max(0.05, end - start)
-    fo_start = max(0.0, dur - fade_out_s)
+    # adaptive fades: keep a steady middle at full level on short clips
+    fi = max(0.03, min(fade_in_s, dur * 0.18))
+    fo = max(0.03, min(fade_out_s, dur * 0.25))
+    fo_start = max(0.0, dur - fo)
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
@@ -77,7 +91,7 @@ def extract_padded(
             "-t",
             f"{dur:.3f}",
             "-af",
-            f"afade=t=in:st=0:d={fade_in_s},afade=t=out:st={fo_start:.3f}:d={fade_out_s}",
+            f"afade=t=in:st=0:d={fi:.3f},afade=t=out:st={fo_start:.3f}:d={fo:.3f}",
             str(out),
         ],
         check=True,
