@@ -7,7 +7,7 @@ from braidio.textprep import clean_ocr, strip_speaker_labels
 
 
 def test_clean_ocr_ligatures_and_soft_hyphens():
-    assert clean_ocr("de­fenﬁce of the ﬂag") == "defence of the flag"
+    assert clean_ocr("de­fine the ﬁrst ﬂag") == "define the first flag"
     assert clean_ocr("A -- B") == "A — B"                 # doubled hyphen → em-dash
     assert clean_ocr("a\n\n  b\t c") == "a b c"           # whitespace collapsed
 
@@ -43,6 +43,6 @@ def test_clean_commentary_scores_zero():
 
 
 def test_platitude_rate_per_1000_words():
-    # one flagged hit in 10 words → 100 per 1000
-    assert platitude_rate("here's the deal and then some more filler words here now") == 100.0
+    # one flagged hit ("here's the") in 10 words → 100 per 1000
+    assert platitude_rate("here's the deal then some more filler words right now") == 100.0
     assert platitude_rate("") == 0.0
