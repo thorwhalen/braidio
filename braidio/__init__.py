@@ -124,6 +124,15 @@ from braidio.timeline import (  # noqa: F401
     TimelineBreakdown,
     build_timeline,
 )
+
+# --- text prep + style audit (reusable script helpers) ---
+from braidio.textprep import clean_ocr, strip_speaker_labels  # noqa: F401
+from braidio.style import (  # noqa: F401
+    Finding,
+    PLATITUDE_PATTERNS,
+    audit_platitudes,
+    platitude_rate,
+)
 from braidio.weave import (  # noqa: F401
     TimelineItem,
     extract_padded,
@@ -248,4 +257,11 @@ __all__ = [
     "BeatSpan",
     "TimelineBreakdown",
     "build_timeline",
+    # text prep + style audit
+    "clean_ocr",
+    "strip_speaker_labels",
+    "Finding",
+    "PLATITUDE_PATTERNS",
+    "audit_platitudes",
+    "platitude_rate",
 ]
