@@ -244,9 +244,9 @@ def render_production(
         elif pb.kind == "dialogue":
             roles.append("dialogue")
             labels.append(getattr(orig, "label", "") or "dialogue")
-        else:  # narration — sub-label by its style (e.g. "book-passage") else "narration"
+        else:  # narration — kind sub-labelled by its style (e.g. "book-passage")
             roles.append(getattr(orig, "style", None) or "narration")
-            labels.append(getattr(orig, "style", None) or getattr(orig, "text", "")[:48])
+            labels.append((getattr(orig, "text", "") or "")[:48])  # text snippet, not the style
         spans.append(clip_span)
 
     has_under = "under" in placements
