@@ -119,6 +119,11 @@ from braidio.formats import (  # noqa: F401
 # --- composition + weaving (audio) ---
 from braidio.compose import compose_narration  # noqa: F401
 from braidio.render import render_production  # noqa: F401
+from braidio.timeline import (  # noqa: F401
+    BeatSpan,
+    TimelineBreakdown,
+    build_timeline,
+)
 from braidio.weave import (  # noqa: F401
     TimelineItem,
     extract_padded,
@@ -239,4 +244,8 @@ __all__ = [
     "weave_timeline",
     "layout_starts",
     "duration_s",
+    # timeline breakdown
+    "BeatSpan",
+    "TimelineBreakdown",
+    "build_timeline",
 ]
