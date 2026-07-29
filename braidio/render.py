@@ -118,11 +118,16 @@ def render_production(
     music_bed=None,  # optional braidio.music.MusicBed — instrumental underscore
     end_fade_s: float = 0.35,  # soft landing: fade the last bit + trailing silence
     end_silence_s: float = 0.7,
+    return_timeline: bool = False,  # also return a TimelineBreakdown of the render
     tts_dir: str | Path = "data/tts",
     clips_dir: str | Path = "data/clips",
     episodes_dir: str | Path = "data/episodes",
-) -> Path:
+) -> "Path | tuple[Path, object]":
     """Render ``script`` under ``profile`` → a single audio file. Returns the path.
+
+    With ``return_timeline=True`` returns ``(path, TimelineBreakdown)`` instead —
+    the render records what it spent time on (per-beat kind, source interval,
+    duration, and offset) rather than leaving it to be reconstructed afterward.
 
     Segment beats are resolved through ``source`` (a :class:`SegmentSource`).
     When ``config`` has ``clip_edge_overlap_s > 0``, a clip is ``placement="under"``,
@@ -169,9 +174,13 @@ def render_production(
     parts: list[Path] = []
     kinds: list[str] = []
     placements: list[str] = []  # "sequential" | "under" (per part, for the weave)
+    roles: list[str] = []  # aggregation label per beat (clip / narration / style / dialogue)
+    spans: list[tuple[float, float] | None] = []  # source [start,end) for clips
+    labels: list[str] = []
     for i, pb in enumerate(plan.beats):
+        orig = script.beats[pb.from_index]
+        clip_span: tuple[float, float] | None = None
         if pb.kind == "narration":
-            orig = script.beats[pb.from_index]
             beat_voice = getattr(orig, "voice", None) or voice_id  # per-beat override
             beat_settings = (
                 getattr(orig, "voice_settings", None) or delivery.voice_settings
@@ -203,6 +212,7 @@ def render_production(
             rs = source.resolve(pb.content)
             if rs is None:
                 raise LookupError(f"segment did not resolve: {pb.content[:50]!r}")
+            clip_span = (float(rs.start_s), float(rs.end_s))
             raw = Path(clips_dir) / f"{script.id_slug}-seg{i:02d}.mp3"
             extract_padded(
                 rs.asset_path,
@@ -223,10 +233,21 @@ def render_production(
         # dialogue + narration are spoken → treated as "narration" on the timeline
         kinds.append("clip" if pb.kind == "clip" else "narration")
         # a "under" clip becomes a ducked underlay; "before"/"after" play clean
-        seg_place = getattr(script.beats[pb.from_index], "placement", "before")
+        seg_place = getattr(orig, "placement", "before")
         placements.append(
             "under" if (pb.kind == "clip" and seg_place == "under") else "sequential"
         )
+        # per-beat timeline metadata (for the returned TimelineBreakdown)
+        if pb.kind == "clip":
+            roles.append("clip")
+            labels.append(getattr(orig, "label", ""))
+        elif pb.kind == "dialogue":
+            roles.append("dialogue")
+            labels.append(getattr(orig, "label", "") or "dialogue")
+        else:  # narration — kind sub-labelled by its style (e.g. "book-passage")
+            roles.append(getattr(orig, "style", None) or "narration")
+            labels.append((getattr(orig, "text", "") or "")[:48])  # text snippet, not the style
+        spans.append(clip_span)
 
     has_under = "under" in placements
     edge_overlap = config.clip_edge_overlap_s if config is not None else 0.0
@@ -258,4 +279,17 @@ def render_production(
     # soft landing so the production doesn't cut dead on the last word
     if end_silence_s > 0 or end_fade_s > 0:
         _end_tail(out, fade_s=end_fade_s, silence_s=end_silence_s)
+
+    if return_timeline:
+        from braidio.timeline import build_timeline
+        from braidio.weave import duration_s
+
+        durs = [duration_s(p) for p in parts]
+        tl = build_timeline(
+            kinds=roles, durations=durs, placements=placements,
+            labels=labels, source_spans=spans,
+            clip_edge_overlap_s=edge_overlap, narration_crossfade_s=crossfade,
+            title=script.title,
+        )
+        return out, tl
     return out
