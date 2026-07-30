@@ -66,7 +66,9 @@ class WeaveConfig:
     clip_post_roll_s: float = 0.3  # …and after — capture words cleanly
     clip_fade_in_s: float = 0.5
     clip_fade_out_s: float = 0.8
-    clip_min_len_s: float = 2.2  # floor length for a clip (short clips extend + get adaptive fades)
+    clip_min_len_s: float = (
+        2.2  # floor length for a clip (short clips extend + get adaptive fades)
+    )
     clip_edge_overlap_s: float = 0.5  # tuck faded clip edges under narration
     duck_db: float = -15.0  # duck clip under speech (speech dominant)
 

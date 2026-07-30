@@ -29,9 +29,13 @@ from braidio.weave import layout_placed
 
 # Neutral kind → accent colour for the HTML view (falls back to a grey).
 KIND_COLORS: dict[str, str] = {
-    "clip": "#cf9526", "segment": "#cf9526", "song": "#cf9526",
-    "book-passage": "#3f5183", "book": "#3f5183",
-    "narration": "#a98f68", "commentary": "#a98f68",
+    "clip": "#cf9526",
+    "segment": "#cf9526",
+    "song": "#cf9526",
+    "book-passage": "#3f5183",
+    "book": "#3f5183",
+    "narration": "#a98f68",
+    "commentary": "#a98f68",
     "dialogue": "#4c8a6a",
 }
 _FALLBACK_COLOR = "#8a8577"
@@ -46,7 +50,9 @@ class BeatSpan:
     """One beat's place on the timeline."""
 
     index: int
-    kind: str  # aggregation label: "clip" | "narration" | "book-passage" | "dialogue" | …
+    kind: (
+        str  # aggregation label: "clip" | "narration" | "book-passage" | "dialogue" | …
+    )
     label: str = ""
     source_start: float | None = None  # clips: [start, end) in the source media
     source_end: float | None = None
@@ -89,16 +95,28 @@ class TimelineBreakdown:
             "duration": self.duration,
             "totals": self.totals(),
             "beats": [
-                {"index": b.index, "kind": b.kind, "label": b.label,
-                 "source": ([b.source_start, b.source_end] if b.source_start is not None else None),
-                 "duration": b.duration, "start": b.start, "end": b.end}
+                {
+                    "index": b.index,
+                    "kind": b.kind,
+                    "label": b.label,
+                    "source": (
+                        [b.source_start, b.source_end]
+                        if b.source_start is not None
+                        else None
+                    ),
+                    "duration": b.duration,
+                    "start": b.start,
+                    "end": b.end,
+                }
                 for b in self.beats
             ],
         }
 
     def to_html(self, title: str | None = None, subtitle: str = "") -> str:
         """A self-contained HTML view: totals bar, walking-order timeline, table."""
-        return _render_html(self, title if title is not None else (self.title or "Timeline"), subtitle)
+        return _render_html(
+            self, title if title is not None else (self.title or "Timeline"), subtitle
+        )
 
 
 def build_timeline(
@@ -125,15 +143,21 @@ def build_timeline(
     source_spans = source_spans or [None] * n
     layout_kinds = ["clip" if k == "clip" else "narration" for k in kinds]
     starts = layout_placed(
-        layout_kinds, durations, placements,
-        clip_edge_overlap_s=clip_edge_overlap_s, narration_crossfade_s=narration_crossfade_s,
+        layout_kinds,
+        durations,
+        placements,
+        clip_edge_overlap_s=clip_edge_overlap_s,
+        narration_crossfade_s=narration_crossfade_s,
     )
     spans = tuple(
         BeatSpan(
-            index=i, kind=kinds[i], label=labels[i],
+            index=i,
+            kind=kinds[i],
+            label=labels[i],
             source_start=(source_spans[i][0] if source_spans[i] else None),
             source_end=(source_spans[i][1] if source_spans[i] else None),
-            duration=round(float(durations[i]), 3), start=round(float(starts[i]), 3),
+            duration=round(float(durations[i]), 3),
+            start=round(float(starts[i]), 3),
         )
         for i in range(n)
     )
@@ -149,19 +173,21 @@ def _render_html(tl: TimelineBreakdown, title: str, subtitle: str) -> str:
 
     stack = "".join(
         f'<div style="flex:{v} 1 0;background:{color(k)}" title="{_html.escape(k)}: {_mmss(v)}"></div>'
-        for k, v in totals.items() if v > 0
+        for k, v in totals.items()
+        if v > 0
     )
     chips = "".join(
         f'<div class="chip"><span class="sw" style="background:{color(k)}"></span>'
-        f'{_html.escape(k)} <b>{_mmss(v)}</b> · {round(100 * v / grand)}%</div>'
-        for k, v in totals.items() if v > 0
+        f"{_html.escape(k)} <b>{_mmss(v)}</b> · {round(100 * v / grand)}%</div>"
+        for k, v in totals.items()
+        if v > 0
     )
     total_dur = tl.duration
     segs = "".join(
         f'<div class="seg" style="flex:{max(b.duration, 0.01)} 1 0;background:{color(b.kind)};'
         f'{"min-width:6px;" if b.kind == "clip" else ""}" '
         f'title="{b.index}. {_html.escape(b.kind)} · {b.duration:.1f}s'
-        f'{(" · song " + _mmss(b.source_start) + chr(45) + _mmss(b.source_end)) if b.source_start is not None else ""}'
+        f"{(' · song ' + _mmss(b.source_start) + chr(45) + _mmss(b.source_end)) if b.source_start is not None else ''}"
         f'{(chr(10) + _html.escape(b.label)) if b.label else ""}"></div>'
         for b in tl.beats
     )

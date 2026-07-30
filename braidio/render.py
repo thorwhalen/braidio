@@ -70,10 +70,17 @@ def _end_tail(path: Path, *, fade_s: float, silence_s: float) -> None:
         fo_start = max(0.0, dur - fade_s)
         tmp = path.with_name(path.stem + "-tail.mp3")
         subprocess.run(
-            ["ffmpeg", "-y", "-i", str(path), "-af",
-             f"afade=t=out:st={fo_start:.3f}:d={fade_s},apad=pad_dur={silence_s}",
-             str(tmp)],
-            check=True, capture_output=True,
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(path),
+                "-af",
+                f"afade=t=out:st={fo_start:.3f}:d={fade_s},apad=pad_dur={silence_s}",
+                str(tmp),
+            ],
+            check=True,
+            capture_output=True,
         )
         tmp.replace(path)
     except (subprocess.CalledProcessError, ValueError, KeyError):
@@ -174,7 +181,9 @@ def render_production(
     parts: list[Path] = []
     kinds: list[str] = []
     placements: list[str] = []  # "sequential" | "under" (per part, for the weave)
-    roles: list[str] = []  # aggregation label per beat (clip / narration / style / dialogue)
+    roles: list[
+        str
+    ] = []  # aggregation label per beat (clip / narration / style / dialogue)
     spans: list[tuple[float, float] | None] = []  # source [start,end) for clips
     labels: list[str] = []
     for i, pb in enumerate(plan.beats):
@@ -246,7 +255,9 @@ def render_production(
             labels.append(getattr(orig, "label", "") or "dialogue")
         else:  # narration — kind sub-labelled by its style (e.g. "book-passage")
             roles.append(getattr(orig, "style", None) or "narration")
-            labels.append((getattr(orig, "text", "") or "")[:48])  # text snippet, not the style
+            labels.append(
+                (getattr(orig, "text", "") or "")[:48]
+            )  # text snippet, not the style
         spans.append(clip_span)
 
     has_under = "under" in placements
@@ -286,9 +297,13 @@ def render_production(
 
         durs = [duration_s(p) for p in parts]
         tl = build_timeline(
-            kinds=roles, durations=durs, placements=placements,
-            labels=labels, source_spans=spans,
-            clip_edge_overlap_s=edge_overlap, narration_crossfade_s=crossfade,
+            kinds=roles,
+            durations=durs,
+            placements=placements,
+            labels=labels,
+            source_spans=spans,
+            clip_edge_overlap_s=edge_overlap,
+            narration_crossfade_s=crossfade,
             title=script.title,
         )
         return out, tl

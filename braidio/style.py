@@ -20,13 +20,19 @@ from dataclasses import dataclass
 
 #: name → compiled pattern for the detectable overused moves.
 PLATITUDE_PATTERNS: dict[str, re.Pattern] = {
-    "director-cue": re.compile(r"\b(?:listen to|notice|watch|catch)\s+(?:how|what|the)\b", re.I),
+    "director-cue": re.compile(
+        r"\b(?:listen to|notice|watch|catch)\s+(?:how|what|the)\b", re.I
+    ),
     "heres-the": re.compile(r"\bhere'?s the\b", re.I),
     "reduction": re.compile(
         r"\b(?:that'?s the whole|the whole \w+ in|in "
-        r"(?:two|three|four|five|six|seven|eight|nine|ten|\d+) words)\b", re.I),
+        r"(?:two|three|four|five|six|seven|eight|nine|ten|\d+) words)\b",
+        re.I,
+    ),
     "negation-just": re.compile(r"\bisn'?t just\b", re.I),
-    "machinery-naming": re.compile(r"\bthe (?:turn|tell|button|trick|move|thesis)\b", re.I),
+    "machinery-naming": re.compile(
+        r"\bthe (?:turn|tell|button|trick|move|thesis)\b", re.I
+    ),
 }
 
 

@@ -18,10 +18,18 @@ import re
 
 #: Latin ligatures that OCR emits as single code points.
 LIGATURES: dict[str, str] = {
-    "ﬁ": "fi", "ﬂ": "fl", "ﬀ": "ff", "ﬃ": "ffi", "ﬄ": "ffl", "ﬅ": "ft", "ﬆ": "st",
+    "ﬁ": "fi",
+    "ﬂ": "fl",
+    "ﬀ": "ff",
+    "ﬃ": "ffi",
+    "ﬄ": "ffl",
+    "ﬅ": "ft",
+    "ﬆ": "st",
 }
 _SOFT_HYPHEN = "­"
-_SPEAKER_LABEL = re.compile(r"^\s*(?:[A-Z][a-z]+|Host|Narrator|Presenter|Speaker)\s*:\s+")
+_SPEAKER_LABEL = re.compile(
+    r"^\s*(?:[A-Z][a-z]+|Host|Narrator|Presenter|Speaker)\s*:\s+"
+)
 _WS = re.compile(r"\s+")
 
 
