@@ -65,6 +65,9 @@ class NarrationRenderBodyV1(BaseModel):
     artifact_id: Optional[str] = Field(
         None, description="lacing Artifact asset_id (once rendered)."
     )
+    url: Optional[str] = Field(
+        None, description="file:// (or hosted) URL of the rendered audio."
+    )
     duration_s: float = Field(0.0, description="Rendered duration, seconds.")
 
 
@@ -79,6 +82,9 @@ class SegmentExtractionBodyV1(BaseModel):
     start_s: float = Field(..., description="Padded extraction start (seconds).")
     end_s: float = Field(..., description="Padded extraction end (seconds).")
     artifact_id: Optional[str] = Field(None, description="lacing Artifact asset_id.")
+    url: Optional[str] = Field(
+        None, description="file:// (or hosted) URL of the extracted audio."
+    )
 
 
 class EpisodeRenderBodyV1(BaseModel):
@@ -91,6 +97,9 @@ class EpisodeRenderBodyV1(BaseModel):
         default_factory=tuple, description="Ids of the member render nodes, in order."
     )
     artifact_id: Optional[str] = Field(None, description="lacing Artifact of the mix.")
+    url: Optional[str] = Field(
+        None, description="file:// (or hosted) URL of the assembled episode audio."
+    )
     duration_s: float = Field(0.0, description="Total duration, seconds.")
 
 

@@ -163,6 +163,9 @@ except ImportError:  # pragma: no cover - optional dep
     pass
 try:  # needs nw
     from braidio.project import Project  # noqa: F401
+    from braidio import transforms  # noqa: F401  (registers braidio's nw.Transforms)
+    from braidio.transforms import weave_project  # noqa: F401
+    from braidio.genre import COMMENTARY_WEAVE  # noqa: F401  (registers the nw.Genre)
 
     HAS_NW = True
 except ImportError:  # pragma: no cover - optional dep

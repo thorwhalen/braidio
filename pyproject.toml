@@ -97,6 +97,17 @@ doctest_optionflags = [
     "ELLIPSIS",
 ]
 
+# System dependencies CI must install (wads `install-system-deps` action).
+# braidio's weave/extract/render primitives shell out to ffmpeg; without this
+# the ffmpeg-dependent tests fail in CI (they had been red since 2026-07-27).
+[tool.wads.ops.ffmpeg]
+description = "Multimedia framework for video/audio processing"
+url = "https://ffmpeg.org/"
+check.linux = "which ffmpeg"
+check.macos = "which ffmpeg"
+install.linux = ["sudo apt-get update", "sudo apt-get install -y ffmpeg"]
+install.macos = "brew install ffmpeg"
+
 [tool.wads.ci]
 project_name = ""
 
