@@ -1,0 +1,4 @@
+braidio.genre
+=============
+.. automodule:: braidio.genre
+   :members:

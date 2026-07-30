@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.conversation &mdash; braidio 0.0.1 documentation</title>
+  <title>braidio.conversation &mdash; braidio 0.0.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/music.html">braidio.music</a></li>
@@ -64,6 +65,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/rights.html">braidio.rights</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/script.html">braidio.script</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/style.html">braidio.style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/timeline.html">braidio.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_voice.html">braidio.transforms._voice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/tts.html">braidio.tts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave.html">braidio.weave</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave_config.html">braidio.weave_config</a></li>
@@ -121,9 +132,9 @@
 
 <span class="c1"># Curated conversational voices (casual, not narrator).</span>
 <span class="n">JESSICA</span> <span class="o">=</span> <span class="s2">&quot;cgSgspJ2msm6clMCkdW9&quot;</span>  <span class="c1"># playful, bright, warm (F)</span>
-<span class="n">WILL</span> <span class="o">=</span> <span class="s2">&quot;bIHbv24MWmeRgasZH58o&quot;</span>     <span class="c1"># relaxed optimist (M)</span>
-<span class="n">CHRIS</span> <span class="o">=</span> <span class="s2">&quot;iP95p4xoKVk53GoZ742B&quot;</span>    <span class="c1"># charming, down-to-earth (M)</span>
-<span class="n">LAURA</span> <span class="o">=</span> <span class="s2">&quot;FGY2WhTYpPnrIDTdsKH5&quot;</span>    <span class="c1"># enthusiast, quirky attitude (F)</span>
+<span class="n">WILL</span> <span class="o">=</span> <span class="s2">&quot;bIHbv24MWmeRgasZH58o&quot;</span>  <span class="c1"># relaxed optimist (M)</span>
+<span class="n">CHRIS</span> <span class="o">=</span> <span class="s2">&quot;iP95p4xoKVk53GoZ742B&quot;</span>  <span class="c1"># charming, down-to-earth (M)</span>
+<span class="n">LAURA</span> <span class="o">=</span> <span class="s2">&quot;FGY2WhTYpPnrIDTdsKH5&quot;</span>  <span class="c1"># enthusiast, quirky attitude (F)</span>
 
 
 <div class="viewcode-block" id="ConversationCast">
@@ -181,9 +192,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">vturns</span> <span class="o">=</span> <span class="p">[(</span><span class="n">cast</span><span class="o">.</span><span class="n">roles</span><span class="p">[</span><span class="n">role</span><span class="p">],</span> <span class="n">text</span><span class="p">)</span> <span class="k">for</span> <span class="n">role</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">turns</span><span class="p">]</span>
     <span class="n">audio</span> <span class="o">=</span> <span class="n">text_to_dialogue</span><span class="p">(</span>
-        <span class="n">vturns</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">cast</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="n">cast</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span>
-        <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">output_format</span><span class="o">=</span><span class="n">output_format</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
-        <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="n">refresh</span><span class="p">,</span>
+        <span class="n">vturns</span><span class="p">,</span>
+        <span class="n">model_id</span><span class="o">=</span><span class="n">cast</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
+        <span class="n">settings</span><span class="o">=</span><span class="n">cast</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+        <span class="n">output_format</span><span class="o">=</span><span class="n">output_format</span><span class="p">,</span>
+        <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
+        <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span>
+        <span class="n">refresh</span><span class="o">=</span><span class="n">refresh</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
     <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -192,17 +208,26 @@
         <span class="n">_require_ffmpeg</span><span class="p">()</span>
         <span class="n">tmp</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s2">&quot;-tight.mp3&quot;</span><span class="p">)</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-            <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;-y&quot;</span><span class="p">,</span> <span class="s2">&quot;-i&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
-             <span class="s2">&quot;-af&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;silenceremove=stop_periods=-1:stop_duration=</span><span class="si">{</span><span class="n">tighten_gaps_s</span><span class="si">}</span><span class="s2">:stop_threshold=-38dB&quot;</span><span class="p">,</span>
-             <span class="nb">str</span><span class="p">(</span><span class="n">tmp</span><span class="p">)],</span>
-            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;-y&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
+                <span class="s2">&quot;-af&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;silenceremove=stop_periods=-1:stop_duration=</span><span class="si">{</span><span class="n">tighten_gaps_s</span><span class="si">}</span><span class="s2">:stop_threshold=-38dB&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">tmp</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">out</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_concat_with_gaps</span><span class="p">(</span><span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span> <span class="n">out</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">gap_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">44100</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_concat_with_gaps</span><span class="p">(</span>
+    <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span> <span class="n">out</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">gap_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">44100</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Concatenate audio parts with ``gap_s`` seconds of silence between them.&quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">mixing</span><span class="w"> </span><span class="kn">import</span> <span class="n">concatenate_audio</span>
 
@@ -213,9 +238,19 @@
         <span class="k">return</span> <span class="n">out</span>
     <span class="n">sil</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;_gap.mp3&quot;</span>
     <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-        <span class="p">[</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;-y&quot;</span><span class="p">,</span> <span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="s2">&quot;lavfi&quot;</span><span class="p">,</span> <span class="s2">&quot;-i&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;anullsrc=r=</span><span class="si">{</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">:cl=stereo&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">gap_s</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">sil</span><span class="p">)],</span>
-        <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">[</span>
+            <span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-y&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-f&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;lavfi&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;anullsrc=r=</span><span class="si">{</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">:cl=stereo&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-t&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">gap_s</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">sil</span><span class="p">),</span>
+        <span class="p">],</span>
+        <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">interleaved</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parts</span><span class="p">):</span>
@@ -249,9 +284,12 @@
     <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">turns</span><span class="p">):</span>
         <span class="n">raw</span> <span class="o">=</span> <span class="n">narrate</span><span class="p">(</span>
-            <span class="n">text</span><span class="p">,</span> <span class="n">work</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;turn</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">.mp3&quot;</span><span class="p">,</span>
+            <span class="n">text</span><span class="p">,</span>
+            <span class="n">work</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;turn</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">.mp3&quot;</span><span class="p">,</span>
             <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
-            <span class="n">voice_id</span><span class="o">=</span><span class="n">cast</span><span class="o">.</span><span class="n">roles</span><span class="p">[</span><span class="n">role</span><span class="p">],</span> <span class="n">model_id</span><span class="o">=</span><span class="n">cast</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span> <span class="n">voice_settings</span><span class="o">=</span><span class="n">voice_settings</span><span class="p">,</span>
+            <span class="n">voice_id</span><span class="o">=</span><span class="n">cast</span><span class="o">.</span><span class="n">roles</span><span class="p">[</span><span class="n">role</span><span class="p">],</span>
+            <span class="n">model_id</span><span class="o">=</span><span class="n">cast</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
+            <span class="n">voice_settings</span><span class="o">=</span><span class="n">voice_settings</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>

@@ -11,6 +11,7 @@
    module_docs/braidio/conversation
    module_docs/braidio/delivery
    module_docs/braidio/formats
+   module_docs/braidio/genre
    module_docs/braidio/kinds
    module_docs/braidio/multivoice
    module_docs/braidio/music
@@ -20,6 +21,16 @@
    module_docs/braidio/rights
    module_docs/braidio/script
    module_docs/braidio/sources
+   module_docs/braidio/style
+   module_docs/braidio/textprep
+   module_docs/braidio/timeline
+   module_docs/braidio/transforms
+   module_docs/braidio/transforms/_common
+   module_docs/braidio/transforms/_episode
+   module_docs/braidio/transforms/_ingest
+   module_docs/braidio/transforms/_narration
+   module_docs/braidio/transforms/_segment
+   module_docs/braidio/transforms/_voice
    module_docs/braidio/tts
    module_docs/braidio/weave
    module_docs/braidio/weave_config

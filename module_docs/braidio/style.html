@@ -1,0 +1,187 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.style &mdash; braidio 0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="braidio.textprep" href="textprep.html" />
+    <link rel="prev" title="braidio.sources" href="sources.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genre.html">braidio.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sources.html">braidio.sources</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">braidio.style</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.style.Finding"><code class="docutils literal notranslate"><span class="pre">Finding</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.style.PLATITUDE_PATTERNS"><code class="docutils literal notranslate"><span class="pre">PLATITUDE_PATTERNS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.style.audit_platitudes"><code class="docutils literal notranslate"><span class="pre">audit_platitudes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.style.platitude_rate"><code class="docutils literal notranslate"><span class="pre">platitude_rate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeline.html">braidio.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_voice.html">braidio.transforms._voice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">braidio.style</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/braidio/style.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-braidio.style">
+<span id="braidio-style"></span><h1>braidio.style<a class="headerlink" href="#module-braidio.style" title="Link to this heading"></a></h1>
+<p>Style audit — flag the recycled rhetorical tics in commentary text.</p>
+<p>The companion, in code, to <code class="docutils literal notranslate"><span class="pre">misc/docs/style/anti-platitude-checklist.md</span></code>: scan
+authored commentary for the empty structural platitudes a writing model falls
+back on, so a production can self-check (and measure) instead of eyeballing.</p>
+<blockquote>
+<div><p>from braidio.style import audit_platitudes, platitude_rate
+findings = audit_platitudes(commentary_text)   # [{pattern, match, start}, …]
+rate = platitude_rate(commentary_text)          # flagged hits per 1000 words</p>
+</div></blockquote>
+<p>Not every match is a crime — the guide says these moves are fine <em>sparingly</em>; the
+value is the RATE and which patterns dominate. Chiasmus (“the X that did Y is the
+X that does Z”) isn’t reliably regex-detectable and is intentionally omitted.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.style.Finding">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.style.</span></span><span class="sig-name descname"><span class="pre">Finding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/style.html#Finding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.style.Finding" title="Link to this definition"></a></dt>
+<dd><p>One flagged platitude.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="braidio.style.PLATITUDE_PATTERNS">
+<span class="sig-prename descclassname"><span class="pre">braidio.style.</span></span><span class="sig-name descname"><span class="pre">PLATITUDE_PATTERNS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Pattern</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'director-cue':</span> <span class="pre">re.compile('\\b(?:listen</span> <span class="pre">to|notice|watch|catch)\\s+(?:how|what|the)\\b',</span> <span class="pre">re.IGNORECASE),</span> <span class="pre">'heres-the':</span> <span class="pre">re.compile(&quot;\\bhere'?s</span> <span class="pre">the\\b&quot;,</span> <span class="pre">re.IGNORECASE),</span> <span class="pre">'machinery-naming':</span> <span class="pre">re.compile('\\bthe</span> <span class="pre">(?:turn|tell|button|trick|move|thesis)\\b',</span> <span class="pre">re.IGNORECASE),</span> <span class="pre">'negation-just':</span> <span class="pre">re.compile(&quot;\\bisn'?t</span> <span class="pre">just\\b&quot;,</span> <span class="pre">re.IGNORECASE),</span> <span class="pre">'reduction':</span> <span class="pre">re.compile(&quot;\\b(?:that'?s</span> <span class="pre">the</span> <span class="pre">whole|the</span> <span class="pre">whole</span> <span class="pre">\\w+</span> <span class="pre">in|in</span> <span class="pre">(?:two|three|four|five|six|seven|eight|nine|ten|\\d+)</span> <span class="pre">words)\\b&quot;,</span> <span class="pre">re.IGNORECASE)}</span></span><a class="headerlink" href="#braidio.style.PLATITUDE_PATTERNS" title="Link to this definition"></a></dt>
+<dd><p>name → compiled pattern for the detectable overused moves.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.style.audit_platitudes">
+<span class="sig-prename descclassname"><span class="pre">braidio.style.</span></span><span class="sig-name descname"><span class="pre">audit_platitudes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#braidio.style.Finding" title="braidio.style.Finding"><span class="pre">Finding</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/braidio/style.html#audit_platitudes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.style.audit_platitudes" title="Link to this definition"></a></dt>
+<dd><p>Return every <a class="reference internal" href="#braidio.style.Finding" title="braidio.style.Finding"><code class="xref py py-class docutils literal notranslate"><span class="pre">Finding</span></code></a> in <code class="docutils literal notranslate"><span class="pre">text</span></code>, in document order.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.style.platitude_rate">
+<span class="sig-prename descclassname"><span class="pre">braidio.style.</span></span><span class="sig-name descname"><span class="pre">platitude_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">per</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../_modules/braidio/style.html#platitude_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.style.platitude_rate" title="Link to this definition"></a></dt>
+<dd><p>Flagged hits per <code class="docutils literal notranslate"><span class="pre">per</span></code> words (default 1000). 0.0 for empty text.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sources.html" class="btn btn-neutral float-left" title="braidio.sources" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="textprep.html" class="btn btn-neutral float-right" title="braidio.textprep" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

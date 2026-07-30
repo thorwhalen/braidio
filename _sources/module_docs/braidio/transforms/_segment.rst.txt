@@ -1,0 +1,4 @@
+braidio.transforms._segment
+===========================
+.. automodule:: braidio.transforms._segment
+   :members:

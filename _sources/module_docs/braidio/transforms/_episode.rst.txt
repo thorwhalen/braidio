@@ -1,0 +1,4 @@
+braidio.transforms._episode
+===========================
+.. automodule:: braidio.transforms._episode
+   :members:

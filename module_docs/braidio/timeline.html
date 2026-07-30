@@ -1,0 +1,220 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.timeline &mdash; braidio 0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="braidio.transforms" href="transforms.html" />
+    <link rel="prev" title="braidio.textprep" href="textprep.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genre.html">braidio.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="style.html">braidio.style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">braidio.timeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.timeline.BeatSpan"><code class="docutils literal notranslate"><span class="pre">BeatSpan</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.timeline.TimelineBreakdown"><code class="docutils literal notranslate"><span class="pre">TimelineBreakdown</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#braidio.timeline.TimelineBreakdown.duration"><code class="docutils literal notranslate"><span class="pre">TimelineBreakdown.duration</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#braidio.timeline.TimelineBreakdown.shares"><code class="docutils literal notranslate"><span class="pre">TimelineBreakdown.shares()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#braidio.timeline.TimelineBreakdown.to_html"><code class="docutils literal notranslate"><span class="pre">TimelineBreakdown.to_html()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#braidio.timeline.TimelineBreakdown.totals"><code class="docutils literal notranslate"><span class="pre">TimelineBreakdown.totals()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.timeline.build_timeline"><code class="docutils literal notranslate"><span class="pre">build_timeline()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_voice.html">braidio.transforms._voice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">braidio.timeline</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/braidio/timeline.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-braidio.timeline">
+<span id="braidio-timeline"></span><h1>braidio.timeline<a class="headerlink" href="#module-braidio.timeline" title="Link to this heading"></a></h1>
+<p>Timeline breakdown — what a production spends its time on, and in what order.</p>
+<p>A rendered production is a walk of beats; this module turns that walk into a
+queryable object: for each beat, its <strong>kind</strong>, <strong>source interval</strong> (for clips),
+<strong>rendered duration</strong>, and <strong>offset on the episode timeline</strong> — plus per-kind
+<strong>totals</strong> and a self-contained <strong>HTML view</strong>. It’s built on the same layout math
+(<a class="reference internal" href="weave.html#braidio.weave.layout_placed" title="braidio.weave.layout_placed"><code class="xref py py-func docutils literal notranslate"><span class="pre">braidio.weave.layout_placed()</span></code></a>) the renderer uses, so the offsets match the
+actual mix.</p>
+<p>Get one straight from the renderer:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">out</span><span class="p">,</span> <span class="n">tl</span> <span class="o">=</span> <span class="n">render_production</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">return_timeline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">tl</span><span class="o">.</span><span class="n">totals</span><span class="p">()</span>          <span class="c1"># {&quot;clip&quot;: 78.6, &quot;book-passage&quot;: 346.4, &quot;narration&quot;: 616.5}</span>
+<span class="n">tl</span><span class="o">.</span><span class="n">shares</span><span class="p">()</span>          <span class="c1"># same, as fractions</span>
+<span class="nb">open</span><span class="p">(</span><span class="s2">&quot;anatomy.html&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tl</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span><span class="s2">&quot;Episode anatomy&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>or build one from raw render data with <a class="reference internal" href="#braidio.timeline.build_timeline" title="braidio.timeline.build_timeline"><code class="xref py py-func docutils literal notranslate"><span class="pre">build_timeline()</span></code></a>. This is the
+first-class, reusable form of what used to be reconstructed by ad-hoc scripts
+(braidio#3): the render now <em>records</em> its timeline instead of anyone probing the
+output after the fact.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.timeline.BeatSpan">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.timeline.</span></span><span class="sig-name descname"><span class="pre">BeatSpan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/timeline.html#BeatSpan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.timeline.BeatSpan" title="Link to this definition"></a></dt>
+<dd><p>One beat’s place on the timeline.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.timeline.TimelineBreakdown">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.timeline.</span></span><span class="sig-name descname"><span class="pre">TimelineBreakdown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple[~braidio.timeline.BeatSpan</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...]</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/timeline.html#TimelineBreakdown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.timeline.TimelineBreakdown" title="Link to this definition"></a></dt>
+<dd><p>The ordered beats of a production, with per-kind totals and an HTML view.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="braidio.timeline.TimelineBreakdown.duration">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">duration</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#braidio.timeline.TimelineBreakdown.duration" title="Link to this definition"></a></dt>
+<dd><p>Total timeline length (s) — the max beat end, accounting for overlaps.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="braidio.timeline.TimelineBreakdown.shares">
+<span class="sig-name descname"><span class="pre">shares</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/braidio/timeline.html#TimelineBreakdown.shares"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.timeline.TimelineBreakdown.shares" title="Link to this definition"></a></dt>
+<dd><p>Fraction of spoken+clip time per <code class="docutils literal notranslate"><span class="pre">kind</span></code> (sums to 1).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="braidio.timeline.TimelineBreakdown.to_html">
+<span class="sig-name descname"><span class="pre">to_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtitle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/braidio/timeline.html#TimelineBreakdown.to_html"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.timeline.TimelineBreakdown.to_html" title="Link to this definition"></a></dt>
+<dd><p>A self-contained HTML view: totals bar, walking-order timeline, table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="braidio.timeline.TimelineBreakdown.totals">
+<span class="sig-name descname"><span class="pre">totals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/braidio/timeline.html#TimelineBreakdown.totals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.timeline.TimelineBreakdown.totals" title="Link to this definition"></a></dt>
+<dd><p>Seconds spent per <code class="docutils literal notranslate"><span class="pre">kind</span></code> (insertion-ordered by first appearance).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.timeline.build_timeline">
+<span class="sig-prename descclassname"><span class="pre">braidio.timeline.</span></span><span class="sig-name descname"><span class="pre">build_timeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">kinds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">durations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">placements</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_spans</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_edge_overlap_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">narration_crossfade_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#braidio.timeline.TimelineBreakdown" title="braidio.timeline.TimelineBreakdown"><span class="pre">TimelineBreakdown</span></a></span></span><a class="reference internal" href="../../_modules/braidio/timeline.html#build_timeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.timeline.build_timeline" title="Link to this definition"></a></dt>
+<dd><p>Assemble a <a class="reference internal" href="#braidio.timeline.TimelineBreakdown" title="braidio.timeline.TimelineBreakdown"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimelineBreakdown</span></code></a> from per-beat render data (pure).</p>
+<p><code class="docutils literal notranslate"><span class="pre">kinds</span></code> are the aggregation labels (any string; <code class="docutils literal notranslate"><span class="pre">&quot;clip&quot;</span></code> is the only one
+the layout treats specially — as an overlapping segment). <code class="docutils literal notranslate"><span class="pre">placements</span></code> is
+the per-beat <code class="docutils literal notranslate"><span class="pre">&quot;sequential&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;under&quot;</span></code> used by the weave; offsets are
+computed with the same <a class="reference internal" href="weave.html#braidio.weave.layout_placed" title="braidio.weave.layout_placed"><code class="xref py py-func docutils literal notranslate"><span class="pre">layout_placed()</span></code></a> the renderer uses.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="textprep.html" class="btn btn-neutral float-left" title="braidio.textprep" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="transforms.html" class="btn btn-neutral float-right" title="braidio.transforms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

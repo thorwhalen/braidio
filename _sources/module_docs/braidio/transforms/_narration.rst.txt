@@ -1,0 +1,4 @@
+braidio.transforms._narration
+=============================
+.. automodule:: braidio.transforms._narration
+   :members:
