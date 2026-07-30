@@ -1,0 +1,221 @@
+"""Offline tests for braidio's nw.Transform pipeline (thorwhalen/braidio#6).
+
+Drives the whole ``commentary_weave`` chain (ingest → voice-assignment →
+narration-render → segment-extraction → weave-to-episode) with the synthesis
+boundaries (``narrate`` / ``extract_padded`` / ``weave_timeline``)
+monkeypatched, so no ElevenLabs / ffmpeg runs. Asserts:
+
+- every authoring + render node lands in the project graph;
+- ``nw.stale_after`` (over ``project.graph``, not braidio's standalone store)
+  returns exactly the right partial-re-render frontier for a config change, a
+  narration-beat change, and a source change;
+- the explicit ``cache_key`` compare-and-skip reuses an existing render;
+- the ``commentary_weave`` genre is registered and ready.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+import braidio
+
+pytestmark = pytest.mark.skipif(
+    not braidio.HAS_NW, reason="nw (and lacing) not available"
+)
+
+
+class _FakeSource:
+    """A SegmentSource that resolves any reference to a fixed window."""
+
+    def __init__(self, asset_path: Path, *, start_s: float = 1.0, end_s: float = 4.0):
+        self._asset_path = asset_path
+        self._start_s = start_s
+        self._end_s = end_s
+
+    def resolve(self, reference: str):
+        from braidio.sources import ResolvedSegment
+
+        return ResolvedSegment(
+            asset_path=self._asset_path,
+            start_s=self._start_s,
+            end_s=self._end_s,
+            score=1.0,
+            matched_text=reference,
+        )
+
+
+@pytest.fixture
+def patched_synthesis(monkeypatch):
+    """Replace the audio boundaries with file-writing stubs (no real synth)."""
+
+    def _write(out_path, tag: bytes):
+        p = Path(out_path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(tag)
+        return p
+
+    monkeypatch.setattr(braidio, "narrate", lambda text, out, **kw: _write(out, b"TTS"))
+    monkeypatch.setattr(
+        braidio,
+        "extract_padded",
+        lambda asset, start, end, out, **kw: _write(out, b"CLIP"),
+    )
+    monkeypatch.setattr(
+        braidio, "weave_timeline", lambda items, out, **kw: _write(out, b"EPISODE")
+    )
+    monkeypatch.setattr(braidio, "duration_s", lambda path: 2.0)
+
+
+@pytest.fixture
+def project(tmp_path):
+    return braidio.Project.init(tmp_path / "proj", title="test weave")
+
+
+@pytest.fixture
+def script_and_source(tmp_path):
+    """A 3-beat script (narration, segment, narration) + a fake source."""
+    song = tmp_path / "song.mp3"
+    song.write_bytes(b"SONG")
+    script = braidio.Script(
+        title="Demo",
+        id_slug="demo",
+        beats=[
+            braidio.Narration(text="Opening line about the song."),
+            braidio.SegmentBeat(reference="the famous hook", label="hook"),
+            braidio.Narration(text="Closing thought on the hook."),
+        ],
+    )
+    return script, _FakeSource(song)
+
+
+def _tier_ids(project, tier):
+    import nw
+
+    return {a.id for a in nw.annotations_at_tier(project.root, tier)}
+
+
+def test_weave_project_populates_graph(project, script_and_source, patched_synthesis):
+    import nw
+
+    script, source = script_and_source
+    episode = braidio.weave_project(project, script, source=source)
+
+    # The episode is complete: it references the assembled audio.
+    assert episode.tier == "episode-renders"
+    assert episode.body["artifact_id"]
+    assert episode.body["url"].startswith("file://")
+    assert len(episode.body["ordered_member_ids"]) == 3  # 2 narration + 1 segment
+
+    # Every authoring + render node landed in the project graph.
+    counts = {
+        t: len(nw.annotations_at_tier(project.root, t))
+        for t in (
+            "weave-configs",
+            "narrative-beats",
+            "source-media",
+            "audio-clips",
+            "voice-assignments",
+            "narration-renders",
+            "segment-extractions",
+            "episode-renders",
+        )
+    }
+    assert counts == {
+        "weave-configs": 1,
+        "narrative-beats": 2,
+        "source-media": 1,
+        "audio-clips": 1,
+        "voice-assignments": 2,
+        "narration-renders": 2,
+        "segment-extractions": 1,
+        "episode-renders": 1,
+    }
+
+    # The produced audio files exist on disk.
+    for nr in nw.annotations_at_tier(project.root, "narration-renders"):
+        assert braidio.transforms._common.url_to_path(nr.body["url"]).exists()
+
+
+def test_stale_after_config_restales_all_renders(
+    project, script_and_source, patched_synthesis
+):
+    import nw
+
+    script, source = script_and_source
+    braidio.weave_project(project, script, source=source)
+
+    (cfg_id,) = _tier_ids(project, "weave-configs")
+    render_ids = (
+        _tier_ids(project, "voice-assignments")
+        | _tier_ids(project, "narration-renders")
+        | _tier_ids(project, "segment-extractions")
+        | _tier_ids(project, "episode-renders")
+    )
+    stale = {a.id for a in nw.stale_after(project.root, cfg_id)}
+    # A weave-config change re-stales every render node, and nothing authoring.
+    assert stale == render_ids
+    assert stale.isdisjoint(
+        _tier_ids(project, "narrative-beats") | _tier_ids(project, "source-media")
+    )
+
+
+def test_stale_after_narration_beat_scope(
+    project, script_and_source, patched_synthesis
+):
+    import nw
+
+    script, source = script_and_source
+    braidio.weave_project(project, script, source=source)
+
+    beats = nw.annotations_at_tier(project.root, "narrative-beats")
+    beat = beats[0]
+    (episode_id,) = _tier_ids(project, "episode-renders")
+    stale = {a.id for a in nw.stale_after(project.root, beat.id)}
+    # Change one narration beat → its voice-assignment, its narration-render,
+    # and the episode re-stale (3 nodes) — not the other beat's renders.
+    assert len(stale) == 3
+    assert episode_id in stale
+
+
+def test_stale_after_source_scope(project, script_and_source, patched_synthesis):
+    import nw
+
+    script, source = script_and_source
+    braidio.weave_project(project, script, source=source)
+
+    (source_media_id,) = _tier_ids(project, "source-media")
+    (episode_id,) = _tier_ids(project, "episode-renders")
+    stale = {a.id for a in nw.stale_after(project.root, source_media_id)}
+    # A source change re-stales its segment-extraction + the episode only.
+    assert stale == (_tier_ids(project, "segment-extractions") | {episode_id})
+
+
+def test_narration_render_cache_skip(project, script_and_source, patched_synthesis):
+    import nw
+    from nw import TransformInputs
+
+    script, source = script_and_source
+    braidio.transforms.ingest_script(project, script, source=source)
+    beat = nw.annotations_at_tier(project.root, "narrative-beats")[0]
+    voice = nw.get_transform("beat_to_voice_assignment.default")
+    narration = nw.get_transform("narration_render.tts")
+
+    voice.execute(project, *voice.plan(project, TransformInputs(primary=(beat,))))
+    plan1, skel1 = narration.plan(project, TransformInputs(primary=(beat,)))
+    first = narration.execute(project, plan1, skel1).annotations[0]
+
+    # A second render of the same beat hits the cache_key: no new node.
+    plan2, skel2 = narration.plan(project, TransformInputs(primary=(beat,)))
+    second = narration.execute(project, plan2, skel2).annotations[0]
+    assert second.id == first.id
+    assert len(nw.annotations_at_tier(project.root, "narration-renders")) == 1
+
+
+def test_commentary_weave_genre_ready():
+    import nw
+
+    genre = nw.get_genre("commentary_weave")
+    assert genre.is_ready()
+    assert genre.projection_entrypoint == "weave_to_episode.default"
