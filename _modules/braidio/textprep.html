@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.textprep &mdash; braidio 0.0.2 documentation</title>
+  <title>braidio.textprep &mdash; braidio 0.0.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="../../_static/documentation_options.js?v=47de8214"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -53,6 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_tiers.html">braidio.bodies._tiers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/compose.html">braidio.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
@@ -125,10 +126,18 @@
 
 <span class="c1">#: Latin ligatures that OCR emits as single code points.</span>
 <span class="n">LIGATURES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;ﬁ&quot;</span><span class="p">:</span> <span class="s2">&quot;fi&quot;</span><span class="p">,</span> <span class="s2">&quot;ﬂ&quot;</span><span class="p">:</span> <span class="s2">&quot;fl&quot;</span><span class="p">,</span> <span class="s2">&quot;ﬀ&quot;</span><span class="p">:</span> <span class="s2">&quot;ff&quot;</span><span class="p">,</span> <span class="s2">&quot;ﬃ&quot;</span><span class="p">:</span> <span class="s2">&quot;ffi&quot;</span><span class="p">,</span> <span class="s2">&quot;ﬄ&quot;</span><span class="p">:</span> <span class="s2">&quot;ffl&quot;</span><span class="p">,</span> <span class="s2">&quot;ﬅ&quot;</span><span class="p">:</span> <span class="s2">&quot;ft&quot;</span><span class="p">,</span> <span class="s2">&quot;ﬆ&quot;</span><span class="p">:</span> <span class="s2">&quot;st&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ﬁ&quot;</span><span class="p">:</span> <span class="s2">&quot;fi&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ﬂ&quot;</span><span class="p">:</span> <span class="s2">&quot;fl&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ﬀ&quot;</span><span class="p">:</span> <span class="s2">&quot;ff&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ﬃ&quot;</span><span class="p">:</span> <span class="s2">&quot;ffi&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ﬄ&quot;</span><span class="p">:</span> <span class="s2">&quot;ffl&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ﬅ&quot;</span><span class="p">:</span> <span class="s2">&quot;ft&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ﬆ&quot;</span><span class="p">:</span> <span class="s2">&quot;st&quot;</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_SOFT_HYPHEN</span> <span class="o">=</span> <span class="s2">&quot;­&quot;</span>
-<span class="n">_SPEAKER_LABEL</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^\s*(?:[A-Z][a-z]+|Host|Narrator|Presenter|Speaker)\s*:\s+&quot;</span><span class="p">)</span>
+<span class="n">_SPEAKER_LABEL</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">&quot;^\s*(?:[A-Z][a-z]+|Host|Narrator|Presenter|Speaker)\s*:\s+&quot;</span>
+<span class="p">)</span>
 <span class="n">_WS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">)</span>
 
 

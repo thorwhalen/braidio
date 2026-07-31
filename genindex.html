@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; braidio 0.0.2 documentation</title>
+  <title>Index &mdash; braidio 0.0.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="_static/documentation_options.js?v=47de8214"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -53,6 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/bodies/_tiers.html">braidio.bodies._tiers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/compose.html">braidio.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/delivery.html">braidio.delivery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/genre.html">braidio.genre</a></li>
@@ -121,6 +122,7 @@
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
@@ -160,6 +162,12 @@
         <li><a href="module_docs/braidio/music.html#braidio.music.bed_for_intensity">(in module braidio.music)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/braidio.html#braidio.billable_chars">billable_chars() (in module braidio)</a>
+
+      <ul>
+        <li><a href="module_docs/braidio/cost.html#braidio.cost.billable_chars">(in module braidio.cost)</a>
+</li>
+      </ul></li>
       <li>
     braidio
 
@@ -179,6 +187,13 @@
 
       <ul>
         <li><a href="module_docs/braidio/conversation.html#module-braidio.conversation">module</a>
+</li>
+      </ul></li>
+      <li>
+    braidio.cost
+
+      <ul>
+        <li><a href="module_docs/braidio/cost.html#module-braidio.cost">module</a>
 </li>
       </ul></li>
       <li>
@@ -216,6 +231,8 @@
         <li><a href="module_docs/braidio/music.html#module-braidio.music">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     braidio.render
 
@@ -223,8 +240,6 @@
         <li><a href="module_docs/braidio/render.html#module-braidio.render">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     braidio.rights
 
@@ -312,16 +327,28 @@
         <li><a href="module_docs/braidio/compose.html#braidio.compose.compose_narration">(in module braidio.compose)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/braidio.html#braidio.content_violations">content_violations() (in module braidio)</a>
 
       <ul>
         <li><a href="module_docs/braidio/rights.html#braidio.rights.content_violations">(in module braidio.rights)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/braidio/conversation.html#braidio.conversation.ConversationCast">ConversationCast (class in braidio.conversation)</a>
 </li>
+      <li><a href="module_docs/braidio.html#braidio.CostLine">CostLine (class in braidio)</a>
+
+      <ul>
+        <li><a href="module_docs/braidio/cost.html#braidio.cost.CostLine">(class in braidio.cost)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/braidio.html#braidio.CostRollup">CostRollup (class in braidio)</a>
+
+      <ul>
+        <li><a href="module_docs/braidio/cost.html#braidio.cost.CostRollup">(class in braidio.cost)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/braidio.html#braidio.cut_quote">cut_quote() (in module braidio)</a>
 
       <ul>
@@ -334,20 +361,22 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/braidio/cost.html#braidio.cost.DEFAULT_USD_PER_1K_CHARS">DEFAULT_USD_PER_1K_CHARS (in module braidio.cost)</a>
+</li>
       <li><a href="module_docs/braidio.html#braidio.Delivery">Delivery (class in braidio)</a>
 
       <ul>
         <li><a href="module_docs/braidio/delivery.html#braidio.delivery.Delivery">(class in braidio.delivery)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/braidio.html#braidio.Dialogue">Dialogue (class in braidio)</a>
 
       <ul>
         <li><a href="module_docs/braidio/script.html#braidio.script.Dialogue">(class in braidio.script)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/braidio/timeline.html#braidio.timeline.TimelineBreakdown.duration">duration (braidio.timeline.TimelineBreakdown property)</a>
 
       <ul>
@@ -359,6 +388,14 @@
 
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/braidio.html#braidio.estimate_cost">estimate_cost() (in module braidio)</a>
+
+      <ul>
+        <li><a href="module_docs/braidio/cost.html#braidio.cost.estimate_cost">(in module braidio.cost)</a>
+</li>
+      </ul></li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/braidio.html#braidio.extract_padded">extract_padded() (in module braidio)</a>
 
@@ -440,6 +477,8 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/braidio/cost.html#braidio.cost.MODEL_USD_PER_1K_CHARS">MODEL_USD_PER_1K_CHARS (in module braidio.cost)</a>
+</li>
       <li>
     module
 
@@ -449,6 +488,8 @@
         <li><a href="module_docs/braidio/compose.html#module-braidio.compose">braidio.compose</a>
 </li>
         <li><a href="module_docs/braidio/conversation.html#module-braidio.conversation">braidio.conversation</a>
+</li>
+        <li><a href="module_docs/braidio/cost.html#module-braidio.cost">braidio.cost</a>
 </li>
         <li><a href="module_docs/braidio/delivery.html#module-braidio.delivery">braidio.delivery</a>
 </li>
@@ -557,6 +598,8 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/braidio/cost.html#braidio.cost.RATE_ENV_VAR">RATE_ENV_VAR (in module braidio.cost)</a>
+</li>
       <li><a href="module_docs/braidio.html#braidio.Format.render">render() (braidio.Format method)</a>
 
       <ul>
@@ -661,6 +704,12 @@
         <li><a href="module_docs/braidio/textprep.html#braidio.textprep.strip_speaker_labels">(in module braidio.textprep)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/braidio/cost.html#braidio.cost.CostRollup.summary">summary (braidio.cost.CostRollup property)</a>
+
+      <ul>
+        <li><a href="module_docs/braidio.html#braidio.CostRollup.summary">(braidio.CostRollup property)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -687,14 +736,14 @@
         <li><a href="module_docs/braidio/timeline.html#braidio.timeline.TimelineBreakdown">(class in braidio.timeline)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/braidio.html#braidio.TimelineItem">TimelineItem (class in braidio)</a>
 
       <ul>
         <li><a href="module_docs/braidio/weave.html#braidio.weave.TimelineItem">(class in braidio.weave)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/braidio/weave_config.html#braidio.weave_config.WeaveConfig.to_dict">to_dict() (braidio.weave_config.WeaveConfig method)</a>
 
       <ul>
@@ -711,6 +760,24 @@
 
       <ul>
         <li><a href="module_docs/braidio.html#braidio.TimelineBreakdown.totals">(braidio.TimelineBreakdown method)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/braidio.html#braidio.tts_cost_usd">tts_cost_usd() (in module braidio)</a>
+
+      <ul>
+        <li><a href="module_docs/braidio/cost.html#braidio.cost.tts_cost_usd">(in module braidio.cost)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/braidio.html#braidio.usd_per_1k_chars">usd_per_1k_chars() (in module braidio)</a>
+
+      <ul>
+        <li><a href="module_docs/braidio/cost.html#braidio.cost.usd_per_1k_chars">(in module braidio.cost)</a>
 </li>
       </ul></li>
   </ul></td>

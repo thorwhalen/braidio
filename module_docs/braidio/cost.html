@@ -1,0 +1,287 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.cost &mdash; braidio 0.0.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=47de8214"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="braidio.delivery" href="delivery.html" />
+    <link rel="prev" title="braidio.conversation" href="conversation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">braidio.cost</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.cost.CostLine"><code class="docutils literal notranslate"><span class="pre">CostLine</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.cost.CostRollup"><code class="docutils literal notranslate"><span class="pre">CostRollup</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#braidio.cost.CostRollup.summary"><code class="docutils literal notranslate"><span class="pre">CostRollup.summary</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.cost.DEFAULT_USD_PER_1K_CHARS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_USD_PER_1K_CHARS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.cost.MODEL_USD_PER_1K_CHARS"><code class="docutils literal notranslate"><span class="pre">MODEL_USD_PER_1K_CHARS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.cost.RATE_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">RATE_ENV_VAR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.cost.billable_chars"><code class="docutils literal notranslate"><span class="pre">billable_chars()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.cost.estimate_cost"><code class="docutils literal notranslate"><span class="pre">estimate_cost()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.cost.tts_cost_usd"><code class="docutils literal notranslate"><span class="pre">tts_cost_usd()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.cost.usd_per_1k_chars"><code class="docutils literal notranslate"><span class="pre">usd_per_1k_chars()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genre.html">braidio.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="style.html">braidio.style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeline.html">braidio.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_voice.html">braidio.transforms._voice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">braidio.cost</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/braidio/cost.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-braidio.cost">
+<span id="braidio-cost"></span><h1>braidio.cost<a class="headerlink" href="#module-braidio.cost" title="Link to this heading"></a></h1>
+<p>Cost model for braidio’s paid operations (ElevenLabs TTS).</p>
+<p>braidio’s only spend is ElevenLabs synthesis — <a class="reference internal" href="../braidio.html#braidio.narrate" title="braidio.narrate"><code class="xref py py-func docutils literal notranslate"><span class="pre">braidio.narrate()</span></code></a> /
+<code class="xref py py-func docutils literal notranslate"><span class="pre">braidio.text_to_dialogue()</span></code> and the renderers built on them — billed by
+ElevenLabs <strong>per character</strong> of submitted text. Everything else (ffmpeg
+extraction, weaving, loudness normalization) is local and free.</p>
+<p>This module turns text into a USD figure so renders can attribute a cost onto
+<code class="docutils literal notranslate"><span class="pre">lacing.Artifact.cost_usd</span></code> and a free <a class="reference internal" href="#braidio.cost.estimate_cost" title="braidio.cost.estimate_cost"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate_cost()</span></code></a> can preview a whole
+<a class="reference internal" href="../braidio.html#braidio.Script" title="braidio.Script"><code class="xref py py-class docutils literal notranslate"><span class="pre">braidio.Script</span></code></a> before any synthesis is paid for.</p>
+<p><strong>The figure is an ESTIMATE</strong>, priced at a configurable per-1000-character rate
+(env <a class="reference internal" href="#braidio.cost.RATE_ENV_VAR" title="braidio.cost.RATE_ENV_VAR"><code class="xref py py-data docutils literal notranslate"><span class="pre">RATE_ENV_VAR</span></code></a>, the per-model <a class="reference internal" href="#braidio.cost.MODEL_USD_PER_1K_CHARS" title="braidio.cost.MODEL_USD_PER_1K_CHARS"><code class="xref py py-data docutils literal notranslate"><span class="pre">MODEL_USD_PER_1K_CHARS</span></code></a> table, or
+<a class="reference internal" href="#braidio.cost.DEFAULT_USD_PER_1K_CHARS" title="braidio.cost.DEFAULT_USD_PER_1K_CHARS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_USD_PER_1K_CHARS</span></code></a>). It equals what ElevenLabs bills for a <em>live</em>
+synthesis at that rate — not the provider’s exact invoice. braidio does not yet
+see the lower-level <code class="docutils literal notranslate"><span class="pre">mixing</span></code> on-disk cache, so a render served from that cache
+still reports its rate estimate rather than <code class="docutils literal notranslate"><span class="pre">$0</span></code> (a safe over-estimate for a
+spend ledger; see thorwhalen/braidio#8 to make it exact).</p>
+<p>This differs from <code class="docutils literal notranslate"><span class="pre">falaw</span></code> (which has no default rate and returns <code class="docutils literal notranslate"><span class="pre">None</span></code>
+whenever a real price is unknown): braidio deliberately supplies a <em>default</em> so a
+ledger has a number out of the box — while still returning <code class="docutils literal notranslate"><span class="pre">None</span></code> (<em>unpriced</em>,
+never a fake <code class="docutils literal notranslate"><span class="pre">0.0</span></code> for real text) when the rate is explicitly disabled or
+invalid. Characters are always counted exactly, so a dollar figure can be
+recomputed if the rate changes.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.cost.CostLine">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.cost.</span></span><span class="sig-name descname"><span class="pre">CostLine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">characters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/cost.html#CostLine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.cost.CostLine" title="Link to this definition"></a></dt>
+<dd><p>One billable line of an estimate (a narration beat or a dialogue beat).</p>
+<p>Named to echo <code class="docutils literal notranslate"><span class="pre">falaw.CostLine</span></code> (a line within a rollup) rather than
+<code class="docutils literal notranslate"><span class="pre">falaw.CostEstimate</span></code> (which means a per-call price spec) — so the vocabulary
+is consistent across the federation.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.cost.CostRollup">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.cost.</span></span><span class="sig-name descname"><span class="pre">CostRollup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">characters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpriced</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#braidio.cost.CostLine" title="braidio.cost.CostLine"><span class="pre">CostLine</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/cost.html#CostRollup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.cost.CostRollup" title="Link to this definition"></a></dt>
+<dd><p>A production’s estimated TTS spend, exact on characters, honest on dollars.</p>
+<p><code class="docutils literal notranslate"><span class="pre">usd</span></code> is the sum of the <em>priced</em> lines; <code class="docutils literal notranslate"><span class="pre">unpriced</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code> when some
+billable text had no configured rate (so <code class="docutils literal notranslate"><span class="pre">usd</span></code> is a lower bound). No billable
+lines (e.g. an all-segment script) gives <code class="docutils literal notranslate"><span class="pre">characters=0,</span> <span class="pre">usd=0.0,</span>
+<span class="pre">unpriced=False</span></code>. Named <code class="docutils literal notranslate"><span class="pre">CostRollup</span></code> to match <code class="docutils literal notranslate"><span class="pre">falaw.CostRollup</span></code>.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="braidio.cost.CostRollup.summary">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">summary</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#braidio.cost.CostRollup.summary" title="Link to this definition"></a></dt>
+<dd><p>One-line human summary (handy for a CLI/MCP preview).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="braidio.cost.DEFAULT_USD_PER_1K_CHARS">
+<span class="sig-prename descclassname"><span class="pre">braidio.cost.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_USD_PER_1K_CHARS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.3</span></span><a class="headerlink" href="#braidio.cost.DEFAULT_USD_PER_1K_CHARS" title="Link to this definition"></a></dt>
+<dd><p>Default USD per 1000 characters when nothing else is configured. Approximate:
+ElevenLabs bills per credit and the $/credit depends on your plan, so set
+<a class="reference internal" href="#braidio.cost.RATE_ENV_VAR" title="braidio.cost.RATE_ENV_VAR"><code class="xref py py-data docutils literal notranslate"><span class="pre">RATE_ENV_VAR</span></code></a> to your plan’s real rate. Kept slightly conservative so a
+budget over- rather than under-estimates spend.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="braidio.cost.MODEL_USD_PER_1K_CHARS">
+<span class="sig-prename descclassname"><span class="pre">braidio.cost.</span></span><span class="sig-name descname"><span class="pre">MODEL_USD_PER_1K_CHARS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#braidio.cost.MODEL_USD_PER_1K_CHARS" title="Link to this definition"></a></dt>
+<dd><p>Confirmed per-model rate overrides (USD per 1000 chars). A model listed here
+is priced at its own rate — winning over the env override and the default —
+because a confirmed price is more accurate than a global guess. Empty until
+ElevenLabs per-model rates are confirmed (e.g. <code class="docutils literal notranslate"><span class="pre">eleven_v3</span></code> dialogue vs
+<code class="docutils literal notranslate"><span class="pre">eleven_multilingual_v2</span></code>).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="braidio.cost.RATE_ENV_VAR">
+<span class="sig-prename descclassname"><span class="pre">braidio.cost.</span></span><span class="sig-name descname"><span class="pre">RATE_ENV_VAR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'BRAIDIO_TTS_USD_PER_1K_CHARS'</span></span><a class="headerlink" href="#braidio.cost.RATE_ENV_VAR" title="Link to this definition"></a></dt>
+<dd><p>Env var overriding the USD-per-1000-characters rate (global default for models
+not in <a class="reference internal" href="#braidio.cost.MODEL_USD_PER_1K_CHARS" title="braidio.cost.MODEL_USD_PER_1K_CHARS"><code class="xref py py-data docutils literal notranslate"><span class="pre">MODEL_USD_PER_1K_CHARS</span></code></a>). Set it to your ElevenLabs plan’s real
+rate for exact ledgers; set it to <code class="docutils literal notranslate"><span class="pre">none</span></code> to mark spend as <em>unpriced</em>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.cost.billable_chars">
+<span class="sig-prename descclassname"><span class="pre">braidio.cost.</span></span><span class="sig-name descname"><span class="pre">billable_chars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../../_modules/braidio/cost.html#billable_chars"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.cost.billable_chars" title="Link to this definition"></a></dt>
+<dd><p>Characters ElevenLabs bills for <code class="docutils literal notranslate"><span class="pre">text</span></code> (the whole submitted string).</p>
+<p>ElevenLabs charges for everything sent — including <code class="docutils literal notranslate"><span class="pre">eleven_v3</span></code> audio tags
+like <code class="docutils literal notranslate"><span class="pre">[excited]</span></code> — so this is just <code class="docutils literal notranslate"><span class="pre">len(text)</span></code>. A named function keeps the
+billing definition in one place if it ever needs to change.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">billable_chars</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
+<span class="go">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">billable_chars</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.cost.estimate_cost">
+<span class="sig-prename descclassname"><span class="pre">braidio.cost.</span></span><span class="sig-name descname"><span class="pre">estimate_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="script.html#braidio.script.Script" title="braidio.script.Script"><span class="pre">Script</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#braidio.cost.CostRollup" title="braidio.cost.CostRollup"><span class="pre">CostRollup</span></a></span></span><a class="reference internal" href="../../_modules/braidio/cost.html#estimate_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.cost.estimate_cost" title="Link to this definition"></a></dt>
+<dd><p>Estimate ElevenLabs spend for a <a class="reference internal" href="../braidio.html#braidio.Script" title="braidio.Script"><code class="xref py py-class docutils literal notranslate"><span class="pre">braidio.Script</span></code></a> or a raw string.</p>
+<p>Free/local work (segment extraction, weaving) contributes nothing. The returned
+<a class="reference internal" href="#braidio.cost.CostRollup" title="braidio.cost.CostRollup"><code class="xref py py-class docutils literal notranslate"><span class="pre">CostRollup</span></code></a> reports exact characters and an honest dollar sum (a lower
+bound when some text is unpriced; see <a class="reference internal" href="#braidio.cost.usd_per_1k_chars" title="braidio.cost.usd_per_1k_chars"><code class="xref py py-func docutils literal notranslate"><span class="pre">usd_per_1k_chars()</span></code></a>).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">braidio</span><span class="w"> </span><span class="kn">import</span> <span class="n">Script</span><span class="p">,</span> <span class="n">Narration</span><span class="p">,</span> <span class="n">SegmentBeat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Script</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">id_slug</span><span class="o">=</span><span class="s2">&quot;01&quot;</span><span class="p">,</span> <span class="n">beats</span><span class="o">=</span><span class="p">[</span>
+<span class="gp">... </span>    <span class="n">Narration</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;a&quot;</span> <span class="o">*</span> <span class="mi">500</span><span class="p">),</span> <span class="n">SegmentBeat</span><span class="p">(</span><span class="n">reference</span><span class="o">=</span><span class="s2">&quot;clip:1&quot;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">estimate_cost</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">characters</span>  <span class="c1"># only the narration counts; the clip is free</span>
+<span class="go">500</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.cost.tts_cost_usd">
+<span class="sig-prename descclassname"><span class="pre">braidio.cost.</span></span><span class="sig-name descname"><span class="pre">tts_cost_usd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/braidio/cost.html#tts_cost_usd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.cost.tts_cost_usd" title="Link to this definition"></a></dt>
+<dd><p>Estimated USD to synthesize <code class="docutils literal notranslate"><span class="pre">text</span></code>; <code class="docutils literal notranslate"><span class="pre">0.0</span></code> for empty, <code class="docutils literal notranslate"><span class="pre">None</span></code> if unpriced.</p>
+<p>Empty text is genuinely free (<code class="docutils literal notranslate"><span class="pre">0.0</span></code>) regardless of the rate; non-empty text
+is <code class="docutils literal notranslate"><span class="pre">None</span></code> only when <a class="reference internal" href="#braidio.cost.usd_per_1k_chars" title="braidio.cost.usd_per_1k_chars"><code class="xref py py-func docutils literal notranslate"><span class="pre">usd_per_1k_chars()</span></code></a> is unpriced.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tts_cost_usd</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.cost.usd_per_1k_chars">
+<span class="sig-prename descclassname"><span class="pre">braidio.cost.</span></span><span class="sig-name descname"><span class="pre">usd_per_1k_chars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/braidio/cost.html#usd_per_1k_chars"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.cost.usd_per_1k_chars" title="Link to this definition"></a></dt>
+<dd><p>Resolved USD-per-1000-characters rate (most specific source first).</p>
+<p>Resolution: a confirmed per-model rate in <a class="reference internal" href="#braidio.cost.MODEL_USD_PER_1K_CHARS" title="braidio.cost.MODEL_USD_PER_1K_CHARS"><code class="xref py py-data docutils literal notranslate"><span class="pre">MODEL_USD_PER_1K_CHARS</span></code></a> →
+the env override <a class="reference internal" href="#braidio.cost.RATE_ENV_VAR" title="braidio.cost.RATE_ENV_VAR"><code class="xref py py-data docutils literal notranslate"><span class="pre">RATE_ENV_VAR</span></code></a> → <a class="reference internal" href="#braidio.cost.DEFAULT_USD_PER_1K_CHARS" title="braidio.cost.DEFAULT_USD_PER_1K_CHARS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_USD_PER_1K_CHARS</span></code></a>.
+Returns <code class="docutils literal notranslate"><span class="pre">None</span></code> (<em>unpriced</em>, not free) when the env override is explicitly
+disabled (one of <code class="xref py py-data docutils literal notranslate"><span class="pre">_UNPRICED_SENTINELS</span></code>) or is not a finite, non-negative
+number — a bad rate must never silently become a dishonest negative/NaN spend.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="conversation.html" class="btn btn-neutral float-left" title="braidio.conversation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="delivery.html" class="btn btn-neutral float-right" title="braidio.delivery" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
