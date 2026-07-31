@@ -140,8 +140,9 @@ def audio_artifact(
 ) -> Artifact:
     """A content-addressed ``lacing.Artifact`` for a produced audio file.
 
-    ``cost_usd`` is the actual spend to produce this file (``None`` = unpriced,
-    never a fake ``0.0``); for TTS it comes from :func:`braidio.cost.tts_cost_usd`.
+    ``cost_usd`` is the cost to produce this file (``None`` = unpriced, never a
+    fake ``0.0``); for TTS it is a rate ESTIMATE from
+    :func:`braidio.cost.tts_cost_usd` (see that module + thorwhalen/braidio#8).
     """
     return Artifact.from_path(
         Path(path),

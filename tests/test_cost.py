@@ -1,8 +1,8 @@
 """Tests for :mod:`braidio.cost` — the ElevenLabs TTS cost model.
 
-Covers the configurable rate (env override / disable / bad value), per-character
-cost, and the Script-aware :func:`braidio.estimate_cost` (narration + dialogue are
-billed, segments are free; the published profile synthesizes clip substitutes).
+Covers the configurable rate (env override / disable / invalid / per-model), the
+per-character cost, and the Script-aware :func:`braidio.estimate_cost` (narration
++ dialogue are billed, segments are free).
 """
 
 import pytest
@@ -11,12 +11,14 @@ from braidio import Script, Narration, Dialogue, SegmentBeat
 from braidio.cost import (
     RATE_ENV_VAR,
     DEFAULT_USD_PER_1K_CHARS,
-    CostEstimate,
+    MODEL_USD_PER_1K_CHARS,
+    CostRollup,
     billable_chars,
     usd_per_1k_chars,
     tts_cost_usd,
     estimate_cost,
 )
+from braidio.tts import DEFAULT_MODEL_ID, DIALOGUE_MODEL_ID
 
 
 @pytest.fixture(autouse=True)
@@ -53,6 +55,21 @@ def test_bad_env_rate_is_unpriced(monkeypatch):
     assert usd_per_1k_chars() is None
 
 
+@pytest.mark.parametrize("bad", ["-0.5", "inf", "-inf", "nan"])
+def test_negative_or_nonfinite_rate_is_unpriced(monkeypatch, bad):
+    # A misconfigured rate must never become a dishonest negative/non-finite spend.
+    monkeypatch.setenv(RATE_ENV_VAR, bad)
+    assert usd_per_1k_chars() is None
+    assert tts_cost_usd("real text") is None
+
+
+def test_per_model_rate_wins_over_default(monkeypatch):
+    # A confirmed per-model rate is used even with the env unset (default path).
+    monkeypatch.setitem(MODEL_USD_PER_1K_CHARS, DIALOGUE_MODEL_ID, 0.9)
+    assert usd_per_1k_chars(DIALOGUE_MODEL_ID) == 0.9
+    assert usd_per_1k_chars(DEFAULT_MODEL_ID) == DEFAULT_USD_PER_1K_CHARS  # unaffected
+
+
 # --- per-text cost -----------------------------------------------------------
 
 
@@ -76,27 +93,45 @@ def test_tts_cost_unpriced_returns_none_but_empty_still_zero(monkeypatch):
 
 def test_estimate_str():
     est = estimate_cost("a" * 500)
-    assert isinstance(est, CostEstimate)
+    assert isinstance(est, CostRollup)
     assert est.characters == 500
     assert est.usd == pytest.approx(0.5 * DEFAULT_USD_PER_1K_CHARS)
     assert est.unpriced is False
 
 
 def test_estimate_script_bills_narration_and_dialogue_only():
+    narration = "a" * 100
+    dialogue = ("b" * 30, "c" * 20)
     script = Script(
         title="t",
         id_slug="01",
         beats=[
-            Narration(text="a" * 100),
+            Narration(text=narration),
             SegmentBeat(reference="clip:1"),  # extracted media = free
-            Dialogue(turns=(("A", "b" * 30), ("B", "c" * 20))),
+            Dialogue(turns=(("A", dialogue[0]), ("B", dialogue[1]))),
         ],
     )
     est = estimate_cost(script)
     assert est.characters == 100 + 50  # narration + dialogue turns; clip is free
-    assert est.usd == pytest.approx(0.150 * DEFAULT_USD_PER_1K_CHARS)
-    assert len(est.items) == 2  # the segment beat contributes no billable item
-    assert {it.kind for it in est.items} == {"narration", "dialogue"}
+    # Expected sum computed from the model — robust to future per-model rates.
+    expected = tts_cost_usd(narration, model_id=DEFAULT_MODEL_ID) + tts_cost_usd(
+        "".join(dialogue), model_id=DIALOGUE_MODEL_ID
+    )
+    assert est.usd == pytest.approx(expected)
+    assert len(est.lines) == 2  # the segment beat contributes no billable line
+    assert {ln.kind for ln in est.lines} == {"narration", "dialogue"}
+
+
+def test_estimate_dialogue_uses_dialogue_model_rate(monkeypatch):
+    # A distinct per-model dialogue rate: estimate_cost sums the mixed rates.
+    monkeypatch.setitem(MODEL_USD_PER_1K_CHARS, DIALOGUE_MODEL_ID, 0.9)
+    script = Script(
+        title="t",
+        id_slug="01",
+        beats=[Narration(text="n" * 1000), Dialogue(turns=(("A", "d" * 1000),))],
+    )
+    est = estimate_cost(script)
+    assert est.usd == pytest.approx(DEFAULT_USD_PER_1K_CHARS + 0.9)
 
 
 def test_estimate_all_segments_is_free():
@@ -118,16 +153,6 @@ def test_estimate_unpriced_flags_but_still_counts_chars(monkeypatch):
     assert est.characters == 100
     assert est.unpriced is True
     assert est.usd is None
-
-
-def test_estimate_published_profile_synthesizes_clip_substitute():
-    script = Script(
-        title="t",
-        id_slug="01",
-        beats=[SegmentBeat(reference="clip:1", published_substitute="y" * 40)],
-    )
-    assert estimate_cost(script).characters == 0  # personal cut plays the clip free
-    assert estimate_cost(script, published=True).characters == 40  # substitute is TTS
 
 
 def test_estimate_summary_is_human_readable():

@@ -68,8 +68,8 @@ from braidio.cost import (  # noqa: F401
     tts_cost_usd,
     billable_chars,
     usd_per_1k_chars,
-    CostEstimate,
-    CostItem,
+    CostRollup,
+    CostLine,
     RATE_ENV_VAR,
     DEFAULT_USD_PER_1K_CHARS,
 )
@@ -228,8 +228,8 @@ __all__ = [
     "tts_cost_usd",
     "billable_chars",
     "usd_per_1k_chars",
-    "CostEstimate",
-    "CostItem",
+    "CostRollup",
+    "CostLine",
     "RATE_ENV_VAR",
     "DEFAULT_USD_PER_1K_CHARS",
     # delivery

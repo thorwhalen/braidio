@@ -5,79 +5,79 @@ braidio's only spend is ElevenLabs synthesis — :func:`braidio.narrate` /
 ElevenLabs **per character** of submitted text. Everything else (ffmpeg
 extraction, weaving, loudness normalization) is local and free.
 
-This module is the single source of truth that turns text into an honest USD
-figure, so:
+This module turns text into a USD figure so renders can attribute a cost onto
+``lacing.Artifact.cost_usd`` and a free :func:`estimate_cost` can preview a whole
+:class:`braidio.Script` before any synthesis is paid for.
 
-- renders can populate ``lacing.Artifact.cost_usd`` (previously hardcoded
-  ``0.0``) and a usage ledger can record real dollars per call, and
-- a free :func:`estimate_cost` can preview a whole :class:`braidio.Script`
-  before any synthesis is paid for.
+**The figure is an ESTIMATE**, priced at a configurable per-1000-character rate
+(env :data:`RATE_ENV_VAR`, the per-model :data:`MODEL_USD_PER_1K_CHARS` table, or
+:data:`DEFAULT_USD_PER_1K_CHARS`). It equals what ElevenLabs bills for a *live*
+synthesis at that rate — not the provider's exact invoice. braidio does not yet
+see the lower-level ``mixing`` on-disk cache, so a render served from that cache
+still reports its rate estimate rather than ``$0`` (a safe over-estimate for a
+spend ledger; see thorwhalen/braidio#8 to make it exact).
 
-Characters are always counted exactly; the USD conversion uses a **configurable**
-per-1000-character rate (env :data:`RATE_ENV_VAR`, a per-model table, or the
-module default) — never a magic number at the call site (open/closed). Honest-cost
-rule (as in ``falaw``): when no rate is known the USD is ``None`` — *unpriced*, not
-a fake ``0.0`` — while the exact character count is still reported.
+This differs from ``falaw`` (which has no default rate and returns ``None``
+whenever a real price is unknown): braidio deliberately supplies a *default* so a
+ledger has a number out of the box — while still returning ``None`` (*unpriced*,
+never a fake ``0.0`` for real text) when the rate is explicitly disabled or
+invalid. Characters are always counted exactly, so a dollar figure can be
+recomputed if the rate changes.
 """
 
 from __future__ import annotations
 
+import math
 import os
 from dataclasses import dataclass
 from typing import Optional, Union
 
-from braidio.script import Script, Narration, Dialogue, SegmentBeat
+from braidio.script import Script, Narration, Dialogue
 from braidio.tts import DEFAULT_MODEL_ID, DIALOGUE_MODEL_ID
 
-#: Env var overriding the USD-per-1000-characters rate for every model.
+#: Env var overriding the USD-per-1000-characters rate (global default for models
+#: not in :data:`MODEL_USD_PER_1K_CHARS`). Set it to your ElevenLabs plan's real
+#: rate for exact ledgers; set it to ``none`` to mark spend as *unpriced*.
 RATE_ENV_VAR = "BRAIDIO_TTS_USD_PER_1K_CHARS"
 
 #: Default USD per 1000 characters when nothing else is configured. Approximate:
 #: ElevenLabs bills per credit and the $/credit depends on your plan, so set
-#: :data:`RATE_ENV_VAR` to your plan's real rate for exact ledgers. Kept slightly
-#: conservative so budgets over-estimate rather than under-estimate spend.
+#: :data:`RATE_ENV_VAR` to your plan's real rate. Kept slightly conservative so a
+#: budget over- rather than under-estimates spend.
 DEFAULT_USD_PER_1K_CHARS: float = 0.30
 
-#: Per-model rate overrides (USD per 1000 chars). ElevenLabs prices some models
-#: differently (e.g. the ``eleven_v3`` dialogue model); extend as rates are
-#: confirmed. An entry here wins over :data:`DEFAULT_USD_PER_1K_CHARS` but not
-#: over the env override.
+#: Confirmed per-model rate overrides (USD per 1000 chars). A model listed here
+#: is priced at its own rate — winning over the env override and the default —
+#: because a confirmed price is more accurate than a global guess. Empty until
+#: ElevenLabs per-model rates are confirmed (e.g. ``eleven_v3`` dialogue vs
+#: ``eleven_multilingual_v2``).
 MODEL_USD_PER_1K_CHARS: dict[str, float] = {}
 
 #: Env values (case-insensitive) that explicitly mark the rate as *unknown* so
-#: costs report ``None`` (unpriced) instead of a default.
+#: costs report ``None`` (unpriced) rather than defaulting.
 _UNPRICED_SENTINELS = ("", "none", "unpriced", "unknown")
 
 
 def usd_per_1k_chars(model_id: Optional[str] = None) -> Optional[float]:
-    """Resolved USD-per-1000-characters rate: env → per-model table → default.
+    """Resolved USD-per-1000-characters rate (most specific source first).
 
-    Returns ``None`` only when the rate is explicitly disabled (env set to one of
-    :data:`_UNPRICED_SENTINELS` or an unparseable value), signalling *unpriced*
-    rather than free.
-
-    >>> import os
-    >>> _ = os.environ.pop(RATE_ENV_VAR, None)
-    >>> usd_per_1k_chars() == DEFAULT_USD_PER_1K_CHARS
-    True
-    >>> os.environ[RATE_ENV_VAR] = "0.5"
-    >>> usd_per_1k_chars()
-    0.5
-    >>> os.environ[RATE_ENV_VAR] = "none"
-    >>> usd_per_1k_chars() is None
-    True
-    >>> del os.environ[RATE_ENV_VAR]
+    Resolution: a confirmed per-model rate in :data:`MODEL_USD_PER_1K_CHARS` →
+    the env override :data:`RATE_ENV_VAR` → :data:`DEFAULT_USD_PER_1K_CHARS`.
+    Returns ``None`` (*unpriced*, not free) when the env override is explicitly
+    disabled (one of :data:`_UNPRICED_SENTINELS`) or is not a finite, non-negative
+    number — a bad rate must never silently become a dishonest negative/NaN spend.
     """
+    if model_id and model_id in MODEL_USD_PER_1K_CHARS:
+        return MODEL_USD_PER_1K_CHARS[model_id]
     env = os.environ.get(RATE_ENV_VAR)
     if env is not None:
         if env.strip().lower() in _UNPRICED_SENTINELS:
             return None
         try:
-            return float(env)
+            val = float(env)
         except ValueError:
             return None
-    if model_id and model_id in MODEL_USD_PER_1K_CHARS:
-        return MODEL_USD_PER_1K_CHARS[model_id]
+        return val if (math.isfinite(val) and val >= 0) else None
     return DEFAULT_USD_PER_1K_CHARS
 
 
@@ -99,13 +99,13 @@ def billable_chars(text: Optional[str]) -> int:
 def tts_cost_usd(
     text: Optional[str], *, model_id: Optional[str] = None
 ) -> Optional[float]:
-    """Honest USD cost to synthesize ``text``; ``0.0`` for empty, ``None`` if unpriced.
+    """Estimated USD to synthesize ``text``; ``0.0`` for empty, ``None`` if unpriced.
+
+    Empty text is genuinely free (``0.0``) regardless of the rate; non-empty text
+    is ``None`` only when :func:`usd_per_1k_chars` is unpriced.
 
     >>> tts_cost_usd("")
     0.0
-    >>> _ = os.environ.pop(RATE_ENV_VAR, None)
-    >>> round(tts_cost_usd("x" * 1000), 4) == round(DEFAULT_USD_PER_1K_CHARS, 4)
-    True
     """
     chars = billable_chars(text)
     if chars == 0:
@@ -117,8 +117,13 @@ def tts_cost_usd(
 
 
 @dataclass(frozen=True)
-class CostItem:
-    """One billable unit of an estimate (a narration beat or a dialogue beat)."""
+class CostLine:
+    """One billable line of an estimate (a narration beat or a dialogue beat).
+
+    Named to echo ``falaw.CostLine`` (a line within a rollup) rather than
+    ``falaw.CostEstimate`` (which means a per-call price spec) — so the vocabulary
+    is consistent across the federation.
+    """
 
     label: str
     kind: str  # 'narration' | 'dialogue'
@@ -128,18 +133,19 @@ class CostItem:
 
 
 @dataclass(frozen=True)
-class CostEstimate:
+class CostRollup:
     """A production's estimated TTS spend, exact on characters, honest on dollars.
 
-    ``usd`` is the sum of the *priced* items; ``unpriced`` is ``True`` when some
-    billable text had no configured rate (so ``usd`` is a lower bound). ``0`` items
-    (e.g. an all-segment script) gives ``characters=0, usd=0.0, unpriced=False``.
+    ``usd`` is the sum of the *priced* lines; ``unpriced`` is ``True`` when some
+    billable text had no configured rate (so ``usd`` is a lower bound). No billable
+    lines (e.g. an all-segment script) gives ``characters=0, usd=0.0,
+    unpriced=False``. Named ``CostRollup`` to match ``falaw.CostRollup``.
     """
 
     characters: int
     usd: Optional[float]
     unpriced: bool
-    items: tuple[CostItem, ...] = ()
+    lines: tuple[CostLine, ...] = ()
 
     @property
     def summary(self) -> str:
@@ -149,82 +155,61 @@ class CostEstimate:
         return f"{self.characters:,} chars → {dollars}{tail}"
 
 
-def _script_items(script: Script, *, published: bool) -> list[CostItem]:
-    """Billable items of ``script``. ``published`` uses rights-safe substitutes.
+def _script_lines(script: Script) -> list[CostLine]:
+    """Billable lines of ``script``: narration + dialogue beats (segments are free).
 
-    Narration uses ``published_text`` (when set) under the published profile;
-    SegmentBeats are free clips *except* when the published profile substitutes a
-    synthesized narration (``published_substitute``). Bare segment beats cost $0.
+    Estimates the *default* (personal) cut. Published-cut costing (rights-safe
+    rewrites + synthesized clip substitutes) must reuse :func:`braidio.plan_production`
+    rather than re-deriving the rights rules here — a follow-up.
     """
-    items: list[CostItem] = []
+    lines: list[CostLine] = []
     for i, beat in enumerate(script.beats):
         if isinstance(beat, Narration):
-            text = (beat.published_text or beat.text) if published else beat.text
-            items.append(
-                CostItem(
+            lines.append(
+                CostLine(
                     label=f"beat[{i}] narration",
                     kind="narration",
-                    characters=billable_chars(text),
-                    usd=tts_cost_usd(text, model_id=DEFAULT_MODEL_ID),
+                    characters=billable_chars(beat.text),
+                    usd=tts_cost_usd(beat.text, model_id=DEFAULT_MODEL_ID),
                     model_id=DEFAULT_MODEL_ID,
                 )
             )
         elif isinstance(beat, Dialogue):
             text = "".join(t for _role, t in beat.turns)
-            items.append(
-                CostItem(
-                    label=(
-                        f"beat[{i}] dialogue ({beat.label})"
-                        if beat.label
-                        else f"beat[{i}] dialogue"
-                    ),
+            label = f"beat[{i}] dialogue"
+            if beat.label:
+                label += f" ({beat.label})"
+            lines.append(
+                CostLine(
+                    label=label,
                     kind="dialogue",
                     characters=billable_chars(text),
                     usd=tts_cost_usd(text, model_id=DIALOGUE_MODEL_ID),
                     model_id=DIALOGUE_MODEL_ID,
                 )
             )
-        elif isinstance(beat, SegmentBeat) and published and beat.published_substitute:
-            text = beat.published_substitute
-            items.append(
-                CostItem(
-                    label=f"beat[{i}] published-substitute",
-                    kind="narration",
-                    characters=billable_chars(text),
-                    usd=tts_cost_usd(text, model_id=DEFAULT_MODEL_ID),
-                    model_id=DEFAULT_MODEL_ID,
-                )
-            )
-        # bare SegmentBeat (default profile) = free extracted media; no item.
-    return items
+        # a SegmentBeat is extracted media = free; it contributes no line.
+    return lines
 
 
 def estimate_cost(
-    source: Union[Script, str],
-    *,
-    model_id: Optional[str] = None,
-    published: bool = False,
-) -> CostEstimate:
+    source: Union[Script, str], *, model_id: Optional[str] = None
+) -> CostRollup:
     """Estimate ElevenLabs spend for a :class:`braidio.Script` or a raw string.
 
-    Free/local work (segment extraction, weaving) contributes nothing. ``published``
-    estimates the published cut (rights-safe rewrites + synthesized clip
-    substitutes). The returned :class:`CostEstimate` reports exact characters and an
-    honest dollar sum (a lower bound when some text is :func:`unpriced <usd_per_1k_chars>`).
+    Free/local work (segment extraction, weaving) contributes nothing. The returned
+    :class:`CostRollup` reports exact characters and an honest dollar sum (a lower
+    bound when some text is unpriced; see :func:`usd_per_1k_chars`).
 
     >>> from braidio import Script, Narration, SegmentBeat
-    >>> _ = os.environ.pop(RATE_ENV_VAR, None)
     >>> s = Script(title="x", id_slug="01", beats=[
     ...     Narration(text="a" * 500), SegmentBeat(reference="clip:1")])
-    >>> est = estimate_cost(s)
-    >>> est.characters  # only the narration counts; the clip is free
+    >>> estimate_cost(s).characters  # only the narration counts; the clip is free
     500
-    >>> est.unpriced
-    False
     """
     if isinstance(source, str):
-        items = [
-            CostItem(
+        lines = [
+            CostLine(
                 label="text",
                 kind="narration",
                 characters=billable_chars(source),
@@ -233,12 +218,12 @@ def estimate_cost(
             )
         ]
     else:
-        items = _script_items(source, published=published)
+        lines = _script_lines(source)
 
-    characters = sum(it.characters for it in items)
-    priced = [it.usd for it in items if it.usd is not None]
-    unpriced = any(it.characters > 0 and it.usd is None for it in items)
+    characters = sum(ln.characters for ln in lines)
+    priced = [ln.usd for ln in lines if ln.usd is not None]
+    unpriced = any(ln.characters > 0 and ln.usd is None for ln in lines)
     usd = round(sum(priced), 6) if priced else (None if unpriced else 0.0)
-    return CostEstimate(
-        characters=characters, usd=usd, unpriced=unpriced, items=tuple(items)
+    return CostRollup(
+        characters=characters, usd=usd, unpriced=unpriced, lines=tuple(lines)
     )

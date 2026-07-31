@@ -115,21 +115,29 @@ class NarrationRenderTTS(BaseTransform):
 
         skel = skeleton[0]
         cache_key = skel.body["cache_key"]
-        if use_cache and not force:
-            hit = cached_output(project, TIER_NARRATION_RENDER, cache_key)
-            if hit is not None:
-                return TransformResult(
-                    annotations=(hit,), artifacts=(), cost_usd_actual=0.0
-                )
-
         parents = resolve_parents(skel, graph_index(project))
         beat = require_tier(parents, TIER_NARRATIVE_BEAT)
         va = require_tier(parents, TIER_VOICE_ASSIGNMENT)
         cfg = require_tier(parents, TIER_WEAVE_CONFIG)
         config = cfg.body.get("config", {})
-
         text = beat.body.get("text", "")
         model_id = config.get("model_id", DEFAULT_MODEL_ID)
+        # ElevenLabs bills per character — the only real spend here. A rate ESTIMATE
+        # (== live-call spend; may over-report on a lower-level mixing-cache hit that
+        # braidio can't yet detect — thorwhalen/braidio#8).
+        cost = tts_cost_usd(text, model_id=model_id)
+
+        if use_cache and not force:
+            hit = cached_output(project, TIER_NARRATION_RENDER, cache_key)
+            if hit is not None:
+                # No synthesis: $0 spent, and the estimate is what caching saved.
+                return TransformResult(
+                    annotations=(hit,),
+                    artifacts=(),
+                    cost_usd_actual=0.0,
+                    cache_hit_savings_usd=cost if cost is not None else 0.0,
+                )
+
         out_path = project.root / "data" / "tts" / f"{skel.id}.mp3"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         braidio.narrate(
@@ -140,8 +148,6 @@ class NarrationRenderTTS(BaseTransform):
             model_id=model_id,
             voice_settings=config.get("voice_settings", {}),
         )
-        # ElevenLabs bills per character — the real (only) spend of this Transform.
-        cost = tts_cost_usd(text, model_id=model_id)
         duration = safe_duration(out_path)
         artifact = audio_artifact(
             out_path,

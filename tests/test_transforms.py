@@ -213,6 +213,86 @@ def test_narration_render_cache_skip(project, script_and_source, patched_synthes
     assert len(nw.annotations_at_tier(project.root, "narration-renders")) == 1
 
 
+def test_narration_render_reports_real_cost(
+    project, script_and_source, patched_synthesis, monkeypatch
+):
+    # The whole point of the cost model: an actual synthesis reports real dollars
+    # on both the TransformResult and the produced Artifact (not a fake 0.0).
+    import nw
+    from nw import TransformInputs
+    from braidio.cost import RATE_ENV_VAR, tts_cost_usd
+
+    monkeypatch.delenv(RATE_ENV_VAR, raising=False)  # default per-char rate
+
+    script, source = script_and_source
+    braidio.transforms.ingest_script(project, script, source=source)
+    beat = nw.annotations_at_tier(project.root, "narrative-beats")[0]
+    voice = nw.get_transform("beat_to_voice_assignment.default")
+    narration = nw.get_transform("narration_render.tts")
+
+    voice.execute(project, *voice.plan(project, TransformInputs(primary=(beat,))))
+    plan1, skel1 = narration.plan(project, TransformInputs(primary=(beat,)))
+    result = narration.execute(project, plan1, skel1)
+
+    expected = tts_cost_usd(beat.body["text"])
+    assert expected > 0  # the beat carries real narration text
+    assert result.cost_usd_actual == pytest.approx(expected)
+    assert result.artifacts[0].cost_usd == pytest.approx(expected)
+
+
+def test_narration_render_cache_hit_reports_savings(
+    project, script_and_source, patched_synthesis, monkeypatch
+):
+    # On a graph cache hit no synthesis happens ($0 spent), but the avoided cost
+    # is reported as cache_hit_savings_usd — symmetric with the spend path.
+    import nw
+    from nw import TransformInputs
+    from braidio.cost import RATE_ENV_VAR, tts_cost_usd
+
+    monkeypatch.delenv(RATE_ENV_VAR, raising=False)
+    script, source = script_and_source
+    braidio.transforms.ingest_script(project, script, source=source)
+    beat = nw.annotations_at_tier(project.root, "narrative-beats")[0]
+    voice = nw.get_transform("beat_to_voice_assignment.default")
+    narration = nw.get_transform("narration_render.tts")
+    voice.execute(project, *voice.plan(project, TransformInputs(primary=(beat,))))
+
+    narration.execute(
+        project, *narration.plan(project, TransformInputs(primary=(beat,)))
+    )
+    hit = narration.execute(
+        project, *narration.plan(project, TransformInputs(primary=(beat,)))
+    )
+
+    assert hit.artifacts == ()  # nothing produced on a hit
+    assert hit.cost_usd_actual == 0.0  # nothing spent
+    assert hit.cache_hit_savings_usd == pytest.approx(tts_cost_usd(beat.body["text"]))
+
+
+def test_narration_render_unpriced_cost(
+    project, script_and_source, patched_synthesis, monkeypatch
+):
+    # Rate disabled: spend is honestly unpriced — Artifact.cost_usd is None (never a
+    # fake 0.0), and cost_usd_actual falls back to 0.0 (nw's field is a plain float).
+    import nw
+    from nw import TransformInputs
+    from braidio.cost import RATE_ENV_VAR
+
+    monkeypatch.setenv(RATE_ENV_VAR, "none")
+    script, source = script_and_source
+    braidio.transforms.ingest_script(project, script, source=source)
+    beat = nw.annotations_at_tier(project.root, "narrative-beats")[0]
+    voice = nw.get_transform("beat_to_voice_assignment.default")
+    narration = nw.get_transform("narration_render.tts")
+    voice.execute(project, *voice.plan(project, TransformInputs(primary=(beat,))))
+    result = narration.execute(
+        project, *narration.plan(project, TransformInputs(primary=(beat,)))
+    )
+
+    assert result.artifacts[0].cost_usd is None
+    assert result.cost_usd_actual == 0.0
+
+
 def test_commentary_weave_genre_ready():
     import nw
 
