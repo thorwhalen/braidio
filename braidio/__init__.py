@@ -61,6 +61,18 @@ from braidio.tts import (  # noqa: F401
     DEFAULT_VOICE_SETTINGS,
     VOICE_ENV_VAR,
 )
+
+# --- cost model (ElevenLabs TTS spend) ---
+from braidio.cost import (  # noqa: F401
+    estimate_cost,
+    tts_cost_usd,
+    billable_chars,
+    usd_per_1k_chars,
+    CostRollup,
+    CostLine,
+    RATE_ENV_VAR,
+    DEFAULT_USD_PER_1K_CHARS,
+)
 from braidio.conversation import (  # noqa: F401
     ConversationCast,
     DEFAULT_CAST,
@@ -211,6 +223,15 @@ __all__ = [
     "DEFAULT_MODEL_ID",
     "DEFAULT_VOICE_SETTINGS",
     "VOICE_ENV_VAR",
+    # cost (ElevenLabs TTS spend)
+    "estimate_cost",
+    "tts_cost_usd",
+    "billable_chars",
+    "usd_per_1k_chars",
+    "CostRollup",
+    "CostLine",
+    "RATE_ENV_VAR",
+    "DEFAULT_USD_PER_1K_CHARS",
     # delivery
     "Delivery",
     "DELIVERIES",

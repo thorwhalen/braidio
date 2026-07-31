@@ -105,6 +105,15 @@ render_production(
 )
 ```
 
+### Cost tracking
+
+ElevenLabs TTS is braidio's only spend (everything else is local ffmpeg). `braidio.estimate_cost(script)` previews a production's cost before you pay for synthesis, and real renders attribute a per-character cost onto their artifacts. Dollars are a **rate estimate** — set your ElevenLabs plan's rate for exact figures:
+
+| Env var | Meaning |
+|---|---|
+| `BRAIDIO_TTS_USD_PER_1K_CHARS` | USD per 1000 characters. Unset → a conservative default; `none` → mark spend *unpriced* (character counts still reported, dollars `None`). |
+| `BRAIDIO_TTS_VOICE` | Default ElevenLabs voice id for narration. |
+
 ## What it deliberately does *not* do
 
 braidio is a thin orchestration layer. It **delegates**:
