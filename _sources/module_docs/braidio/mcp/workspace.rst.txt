@@ -1,0 +1,4 @@
+braidio.mcp.workspace
+=====================
+.. automodule:: braidio.mcp.workspace
+   :members:

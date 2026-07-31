@@ -14,6 +14,11 @@
    module_docs/braidio/formats
    module_docs/braidio/genre
    module_docs/braidio/kinds
+   module_docs/braidio/mcp
+   module_docs/braidio/mcp/_helpers
+   module_docs/braidio/mcp/metering
+   module_docs/braidio/mcp/tools
+   module_docs/braidio/mcp/workspace
    module_docs/braidio/multivoice
    module_docs/braidio/music
    module_docs/braidio/project
