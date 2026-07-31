@@ -31,6 +31,7 @@ from braidio.bodies._render_nodes import (
     NARRATION_RENDER_V1,
     NarrationRenderBodyV1,
 )
+from braidio.cost import tts_cost_usd
 from braidio.tts import DEFAULT_MODEL_ID, DEFAULT_VOICE_ID
 from braidio.transforms._common import (
     TIER_NARRATIVE_BEAT,
@@ -127,22 +128,27 @@ class NarrationRenderTTS(BaseTransform):
         cfg = require_tier(parents, TIER_WEAVE_CONFIG)
         config = cfg.body.get("config", {})
 
+        text = beat.body.get("text", "")
+        model_id = config.get("model_id", DEFAULT_MODEL_ID)
         out_path = project.root / "data" / "tts" / f"{skel.id}.mp3"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         braidio.narrate(
-            beat.body.get("text", ""),
+            text,
             out_path,
             api_key=None,  # resolved from env; key injection is a follow-up
             voice_id=va.body.get("voice_id") or DEFAULT_VOICE_ID,
-            model_id=config.get("model_id", DEFAULT_MODEL_ID),
+            model_id=model_id,
             voice_settings=config.get("voice_settings", {}),
         )
+        # ElevenLabs bills per character — the real (only) spend of this Transform.
+        cost = tts_cost_usd(text, model_id=model_id)
         duration = safe_duration(out_path)
         artifact = audio_artifact(
             out_path,
             transform_name=self.name,
             derived_from=skel.provenance.was_derived_from,
             duration_s=duration,
+            cost_usd=cost,
         )
         completed = skel.model_copy(
             update={
@@ -158,6 +164,6 @@ class NarrationRenderTTS(BaseTransform):
         return TransformResult(
             annotations=(completed,),
             artifacts=(artifact,),
-            cost_usd_actual=0.0,
+            cost_usd_actual=cost if cost is not None else 0.0,
             cache_hit_savings_usd=0.0,
         )

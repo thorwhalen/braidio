@@ -136,8 +136,13 @@ def audio_artifact(
     transform_name: str,
     derived_from,
     duration_s: float | None = None,
+    cost_usd: float | None = None,
 ) -> Artifact:
-    """A content-addressed ``lacing.Artifact`` for a produced audio file."""
+    """A content-addressed ``lacing.Artifact`` for a produced audio file.
+
+    ``cost_usd`` is the actual spend to produce this file (``None`` = unpriced,
+    never a fake ``0.0``); for TTS it comes from :func:`braidio.cost.tts_cost_usd`.
+    """
     return Artifact.from_path(
         Path(path),
         kind="audio",
@@ -145,6 +150,7 @@ def audio_artifact(
         was_attributed_to="agent:braidio",
         was_derived_from=tuple(str(x) for x in derived_from),
         duration_s=duration_s,
+        cost_usd=cost_usd,
     )
 
 
