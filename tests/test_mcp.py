@@ -67,7 +67,7 @@ def _mock_token(monkeypatch, email):
 def test_to_json_coerces_path_enum_dataclass():
     from braidio import Profile, Voice
 
-    assert to_json(Path("/a/b")) == "/a/b"
+    assert to_json(Path("/a/b")) == str(Path("/a/b"))  # Path -> str (platform-agnostic)
     assert to_json(Profile.PUBLISHED) == "published"
     assert to_json(Voice(id="v", name="V", gender="f")) == {
         "id": "v",
