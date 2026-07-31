@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from braidio.sources import (
     ResolvedSegment,
     SegmentSource,
@@ -51,6 +53,6 @@ def test_timed_line_segment_source_protocol():
     assert isinstance(src, SegmentSource)  # runtime_checkable structural match
     rs = src.resolve("The ten-dollar Founding Father without a father")
     assert isinstance(rs, ResolvedSegment)
-    assert str(rs.asset_path) == "/tmp/song.mp3"
+    assert Path(rs.asset_path) == Path("/tmp/song.mp3")  # platform-agnostic
     assert (rs.start_s, rs.end_s) == (18.74, 22.27)
     assert src.resolve("nothing like this appears") is None
