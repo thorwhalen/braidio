@@ -21,13 +21,14 @@ import braidio  # attr access (braidio.narrate, ...) so tests can monkeypatch
 from fastmcp.exceptions import ToolError
 
 from braidio.mcp._helpers import script_from_json, source_from_json, to_json
-from braidio.mcp.metering import caller_email
+from braidio.mcp.metering import current_email
 from braidio.mcp.workspace import Workspace
+from braidio.tts import DEFAULT_MODEL_ID, DIALOGUE_MODEL_ID
 
 
 def _workspace() -> Workspace:
-    """The calling user's workspace (email resolved from the OAuth token / dev fallback)."""
-    return Workspace.for_email(caller_email())
+    """The calling user's workspace, keyed by the identity the middleware resolved."""
+    return Workspace.for_email(current_email())
 
 
 def _require_nw(tool: str) -> None:
@@ -222,6 +223,58 @@ def _work_dir(ws: Workspace, name: str) -> str:
     return str(ws.renders_dir / "_work" / name)
 
 
+def _check_source(scr, source) -> None:
+    """Fail early if a script needs segment media but no ``source`` was given.
+
+    A segment source references a **server-accessible** ``asset_path``; a remote
+    caller can only weave clips whose media already lives on the server (retrieval /
+    upload of media is a connector concern — thorwhalen/braidio#10).
+    """
+    from braidio import SegmentBeat
+
+    if source is None and any(isinstance(b, SegmentBeat) for b in scr.beats):
+        raise ToolError(
+            "this script has segment beats but no `source`; provide a source (timed "
+            "lines + a server-accessible asset_path) or use a narration-only script"
+        )
+
+
+def _render_cost(scr, profile: str) -> dict:
+    """Estimate the spend of the beats that WILL render under ``profile``.
+
+    Costs :func:`braidio.plan_production`'s output (the SSOT for the rights
+    projection), so under ``"published"`` dropped clips cost nothing and synthesized
+    substitutes are billed — unlike costing the raw script. The figure is a rate
+    estimate (``cost_basis="estimate"``; see :mod:`braidio.cost` + braidio#8).
+    """
+    from braidio import Profile
+
+    plan = braidio.plan_production(scr, Profile(profile))
+    chars = 0
+    priced: list[float] = []
+    unpriced = False
+    for b in plan.beats:
+        if b.kind == "narration":
+            text, model = b.content, DEFAULT_MODEL_ID
+        elif b.kind == "dialogue":
+            text, model = "".join(t for _r, t in (b.turns or ())), DIALOGUE_MODEL_ID
+        else:
+            continue  # clip = free (local ffmpeg)
+        chars += braidio.billable_chars(text)
+        cost = braidio.tts_cost_usd(text, model_id=model)
+        if cost is None and text:
+            unpriced = True
+        elif cost is not None:
+            priced.append(cost)
+    usd = round(sum(priced), 6) if priced else (None if unpriced else 0.0)
+    return {
+        "cost_usd": usd,
+        "characters": chars,
+        "unpriced": unpriced,
+        "cost_basis": "estimate",
+    }
+
+
 def narrate(
     text: str,
     voice_id: str | None = None,
@@ -237,6 +290,7 @@ def narrate(
         "path": str(out),
         "cost_usd": braidio.tts_cost_usd(text, model_id=model_id),
         "characters": braidio.billable_chars(text),
+        "cost_basis": "estimate",
     }
 
 
@@ -252,6 +306,7 @@ def render_dialogue(turns: list[list[str]], name: str = "dialogue") -> dict:
         "path": str(out),
         "cost_usd": braidio.tts_cost_usd(text, model_id="eleven_v3"),
         "characters": braidio.billable_chars(text),
+        "cost_basis": "estimate",
     }
 
 
@@ -272,6 +327,7 @@ def render_multivoice(
         "path": str(out),
         "cost_usd": braidio.tts_cost_usd(text),
         "characters": braidio.billable_chars(text),
+        "cost_basis": "estimate",
     }
 
 
@@ -294,6 +350,7 @@ def compose_narration(
         "path": str(out),
         "cost_usd": braidio.tts_cost_usd(text),
         "characters": braidio.billable_chars(text),
+        "cost_basis": "estimate",
     }
 
 
@@ -312,26 +369,21 @@ def render_production(
     from braidio import Profile
 
     scr = script_from_json(script)
+    src = source_from_json(source)
+    _check_source(scr, src)
     ws = _workspace()
     stem = name or scr.id_slug
     out = ws.render_path(stem)
     braidio.render_production(
         scr,
-        source=source_from_json(source),
+        source=src,
         profile=Profile(profile),
         out_path=out,
         tts_dir=_work_dir(ws, stem) + "/tts",
         clips_dir=_work_dir(ws, stem) + "/clips",
         episodes_dir=str(ws.renders_dir),
     )
-    roll = braidio.estimate_cost(scr)
-    return {
-        "url": out.as_uri(),
-        "path": str(out),
-        "cost_usd": roll.usd,
-        "characters": roll.characters,
-        "unpriced": roll.unpriced,
-    }
+    return {"url": out.as_uri(), "path": str(out), **_render_cost(scr, profile)}
 
 
 def render_format(
@@ -349,23 +401,22 @@ def render_format(
             f"unknown format {format_id!r}; use one of {sorted(braidio.FORMATS)}"
         )
     scr = script_from_json(script)
+    src = source_from_json(source)
+    _check_source(scr, src)
     ws = _workspace()
-    out = ws.render_path(name or scr.id_slug)
+    stem = name or scr.id_slug
+    out = ws.render_path(stem)
     braidio.render_format(
         braidio.FORMATS[format_id],
         scr,
-        source=source_from_json(source),
+        source=src,
         profile=Profile(profile),
         out_path=out,
+        tts_dir=_work_dir(ws, stem) + "/tts",
+        clips_dir=_work_dir(ws, stem) + "/clips",
+        episodes_dir=str(ws.renders_dir),
     )
-    roll = braidio.estimate_cost(scr)
-    return {
-        "url": out.as_uri(),
-        "path": str(out),
-        "cost_usd": roll.usd,
-        "characters": roll.characters,
-        "unpriced": roll.unpriced,
-    }
+    return {"url": out.as_uri(), "path": str(out), **_render_cost(scr, profile)}
 
 
 def weave_project(project_id: str, script: dict, source: dict | None = None) -> dict:
@@ -377,14 +428,13 @@ def weave_project(project_id: str, script: dict, source: dict | None = None) -> 
     """
     _require_nw("weave_project")
     scr = script_from_json(script)
+    src = source_from_json(source)
+    _check_source(scr, src)
     proj = _workspace().open_project(project_id)
-    episode = braidio.weave_project(proj, scr, source=source_from_json(source))
-    roll = braidio.estimate_cost(scr)
+    episode = braidio.weave_project(proj, scr, source=src)
     body = episode.body
     return {
         "episode": to_json(body),
         "url": body.get("url"),
-        "cost_usd": roll.usd,
-        "characters": roll.characters,
-        "unpriced": roll.unpriced,
+        **_render_cost(scr, "personal"),
     }

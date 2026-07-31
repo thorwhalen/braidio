@@ -116,6 +116,12 @@ install.macos = "brew install ffmpeg"
 [tool.wads.ci]
 project_name = ""
 
+# Install the `mcp` extra in CI so the MCP-server tests (fastmcp + py2mcp + the
+# nw-app) actually run — without this, tests/test_mcp.py and the nw-gated
+# tests/test_transforms.py + tests/test_nw_app.py are silently skipped.
+[tool.wads.ci.install]
+extras = "mcp"
+
 [tool.wads.ci.commands]
 pre_test = []
 test = []

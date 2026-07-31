@@ -1,28 +1,34 @@
 """Usage metering + access control for the braidio MCP server.
 
 The server runs with a **shared** ElevenLabs key, so the usage ledger is the only
-record of who spent what. Metering is a FastMCP **middleware**, not per-tool
-decorators — a decorator you forget on a paid tool means untracked spend; a
-middleware wraps *every* call (this is what py2mcp's ``middleware=`` hook,
-i2mint/py2mcp#7, exists for). It runs after OAuth, so the caller's email is known.
+record of who spent what — which makes identity and ledger integrity load-bearing.
+Both live here as one FastMCP **middleware** (not per-tool decorators — a decorator
+you forget on a paid tool means untracked spend; the middleware wraps *every* call,
+which is what py2mcp's ``middleware=`` hook, i2mint/py2mcp#7, exists for).
 
-Two concerns:
+Design (all **fail-closed**):
 
-- **Access** — an in-code allowlist (defense-in-depth over the platform's
-  ``resource_allowlist``): a caller whose email isn't allowed is rejected before
-  any tool runs.
-- **Usage** — one append-only ledger entry per call: who / when / tool, and — for
-  costed tools that surface it in their result — ``cost_usd`` and
-  ``cache_hit_savings_usd``. The ledger is a ``MutableMapping`` injected by the
-  connector (a ``dol`` file store under ``~/.local/share/braidio/usage/`` locally;
-  swappable for S3/DB later without touching this code).
+- **Identity is resolved ONCE**, here, from the verified OAuth token (its ``email``
+  claim, else ``sub``). There is **no ambient fallback**: a served request without a
+  token is rejected. A ``local_user`` may be set for local/stdio dev — an *explicit*
+  opt-in, never inferred. The resolved email is put in a context var and the tools
+  read it via :func:`current_email` (they never re-derive it), so authorization,
+  metering, and per-user workspace all key off the same identity.
+- **Authorization** — a caller not in ``allowed`` is rejected before any tool runs;
+  a served server with no ``allowed`` and no ``allow_any_authenticated`` rejects
+  everyone (deny by default).
+- **Usage** — a write-ahead ledger entry is recorded *before* the call (if that
+  write fails the call is **refused**, so money is never spent un-recordably), then
+  updated with the outcome + ``cost_usd``. The ledger store is a ``MutableMapping``
+  injected by the connector (a ``dol`` file store in prod; a ``dict`` in tests).
 """
 
 from __future__ import annotations
 
-import os
+import itertools
 import time
 from collections.abc import MutableMapping
+from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
@@ -30,52 +36,74 @@ from typing import Optional
 from fastmcp.exceptions import ToolError
 from fastmcp.server.middleware import Middleware
 
-#: Env fallback for the caller email when there is no OAuth context (stdio/dev).
-LOCAL_USER_ENV_VAR = "BRAIDIO_MCP_LOCAL_USER"
+from braidio.mcp.workspace import _safe_component
+
+#: Set by :class:`MeteringMiddleware` for the duration of a tool call; read by tools.
+_CURRENT_EMAIL: ContextVar[Optional[str]] = ContextVar(
+    "braidio_mcp_email", default=None
+)
 
 
-def caller_email(*, default: Optional[str] = None) -> str:
-    """The authenticated caller's email (token ``sub``), lowercased.
+def token_email() -> Optional[str]:
+    """The verified caller's email from the OAuth token (``email`` claim, else ``sub``).
 
-    Falls back — when there is no request/auth context (local stdio, tests) — to
-    ``default`` → ``$BRAIDIO_MCP_LOCAL_USER`` → ``"local@braidio"``.
+    Lowercased, or ``None`` when there is no request/token context — deliberately
+    **no fallback**, so a caller can be failed closed rather than silently handed a
+    shared identity. (enlace_auth mints ``sub = email``; a generic IdP's ``email``
+    claim is preferred when present.)
     """
     try:
         from fastmcp.server.dependencies import get_access_token
 
         token = get_access_token()
     except Exception:  # noqa: BLE001 — no active request/token context
-        token = None
-    if token is not None:
-        sub = (getattr(token, "claims", None) or {}).get("sub")
-        if sub:
-            return str(sub).lower()
-    return (default or os.environ.get(LOCAL_USER_ENV_VAR) or "local@braidio").lower()
+        return None
+    if token is None:
+        return None
+    claims = getattr(token, "claims", None) or {}
+    ident = claims.get("email") or claims.get("sub")
+    return str(ident).lower() if ident else None
+
+
+def current_email() -> str:
+    """The identity the middleware resolved for the in-flight call (SSOT for tools).
+
+    Raises if called outside a metered tool call — a tool must never run, or place
+    data, under an unauthenticated/unknown identity.
+    """
+    email = _CURRENT_EMAIL.get()
+    if not email:
+        raise ToolError("no caller identity in context (metering middleware inactive)")
+    return email
 
 
 @dataclass(frozen=True)
 class UsageLedger:
     """Append-only usage/cost ledger over an injected ``MutableMapping``.
 
-    One JSON entry per call, keyed ``{email}/{YYYY-MM}/{ts_ns}-{tool}.json`` — a
-    layout that answers "what did X spend this month" with a cheap subtree scan.
-    The store is DI'd (a ``dol`` file store in prod, a plain ``dict`` in tests) so
-    the ledger can grow up to blob storage without changing callers.
+    One JSON entry per call, keyed ``{email}/{YYYY-MM}/{id}.json`` — a layout that
+    answers "what did X spend this month" with a cheap subtree scan. The email
+    component is traversal-checked (matching the workspace) so a hostile identity
+    can't escape its ledger prefix. The store is DI'd so the ledger can grow up to
+    blob storage without changing callers.
     """
 
     store: MutableMapping
 
     def record(self, entry: dict) -> str:
-        key = f"{entry['email']}/{entry['month']}/{entry['id']}.json"
+        email = _safe_component(entry["email"], label="ledger email")
+        key = f"{email}/{entry['month']}/{entry['id']}.json"
         self.store[key] = entry
         return key
 
 
 class MeteringMiddleware(Middleware):
-    """FastMCP middleware: authorize the caller, then meter every tool call.
+    """FastMCP middleware: resolve + authorize the caller, then meter every call.
 
-    ``allowed`` is an email allow-set (``None`` = allow any authenticated caller);
-    ``default_email`` overrides the no-auth fallback for local dev.
+    ``allowed`` is an email allow-set; ``local_user`` enables local/dev mode (an
+    explicit identity when there's no OAuth); ``allow_any_authenticated`` permits any
+    token-authenticated caller when no ``allowed`` set is given. With none of these,
+    a served server denies every call.
     """
 
     def __init__(
@@ -83,36 +111,78 @@ class MeteringMiddleware(Middleware):
         ledger: UsageLedger,
         *,
         allowed: Optional[set[str]] = None,
-        default_email: Optional[str] = None,
+        local_user: Optional[str] = None,
+        allow_any_authenticated: bool = False,
     ):
         self.ledger = ledger
         self.allowed = {e.lower() for e in allowed} if allowed is not None else None
-        self.default_email = default_email
+        self.local_user = local_user.lower() if local_user else None
+        self.allow_any = allow_any_authenticated
+        self._seq = itertools.count()
+
+    def _authorize(self) -> str:
+        """Resolve the caller (fail-closed) and check authorization. Returns the email."""
+        email = token_email()
+        if email is None:
+            if self.local_user is None:
+                raise ToolError("authentication required")
+            email = self.local_user
+        try:
+            email = _safe_component(email, label="caller identity")
+        except ValueError as exc:
+            raise ToolError(f"invalid caller identity: {exc}") from exc
+        if self.allowed is not None:
+            if email not in self.allowed:
+                raise ToolError(
+                    f"{email!r} is not authorized to use this braidio server"
+                )
+        elif not (self.local_user or self.allow_any):
+            raise ToolError(
+                "server has no allowlist and allow_any_authenticated is off — "
+                "refusing (configure `allowed` or pass allow_any_authenticated=True)"
+            )
+        return email
 
     async def on_call_tool(self, context, call_next):
-        email = caller_email(default=self.default_email)
-        if self.allowed is not None and email not in self.allowed:
-            raise ToolError(f"{email!r} is not authorized to use this braidio server")
+        email = self._authorize()
+        token = _CURRENT_EMAIL.set(email)
+        try:
+            return await self._meter(context, call_next, email)
+        finally:
+            _CURRENT_EMAIL.reset(token)
 
+    async def _meter(self, context, call_next, email: str):
         tool = context.message.name
         t0 = time.time_ns()
         now = datetime.now(timezone.utc)
         entry = {
-            "id": f"{t0}-{tool}",
+            "id": f"{t0}-{next(self._seq)}-{tool}",
             "email": email,
             "month": now.strftime("%Y-%m"),
             "ts": now.isoformat(),
             "tool": tool,
             "status": "started",
         }
+        # Write-ahead: refuse to run if we can't even record that it started — a
+        # costed call must never spend on the shared key with no recoverable trace.
+        try:
+            self.ledger.record(entry)
+        except Exception as exc:  # noqa: BLE001
+            raise ToolError(
+                "usage ledger unavailable; refusing to run to avoid untracked spend"
+            ) from exc
         try:
             result = await call_next(context)
             out = getattr(result, "structured_content", None)
             if isinstance(out, dict):
-                entry["cost_usd"] = out.get("cost_usd")
-                entry["cache_hit_savings_usd"] = out.get("cache_hit_savings_usd")
-                entry["characters"] = out.get("characters")
-                entry["artifact_ref"] = out.get("url") or out.get("ref")
+                for k in (
+                    "cost_usd",
+                    "cache_hit_savings_usd",
+                    "characters",
+                    "cost_basis",
+                ):
+                    entry[k] = out.get(k)
+                entry["artifact_ref"] = out.get("url") or out.get("path")
             entry["status"] = "done"
             entry["elapsed_s"] = (time.time_ns() - t0) / 1e9
             return result
@@ -122,7 +192,7 @@ class MeteringMiddleware(Middleware):
             entry["elapsed_s"] = (time.time_ns() - t0) / 1e9
             raise
         finally:
-            # Never fail a tool because metering couldn't write.
+            # Best-effort final update; the write-ahead 'started' row is the trace.
             try:
                 self.ledger.record(entry)
             except Exception:  # noqa: BLE001

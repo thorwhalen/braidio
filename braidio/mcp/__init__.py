@@ -11,7 +11,12 @@ money; every call is metered by the middleware (using py2mcp's ``middleware=`` h
 i2mint/py2mcp#7).
 """
 
-from braidio.mcp.metering import MeteringMiddleware, UsageLedger, caller_email
+from braidio.mcp.metering import (
+    MeteringMiddleware,
+    UsageLedger,
+    current_email,
+    token_email,
+)
 from braidio.mcp.workspace import Workspace, data_root
 
 #: Free, stateless tools (no ElevenLabs spend): catalog + planning/read + project mgmt.
@@ -57,22 +62,28 @@ def build_server(
     *,
     ledger: "MutableMapping | None" = None,  # noqa: F821 - forward type only
     allowed: "set[str] | None" = None,
+    local_user: str | None = None,
+    allow_any_authenticated: bool = False,
     name: str = "braidio",
-    default_email: str | None = None,
 ):
     """Build a FastMCP server exposing braidio's tools with usage metering.
 
-    ``ledger`` is the usage store (a ``MutableMapping``); defaults to an in-memory
-    ``dict`` for dev/tests — the connector injects a durable ``dol`` store under
-    ``~/.local/share/braidio/usage/``. ``allowed`` is an email allow-set (``None``
-    = any authenticated caller). Auth (OAuth) is added by the connector via
-    ``py2mcp``'s ``auth=`` on the HTTP path; here we wire only the middleware.
+    ``ledger`` is the usage store (a ``MutableMapping``); defaults to an ephemeral
+    in-memory ``dict`` — fine for stdio/dev/tests, but a **served** connector MUST
+    inject a durable store (a ``dol`` file store under ``~/.local/share/braidio/usage/``).
+    Access is **fail-closed**: a served server needs ``allowed`` (an email allow-set)
+    or ``allow_any_authenticated=True``; ``local_user`` enables local/stdio dev with an
+    explicit identity (no OAuth). Auth (OAuth) is added by the connector via py2mcp's
+    ``auth=`` on the HTTP path; here we wire only the metering + allowlist middleware.
     """
     from py2mcp import mk_mcp_from_refs
 
     store = {} if ledger is None else ledger
     middleware = MeteringMiddleware(
-        UsageLedger(store), allowed=allowed, default_email=default_email
+        UsageLedger(store),
+        allowed=allowed,
+        local_user=local_user,
+        allow_any_authenticated=allow_any_authenticated,
     )
     return mk_mcp_from_refs(TOOL_REFS, name=name, middleware=[middleware])
 
@@ -85,7 +96,8 @@ __all__ = [
     "build_server",
     "MeteringMiddleware",
     "UsageLedger",
-    "caller_email",
+    "current_email",
+    "token_email",
     "Workspace",
     "data_root",
 ]
