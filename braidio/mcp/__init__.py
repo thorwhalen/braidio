@@ -11,6 +11,7 @@ money; every call is metered by the middleware (using py2mcp's ``middleware=`` h
 i2mint/py2mcp#7).
 """
 
+from braidio.mcp._guide import INSTRUCTIONS
 from braidio.mcp.metering import (
     MeteringMiddleware,
     UsageLedger,
@@ -19,8 +20,10 @@ from braidio.mcp.metering import (
 )
 from braidio.mcp.workspace import Workspace, data_root
 
-#: Free, stateless tools (no ElevenLabs spend): catalog + planning/read + project mgmt.
+#: Free, stateless tools (no ElevenLabs spend): assistance + catalog + planning/read
+#: + source ingestion + project management.
 FREE_TOOLS = [
+    "help",
     "list_formats",
     "list_presets",
     "list_deliveries",
@@ -39,6 +42,8 @@ FREE_TOOLS = [
     "create_project",
     "list_projects",
     "project_status",
+    "ingest_document",
+    "save_script",
 ]
 
 #: Tools that spend ElevenLabs money — gated + metered.
@@ -85,7 +90,9 @@ def build_server(
         local_user=local_user,
         allow_any_authenticated=allow_any_authenticated,
     )
-    return mk_mcp_from_refs(TOOL_REFS, name=name, middleware=[middleware])
+    return mk_mcp_from_refs(
+        TOOL_REFS, name=name, instructions=INSTRUCTIONS, middleware=[middleware]
+    )
 
 
 __all__ = [
@@ -93,6 +100,7 @@ __all__ = [
     "COSTED_TOOLS",
     "TOOL_NAMES",
     "TOOL_REFS",
+    "INSTRUCTIONS",
     "build_server",
     "MeteringMiddleware",
     "UsageLedger",
