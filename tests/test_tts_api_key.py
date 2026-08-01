@@ -24,9 +24,10 @@ def test_narrate_threads_api_key(tmp_path, monkeypatch):
 
     captured: dict = {}
 
-    def fake_text_to_speech(text, voice_id, *, api_key=None, **kw):
+    def fake_text_to_speech(text, voice_id, *, api_key=None, return_cache_status=False, **kw):
         captured["api_key"] = api_key
-        return b"AUDIO"
+        audio = b"AUDIO"
+        return (audio, False) if return_cache_status else audio
 
     monkeypatch.setattr(tts, "text_to_speech", fake_text_to_speech)
 

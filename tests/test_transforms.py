@@ -56,7 +56,11 @@ def patched_synthesis(monkeypatch):
         p.write_bytes(tag)
         return p
 
-    monkeypatch.setattr(braidio, "narrate", lambda text, out, **kw: _write(out, b"TTS"))
+    def _narrate(text, out, *, return_cache_status=False, **kw):
+        p = _write(out, b"TTS")  # default: live synth (was_cached=False)
+        return (p, False) if return_cache_status else p
+
+    monkeypatch.setattr(braidio, "narrate", _narrate)
     monkeypatch.setattr(
         braidio,
         "extract_padded",
@@ -267,6 +271,43 @@ def test_narration_render_cache_hit_reports_savings(
     assert hit.artifacts == ()  # nothing produced on a hit
     assert hit.cost_usd_actual == 0.0  # nothing spent
     assert hit.cache_hit_savings_usd == pytest.approx(tts_cost_usd(beat.body["text"]))
+
+
+def test_narration_render_mixing_cache_hit_reports_zero_actual(
+    project, script_and_source, patched_synthesis, monkeypatch
+):
+    # braidio#8: the graph cache MISSES (fresh project) but mixing's on-disk cache
+    # HITS — the synthesis branch runs yet real spend was $0. cost_usd_actual must
+    # be 0 (the estimate would over-report), while the Artifact keeps the estimate.
+    import nw
+    from nw import TransformInputs
+    from braidio.cost import RATE_ENV_VAR, tts_cost_usd
+
+    monkeypatch.delenv(RATE_ENV_VAR, raising=False)
+
+    def _cached_narrate(text, out, *, return_cache_status=False, **kw):
+        p = Path(out)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(b"TTS")
+        return (p, True) if return_cache_status else p  # was_cached=True
+
+    monkeypatch.setattr(braidio, "narrate", _cached_narrate)
+
+    script, source = script_and_source
+    braidio.transforms.ingest_script(project, script, source=source)
+    beat = nw.annotations_at_tier(project.root, "narrative-beats")[0]
+    voice = nw.get_transform("beat_to_voice_assignment.default")
+    narration = nw.get_transform("narration_render.tts")
+    voice.execute(project, *voice.plan(project, TransformInputs(primary=(beat,))))
+
+    result = narration.execute(
+        project, *narration.plan(project, TransformInputs(primary=(beat,)))
+    )
+    expected = tts_cost_usd(beat.body["text"])
+    assert expected > 0
+    assert result.cost_usd_actual == 0.0  # real spend was $0 (mixing cache hit)
+    assert result.cache_hit_savings_usd == pytest.approx(expected)
+    assert result.artifacts[0].cost_usd == pytest.approx(expected)  # estimate kept
 
 
 def test_narration_render_unpriced_cost(

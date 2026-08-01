@@ -89,6 +89,8 @@ from braidio.delivery import (  # noqa: F401
     V2_NARRATOR,
     V3_NATURAL,
     V3_CREATIVE,
+    NARRATION,
+    CONVERSATIONAL,
 )
 
 # --- multi-voice casting ---
@@ -242,6 +244,8 @@ __all__ = [
     "V2_NARRATOR",
     "V3_NATURAL",
     "V3_CREATIVE",
+    "NARRATION",
+    "CONVERSATIONAL",
     # multivoice
     "Voice",
     "POOL_4",

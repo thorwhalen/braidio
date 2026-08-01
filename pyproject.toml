@@ -23,8 +23,10 @@ authors = [
     { name = "Thor Whalen" },
 ]
 # Functional core deps. Also requires `ffmpeg`/`ffprobe` on PATH (system dep).
+# mixing>=0.0.28: narrate() calls text_to_speech(return_cache_status=...) (added
+#   there) so a mixing-cache hit reports cost_usd_actual=$0 (braidio#8).
 dependencies = [
-    "mixing",
+    "mixing>=0.0.28",
     "elevenlabs",
 ]
 
