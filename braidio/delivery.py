@@ -118,6 +118,39 @@ V3_CREATIVE = Delivery(
     note="Eleven v3, low stability, driven by inline audio tags. Alpha; per-take variance.",
 )
 
+# --- register presets: narration (reading) vs conversational (talking) --------
+# The two named "registers" (issue #1). ``narration`` = the default reading
+# register (kept in lock-step with V2_TUNED, render_production's default).
+# ``conversational`` makes a single narrator sound like they're *talking*, not
+# reading: eleven_v3 with loosened stability so inline audio tags / disfluencies
+# written into the text actually fire. NOTE this is the *single-voice* register —
+# distinct from the multi-speaker Dialogue path (render_dialogue / eleven_v3
+# Text-to-Dialogue), which renders two voices in an exchange.
+
+NARRATION = Delivery(
+    name="narration",
+    model_id="eleven_multilingual_v2",
+    voice_settings={
+        "stability": 0.35,
+        "similarity_boost": 0.75,
+        "style": 0.35,
+        "use_speaker_boost": True,
+        "speed": 0.98,
+    },
+    note="Default register: reading a script cleanly (voice settings == v2-tuned).",
+)
+
+CONVERSATIONAL = Delivery(
+    name="conversational",
+    model_id="eleven_v3",
+    voice_settings={"stability": 0.35, "use_speaker_boost": True},
+    supports_audio_tags=True,
+    note="Register that sounds like talking, not reading: eleven_v3 with loosened "
+    "stability so audio tags/disfluencies in the text fire. Pair with a "
+    "conversationalized script (contractions, [tags], ellipses). Single-voice — "
+    "for a two-host exchange use the Dialogue path instead.",
+)
+
 DELIVERIES: dict[str, Delivery] = {
     d.name: d
     for d in (
@@ -128,5 +161,7 @@ DELIVERIES: dict[str, Delivery] = {
         V2_NARRATOR,
         V3_NATURAL,
         V3_CREATIVE,
+        NARRATION,
+        CONVERSATIONAL,
     )
 }

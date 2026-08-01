@@ -476,6 +476,37 @@ def test_save_script_links_narration_beats():
     assert len(beats) == 1 and beats[0]["kind"] == "narration"
 
 
+# --- delivery register (braidio#1) ------------------------------------------
+
+
+def test_narrate_delivery_selects_register(monkeypatch):
+    captured = {}
+
+    def _fake(text, out, **kw):
+        captured.update(kw)
+        return Path(out)
+
+    monkeypatch.setattr(braidio, "narrate", _fake)
+    server = _local_server(ledger={})
+
+    _call(server, "narrate", {"text": "hi", "delivery": "conversational"})
+    assert captured["model_id"] == "eleven_v3"
+    assert captured["voice_settings"] == braidio.CONVERSATIONAL.voice_settings
+
+    captured.clear()
+    _call(server, "narrate", {"text": "hi"})  # default register = narration
+    assert captured["model_id"] == "eleven_multilingual_v2"
+    assert captured["voice_settings"] == braidio.NARRATION.voice_settings
+
+
+def test_unknown_delivery_raises(monkeypatch):
+    monkeypatch.setattr(braidio, "narrate", lambda *a, **k: Path("/tmp/x"))
+    server = _local_server(ledger={})
+    with pytest.raises(Exception) as ei:
+        _call(server, "narrate", {"text": "hi", "delivery": "bogus"})
+    assert "unknown delivery" in str(ei.value)
+
+
 # --- assets (braidio#10) ----------------------------------------------------
 # Assets are per-USER (no project needed), so one-shot renders share them too.
 

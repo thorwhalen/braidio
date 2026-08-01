@@ -46,7 +46,8 @@ def narrate(
     voice_settings: dict | None = None,
     output_format: str = "mp3_44100_128",
     refresh: bool = False,
-) -> Path:
+    return_cache_status: bool = False,
+) -> Path | tuple[Path, bool]:
     """Synthesize ``text`` to ``out_path`` (mp3). Returns the path.
 
     Caching is handled by ``mixing.text_to_speech`` (keyed on text+voice+model);
@@ -56,8 +57,13 @@ def narrate(
     over the environment; when ``None`` (default) resolution falls back to
     ``$ELEVENLABS_API_KEY`` (unchanged behavior). This is what lets a caller
     thread a per-user BYO key without touching the process environment.
+
+    ``return_cache_status``: when ``True``, return ``(path, was_cached)`` where
+    ``was_cached`` is ``True`` iff mixing served the audio from its on-disk cache
+    (no ElevenLabs call = $0 real spend). Lets the caller attribute real cost
+    (braidio#8). Default ``False`` keeps the ``Path`` return.
     """
-    audio = text_to_speech(
+    audio, was_cached = text_to_speech(
         text,
         resolve_voice_id(voice_id),
         api_key=api_key,
@@ -65,11 +71,12 @@ def narrate(
         output_format=output_format,
         voice_settings=voice_settings or DEFAULT_VOICE_SETTINGS,
         refresh=refresh,
+        return_cache_status=True,
     )
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(audio)
-    return out
+    return (out, was_cached) if return_cache_status else out
 
 
 DIALOGUE_MODEL_ID = "eleven_v3"

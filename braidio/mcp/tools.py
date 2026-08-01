@@ -445,20 +445,38 @@ def _render_cost(scr, profile: str) -> dict:
     }
 
 
+def _delivery(name: str):
+    """Resolve a delivery/register preset name to its :class:`braidio.Delivery`."""
+    if name not in braidio.DELIVERIES:
+        raise ToolError(
+            f"unknown delivery {name!r}; use one of {sorted(braidio.DELIVERIES)} "
+            "(list_deliveries describes them)"
+        )
+    return braidio.DELIVERIES[name]
+
+
 def narrate(
     text: str,
     voice_id: str | None = None,
-    model_id: str = "eleven_multilingual_v2",
+    delivery: str = "narration",
     name: str = "narration",
 ) -> dict:
-    """[COSTED] Synthesize one text to speech (single voice) → an mp3 in your workspace."""
+    """[COSTED] Synthesize one text to speech (single voice) → an mp3 in your workspace.
+
+    ``delivery`` picks the speaking register / voice preset: ``"narration"`` (default —
+    reading a script) or ``"conversational"`` (sounds like talking, not reading), among
+    others from ``list_deliveries``. It sets the model + voice settings.
+    """
+    d = _delivery(delivery)
     ws = _workspace()
     out = ws.render_path(name)
-    braidio.narrate(text, out, voice_id=voice_id, model_id=model_id)
+    braidio.narrate(
+        text, out, voice_id=voice_id, model_id=d.model_id, voice_settings=d.voice_settings
+    )
     return {
         "url": out.as_uri(),
         "path": str(out),
-        "cost_usd": braidio.tts_cost_usd(text, model_id=model_id),
+        "cost_usd": braidio.tts_cost_usd(text, model_id=d.model_id),
         "characters": braidio.billable_chars(text),
         "cost_basis": "estimate",
     }
@@ -528,13 +546,15 @@ def render_production(
     script: dict,
     source: dict | None = None,
     profile: str = "personal",
+    delivery: str = "narration",
     name: str | None = None,
 ) -> dict:
     """[COSTED] Render a whole script → one mixed episode mp3 in your workspace.
 
     ``script`` is a JSON script envelope; ``source`` (``{lines, asset_path, ...}``)
     is required only if the script has segment beats. ``profile`` = ``"personal"``
-    or ``"published"``.
+    or ``"published"``. ``delivery`` = the narration register (``"narration"`` =
+    reading, ``"conversational"`` = talking; see ``list_deliveries``).
     """
     from braidio import Profile
 
@@ -548,6 +568,7 @@ def render_production(
         scr,
         source=src,
         profile=Profile(profile),
+        delivery=_delivery(delivery),
         out_path=out,
         tts_dir=_work_dir(ws, stem) + "/tts",
         clips_dir=_work_dir(ws, stem) + "/clips",

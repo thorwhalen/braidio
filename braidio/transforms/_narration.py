@@ -140,13 +140,16 @@ class NarrationRenderTTS(BaseTransform):
 
         out_path = project.root / "data" / "tts" / f"{skel.id}.mp3"
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        braidio.narrate(
+        # was_cached: mixing served this from its on-disk cache (no ElevenLabs call
+        # = $0 real spend) even though our graph cache missed — braidio#8.
+        _, was_cached = braidio.narrate(
             text,
             out_path,
             api_key=None,  # resolved from env; key injection is a follow-up
             voice_id=va.body.get("voice_id") or DEFAULT_VOICE_ID,
             model_id=model_id,
             voice_settings=config.get("voice_settings", {}),
+            return_cache_status=True,
         )
         duration = safe_duration(out_path)
         artifact = audio_artifact(
@@ -167,9 +170,12 @@ class NarrationRenderTTS(BaseTransform):
             }
         )
         project.graph.add_annotation(completed)
+        # A mixing-cache hit cost $0 in reality — report that as actual spend while
+        # keeping the estimate on the Artifact (cost_usd) for prediction (braidio#8).
+        estimate = cost if cost is not None else 0.0
         return TransformResult(
             annotations=(completed,),
             artifacts=(artifact,),
-            cost_usd_actual=cost if cost is not None else 0.0,
-            cache_hit_savings_usd=0.0,
+            cost_usd_actual=0.0 if was_cached else estimate,
+            cache_hit_savings_usd=estimate if was_cached else 0.0,
         )
