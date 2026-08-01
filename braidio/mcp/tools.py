@@ -353,7 +353,9 @@ def upload_asset(
     else:
         raise ToolError("provide either `uri` or `data_b64`")
 
-    ref = ws.content_store(project_id).add(data, mime_type=ctype, name=name or (uri or None))
+    ref = ws.content_store(project_id).add(
+        data, mime_type=ctype, name=name or (uri or None)
+    )
     meta = {**ref.to_json(), "name": name or src, "source": src}
     ws.asset_meta(project_id)[ref.item_id] = meta
     return meta
