@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.tts &mdash; braidio 0.0.7 documentation</title>
+  <title>braidio.tts &mdash; braidio 0.0.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="../../_static/documentation_options.js?v=53b53b71"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -166,7 +166,8 @@
     <span class="n">voice_settings</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">output_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mp3_44100_128&quot;</span><span class="p">,</span>
     <span class="n">refresh</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+    <span class="n">return_cache_status</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Synthesize ``text`` to ``out_path`` (mp3). Returns the path.</span>
 
 <span class="sd">    Caching is handled by ``mixing.text_to_speech`` (keyed on text+voice+model);</span>
@@ -176,8 +177,13 @@
 <span class="sd">    over the environment; when ``None`` (default) resolution falls back to</span>
 <span class="sd">    ``$ELEVENLABS_API_KEY`` (unchanged behavior). This is what lets a caller</span>
 <span class="sd">    thread a per-user BYO key without touching the process environment.</span>
+
+<span class="sd">    ``return_cache_status``: when ``True``, return ``(path, was_cached)`` where</span>
+<span class="sd">    ``was_cached`` is ``True`` iff mixing served the audio from its on-disk cache</span>
+<span class="sd">    (no ElevenLabs call = $0 real spend). Lets the caller attribute real cost</span>
+<span class="sd">    (braidio#8). Default ``False`` keeps the ``Path`` return.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">audio</span> <span class="o">=</span> <span class="n">text_to_speech</span><span class="p">(</span>
+    <span class="n">audio</span><span class="p">,</span> <span class="n">was_cached</span> <span class="o">=</span> <span class="n">text_to_speech</span><span class="p">(</span>
         <span class="n">text</span><span class="p">,</span>
         <span class="n">resolve_voice_id</span><span class="p">(</span><span class="n">voice_id</span><span class="p">),</span>
         <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
@@ -185,11 +191,12 @@
         <span class="n">output_format</span><span class="o">=</span><span class="n">output_format</span><span class="p">,</span>
         <span class="n">voice_settings</span><span class="o">=</span><span class="n">voice_settings</span> <span class="ow">or</span> <span class="n">DEFAULT_VOICE_SETTINGS</span><span class="p">,</span>
         <span class="n">refresh</span><span class="o">=</span><span class="n">refresh</span><span class="p">,</span>
+        <span class="n">return_cache_status</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
     <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">out</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">audio</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">out</span></div>
+    <span class="k">return</span> <span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">was_cached</span><span class="p">)</span> <span class="k">if</span> <span class="n">return_cache_status</span> <span class="k">else</span> <span class="n">out</span></div>
 
 
 
