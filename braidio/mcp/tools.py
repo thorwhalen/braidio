@@ -471,7 +471,11 @@ def narrate(
     ws = _workspace()
     out = ws.render_path(name)
     braidio.narrate(
-        text, out, voice_id=voice_id, model_id=d.model_id, voice_settings=d.voice_settings
+        text,
+        out,
+        voice_id=voice_id,
+        model_id=d.model_id,
+        voice_settings=d.voice_settings,
     )
     return {
         "url": out.as_uri(),
