@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.mcp._guide &mdash; braidio 0.0.5 documentation</title>
+  <title>braidio.mcp._guide &mdash; braidio 0.0.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=282f96c0"></script>
+      <script src="../../../_static/documentation_options.js?v=1fd71caa"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -145,10 +145,15 @@
 <span class="s2">6. render_production(script, ...) OR weave_project(project_id, script, ...) — synthesize</span>
 <span class="s2">   and mix into one audio file. This SPENDS ElevenLabs credits (metered per user).</span>
 
+<span class="s2">If the Script has &quot;segment&quot; beats that quote source audio/video, first</span>
+<span class="s2">upload_asset(project_id, uri=... or data_b64=...) to store the media (it returns an</span>
+<span class="s2">`itemId`), then reference it from the segment source as `source.asset_id` when you</span>
+<span class="s2">save_script / weave_project. Manage assets with list_assets / get_asset.</span>
+
 <span class="s2">Guidance: call `help` for the full capability + tool catalog. Always `estimate_cost`</span>
 <span class="s2">before a render. The tools that spend money are narrate, the render_* tools,</span>
-<span class="s2">compose_narration, and weave_project; the rest (catalog, planning, ingest, text-prep)</span>
-<span class="s2">are free. Every call is metered to the authenticated caller. Ask a clarifying question if the desired voice, format, or</span>
+<span class="s2">compose_narration, and weave_project; the rest (catalog, planning, ingest, assets,</span>
+<span class="s2">text-prep) are free. Every call is metered to the authenticated caller. Ask a clarifying question if the desired voice, format, or</span>
 <span class="s2">length is unclear before spending on a render.</span><span class="se">\</span>
 <span class="s2">&quot;&quot;&quot;</span>
 
@@ -204,6 +209,11 @@
                 <span class="s2">&quot;project_status&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;save_script&quot;</span><span class="p">,</span>
             <span class="p">],</span>
+            <span class="s2">&quot;assets_free&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">&quot;upload_asset&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;list_assets&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;get_asset&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
             <span class="s2">&quot;render_COSTED&quot;</span><span class="p">:</span> <span class="p">[</span>
                 <span class="s2">&quot;render_production&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;render_format&quot;</span><span class="p">,</span>
@@ -230,8 +240,10 @@
         <span class="s2">&quot;notes&quot;</span><span class="p">:</span> <span class="p">[</span>
             <span class="s2">&quot;Costed tools (narrate, render_*, weave_project) spend ElevenLabs &quot;</span>
             <span class="s2">&quot;credits — call estimate_cost first.&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Segment beats need a `source` (timed lines + a server-accessible audio &quot;</span>
-            <span class="s2">&quot;asset); a narration-only script needs no source.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Segment beats need a `source` (timed lines + audio): upload the media &quot;</span>
+            <span class="s2">&quot;with upload_asset and pass its itemId as `source.asset_id`, or point &quot;</span>
+            <span class="s2">&quot;`source.asset_path` at a server-local file. A narration-only script &quot;</span>
+            <span class="s2">&quot;needs no source.&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Dialogue beats aren&#39;t in the graph pipeline yet — use render_production &quot;</span>
             <span class="s2">&quot;for dialogue.&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Every call is metered to the authenticated user; the connector is &quot;</span>
