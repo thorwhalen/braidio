@@ -31,9 +31,11 @@ To turn a document into audio, the typical path is:
    and mix into one audio file. This SPENDS ElevenLabs credits (metered per user).
 
 If the Script has "segment" beats that quote source audio/video, first
-upload_asset(project_id, uri=... or data_b64=...) to store the media (it returns an
-`itemId`), then reference it from the segment source as `source.asset_id` when you
-save_script / weave_project. Manage assets with list_assets / get_asset.
+upload_asset(uri=... or data_b64=...) to store the media in your library (it returns
+an `itemId`), then reference it from the segment source as `source.asset_id` in ANY
+render that takes a source — render_production / render_format (one-shot) or
+save_script / weave_project (project graph). Manage your library with list_assets /
+get_asset.
 
 Guidance: call `help` for the full capability + tool catalog. Always `estimate_cost`
 before a render. The tools that spend money are narrate, the render_* tools,
