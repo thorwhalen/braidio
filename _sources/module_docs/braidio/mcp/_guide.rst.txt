@@ -1,0 +1,4 @@
+braidio.mcp._guide
+==================
+.. automodule:: braidio.mcp._guide
+   :members:

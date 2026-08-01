@@ -1,0 +1,175 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.mcp._guide &mdash; braidio 0.0.5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=282f96c0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="braidio.mcp._helpers" href="_helpers.html" />
+    <link rel="prev" title="braidio.mcp._docs" href="_docs.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cost.html">braidio.cost</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genre.html">braidio.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mcp.html">braidio.mcp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="_docs.html">braidio.mcp._docs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">braidio.mcp._guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.mcp._guide.INSTRUCTIONS"><code class="docutils literal notranslate"><span class="pre">INSTRUCTIONS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.mcp._guide.capabilities"><code class="docutils literal notranslate"><span class="pre">capabilities()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="_helpers.html">braidio.mcp._helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metering.html">braidio.mcp.metering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">braidio.mcp.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workspace.html">braidio.mcp.workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../style.html">braidio.style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timeline.html">braidio.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../transforms/_voice.html">braidio.transforms._voice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">braidio.mcp._guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/module_docs/braidio/mcp/_guide.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-braidio.mcp._guide">
+<span id="braidio-mcp-guide"></span><h1>braidio.mcp._guide<a class="headerlink" href="#module-braidio.mcp._guide" title="Link to this heading"></a></h1>
+<p>The braidio MCP server’s self-description — one SSOT for both the server-level
+<code class="docutils literal notranslate"><span class="pre">instructions</span></code> (shown to the model automatically) and the <code class="docutils literal notranslate"><span class="pre">help</span></code> tool (called
+when a user asks what braidio can do).</p>
+<p>Keep this in step with the tool surface in <code class="xref py py-mod docutils literal notranslate"><span class="pre">braidio.mcp</span></code> — it is the connector’s
+front door.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="braidio.mcp._guide.INSTRUCTIONS">
+<span class="sig-prename descclassname"><span class="pre">braidio.mcp._guide.</span></span><span class="sig-name descname"><span class="pre">INSTRUCTIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'braidio</span> <span class="pre">turns</span> <span class="pre">source</span> <span class="pre">material</span> <span class="pre">into</span> <span class="pre">a</span> <span class="pre">narrated</span> <span class="pre">audio</span> <span class="pre">production</span> <span class="pre">—</span> <span class="pre">it</span> <span class="pre">weaves</span> <span class="pre">authored\nnarration</span> <span class="pre">(ElevenLabs</span> <span class="pre">text-to-speech)</span> <span class="pre">together</span> <span class="pre">with</span> <span class="pre">extracted</span> <span class="pre">segments</span> <span class="pre">of</span> <span class="pre">source\nmedia</span> <span class="pre">into</span> <span class="pre">one</span> <span class="pre">mixed</span> <span class="pre">audio</span> <span class="pre">file.</span> <span class="pre">(Video</span> <span class="pre">is</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">roadmap.)\n\nTo</span> <span class="pre">turn</span> <span class="pre">a</span> <span class="pre">document</span> <span class="pre">into</span> <span class="pre">audio,</span> <span class="pre">the</span> <span class="pre">typical</span> <span class="pre">path</span> <span class="pre">is:\n1.</span> <span class="pre">create_project(project_id)</span> <span class="pre">—</span> <span class="pre">a</span> <span class="pre">workspace</span> <span class="pre">for</span> <span class="pre">this</span> <span class="pre">production.\n2.</span> <span class="pre">ingest_document(project_id,</span> <span class="pre">uri=...)</span> <span class="pre">OR</span> <span class="pre">(project_id,</span> <span class="pre">text=...)</span> <span class="pre">—</span> <span class="pre">pull</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">source\n</span>&#160;&#160; <span class="pre">(a</span> <span class="pre">public</span> <span class="pre">URL,</span> <span class="pre">a</span> <span class="pre">PDF,</span> <span class="pre">or</span> <span class="pre">pasted</span> <span class="pre">text).</span> <span class="pre">It</span> <span class="pre">returns</span> <span class="pre">the</span> <span class="pre">extracted</span> <span class="pre">plaintext</span> <span class="pre">for</span> <span class="pre">you\n</span>&#160;&#160; <span class="pre">to</span> <span class="pre">read</span> <span class="pre">and</span> <span class="pre">analyze.\n3.</span> <span class="pre">Analyze</span> <span class="pre">that</span> <span class="pre">text</span> <span class="pre">and</span> <span class="pre">author</span> <span class="pre">a</span> <span class="pre">Script:</span> <span class="pre">an</span> <span class="pre">ordered</span> <span class="pre">list</span> <span class="pre">of</span> <span class="pre">beats</span> <span class="pre">—</span> <span class="pre">&quot;narration&quot;</span> <span class="pre">beats\n</span>&#160;&#160; <span class="pre">(spoken</span> <span class="pre">commentary</span> <span class="pre">you</span> <span class="pre">write,</span> <span class="pre">in</span> <span class="pre">your</span> <span class="pre">own</span> <span class="pre">words</span> <span class="pre">=</span> <span class="pre">rights-safe)</span> <span class="pre">and,</span> <span class="pre">when</span> <span class="pre">there</span> <span class="pre">is\n</span>&#160;&#160; <span class="pre">source</span> <span class="pre">audio</span> <span class="pre">to</span> <span class="pre">quote,</span> <span class="pre">&quot;segment&quot;</span> <span class="pre">beats.</span> <span class="pre">Break</span> <span class="pre">the</span> <span class="pre">material</span> <span class="pre">into</span> <span class="pre">a</span> <span class="pre">natural</span> <span class="pre">spoken\n</span>&#160;&#160; <span class="pre">sequence.\n4.</span> <span class="pre">estimate_cost(script)</span> <span class="pre">—</span> <span class="pre">preview</span> <span class="pre">the</span> <span class="pre">ElevenLabs</span> <span class="pre">spend</span> <span class="pre">BEFORE</span> <span class="pre">rendering</span> <span class="pre">(free).\n5.</span> <span class="pre">save_script(project_id,</span> <span class="pre">script)</span> <span class="pre">—</span> <span class="pre">link</span> <span class="pre">the</span> <span class="pre">beats</span> <span class="pre">into</span> <span class="pre">the</span> <span class="pre">project</span> <span class="pre">graph</span> <span class="pre">(free,\n</span>&#160;&#160; <span class="pre">optional),</span> <span class="pre">or</span> <span class="pre">go</span> <span class="pre">straight</span> <span class="pre">to</span> <span class="pre">rendering.\n6.</span> <span class="pre">render_production(script,</span> <span class="pre">...)</span> <span class="pre">OR</span> <span class="pre">weave_project(project_id,</span> <span class="pre">script,</span> <span class="pre">...)</span> <span class="pre">—</span> <span class="pre">synthesize\n</span>&#160;&#160; <span class="pre">and</span> <span class="pre">mix</span> <span class="pre">into</span> <span class="pre">one</span> <span class="pre">audio</span> <span class="pre">file.</span> <span class="pre">This</span> <span class="pre">SPENDS</span> <span class="pre">ElevenLabs</span> <span class="pre">credits</span> <span class="pre">(metered</span> <span class="pre">per</span> <span class="pre">user).\n\nGuidance:</span> <span class="pre">call</span> <span class="pre">`help`</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">full</span> <span class="pre">capability</span> <span class="pre">+</span> <span class="pre">tool</span> <span class="pre">catalog.</span> <span class="pre">Always</span> <span class="pre">`estimate_cost`\nbefore</span> <span class="pre">a</span> <span class="pre">render.</span> <span class="pre">The</span> <span class="pre">tools</span> <span class="pre">that</span> <span class="pre">spend</span> <span class="pre">money</span> <span class="pre">are</span> <span class="pre">narrate,</span> <span class="pre">the</span> <span class="pre">render_*</span> <span class="pre">tools,\ncompose_narration,</span> <span class="pre">and</span> <span class="pre">weave_project;</span> <span class="pre">the</span> <span class="pre">rest</span> <span class="pre">(catalog,</span> <span class="pre">planning,</span> <span class="pre">ingest,</span> <span class="pre">text-prep)\nare</span> <span class="pre">free.</span> <span class="pre">Every</span> <span class="pre">call</span> <span class="pre">is</span> <span class="pre">metered</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">authenticated</span> <span class="pre">caller.</span> <span class="pre">Ask</span> <span class="pre">a</span> <span class="pre">clarifying</span> <span class="pre">question</span> <span class="pre">if</span> <span class="pre">the</span> <span class="pre">desired</span> <span class="pre">voice,</span> <span class="pre">format,</span> <span class="pre">or\nlength</span> <span class="pre">is</span> <span class="pre">unclear</span> <span class="pre">before</span> <span class="pre">spending</span> <span class="pre">on</span> <span class="pre">a</span> <span class="pre">render.'</span></span><a class="headerlink" href="#braidio.mcp._guide.INSTRUCTIONS" title="Link to this definition"></a></dt>
+<dd><p>Natural-language server instructions (FastMCP <code class="docutils literal notranslate"><span class="pre">instructions=</span></code>). The model sees
+this without calling any tool, so lead with what braidio is and the happy path.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.mcp._guide.capabilities">
+<span class="sig-prename descclassname"><span class="pre">braidio.mcp._guide.</span></span><span class="sig-name descname"><span class="pre">capabilities</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../../../_modules/braidio/mcp/_guide.html#capabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.mcp._guide.capabilities" title="Link to this definition"></a></dt>
+<dd><p>Structured capability guide (returned by the <code class="docutils literal notranslate"><span class="pre">help</span></code> tool).</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="_docs.html" class="btn btn-neutral float-left" title="braidio.mcp._docs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="_helpers.html" class="btn btn-neutral float-right" title="braidio.mcp._helpers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

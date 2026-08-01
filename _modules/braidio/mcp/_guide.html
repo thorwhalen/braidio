@@ -1,0 +1,271 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.mcp._guide &mdash; braidio 0.0.5 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=282f96c0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/cost.html">braidio.cost</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/genre.html">braidio.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp.html">braidio.mcp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/_docs.html">braidio.mcp._docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/_guide.html">braidio.mcp._guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/_helpers.html">braidio.mcp._helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/metering.html">braidio.mcp.metering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/tools.html">braidio.mcp.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/style.html">braidio.style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/timeline.html">braidio.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms/_voice.html">braidio.transforms._voice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">braidio.mcp._guide</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for braidio.mcp._guide</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;The braidio MCP server&#39;s self-description — one SSOT for both the server-level</span>
+<span class="sd">``instructions`` (shown to the model automatically) and the ``help`` tool (called</span>
+<span class="sd">when a user asks what braidio can do).</span>
+
+<span class="sd">Keep this in step with the tool surface in :mod:`braidio.mcp` — it is the connector&#39;s</span>
+<span class="sd">front door.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="c1">#: Natural-language server instructions (FastMCP ``instructions=``). The model sees</span>
+<span class="c1">#: this without calling any tool, so lead with what braidio is and the happy path.</span>
+<span class="n">INSTRUCTIONS</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">braidio turns source material into a narrated audio production — it weaves authored</span>
+<span class="s2">narration (ElevenLabs text-to-speech) together with extracted segments of source</span>
+<span class="s2">media into one mixed audio file. (Video is on the roadmap.)</span>
+
+<span class="s2">To turn a document into audio, the typical path is:</span>
+<span class="s2">1. create_project(project_id) — a workspace for this production.</span>
+<span class="s2">2. ingest_document(project_id, uri=...) OR (project_id, text=...) — pull in the source</span>
+<span class="s2">   (a public URL, a PDF, or pasted text). It returns the extracted plaintext for you</span>
+<span class="s2">   to read and analyze.</span>
+<span class="s2">3. Analyze that text and author a Script: an ordered list of beats — &quot;narration&quot; beats</span>
+<span class="s2">   (spoken commentary you write, in your own words = rights-safe) and, when there is</span>
+<span class="s2">   source audio to quote, &quot;segment&quot; beats. Break the material into a natural spoken</span>
+<span class="s2">   sequence.</span>
+<span class="s2">4. estimate_cost(script) — preview the ElevenLabs spend BEFORE rendering (free).</span>
+<span class="s2">5. save_script(project_id, script) — link the beats into the project graph (free,</span>
+<span class="s2">   optional), or go straight to rendering.</span>
+<span class="s2">6. render_production(script, ...) OR weave_project(project_id, script, ...) — synthesize</span>
+<span class="s2">   and mix into one audio file. This SPENDS ElevenLabs credits (metered per user).</span>
+
+<span class="s2">Guidance: call `help` for the full capability + tool catalog. Always `estimate_cost`</span>
+<span class="s2">before a render. The tools that spend money are narrate, the render_* tools,</span>
+<span class="s2">compose_narration, and weave_project; the rest (catalog, planning, ingest, text-prep)</span>
+<span class="s2">are free. Every call is metered to the authenticated caller. Ask a clarifying question if the desired voice, format, or</span>
+<span class="s2">length is unclear before spending on a render.</span><span class="se">\</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="capabilities">
+<a class="viewcode-back" href="../../../module_docs/braidio/mcp/_guide.html#braidio.mcp._guide.capabilities">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">capabilities</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Structured capability guide (returned by the ``help`` tool).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;what_is_braidio&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;A tool for turning source material into narrated audio productions: it &quot;</span>
+            <span class="s2">&quot;weaves authored narration (ElevenLabs TTS) with extracted segments of &quot;</span>
+            <span class="s2">&quot;source media into one mixed audio file. Video is roadmap.&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;workflow&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;create_project(project_id) — a workspace for the production.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ingest_document(project_id, uri= or text=) — pull in source material; &quot;</span>
+            <span class="s2">&quot;returns the extracted text to analyze.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Author a Script from that text: ordered narration + segment beats.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;estimate_cost(script) — preview the ElevenLabs spend (free).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;save_script(project_id, script) — link the beats into the graph (free), &quot;</span>
+            <span class="s2">&quot;or render directly.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;render_production(script) or weave_project(project_id, script) — &quot;</span>
+            <span class="s2">&quot;synthesize + mix to audio (COSTED, metered per user).&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;assistance&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;discover&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">&quot;list_formats&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;list_presets&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;list_deliveries&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;list_voice_pools&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;describe_genre&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;source_and_authoring_free&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">&quot;ingest_document&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;clean_text&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;find_forbidden_quotes&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;audit_platitudes&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;narration_segments&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;assign_voices&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;find_segment&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;plan_and_estimate_free&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">&quot;estimate_cost&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plan_production&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;build_timeline&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;content_violations&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;projects_free&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">&quot;create_project&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;list_projects&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;project_status&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;save_script&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;render_COSTED&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">&quot;render_production&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;render_format&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;weave_project&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;narrate&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;render_dialogue&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;render_multivoice&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;compose_narration&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;script_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id_slug&quot;</span><span class="p">:</span> <span class="s2">&quot;short stable id, e.g. &#39;01&#39;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;beats&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;narration&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;spoken commentary you author&quot;</span><span class="p">},</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;segment&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;reference&quot;</span><span class="p">:</span> <span class="s2">&quot;a quote/label to resolve against source audio&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;rights&quot;</span><span class="p">:</span> <span class="s2">&quot;owned-local | public-domain | copyrighted&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;dialogue&quot;</span><span class="p">,</span> <span class="s2">&quot;turns&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;line&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;reply&quot;</span><span class="p">]]},</span>
+            <span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;notes&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;Costed tools (narrate, render_*, weave_project) spend ElevenLabs &quot;</span>
+            <span class="s2">&quot;credits — call estimate_cost first.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Segment beats need a `source` (timed lines + a server-accessible audio &quot;</span>
+            <span class="s2">&quot;asset); a narration-only script needs no source.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Dialogue beats aren&#39;t in the graph pipeline yet — use render_production &quot;</span>
+            <span class="s2">&quot;for dialogue.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Every call is metered to the authenticated user; the connector is &quot;</span>
+            <span class="s2">&quot;restricted to its allowlisted users.&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
