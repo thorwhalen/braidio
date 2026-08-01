@@ -301,7 +301,7 @@ def save_script(project_id: str, script: dict, source: dict | None = None) -> di
     _require_nw("save_script")
     scr = script_from_json(script)
     _reject_dialogue(scr, "save_script")
-    src = source_from_json(source)
+    src = _resolve_source(project_id, source)
     _check_source(scr, src)
     proj = _workspace().open_project(project_id)
     ingested = braidio.transforms.ingest_script(proj, scr, source=src)
@@ -309,6 +309,87 @@ def save_script(project_id: str, script: dict, source: dict | None = None) -> di
         "project_id": project_id,
         "beats": [{"kind": k, "id": str(a.id)} for k, a in ingested.ordered],
     }
+
+
+# --- assets (braidio#10, free) ----------------------------------------------
+
+
+def upload_asset(
+    project_id: str,
+    uri: str | None = None,
+    data_b64: str | None = None,
+    name: str | None = None,
+) -> dict:
+    """Upload media/source into a project's asset store; returns a ContentRef.
+
+    Provide EITHER ``uri`` (a public http/https URL — audio/video/etc., fetched
+    server-side, SSRF-guarded and size-bounded) OR ``data_b64`` (base64 bytes, for
+    small inline uploads). The blob is stored **content-addressed** (identical bytes
+    dedupe to one copy), and you get back an ``item_id`` you can later reference from a
+    segment source as ``source.asset_id`` when you ``save_script`` / ``weave_project``.
+    Free — no synthesis.
+    """
+    _require_nw("upload_asset")
+    import base64
+
+    from braidio.mcp import _docs
+
+    ws = _workspace()
+    root = ws.project_root(project_id)
+    if not (root / "project.json").exists():
+        raise ToolError(f"no project {project_id!r} — call create_project first")
+    if uri:
+        try:
+            data, ctype = _docs.fetch_uri(uri)
+        except ValueError as exc:
+            raise ToolError(str(exc)) from exc
+        src = uri
+    elif data_b64:
+        try:
+            data = base64.b64decode(data_b64, validate=True)
+        except (ValueError, TypeError) as exc:
+            raise ToolError(f"invalid data_b64: {exc}") from exc
+        ctype, src = None, "inline"
+    else:
+        raise ToolError("provide either `uri` or `data_b64`")
+
+    ref = ws.content_store(project_id).add(data, mime_type=ctype, name=name or (uri or None))
+    meta = {**ref.to_json(), "name": name or src, "source": src}
+    ws.asset_meta(project_id)[ref.item_id] = meta
+    return meta
+
+
+def list_assets(project_id: str) -> dict:
+    """List the media/source assets uploaded to a project (ContentRefs + names). Free."""
+    _require_nw("list_assets")
+    meta = _workspace().asset_meta(project_id)
+    return {"assets": [meta[k] for k in meta]}
+
+
+def get_asset(project_id: str, asset_id: str) -> dict:
+    """Details for one uploaded asset (its ContentRef + name, and a URL if the store
+    can mint one — e.g. an S3 backend; a local store returns none). Free."""
+    _require_nw("get_asset")
+    from dol import content_url
+
+    ws = _workspace()
+    meta = ws.asset_meta(project_id)
+    if asset_id not in meta:
+        raise ToolError(f"no asset {asset_id!r} in project {project_id!r}")
+    out = dict(meta[asset_id])
+    url = content_url(ws.content_store(project_id), asset_id)
+    if url:
+        out["url"] = url
+    return out
+
+
+def _resolve_source(project_id: str, source: dict | None):
+    """Build a segment source, resolving a ``source.asset_id`` (an uploaded
+    :class:`dol.ContentRef`) to its server-local ``asset_path`` for weave/render."""
+    if source and source.get("asset_id") and not source.get("asset_path"):
+        path = _workspace().asset_path(project_id, source["asset_id"])
+        source = {**source, "asset_path": path}
+    return source_from_json(source)
 
 
 # --- [COSTED] renders (spend ElevenLabs money) ------------------------------
@@ -525,7 +606,7 @@ def weave_project(project_id: str, script: dict, source: dict | None = None) -> 
     _require_nw("weave_project")
     scr = script_from_json(script)
     _reject_dialogue(scr, "weave_project")
-    src = source_from_json(source)
+    src = _resolve_source(project_id, source)
     _check_source(scr, src)
     proj = _workspace().open_project(project_id)
     episode = braidio.weave_project(proj, scr, source=src)

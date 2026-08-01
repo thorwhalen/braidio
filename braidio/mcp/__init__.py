@@ -44,6 +44,9 @@ FREE_TOOLS = [
     "project_status",
     "ingest_document",
     "save_script",
+    "upload_asset",
+    "list_assets",
+    "get_asset",
 ]
 
 #: Tools that spend ElevenLabs money — gated + metered.
