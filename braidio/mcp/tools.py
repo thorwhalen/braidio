@@ -36,6 +36,31 @@ def _require_nw(tool: str) -> None:
         raise ToolError(f"{tool} needs braidio's nw layer, which is not installed here")
 
 
+def _reject_dialogue(scr, tool: str) -> None:
+    """The nw graph pipeline can't ingest Dialogue beats yet — fail BEFORE mutating."""
+    from braidio import Dialogue
+
+    if any(isinstance(b, Dialogue) for b in scr.beats):
+        raise ToolError(
+            f"{tool}: Dialogue beats aren't supported by the graph pipeline yet — "
+            "use render_production for dialogue"
+        )
+
+
+# --- assistance -------------------------------------------------------------
+
+
+def help() -> dict:
+    """What braidio can do and how to use it.
+
+    Call this when a user asks what this connector/assistant can do, or to recall the
+    document -> script -> audio workflow and the free-vs-costed tool split.
+    """
+    from braidio.mcp._guide import capabilities
+
+    return capabilities()
+
+
 # --- catalog / registries (free) --------------------------------------------
 
 
@@ -213,6 +238,77 @@ def project_status(project_id: str) -> dict:
         to_json(a.body) for a in nw.annotations_at_tier(proj.root, "episode-renders")
     ]
     return {"project_id": project_id, "episodes": episodes}
+
+
+def ingest_document(
+    project_id: str,
+    uri: str | None = None,
+    text: str | None = None,
+    name: str | None = None,
+    max_chars: int = 40000,
+) -> dict:
+    """Ingest source material into a project so you can analyze it into a Script.
+
+    Provide EITHER ``uri`` (a public http/https URL — PDF, HTML, or plain text) OR
+    ``text`` (pasted content). The document is fetched (SSRF-guarded: public hosts
+    only, size/time bounded), its plaintext extracted and stored in the project, and
+    the text returned (up to ``max_chars``) for you to read and turn into narration /
+    segment beats. Free — no synthesis.
+    """
+    from braidio.mcp import _docs
+
+    ws = _workspace()
+    root = ws.project_root(project_id)
+    if not (root / "project.json").exists():
+        raise ToolError(f"no project {project_id!r} — call create_project first")
+    try:
+        if uri:
+            data, ctype = _docs.fetch_uri(uri)
+            src = uri
+        elif text is not None:
+            data, ctype, src = text.encode("utf-8"), "text/plain", "inline"
+        else:
+            raise ToolError("provide either `uri` or `text`")
+        full = _docs.extract_text(data, ctype)
+    except ValueError as exc:
+        raise ToolError(str(exc)) from exc
+
+    from hashlib import sha256
+
+    docs_dir = root / "docs"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    doc_id = sha256(data).hexdigest()[:16]
+    (docs_dir / f"{doc_id}.txt").write_text(full, encoding="utf-8")
+    return {
+        "doc_id": doc_id,
+        "name": name or src,
+        "source": src,
+        "content_type": ctype,
+        "characters": len(full),
+        "truncated": len(full) > max_chars,
+        "text": full[:max_chars],
+    }
+
+
+def save_script(project_id: str, script: dict, source: dict | None = None) -> dict:
+    """Link a Script's beats into a project's graph (free authoring; render later).
+
+    Writes the narration + segment beats (with their source-media links) into the
+    project graph, so you can review (project_status) and render with weave_project
+    when ready. Narration + Segment beats only (Dialogue is not yet in the graph
+    pipeline). Free — no synthesis.
+    """
+    _require_nw("save_script")
+    scr = script_from_json(script)
+    _reject_dialogue(scr, "save_script")
+    src = source_from_json(source)
+    _check_source(scr, src)
+    proj = _workspace().open_project(project_id)
+    ingested = braidio.transforms.ingest_script(proj, scr, source=src)
+    return {
+        "project_id": project_id,
+        "beats": [{"kind": k, "id": str(a.id)} for k, a in ingested.ordered],
+    }
 
 
 # --- [COSTED] renders (spend ElevenLabs money) ------------------------------
@@ -428,6 +524,7 @@ def weave_project(project_id: str, script: dict, source: dict | None = None) -> 
     """
     _require_nw("weave_project")
     scr = script_from_json(script)
+    _reject_dialogue(scr, "weave_project")
     src = source_from_json(source)
     _check_source(scr, src)
     proj = _workspace().open_project(project_id)

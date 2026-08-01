@@ -403,3 +403,126 @@ def test_weave_project_records_cost(monkeypatch):
     )
     assert r.structured_content["cost_usd"] == pytest.approx(0.30)
     assert r.structured_content["url"] == "file:///x.mp3"
+
+
+# --- assistance + document ingestion ----------------------------------------
+
+
+def test_help_tool_served():
+    server = _local_server(ledger={})
+    r = _call(server, "help", {})
+    assert "what_is_braidio" in r.structured_content
+    assert "render_COSTED" in r.structured_content["tools"]
+    assert any("ingest_document" in step for step in r.structured_content["workflow"])
+
+
+def test_docs_extract_text_html_and_plain():
+    from braidio.mcp import _docs
+
+    html = b"<html><body><p>Hi <b>there</b></p><script>x=1</script></body></html>"
+    assert _docs.extract_text(html, "text/html") == "Hi there"
+    assert _docs.extract_text(b"plain body", "text/plain") == "plain body"
+
+
+@pytest.mark.parametrize(
+    "bad_uri",
+    [
+        "ftp://example.com/x",
+        "file:///etc/passwd",
+        "http://localhost/x",
+        "http://127.0.0.1/x",
+        "http://192.168.0.1/x",
+        "http://169.254.169.254/latest/meta-data",  # cloud metadata SSRF
+    ],
+)
+def test_docs_fetch_ssrf_guard(bad_uri):
+    from braidio.mcp import _docs
+
+    with pytest.raises(ValueError):
+        _docs.fetch_uri(bad_uri)  # rejected before any network call
+
+
+@_NW
+def test_ingest_document_requires_project_then_stores_text():
+    server = _local_server(ledger={})
+    with pytest.raises(Exception) as ei:
+        _call(server, "ingest_document", {"project_id": "p1", "text": "hello"})
+    assert "create_project" in str(ei.value)
+
+    _call(server, "create_project", {"project_id": "p1", "title": "P1"})
+    r = _call(server, "ingest_document", {"project_id": "p1", "text": "A " * 100})
+    assert r.structured_content["characters"] == 200
+    assert r.structured_content["source"] == "inline"
+    assert r.structured_content["text"].startswith("A ")
+
+
+@_NW
+def test_save_script_links_narration_beats():
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "p2", "title": "P2"})
+    r = _call(
+        server,
+        "save_script",
+        {
+            "project_id": "p2",
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [{"type": "narration", "text": "hello"}],
+            },
+        },
+    )
+    beats = r.structured_content["beats"]
+    assert len(beats) == 1 and beats[0]["kind"] == "narration"
+
+
+def test_docs_rejects_disallowed_port(monkeypatch):
+    from braidio.mcp import _docs
+
+    monkeypatch.setattr(_docs, "_host_is_public", lambda h: True)
+    with pytest.raises(ValueError, match="port"):
+        _docs._validate_target("http://example.com:8080/x")
+    _docs._validate_target("https://example.com/x")  # 443 default is fine
+
+
+def test_docs_redirect_to_private_is_rejected(monkeypatch):
+    # The CRITICAL fix: a public URL that 302s to an internal host must be refused,
+    # and the internal target must never be fetched.
+    import urllib.error
+    import urllib.request as ureq
+
+    from braidio.mcp import _docs
+
+    monkeypatch.setattr(_docs, "_host_is_public", lambda h: h != "127.0.0.1")
+    hops = []
+
+    def fake_open(self, req, data=None, timeout=None):
+        hops.append(req.full_url)
+        raise urllib.error.HTTPError(
+            req.full_url, 302, "redir", {"Location": "http://127.0.0.1/secret"}, None
+        )
+
+    monkeypatch.setattr(ureq.OpenerDirector, "open", fake_open)
+    with pytest.raises(ValueError):
+        _docs.fetch_uri("http://public.example/start")
+    assert hops == ["http://public.example/start"]  # never fetched the private target
+
+
+@_NW
+def test_save_script_rejects_dialogue_before_mutating():
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "pd", "title": "PD"})
+    with pytest.raises(Exception) as ei:
+        _call(
+            server,
+            "save_script",
+            {
+                "project_id": "pd",
+                "script": {
+                    "title": "t",
+                    "id_slug": "01",
+                    "beats": [{"type": "dialogue", "turns": [["A", "hi"]]}],
+                },
+            },
+        )
+    assert "Dialogue" in str(ei.value)
