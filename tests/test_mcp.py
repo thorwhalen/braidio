@@ -476,6 +476,79 @@ def test_save_script_links_narration_beats():
     assert len(beats) == 1 and beats[0]["kind"] == "narration"
 
 
+# --- assets (braidio#10) ----------------------------------------------------
+
+
+@_NW
+def test_upload_asset_dedups_lists_and_gets():
+    import base64
+
+    from dol import content_hash
+
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "pa", "title": "PA"})
+    payload = b"FAKE-AUDIO-BYTES"
+    b64 = base64.b64encode(payload).decode()
+    meta = _call(
+        server, "upload_asset", {"project_id": "pa", "data_b64": b64, "name": "song.mp3"}
+    ).structured_content
+    assert meta["itemId"] == content_hash(payload)  # content-addressed
+    assert meta["hash"] == meta["itemId"] and meta["size"] == len(payload)
+    assert meta["mimeType"].startswith("audio/") and meta["name"] == "song.mp3"
+
+    # identical bytes dedupe to one stored asset
+    again = _call(
+        server, "upload_asset", {"project_id": "pa", "data_b64": b64}
+    ).structured_content
+    assert again["itemId"] == meta["itemId"]
+    listed = _call(server, "list_assets", {"project_id": "pa"}).structured_content["assets"]
+    assert len(listed) == 1 and listed[0]["itemId"] == meta["itemId"]
+    got = _call(
+        server, "get_asset", {"project_id": "pa", "asset_id": meta["itemId"]}
+    ).structured_content
+    assert got["itemId"] == meta["itemId"]
+
+
+@_NW
+def test_upload_asset_requires_project_and_a_source():
+    import base64
+
+    server = _local_server(ledger={})
+    with pytest.raises(Exception) as ei:
+        _call(
+            server,
+            "upload_asset",
+            {"project_id": "nope", "data_b64": base64.b64encode(b"x").decode()},
+        )
+    assert "create_project" in str(ei.value)
+
+    _call(server, "create_project", {"project_id": "pb", "title": "PB"})
+    with pytest.raises(Exception) as ei:  # neither uri nor data_b64
+        _call(server, "upload_asset", {"project_id": "pb"})
+    assert "uri" in str(ei.value) or "data_b64" in str(ei.value)
+
+
+@_NW
+def test_asset_reference_resolves_to_local_path():
+    import base64
+    from pathlib import Path as P
+
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "pc", "title": "PC"})
+    item_id = _call(
+        server,
+        "upload_asset",
+        {"project_id": "pc", "data_b64": base64.b64encode(b"MEDIA").decode()},
+    ).structured_content["itemId"]
+
+    # the resolver weave_project/save_script use for `source.asset_id`
+    ws = Workspace.for_email(OWNER)
+    path = ws.asset_path("pc", item_id)
+    assert P(path).exists() and P(path).read_bytes() == b"MEDIA"
+    with pytest.raises(FileNotFoundError):
+        ws.asset_path("pc", "deadbeefdeadbeef")
+
+
 def test_docs_rejects_disallowed_port(monkeypatch):
     from braidio.mcp import _docs
 

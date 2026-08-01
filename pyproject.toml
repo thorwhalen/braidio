@@ -51,9 +51,12 @@ nw-app = ["lacing", "nw", "falaw"]
 # The MCP server (`braidio.mcp`): a Claude.ai connector's tool surface + usage
 # metering. `fastmcp` + `py2mcp` build and serve it; the nw-app powers the project
 # and weave tools. The usage-ledger store is dependency-injected by the connector
-# (e.g. a `dol` file store), so it is not a hard dep here.
+# (e.g. a `dol` file store).
 # py2mcp>=0.1.9: build_server passes instructions= (added in 0.1.9) to mk_http_app.
-mcp = ["fastmcp", "py2mcp>=0.1.9", "pypdf", "lacing", "nw", "falaw"]
+# dol>=0.3.57: the asset tools use dol.content (ContentRef + content-addressed
+#   store), added in that release — pin the floor so installs don't resolve an
+#   older dol without it.
+mcp = ["fastmcp", "py2mcp>=0.1.9", "pypdf", "dol>=0.3.57", "lacing", "nw", "falaw"]
 
 [tool.ruff]
 line-length = 88

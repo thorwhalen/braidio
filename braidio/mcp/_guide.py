@@ -30,10 +30,15 @@ To turn a document into audio, the typical path is:
 6. render_production(script, ...) OR weave_project(project_id, script, ...) — synthesize
    and mix into one audio file. This SPENDS ElevenLabs credits (metered per user).
 
+If the Script has "segment" beats that quote source audio/video, first
+upload_asset(project_id, uri=... or data_b64=...) to store the media (it returns an
+`itemId`), then reference it from the segment source as `source.asset_id` when you
+save_script / weave_project. Manage assets with list_assets / get_asset.
+
 Guidance: call `help` for the full capability + tool catalog. Always `estimate_cost`
 before a render. The tools that spend money are narrate, the render_* tools,
-compose_narration, and weave_project; the rest (catalog, planning, ingest, text-prep)
-are free. Every call is metered to the authenticated caller. Ask a clarifying question if the desired voice, format, or
+compose_narration, and weave_project; the rest (catalog, planning, ingest, assets,
+text-prep) are free. Every call is metered to the authenticated caller. Ask a clarifying question if the desired voice, format, or
 length is unclear before spending on a render.\
 """
 
@@ -87,6 +92,11 @@ def capabilities() -> dict:
                 "project_status",
                 "save_script",
             ],
+            "assets_free": [
+                "upload_asset",
+                "list_assets",
+                "get_asset",
+            ],
             "render_COSTED": [
                 "render_production",
                 "render_format",
@@ -113,8 +123,10 @@ def capabilities() -> dict:
         "notes": [
             "Costed tools (narrate, render_*, weave_project) spend ElevenLabs "
             "credits — call estimate_cost first.",
-            "Segment beats need a `source` (timed lines + a server-accessible audio "
-            "asset); a narration-only script needs no source.",
+            "Segment beats need a `source` (timed lines + audio): upload the media "
+            "with upload_asset and pass its itemId as `source.asset_id`, or point "
+            "`source.asset_path` at a server-local file. A narration-only script "
+            "needs no source.",
             "Dialogue beats aren't in the graph pipeline yet — use render_production "
             "for dialogue.",
             "Every call is metered to the authenticated user; the connector is "

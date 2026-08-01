@@ -114,3 +114,41 @@ class Workspace:
         stem = _safe_component(name, label="render name")
         self.renders_dir.mkdir(parents=True, exist_ok=True)
         return self.renders_dir / f"{stem}{suffix}"
+
+    # -- assets (braidio#10) --------------------------------------------------
+    # Media/source blobs a caller uploads, stored through a dol content store so
+    # the local backend can later swap to s3dol with no tool-code change. Content
+    # (bytes) is content-addressed under ``assets/``; a JSON sidecar under
+    # ``assets_meta/`` holds each blob's name/mime/size (the content-metadata
+    # bifurcation — the CAS store only knows hashes).
+
+    def assets_dir(self, project_id: str) -> Path:
+        return self.project_root(project_id) / "assets"
+
+    def content_store(self, project_id: str):
+        """A content-addressed asset store for a project (``dol`` — local now, S3 later).
+
+        The backend is a local :class:`dol.Files`; swapping it for an ``s3dol`` store
+        (or injecting one) needs no change to the tools that consume this.
+        """
+        from dol import Files, with_content_addressing
+
+        d = self.assets_dir(project_id)
+        d.mkdir(parents=True, exist_ok=True)
+        return with_content_addressing(Files(str(d)))
+
+    def asset_meta(self, project_id: str):
+        """The per-project asset metadata sidecar (``{hash: {name, mimeType, size, ...}}``)."""
+        from dol import JsonFiles
+
+        d = self.project_root(project_id) / "assets_meta"
+        d.mkdir(parents=True, exist_ok=True)
+        return JsonFiles(str(d))
+
+    def asset_path(self, project_id: str, asset_id: str) -> str:
+        """Resolve a stored asset (a :class:`dol.ContentRef` ``item_id``/hash) to its
+        server-local file path — so weave/render can read the media."""
+        key = _safe_component(asset_id, label="asset_id")
+        if key not in self.content_store(project_id):
+            raise FileNotFoundError(f"no asset {asset_id!r} in project {project_id!r}")
+        return str(self.assets_dir(project_id) / key)
