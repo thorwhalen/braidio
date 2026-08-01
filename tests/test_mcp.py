@@ -477,76 +477,92 @@ def test_save_script_links_narration_beats():
 
 
 # --- assets (braidio#10) ----------------------------------------------------
+# Assets are per-USER (no project needed), so one-shot renders share them too.
 
 
-@_NW
 def test_upload_asset_dedups_lists_and_gets():
     import base64
 
     from dol import content_hash
 
-    server = _local_server(ledger={})
-    _call(server, "create_project", {"project_id": "pa", "title": "PA"})
+    server = _local_server(ledger={})  # no create_project — assets are project-less
     payload = b"FAKE-AUDIO-BYTES"
     b64 = base64.b64encode(payload).decode()
     meta = _call(
-        server, "upload_asset", {"project_id": "pa", "data_b64": b64, "name": "song.mp3"}
+        server, "upload_asset", {"data_b64": b64, "name": "song.mp3"}
     ).structured_content
     assert meta["itemId"] == content_hash(payload)  # content-addressed
     assert meta["hash"] == meta["itemId"] and meta["size"] == len(payload)
     assert meta["mimeType"].startswith("audio/") and meta["name"] == "song.mp3"
 
     # identical bytes dedupe to one stored asset
-    again = _call(
-        server, "upload_asset", {"project_id": "pa", "data_b64": b64}
-    ).structured_content
+    again = _call(server, "upload_asset", {"data_b64": b64}).structured_content
     assert again["itemId"] == meta["itemId"]
-    listed = _call(server, "list_assets", {"project_id": "pa"}).structured_content["assets"]
+    listed = _call(server, "list_assets", {}).structured_content["assets"]
     assert len(listed) == 1 and listed[0]["itemId"] == meta["itemId"]
-    got = _call(
-        server, "get_asset", {"project_id": "pa", "asset_id": meta["itemId"]}
-    ).structured_content
+    got = _call(server, "get_asset", {"asset_id": meta["itemId"]}).structured_content
     assert got["itemId"] == meta["itemId"]
 
 
-@_NW
-def test_upload_asset_requires_project_and_a_source():
-    import base64
-
+def test_upload_asset_requires_uri_or_data():
     server = _local_server(ledger={})
-    with pytest.raises(Exception) as ei:
-        _call(
-            server,
-            "upload_asset",
-            {"project_id": "nope", "data_b64": base64.b64encode(b"x").decode()},
-        )
-    assert "create_project" in str(ei.value)
-
-    _call(server, "create_project", {"project_id": "pb", "title": "PB"})
     with pytest.raises(Exception) as ei:  # neither uri nor data_b64
-        _call(server, "upload_asset", {"project_id": "pb"})
+        _call(server, "upload_asset", {})
     assert "uri" in str(ei.value) or "data_b64" in str(ei.value)
 
 
-@_NW
 def test_asset_reference_resolves_to_local_path():
     import base64
     from pathlib import Path as P
 
     server = _local_server(ledger={})
-    _call(server, "create_project", {"project_id": "pc", "title": "PC"})
     item_id = _call(
-        server,
-        "upload_asset",
-        {"project_id": "pc", "data_b64": base64.b64encode(b"MEDIA").decode()},
+        server, "upload_asset", {"data_b64": base64.b64encode(b"MEDIA").decode()}
     ).structured_content["itemId"]
 
-    # the resolver weave_project/save_script use for `source.asset_id`
-    ws = Workspace.for_email(OWNER)
-    path = ws.asset_path("pc", item_id)
+    ws = Workspace.for_email(OWNER)  # the resolver weave/render use for `source.asset_id`
+    path = ws.asset_path(item_id)
     assert P(path).exists() and P(path).read_bytes() == b"MEDIA"
     with pytest.raises(FileNotFoundError):
-        ws.asset_path("pc", "deadbeefdeadbeef")
+        ws.asset_path("deadbeefdeadbeef")
+
+
+def test_oneshot_render_resolves_asset_id(monkeypatch):
+    # A project-LESS render_production resolves source.asset_id to the uploaded file.
+    import base64
+    from pathlib import Path as P
+
+    captured = {}
+
+    def _stub(scr, *, out_path, **kw):
+        captured.update(kw)
+        P(out_path).parent.mkdir(parents=True, exist_ok=True)
+        P(out_path).write_bytes(b"EP")
+        return P(out_path)
+
+    monkeypatch.setattr(braidio, "render_production", _stub)
+    server = _local_server(ledger={})
+    item_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"SONG").decode()}
+    ).structured_content["itemId"]
+    _call(
+        server,
+        "render_production",
+        {
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [{"type": "segment", "reference": "line-0"}],
+            },
+            "source": {
+                "lines": [{"index": 0, "start_s": 0, "end_s": 1, "text": "hi"}],
+                "asset_id": item_id,
+            },
+        },
+    )
+    src = captured["source"]  # the TimedLineSegmentSource braidio.render_production got
+    assert str(src._asset) == Workspace.for_email(OWNER).asset_path(item_id)
+    assert P(src._asset).read_bytes() == b"SONG"
 
 
 def test_docs_rejects_disallowed_port(monkeypatch):
