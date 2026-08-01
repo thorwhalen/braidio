@@ -337,6 +337,14 @@ def test_narration_render_unpriced_cost(
 def test_commentary_weave_genre_ready():
     import nw
 
+    from braidio.formats import FORMATS
+
     genre = nw.get_genre("commentary_weave")
     assert genre.is_ready()
     assert genre.projection_entrypoint == "weave_to_episode.default"
+    # braidio#6: the genre is self-describing — its 7 Formats are Templates,
+    # plus intake_kinds + a cost_profile, so a host can expose it straight from nw.
+    assert {t.slug for t in genre.templates} == set(FORMATS)
+    assert all(t.params["format_id"] in FORMATS for t in genre.templates)
+    assert genre.intake_kinds and genre.cost_profile == "tts"
+    assert genre.defaults["format_id"] in FORMATS
