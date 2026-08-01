@@ -52,7 +52,8 @@ nw-app = ["lacing", "nw", "falaw"]
 # metering. `fastmcp` + `py2mcp` build and serve it; the nw-app powers the project
 # and weave tools. The usage-ledger store is dependency-injected by the connector
 # (e.g. a `dol` file store), so it is not a hard dep here.
-mcp = ["fastmcp", "py2mcp", "pypdf", "lacing", "nw", "falaw"]
+# py2mcp>=0.1.9: build_server passes instructions= (added in 0.1.9) to mk_http_app.
+mcp = ["fastmcp", "py2mcp>=0.1.9", "pypdf", "lacing", "nw", "falaw"]
 
 [tool.ruff]
 line-length = 88
