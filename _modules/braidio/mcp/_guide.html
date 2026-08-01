@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.mcp._guide &mdash; braidio 0.0.6 documentation</title>
+  <title>braidio.mcp._guide &mdash; braidio 0.0.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=1fd71caa"></script>
+      <script src="../../../_static/documentation_options.js?v=bbaf98b3"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -146,9 +146,11 @@
 <span class="s2">   and mix into one audio file. This SPENDS ElevenLabs credits (metered per user).</span>
 
 <span class="s2">If the Script has &quot;segment&quot; beats that quote source audio/video, first</span>
-<span class="s2">upload_asset(project_id, uri=... or data_b64=...) to store the media (it returns an</span>
-<span class="s2">`itemId`), then reference it from the segment source as `source.asset_id` when you</span>
-<span class="s2">save_script / weave_project. Manage assets with list_assets / get_asset.</span>
+<span class="s2">upload_asset(uri=... or data_b64=...) to store the media in your library (it returns</span>
+<span class="s2">an `itemId`), then reference it from the segment source as `source.asset_id` in ANY</span>
+<span class="s2">render that takes a source — render_production / render_format (one-shot) or</span>
+<span class="s2">save_script / weave_project (project graph). Manage your library with list_assets /</span>
+<span class="s2">get_asset.</span>
 
 <span class="s2">Guidance: call `help` for the full capability + tool catalog. Always `estimate_cost`</span>
 <span class="s2">before a render. The tools that spend money are narrate, the render_* tools,</span>
