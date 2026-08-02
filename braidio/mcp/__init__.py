@@ -47,6 +47,7 @@ FREE_TOOLS = [
     "upload_asset",
     "list_assets",
     "get_asset",
+    "download_audio",
 ]
 
 #: Tools that spend ElevenLabs money — gated + metered.

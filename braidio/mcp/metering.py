@@ -66,14 +66,17 @@ def token_email() -> Optional[str]:
 
 
 def current_email() -> str:
-    """The identity the middleware resolved for the in-flight call (SSOT for tools).
+    """The caller's identity for the in-flight tool call (SSOT for per-user placement).
 
-    Raises if called outside a metered tool call — a tool must never run, or place
-    data, under an unauthenticated/unknown identity.
+    Resolves from braidio's own ``MeteringMiddleware`` context var when present (stdio
+    dev), else **directly from the verified OAuth token** — so tools work under ANY host
+    middleware, including the shared ``enlace_metering.MeteringMiddleware`` the hosted
+    connector now installs (thorwhalen/reelee#232), which keys its own context var. No
+    fallback beyond the token: an unauthenticated call is failed closed.
     """
-    email = _CURRENT_EMAIL.get()
+    email = _CURRENT_EMAIL.get() or token_email()
     if not email:
-        raise ToolError("no caller identity in context (metering middleware inactive)")
+        raise ToolError("no caller identity (authentication required)")
     return email
 
 

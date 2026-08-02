@@ -17,6 +17,8 @@ intermediate/work files stay inside the workspace (never the server CWD).
 
 from __future__ import annotations
 
+import os
+
 import braidio  # attr access (braidio.narrate, ...) so tests can monkeypatch
 from fastmcp.exceptions import ToolError
 
@@ -375,6 +377,125 @@ def get_asset(asset_id: str) -> dict:
     if url:
         out["url"] = url
     return out
+
+
+# Bounds for server-side audio fetches (shared prod box; mirrors the intent of
+# _docs.MAX_BYTES for document fetches). Audio mp3 is legitimately tens of MB for a
+# long track, so the byte cap is larger than the 10MB document cap; both env-tunable.
+_AUDIO_MAX_BYTES = int(os.environ.get("BRAIDIO_AUDIO_MAX_BYTES", str(60 * 1024 * 1024)))
+_AUDIO_MAX_DURATION_S = int(
+    os.environ.get("BRAIDIO_AUDIO_MAX_DURATION_S", str(45 * 60))
+)
+
+
+def download_audio(url: str, name: str | None = None) -> dict:
+    """Download the AUDIO of a song/video from a public link into your asset library.
+
+    ⚠️ COPYRIGHT: only download audio you have the right to use. You are responsible for
+    respecting the source's copyright and terms of service — this tool grants no rights
+    to the content.
+
+    Fetches the best audio stream from ``url`` (via yt-dlp — YouTube, SoundCloud,
+    Bandcamp, and many more; **no login or API key needed**), extracts it to mp3, and
+    stores it **content-addressed** in your per-user library, giving back a ContentRef
+    you can reference from a segment source as ``source.asset_id`` in any render/weave —
+    exactly like :func:`upload_asset` (use this when you have a *link*, ``upload_asset``
+    when you have a direct file URL or bytes). Free — no ElevenLabs/synthesis spend.
+    Needs ``braidio[mcp]`` (pulls ``yb[download]`` = yt-dlp) + ffmpeg on PATH. The source
+    must be a public host and under the size/duration limits (server-side fetch on a
+    shared box).
+    """
+    from pathlib import Path
+
+    from braidio.mcp import _docs
+
+    # SSRF pre-check (matches upload_asset/ingest_document): refuse non-http(s) and
+    # loopback/private/link-local/cloud-metadata hosts. NOTE: yt-dlp resolves the page +
+    # follows redirects itself, so this closes the direct-target vector but is not a full
+    # egress sandbox — the driving agent's `url` can be steered by prompt injection.
+    try:
+        _docs._validate_target(url)
+    except ValueError as exc:
+        raise ToolError(str(exc)) from exc
+
+    try:
+        from yb.download import download_youtube_video, youtube_video_info
+    except ImportError as exc:
+        raise ToolError(
+            "audio download needs yt-dlp — install braidio[mcp] (which pulls yb[download])"
+        ) from exc
+
+    # Reject over-long sources (livestreams / multi-hour) BEFORE fetching any bytes.
+    try:
+        preview = youtube_video_info(url)
+    except Exception as exc:  # noqa: BLE001 — extractor errors
+        raise ToolError(f"could not read the source: {exc}") from exc
+    duration = preview.get("duration")
+    if isinstance(duration, (int, float)) and duration > _AUDIO_MAX_DURATION_S:
+        raise ToolError(
+            f"source is {int(duration)}s long; exceeds the "
+            f"{_AUDIO_MAX_DURATION_S}s audio-download limit"
+        )
+
+    ws = _workspace()
+    work = ws.renders_dir / "_downloads"
+    work.mkdir(parents=True, exist_ok=True)
+    try:
+        result = download_youtube_video(
+            url,
+            download_dir=str(work),
+            fmt="bestaudio/best",
+            merge_to=None,  # audio-only; no video+audio merge
+            extra_opts={
+                "max_filesize": _AUDIO_MAX_BYTES,  # yt-dlp skips/aborts oversized formats
+                "postprocessors": [
+                    {
+                        "key": "FFmpegExtractAudio",
+                        "preferredcodec": "mp3",
+                        "preferredquality": "192",
+                    }
+                ],
+            },
+        )
+    except Exception as exc:  # noqa: BLE001 — yt-dlp raises many extractor error types
+        raise ToolError(f"audio download failed: {exc}") from exc
+
+    audio_path = Path(result.path)
+    if audio_path.suffix.lower() != ".mp3":  # the postprocessor rewrites to .mp3
+        mp3 = audio_path.with_suffix(".mp3")
+        if mp3.exists():
+            audio_path = mp3
+    # Belt-and-braces size gate before loading into RAM (post-processing can grow a file,
+    # and max_filesize bounds the download, not the extracted output).
+    if audio_path.stat().st_size > _AUDIO_MAX_BYTES:
+        try:
+            audio_path.unlink()
+        except OSError:
+            pass
+        raise ToolError(
+            f"downloaded audio exceeds the {_AUDIO_MAX_BYTES}-byte limit"
+        )
+    data = audio_path.read_bytes()
+    info = result.info or {}
+    title = name or info.get("title") or audio_path.stem
+    ref = ws.content_store().add(data, mime_type="audio/mpeg", name=title)
+    meta = {
+        **ref.to_json(),
+        "name": title,
+        "source": url,
+        "kind": "audio",
+        "duration": info.get("duration"),
+        "copyright_notice": (
+            "Downloaded from a user-supplied link — respect the source's copyright and "
+            "terms of service; you are responsible for having the right to use it."
+        ),
+    }
+    ws.asset_meta()[ref.item_id] = meta
+    try:
+        audio_path.unlink()  # the content-addressed store owns the bytes now
+    except OSError:
+        pass
+    return meta
 
 
 def _resolve_source(source: dict | None):

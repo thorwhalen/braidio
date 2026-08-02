@@ -646,3 +646,72 @@ def test_save_script_rejects_dialogue_before_mutating():
             },
         )
     assert "Dialogue" in str(ei.value)
+
+
+# --- download_audio (yt-dlp via yb) + identity fallback (reelee#232) ---------
+
+
+def test_download_audio_stores_asset_without_network(monkeypatch, tmp_path):
+    # download_audio lazy-imports yb.download; inject a fake so no yt-dlp/network runs.
+    import sys
+    import types
+
+    import braidio.mcp._docs as _docs
+
+    monkeypatch.setattr(_docs, "_validate_target", lambda url: None)  # skip DNS/SSRF check
+
+    mp3 = tmp_path / "grabbed.mp3"
+    mp3.write_bytes(b"ID3\x03fake-mp3-bytes")
+
+    class _Res:
+        path = str(mp3)
+        info = {"title": "My Song", "duration": 200}
+        sidecars = {}
+
+    fake = types.ModuleType("yb.download")
+    fake.download_youtube_video = lambda url, **kw: _Res()
+    fake.youtube_video_info = lambda url, **kw: {"title": "My Song", "duration": 200}
+    monkeypatch.setitem(sys.modules, "yb", types.ModuleType("yb"))
+    monkeypatch.setitem(sys.modules, "yb.download", fake)
+
+    server = _local_server()
+    out = _call(
+        server, "download_audio", {"url": "https://example.com/song"}
+    ).structured_content
+    assert out["kind"] == "audio"
+    assert out["name"] == "My Song"
+    assert out["duration"] == 200
+    assert out["source"] == "https://example.com/song"
+    assert "copyright" in out["copyright_notice"].lower()
+    # stored content-addressed in the library (same shape as upload_asset) + listed
+    assert out["_tag"] == "ContentRef"
+    listed = _call(server, "list_assets", {}).structured_content["assets"]
+    assert any(
+        a.get("name") == "My Song" and a.get("kind") == "audio" for a in listed
+    )
+
+
+def test_download_audio_registered_free():
+    assert "download_audio" in bmcp.FREE_TOOLS
+    assert "download_audio" not in bmcp.COSTED_TOOLS
+
+
+def test_download_audio_rejects_ssrf_target():
+    # A server-side fetch to a loopback/metadata host must be refused (no network:
+    # 127.0.0.1 is a literal IP, so _validate_target rejects it without DNS).
+    from fastmcp.exceptions import ToolError
+
+    from braidio.mcp.tools import download_audio
+
+    with pytest.raises(ToolError):
+        download_audio("http://127.0.0.1:8010/api/secrets")
+    with pytest.raises(ToolError):
+        download_audio("http://169.254.169.254/latest/meta-data/")
+
+
+def test_current_email_falls_back_to_token(monkeypatch):
+    # reelee#232 decoupling: under a NON-braidio middleware (no braidio contextvar set),
+    # current_email resolves the caller directly from the verified OAuth token — so
+    # braidio's tools work under the connector's shared enlace_metering middleware.
+    _mock_token(monkeypatch, "Owner@X.com")
+    assert metering.current_email() == "owner@x.com"

@@ -58,7 +58,7 @@ nw-app = ["lacing", "nw>=0.0.12", "falaw"]
 # dol>=0.3.57: the asset tools use dol.content (ContentRef + content-addressed
 #   store), added in that release — pin the floor so installs don't resolve an
 #   older dol without it.
-mcp = ["fastmcp", "py2mcp>=0.1.9", "pypdf", "dol>=0.3.57", "lacing", "nw>=0.0.12", "falaw"]
+mcp = ["fastmcp", "py2mcp>=0.1.9", "pypdf", "dol>=0.3.57", "lacing", "nw>=0.0.12", "falaw", "yb[download]>=0.1.7"]
 
 [tool.ruff]
 line-length = 88
