@@ -472,9 +472,7 @@ def download_audio(url: str, name: str | None = None) -> dict:
             audio_path.unlink()
         except OSError:
             pass
-        raise ToolError(
-            f"downloaded audio exceeds the {_AUDIO_MAX_BYTES}-byte limit"
-        )
+        raise ToolError(f"downloaded audio exceeds the {_AUDIO_MAX_BYTES}-byte limit")
     data = audio_path.read_bytes()
     info = result.info or {}
     title = name or info.get("title") or audio_path.stem
