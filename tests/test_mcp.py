@@ -31,7 +31,20 @@ from fastmcp import Client  # noqa: E402
 
 _NW = pytest.mark.skipif(not braidio.HAS_NW, reason="nw layer not installed")
 
+#: Identity of the local-dev (no-OAuth) server the served-tool tests run against.
 OWNER = "owner@example.com"
+
+#: Opaque bearer value carried by the stand-in OAuth token. Never verified — the
+#: tests monkeypatch the dependency that would do the verifying.
+MOCK_TOKEN_VALUE = "test-access-token"
+
+#: OAuth client the stand-in token is issued to. fastmcp's telemetry hook reads it
+#: off every verified token, so it has to be present and non-empty.
+MOCK_CLIENT_ID = "test-client"
+
+#: Scopes granted to the stand-in token. braidio authorizes on the ``email``/``sub``
+#: claim, not on scopes, so an empty grant is the honest default.
+MOCK_SCOPES: list[str] = []
 
 
 @pytest.fixture(autouse=True)
@@ -54,11 +67,28 @@ def _call(server, tool, args):
     return asyncio.run(go())
 
 
-def _mock_token(monkeypatch, email):
-    import fastmcp.server.dependencies as deps
+def _mock_token(monkeypatch, email, *, client_id=MOCK_CLIENT_ID, scopes=None):
+    """Install a **real** ``AccessToken`` for ``email`` as the verified caller.
 
-    tok = type("Tok", (), {"claims": {"email": email}})()
-    monkeypatch.setattr(deps, "get_access_token", lambda: tok)
+    It must be the genuine type, not a duck-typed stand-in carrying only ``claims``:
+    fastmcp's server plumbing reads the *whole* token off every request — its
+    telemetry hook touches ``token.client_id``/``token.scopes`` (catching only
+    ``RuntimeError``), and ``get_access_token`` coerces foreign objects through
+    ``model_dump()``, requiring ``token``/``client_id``/``scopes``. A partial double
+    therefore fails every *served* tool call with an opaque ``AttributeError`` that
+    has nothing to do with the behaviour under test.
+    """
+    import fastmcp.server.dependencies as deps
+    from fastmcp.server.auth.auth import AccessToken
+
+    token = AccessToken(
+        token=MOCK_TOKEN_VALUE,
+        client_id=client_id,
+        scopes=list(MOCK_SCOPES if scopes is None else scopes),
+        claims={"email": email},
+    )
+    monkeypatch.setattr(deps, "get_access_token", lambda: token)
+    return token
 
 
 # --- serialization ----------------------------------------------------------
@@ -168,6 +198,26 @@ def test_workspace_open_missing_and_list(tmp_path):
 
 
 # --- identity / access (fail-closed) ----------------------------------------
+
+
+def test_mock_token_is_a_real_access_token(monkeypatch):
+    """The test double must satisfy fastmcp's *whole* token contract, not just ``claims``.
+
+    Guards against re-introducing a duck-typed stand-in: this asserts the real type
+    and then runs the very fastmcp hook (``get_auth_span_attributes``) that a partial
+    double breaks — which is what turned every served-tool test red under fastmcp 3.1.
+    """
+    from fastmcp.server.auth.auth import AccessToken
+    from fastmcp.server.telemetry import get_auth_span_attributes
+
+    _mock_token(monkeypatch, "user@example.com")
+    # Resolve the dependency the way fastmcp itself does — a late module-attribute
+    # lookup, so the patched provider (not the import-time original) is what runs.
+    from fastmcp.server.dependencies import get_access_token
+
+    token = get_access_token()
+    assert isinstance(token, AccessToken)
+    assert get_auth_span_attributes()["enduser.id"] == MOCK_CLIENT_ID
 
 
 def test_token_email_prefers_email_claim_lowercased(monkeypatch):
