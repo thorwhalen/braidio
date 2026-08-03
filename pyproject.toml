@@ -100,8 +100,14 @@ convention = "google"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
+# wads CI runs `pytest --doctest-modules` with NO path argument, so collection is
+# driven entirely by `testpaths`. With only "tests" here the package's own doctests
+# were never collected (CI stayed green while doctesting nothing). Listing the
+# package dir makes `--doctest-modules` reach it — and doubles as an import smoke
+# test for every module.
 testpaths = [
     "tests",
+    "braidio",
 ]
 doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
