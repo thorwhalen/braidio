@@ -19,6 +19,26 @@ keywords = [
     "ffmpeg",
     "elevenlabs",
 ]
+# Development Status is 3 - Alpha on purpose: the README says the engine is early
+# and "APIs will move quickly", and the version is still 0.0.x. No Typing :: Typed
+# (no py.typed marker ships) and no Multimedia :: Video (video is roadmap only —
+# every render path today produces audio).
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Multimedia :: Sound/Audio :: Editors",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 authors = [
     { name = "Thor Whalen" },
 ]
