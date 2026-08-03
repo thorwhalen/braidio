@@ -121,7 +121,9 @@ def register_tools(server, *, prefix="", include=None, exclude=None):
         if name in skip:
             continue
         fn = import_object(f"braidio.mcp.tools:{name}")
-        server.tool(fn, name=f"{prefix}{name}", description=(fn.__doc__ or "").strip() or None)
+        server.tool(
+            fn, name=f"{prefix}{name}", description=(fn.__doc__ or "").strip() or None
+        )
         registered.append(f"{prefix}{name}")
     return registered
 
