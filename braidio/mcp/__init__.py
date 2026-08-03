@@ -99,6 +99,33 @@ def build_server(
     )
 
 
+def register_tools(server, *, prefix="", include=None, exclude=None):
+    """Register braidio's MCP tools onto an EXISTING FastMCP ``server`` — the
+    aggregation seam for a host connector (the unified reelee connector, braidio#18).
+
+    Lets a host expose braidio's tool surface alongside its own. ``prefix`` namespaces
+    the tool names (e.g. ``"braidio_"``) to avoid collisions with the host's tools;
+    ``include`` / ``exclude`` (sets of bare tool names) select the subset. Mirrors
+    ``falaw.bridges.mcp.register_tools``. Returns the registered (prefixed) names.
+
+    The host must install braidio's metering/identity separately (or aggregate under its
+    own metering middleware) — this only wires the tool functions. braidio's tools resolve
+    the caller via :func:`current_email`, which works under any host middleware.
+    """
+    from py2mcp.util import import_object
+
+    names = list(include) if include is not None else list(TOOL_NAMES)
+    skip = set(exclude or ())
+    registered = []
+    for name in names:
+        if name in skip:
+            continue
+        fn = import_object(f"braidio.mcp.tools:{name}")
+        server.tool(fn, name=f"{prefix}{name}", description=(fn.__doc__ or "").strip() or None)
+        registered.append(f"{prefix}{name}")
+    return registered
+
+
 __all__ = [
     "FREE_TOOLS",
     "COSTED_TOOLS",
@@ -106,6 +133,7 @@ __all__ = [
     "TOOL_REFS",
     "INSTRUCTIONS",
     "build_server",
+    "register_tools",
     "MeteringMiddleware",
     "UsageLedger",
     "current_email",

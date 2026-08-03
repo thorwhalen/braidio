@@ -16,7 +16,10 @@ expose the full genre (identity + templates + intake + cost) straight from
 
 from __future__ import annotations
 
-from nw import Genre, Template, register_genre
+# `register_genre_project_factory` (nw >= 0.0.15) also acts as an explicit version
+# guard: on a too-old nw this import fails, and braidio/__init__'s HAS_NW guard then
+# degrades commentary_weave out of the catalog (braidio pins the nw floor in its extras).
+from nw import Genre, Template, register_genre, register_genre_project_factory
 
 from braidio.formats import FORMATS
 from braidio.bodies._domain import NARRATIVE_BEAT_V1, AUDIO_CLIP_V1
@@ -87,3 +90,29 @@ COMMENTARY_WEAVE: Genre = register_genre(
         ),
     )
 )
+
+
+def _commentary_weave_project_factory(caller, project_id, *, title, template, params):
+    """Create a ``commentary_weave`` project in the CALLER's own braidio workspace.
+
+    The nw project-factory (thorwhalen/braidio#18) a host connector calls via
+    ``nw.create_genre_project`` so the unified reelee connector can create commentary
+    projects it doesn't natively host. Creates in the caller's per-user workspace
+    (``projects/{caller}/{project_id}/``) — the caller-space contract. ``Workspace`` is
+    imported **lazily** here so ``import braidio.genre`` stays fastmcp-free (a top-level
+    ``braidio.mcp.workspace`` import would pull fastmcp via ``braidio.mcp`` and flip
+    braidio's ``HAS_NW`` off). braidio's Format is applied at render time, so there is no
+    initializer — the ``format_id`` rides in the returned info + ``create``'s envelope.
+    """
+    from braidio.mcp.workspace import Workspace
+
+    proj = Workspace.for_email(caller).create_project(project_id, title=title)
+    return {
+        "project": proj,
+        "project_id": project_id,
+        "title": title,
+        "format_id": params.get("format_id"),
+    }
+
+
+register_genre_project_factory(COMMENTARY_WEAVE_SLUG, _commentary_weave_project_factory)
