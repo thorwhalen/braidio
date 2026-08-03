@@ -715,3 +715,39 @@ def test_current_email_falls_back_to_token(monkeypatch):
     # braidio's tools work under the connector's shared enlace_metering middleware.
     _mock_token(monkeypatch, "Owner@X.com")
     assert metering.current_email() == "owner@x.com"
+
+
+# --- commentary_weave project-factory + tool aggregation (braidio#18) --------
+
+
+def test_commentary_weave_project_factory_creates_in_caller_workspace(tmp_path):
+    # The nw project-factory a host connector calls (via nw.create_genre_project) to
+    # create a commentary project in the CALLER's own braidio workspace. (_isolated_home
+    # already points BRAIDIO_DATA_HOME at tmp_path.)
+    import nw
+
+    assert nw.has_genre_project_factory("commentary_weave")
+    info = nw.create_genre_project(
+        "commentary_weave", "owner@example.com", "myshow",
+        title="My Show", template="solo_explainer",
+    )
+    assert info["project_id"] == "myshow"
+    assert info["genre"] == "commentary_weave"
+    assert info["params"] == {"format_id": "solo_explainer"}
+    # created in the caller's per-user workspace, addressable by project_id
+    ws = Workspace.for_email("owner@example.com", root=tmp_path)
+    proj = ws.open_project("myshow")  # raises if absent
+    assert proj is not None
+
+
+def test_register_tools_prefixes_and_excludes():
+    from fastmcp import FastMCP
+
+    srv = FastMCP(name="agg-test", on_duplicate="error")
+    registered = bmcp.register_tools(
+        srv, prefix="braidio_", exclude={"create_project", "describe_genre"}
+    )
+    assert "braidio_download_audio" in registered
+    assert "braidio_create_project" not in registered  # excluded (host owns create)
+    assert "braidio_describe_genre" not in registered  # excluded (host catalog covers it)
+    assert all(n.startswith("braidio_") for n in registered)
