@@ -26,9 +26,15 @@ def to_json(obj: Any) -> Any:
     mappings/sequences. ``bytes`` raise — audio bytes must be written to the
     workspace and referenced by path, never embedded in a JSON tool result.
 
+    Note the single-segment path: a multi-segment one would render with the host's
+    separator (``a/b`` on POSIX, ``a\\b`` on Windows) and make this doctest fail on
+    one platform or the other. ``PurePosixPath`` would not do either -- it is not a
+    ``Path``, so it would fall through to the last-resort branch instead of the
+    ``Path`` one this is meant to document.
+
     >>> from pathlib import Path
-    >>> to_json({"p": Path("/a/b"), "xs": (1, 2)})
-    {'p': '/a/b', 'xs': [1, 2]}
+    >>> to_json({"p": Path("beats.json"), "xs": (1, 2)})
+    {'p': 'beats.json', 'xs': [1, 2]}
     """
     if obj is None or isinstance(obj, (bool, int, float, str)):
         return obj
