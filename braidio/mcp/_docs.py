@@ -41,6 +41,18 @@ ALLOWED_SCHEMES = ("http", "https")
 ALLOWED_PORTS = frozenset({80, 443})
 PDF_MAX_PAGES = 300
 
+#: Socket read granularity. Bounds how far past ``MAX_BYTES`` a hostile response can
+#: push us before the cap is enforced, and how often the deadline is re-checked.
+READ_CHUNK_BYTES = 64 * 1024
+
+#: HTTP statuses treated as a redirect worth following. Each hop is re-validated
+#: against the SSRF rules above, so a public URL can never redirect us inward.
+REDIRECT_STATUS_CODES = frozenset({301, 302, 303, 307, 308})
+
+#: Identifies braidio to the origin server. Kept honest (no browser spoofing) so
+#: operators can see, and rate-limit, what is fetching their documents.
+USER_AGENT = "braidio-mcp/1.0"
+
 
 class _TextHTMLParser(HTMLParser):
     """Collect visible text from HTML, skipping <script>/<style>."""
@@ -107,7 +119,7 @@ def _read_bounded(resp, deadline: float) -> bytes:
     while total <= MAX_BYTES:
         if time.monotonic() > deadline:
             raise ValueError("document fetch exceeded its time budget")
-        chunk = resp.read(65536)
+        chunk = resp.read(READ_CHUNK_BYTES)
         if not chunk:
             break
         total += len(chunk)
@@ -128,12 +140,12 @@ def fetch_uri(uri: str) -> tuple[bytes, str]:
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise ValueError("document fetch exceeded its time budget")
-        req = urllib.request.Request(current, headers={"User-Agent": "braidio-mcp/1.0"})
+        req = urllib.request.Request(current, headers={"User-Agent": USER_AGENT})
         try:
             resp = opener.open(req, timeout=min(OP_TIMEOUT_S, remaining))  # noqa: S310
         except urllib.error.HTTPError as err:
             loc = err.headers.get("Location") if err.headers else None
-            if err.code in (301, 302, 303, 307, 308) and loc:
+            if err.code in REDIRECT_STATUS_CODES and loc:
                 current = urllib.parse.urljoin(current, loc)
                 continue  # the loop re-validates the redirect target
             raise ValueError(f"fetch failed: HTTP {err.code}") from err
