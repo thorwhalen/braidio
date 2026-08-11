@@ -100,6 +100,36 @@ def _tier_ids(project, tier):
     return {a.id for a in nw.annotations_at_tier(project.root, tier)}
 
 
+def _rewrite_in_place(project, ann, *, body: dict):
+    """Replace ``ann``'s body keeping its id — what a real edit does.
+
+    ``nw.stale_after`` grew a verifying-trace early cutoff (nw#24): freshly
+    derived nodes whose traces match their parents' *current* digests are
+    fresh, so querying it right after a weave — with nothing changed — is
+    correctly empty. To assert a re-render frontier the fixture must actually
+    change the parent. ``store.add`` is a plain INSERT, so in-place update is
+    remove-then-add; going back through ``add_annotation`` is the point — it
+    re-records the trace (idiom from nw's tests/test_freshness.py).
+    """
+    import nw
+    from lacing.time import RationalTime
+
+    updated = ann.model_copy(
+        update={
+            "body": body,
+            "provenance": ann.provenance.model_copy(
+                update={"generated_at_time": RationalTime.now()}
+            ),
+        }
+    )
+    with nw.open_project_stores(project.root) as stores:
+        for store in stores:
+            if store.remove(ann.id) is not None:
+                break
+    project.graph.add_annotation(updated)
+    return updated
+
+
 def test_weave_project_populates_graph(project, script_and_source, patched_synthesis):
     import nw
 
@@ -150,14 +180,20 @@ def test_stale_after_config_restales_all_renders(
     script, source = script_and_source
     braidio.weave_project(project, script, source=source)
 
-    (cfg_id,) = _tier_ids(project, "weave-configs")
+    (cfg,) = nw.annotations_at_tier(project.root, "weave-configs")
     render_ids = (
         _tier_ids(project, "voice-assignments")
         | _tier_ids(project, "narration-renders")
         | _tier_ids(project, "segment-extractions")
         | _tier_ids(project, "episode-renders")
     )
-    stale = {a.id for a in nw.stale_after(project.root, cfg_id)}
+    # Actually change the config (a fresh weave is correctly all-fresh).
+    _rewrite_in_place(
+        project,
+        cfg,
+        body={**cfg.body, "config": {**cfg.body["config"], "voice_seed": 8}},
+    )
+    stale = {a.id for a in nw.stale_after(project.root, cfg.id)}
     # A weave-config change re-stales every render node, and nothing authoring.
     assert stale == render_ids
     assert stale.isdisjoint(
@@ -176,6 +212,10 @@ def test_stale_after_narration_beat_scope(
     beats = nw.annotations_at_tier(project.root, "narrative-beats")
     beat = beats[0]
     (episode_id,) = _tier_ids(project, "episode-renders")
+    # Actually change the beat's text (a fresh weave is correctly all-fresh).
+    _rewrite_in_place(
+        project, beat, body={**beat.body, "text": beat.body["text"] + " (edited)"}
+    )
     stale = {a.id for a in nw.stale_after(project.root, beat.id)}
     # Change one narration beat → its voice-assignment, its narration-render,
     # and the episode re-stale (3 nodes) — not the other beat's renders.
@@ -189,9 +229,15 @@ def test_stale_after_source_scope(project, script_and_source, patched_synthesis)
     script, source = script_and_source
     braidio.weave_project(project, script, source=source)
 
-    (source_media_id,) = _tier_ids(project, "source-media")
+    (source_media,) = nw.annotations_at_tier(project.root, "source-media")
     (episode_id,) = _tier_ids(project, "episode-renders")
-    stale = {a.id for a in nw.stale_after(project.root, source_media_id)}
+    # Actually repoint the source (a fresh weave is correctly all-fresh).
+    _rewrite_in_place(
+        project,
+        source_media,
+        body={**source_media.body, "asset_id": source_media.body["asset_id"] + ".v2"},
+    )
+    stale = {a.id for a in nw.stale_after(project.root, source_media.id)}
     # A source change re-stales its segment-extraction + the episode only.
     assert stale == (_tier_ids(project, "segment-extractions") | {episode_id})
 
