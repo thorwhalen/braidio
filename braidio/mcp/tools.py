@@ -325,11 +325,10 @@ def upload_asset(
 
     Provide EITHER ``uri`` (a public http/https URL — audio/video/etc., fetched
     server-side, SSRF-guarded and size-bounded) OR ``data_b64`` (base64 bytes, for
-    small inline uploads). The blob is stored **content-addressed** (identical bytes
-    dedupe to one copy) in your per-user library, and you get back an ``item_id`` you
-    can reference from a segment source as ``source.asset_id`` in ANY render that takes
-    a source — ``render_production`` / ``render_format`` (one-shot) or ``save_script`` /
-    ``weave_project`` (project graph). Free — no synthesis.
+    small inline uploads). Stored content-addressed per user; the returned
+    ``item_id`` is usable as ``source.asset_id`` in any render that takes a
+    source. Use ``download_audio`` instead for a song/video *page* link
+    (YouTube etc.). Free — no synthesis.
     """
     import base64
 
@@ -389,21 +388,13 @@ _AUDIO_MAX_DURATION_S = int(
 
 
 def download_audio(url: str, name: str | None = None) -> dict:
-    """Download the AUDIO of a song/video from a public link into your asset library.
-
-    ⚠️ COPYRIGHT: only download audio you have the right to use. You are responsible for
-    respecting the source's copyright and terms of service — this tool grants no rights
-    to the content.
-
-    Fetches the best audio stream from ``url`` (via yt-dlp — YouTube, SoundCloud,
-    Bandcamp, and many more; **no login or API key needed**), extracts it to mp3, and
-    stores it **content-addressed** in your per-user library, giving back a ContentRef
-    you can reference from a segment source as ``source.asset_id`` in any render/weave —
-    exactly like :func:`upload_asset` (use this when you have a *link*, ``upload_asset``
-    when you have a direct file URL or bytes). Free — no ElevenLabs/synthesis spend.
-    Needs ``braidio[mcp]`` (pulls ``yb[download]`` = yt-dlp) + ffmpeg on PATH. The source
-    must be a public host and under the size/duration limits (server-side fetch on a
-    shared box).
+    """Put the audio of a song or video into your asset library from a link
+    (YouTube, SoundCloud, Bandcamp, …): paste a public URL, get back an
+    asset_id any render/weave can use. Use ``upload_asset`` for a direct file
+    URL or bytes. Free — no synthesis spend. ⚠️ Only fetch audio you have the
+    right to use — this grants no rights. Public hosts only,
+    size/duration-bounded; best audio stream → mp3 via yt-dlp (no login/API
+    key). Needs ``braidio[mcp]`` + ffmpeg.
     """
     from pathlib import Path
 
