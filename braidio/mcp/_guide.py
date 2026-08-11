@@ -30,9 +30,11 @@ To turn a document into audio, the typical path is:
 6. render_production(script, ...) OR weave_project(project_id, script, ...) — synthesize
    and mix into one audio file. This SPENDS ElevenLabs credits (metered per user).
 
-If the Script has "segment" beats that quote source audio/video, first
-upload_asset(uri=... or data_b64=...) to store the media in your library (it returns
-an `itemId`), then reference it from the segment source as `source.asset_id` in ANY
+If the Script has "segment" beats that quote source audio/video, first put the media
+in your library: download_audio(url) when you have a song/video *link* (YouTube,
+SoundCloud, … — it pulls the audio; respect copyright), or
+upload_asset(uri=... or data_b64=...) for a direct file URL or bytes. Either returns
+an `itemId`; reference it from the segment source as `source.asset_id` in ANY
 render that takes a source — render_production / render_format (one-shot) or
 save_script / weave_project (project graph). Manage your library with list_assets /
 get_asset.
@@ -95,6 +97,7 @@ def capabilities() -> dict:
                 "save_script",
             ],
             "assets_free": [
+                "download_audio",
                 "upload_asset",
                 "list_assets",
                 "get_asset",
