@@ -22,7 +22,7 @@ recommended *default* for the format. A **music bed** renders when you pass a
 ``bed_asset`` to :func:`render_format` — the format's ``music_bed`` *intensity*
 picks the gain. Fields tagged *(authoring)* — ``roles``, ``scripting`` — are
 conventions for whoever writes (or generates) the ``Script``; scene stings remain
-**roadmap** on the render side (braidio#1). Preset ids mirror the standard names
+**roadmap** on the render side (braidio#25). Preset ids mirror the standard names
 so a UI can label them ("Deep Dive", "Song Exploder-style").
 """
 

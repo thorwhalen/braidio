@@ -11,7 +11,9 @@ This is the **functional core** (pure Python over files + numbers; deps:
 and imported only when ``nw`` is available — ``import braidio`` never requires
 it.
 
-Extracted from the Hamilton lyrics-podcast; see that project + issues #18/#28.
+Extracted from the Hamilton lyrics-podcast; the extraction is designed in
+Hamilton#18 (the epic) and Hamilton#28 (placement + naming). Those numbers are
+in the *Hamilton* repo — braidio has its own #18 about something else.
 """
 
 from __future__ import annotations
@@ -158,6 +160,18 @@ from braidio.weave import (  # noqa: F401
 # --- production kinds (pure) ---
 from braidio.kinds import WeaveKind  # noqa: F401
 
+# --- version ---------------------------------------------------------------
+# Read from installed distribution metadata rather than written literally here:
+# CI bumps the version in pyproject.toml and pushes back, so a literal in this
+# file would silently drift from the released version. `"unknown"` is the honest
+# answer for a source tree that was never installed (not even editable).
+from importlib.metadata import PackageNotFoundError, version as _dist_version
+
+try:
+    __version__ = _dist_version("braidio")
+except PackageNotFoundError:  # pragma: no cover - source tree, not installed
+    __version__ = "unknown"
+
 # --- optional nw-app layer (graph bodies + provenance) --------------------
 # Registers braidio's domain/render body schemas with lacing and exposes the
 # provenance / partial-re-render helpers. Guarded: `import braidio` never needs
@@ -186,6 +200,7 @@ except ImportError:  # pragma: no cover - optional dep
     pass
 
 __all__ = [
+    "__version__",
     # production kinds
     "WeaveKind",
     "HAS_GRAPH",
