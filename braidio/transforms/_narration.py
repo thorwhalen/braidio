@@ -50,7 +50,6 @@ from braidio.transforms._common import (
 )
 
 NAME = "narration_render.tts"
-_VERSION = "1"
 
 
 def _narration_cache_key(text: str, voice_id: str, model_id: str, settings) -> str:
@@ -96,9 +95,7 @@ class NarrationRenderTTS(BaseTransform):
             reference=beat.reference,
             body=NarrationRenderBodyV1(cache_key=cache_key).model_dump(),
             body_schema_uri=NARRATION_RENDER_V1,
-            provenance=derive_provenance(
-                self.name, _VERSION, full, attributed_to="agent:braidio"
-            ),
+            provenance=derive_provenance(self, full, attributed_to="agent:braidio"),
         )
         return Plan(calls=()), (skeleton,)
 

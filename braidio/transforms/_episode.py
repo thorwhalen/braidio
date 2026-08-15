@@ -44,7 +44,6 @@ from braidio.transforms._common import (
 )
 
 NAME = "weave_to_episode.default"
-_VERSION = "1"
 
 
 @register_transform(NAME)
@@ -72,9 +71,7 @@ class WeaveToEpisode(BaseTransform):
                 profile="personal", ordered_member_ids=ordered_member_ids
             ).model_dump(),
             body_schema_uri=EPISODE_RENDER_V1,
-            provenance=derive_provenance(
-                self.name, _VERSION, full, attributed_to="agent:braidio"
-            ),
+            provenance=derive_provenance(self, full, attributed_to="agent:braidio"),
         )
         return Plan(calls=()), (skeleton,)
 
