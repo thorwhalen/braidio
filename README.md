@@ -20,9 +20,12 @@ Two things braidio gives you:
    of beats, cast via a `ConversationCast`, tuned by `WeaveConfig` + `Delivery`,
    with per-beat voice/delivery overrides.
 
-> Status: early. `braidio` is extracted from the
+> `braidio` was extracted from the
 > [Hamilton lyrics-podcast](https://github.com/thorwhalen/Hamilton) (its first
-> application) into a reusable engine. APIs will move quickly.
+> application) into a reusable engine. It is now live infrastructure: released
+> on PyPI, served as a multi-tool MCP connector, and imported in production by
+> [`reelee`](https://github.com/thorwhalen/reelee). Treat a signature change
+> here as having downstream blast radius.
 
 ## The model
 
@@ -71,7 +74,8 @@ master, **per-clip placement** — `SegmentBeat(placement="before" | "under" |
 "after")`, where `under` lays the clip concurrently beneath the talk, ducked —
 and a **music bed** (`MusicBed`, an app-supplied instrumental laid under the whole
 production) are applied today. Scene stings and fade-to-spotlight (dropping the
-bed before a key exhibit) remain on the render-side roadmap (braidio#1).
+bed before a key exhibit) remain on the render-side roadmap — tracked in
+[braidio#25](https://github.com/thorwhalen/braidio/issues/25).
 
 ## Parametrize anything
 
@@ -140,8 +144,11 @@ provenance so a change re-renders only the affected parts.
 ## Install
 
 ```bash
-pip install braidio   # (once published)
+pip install braidio
 ```
+
+ElevenLabs credentials are needed for TTS; `ffmpeg` must be on PATH for
+everything else.
 
 ## License
 
