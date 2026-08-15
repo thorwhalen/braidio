@@ -18,6 +18,7 @@
    module_docs/braidio/mcp/_docs
    module_docs/braidio/mcp/_guide
    module_docs/braidio/mcp/_helpers
+   module_docs/braidio/mcp/_media
    module_docs/braidio/mcp/metering
    module_docs/braidio/mcp/tools
    module_docs/braidio/mcp/workspace

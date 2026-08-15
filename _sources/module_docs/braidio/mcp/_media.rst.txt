@@ -1,0 +1,4 @@
+braidio.mcp._media
+==================
+.. automodule:: braidio.mcp._media
+   :members:
