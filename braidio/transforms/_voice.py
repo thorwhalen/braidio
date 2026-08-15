@@ -35,7 +35,6 @@ from braidio.transforms._common import (
 )
 
 NAME = "beat_to_voice_assignment.default"
-_VERSION = "1"
 
 
 def _pick_voice(voices: list[str], *, seed: int, ordinal: int) -> str:
@@ -76,9 +75,7 @@ class BeatToVoiceAssignment(BaseTransform):
                 voice_id=voice_id, pool_label=pool_label, seed=seed
             ).model_dump(),
             body_schema_uri=VOICE_ASSIGNMENT_V1,
-            provenance=derive_provenance(
-                self.name, _VERSION, full, attributed_to="agent:braidio"
-            ),
+            provenance=derive_provenance(self, full, attributed_to="agent:braidio"),
         )
         return Plan(calls=()), (skeleton,)
 

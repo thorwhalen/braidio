@@ -41,7 +41,6 @@ from braidio.transforms._common import (
 )
 
 NAME = "segment_extraction.ffmpeg"
-_VERSION = "1"
 
 
 def _pads_fades(config: dict):
@@ -101,9 +100,7 @@ class SegmentExtractionFFmpeg(BaseTransform):
                 cache_key=cache_key, start_s=start_s, end_s=end_s
             ).model_dump(),
             body_schema_uri=SEGMENT_EXTRACTION_V1,
-            provenance=derive_provenance(
-                self.name, _VERSION, full, attributed_to="agent:braidio"
-            ),
+            provenance=derive_provenance(self, full, attributed_to="agent:braidio"),
         )
         return Plan(calls=()), (skeleton,)
 
