@@ -70,13 +70,17 @@ script = Script(
     title="What makes this song work",
     id_slug="01",
     beats=[
-        Dialogue((("host_a", "The thing that gets me is the bass."),
-                  ("host_b", "Say more — it's doing something odd, right?"))),
+        Dialogue(
+            (
+                ("host_a", "The thing that gets me is the bass."),
+                ("host_b", "Say more — it's doing something odd, right?"),
+            )
+        ),
         Narration("Here's the passage in question —"),
     ],
 )
 
-print(braidio.estimate_cost(script).summary)   # "110 chars → $0.0330"
+print(braidio.estimate_cost(script).summary)  # "110 chars → $0.0330"
 braidio.render_format(DEEP_DIVE, script, source=None, out_path="episode.mp3")
 ```
 
