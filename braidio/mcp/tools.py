@@ -398,7 +398,7 @@ def download_audio(url: str, name: str | None = None) -> dict:
     """
     from pathlib import Path
 
-    from braidio.mcp import _docs
+    from braidio.mcp import _docs, _media
 
     # SSRF pre-check (matches upload_asset/ingest_document): refuse non-http(s) and
     # loopback/private/link-local/cloud-metadata hosts. NOTE: yt-dlp resolves the page +
@@ -416,11 +416,20 @@ def download_audio(url: str, name: str | None = None) -> dict:
             "audio download needs yt-dlp — install braidio[mcp] (which pulls yb[download])"
         ) from exc
 
+    # Whatever credentials this deployment was given (often none). Checked BEFORE the
+    # network: yt_dlp.cookies.load_cookies SILENTLY ignores an unreadable jar, so an
+    # unchecked mis-provisioned server fails identically to a bot-gated one.
+    creds = _media.SourceCredentials.from_env()
+    creds.check()
+
     # Reject over-long sources (livestreams / multi-hour) BEFORE fetching any bytes.
+    # Credentials go on this call too — the bot gate fires during metadata extraction.
     try:
-        preview = youtube_video_info(url)
+        preview = youtube_video_info(url, extra_opts=dict(creds.opts))
     except Exception as exc:  # noqa: BLE001 — extractor errors
-        raise ToolError(f"could not read the source: {exc}") from exc
+        raise _media.as_tool_error(
+            exc, fallback="could not read the source", credentials=creds
+        ) from exc
     duration = preview.get("duration")
     if isinstance(duration, (int, float)) and duration > _AUDIO_MAX_DURATION_S:
         raise ToolError(
@@ -438,6 +447,9 @@ def download_audio(url: str, name: str | None = None) -> dict:
             fmt="bestaudio/best",
             merge_to=None,  # audio-only; no video+audio merge
             extra_opts={
+                **creds.opts,
+                # braidio's own bounds are written AFTER the deployment's options, so a
+                # configured option can never widen a safety bound.
                 "max_filesize": _AUDIO_MAX_BYTES,  # yt-dlp skips/aborts oversized formats
                 "postprocessors": [
                     {
@@ -449,7 +461,9 @@ def download_audio(url: str, name: str | None = None) -> dict:
             },
         )
     except Exception as exc:  # noqa: BLE001 — yt-dlp raises many extractor error types
-        raise ToolError(f"audio download failed: {exc}") from exc
+        raise _media.as_tool_error(
+            exc, fallback="audio download failed", credentials=creds
+        ) from exc
 
     audio_path = Path(result.path)
     if audio_path.suffix.lower() != ".mp3":  # the postprocessor rewrites to .mp3

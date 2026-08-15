@@ -801,3 +801,96 @@ def test_register_tools_prefixes_and_excludes():
     assert "braidio_create_project" not in registered  # excluded (host owns create)
     assert "braidio_describe_genre" not in registered  # excluded (host catalog covers it)
     assert all(n.startswith("braidio_") for n in registered)
+
+
+def test_download_audio_passes_configured_cookies_to_ytdlp(monkeypatch, tmp_path):
+    """braidio#23: credentials must reach BOTH yt-dlp calls, without widening a bound.
+
+    The bot gate fires during metadata extraction, so cookies on the download call
+    alone would still fail — and braidio's own `max_filesize` must survive the
+    merge of the deployment's options.
+    """
+    import sys
+    import time
+    import types
+
+    import braidio.mcp._docs as _docs
+    from braidio.mcp import _media
+
+    monkeypatch.setattr(_docs, "_validate_target", lambda url: None)
+
+    jar = tmp_path / "cookies.txt"
+    jar.write_text(
+        "# Netscape HTTP Cookie File\n"
+        f".youtube.com\tTRUE\t/\tTRUE\t{int(time.time() + 86400)}\tLOGIN_INFO\tv\n"
+    )
+    monkeypatch.setenv(_media.COOKIES_FILE_ENV_VAR, str(jar))
+
+    mp3 = tmp_path / "grabbed.mp3"
+    mp3.write_bytes(b"ID3\x03fake-mp3-bytes")
+    seen = {}
+
+    class _Res:
+        path = str(mp3)
+        info = {"title": "S", "duration": 10}
+        sidecars = {}
+
+    def _info(url, **kw):
+        seen["info"] = kw.get("extra_opts") or {}
+        return {"title": "S", "duration": 10}
+
+    def _download(url, **kw):
+        seen["download"] = kw.get("extra_opts") or {}
+        return _Res()
+
+    fake = types.ModuleType("yb.download")
+    fake.youtube_video_info = _info
+    fake.download_youtube_video = _download
+    monkeypatch.setitem(sys.modules, "yb", types.ModuleType("yb"))
+    monkeypatch.setitem(sys.modules, "yb.download", fake)
+
+    _call(_local_server(), "download_audio", {"url": "https://example.com/s"})
+
+    assert seen["info"]["cookiefile"] == str(jar)
+    assert seen["download"]["cookiefile"] == str(jar)
+    # braidio's bound is written after the deployment's options, so it stands.
+    from braidio.mcp.tools import _AUDIO_MAX_BYTES
+
+    assert seen["download"]["max_filesize"] == _AUDIO_MAX_BYTES
+
+
+def test_download_audio_surfaces_bot_gate_as_auth_error(monkeypatch, tmp_path):
+    """A bot gate becomes an error naming its own fix, not a raw yt-dlp string."""
+    import sys
+    import types
+
+    import braidio.mcp._docs as _docs
+    from braidio.mcp import _media
+    from braidio.mcp.tools import download_audio
+
+    monkeypatch.setattr(_docs, "_validate_target", lambda url: None)
+    for var in (
+        _media.COOKIES_FILE_ENV_VAR,
+        _media.COOKIES_FROM_BROWSER_ENV_VAR,
+        _media.EXTRACTOR_ARGS_ENV_VAR,
+    ):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("BRAIDIO_DATA_HOME", str(tmp_path))
+
+    def _gated(url, **kw):
+        raise RuntimeError(
+            "ERROR: [youtube] x: Sign in to confirm you're not a bot. "
+            "Use --cookies-from-browser or --cookies for the authentication."
+        )
+
+    fake = types.ModuleType("yb.download")
+    fake.youtube_video_info = _gated
+    fake.download_youtube_video = _gated
+    monkeypatch.setitem(sys.modules, "yb", types.ModuleType("yb"))
+    monkeypatch.setitem(sys.modules, "yb.download", fake)
+
+    with pytest.raises(_media.SourceAuthRequired) as excinfo:
+        download_audio("https://example.com/s")
+    message = str(excinfo.value)
+    assert _media.COOKIES_FILE_ENV_VAR in message
+    assert "--cookies-from-browser" not in message  # no raw yt-dlp string leaks
