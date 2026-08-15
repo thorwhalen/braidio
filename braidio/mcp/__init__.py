@@ -12,6 +12,12 @@ i2mint/py2mcp#7).
 """
 
 from braidio.mcp._guide import INSTRUCTIONS
+from braidio.mcp._media import (
+    MediaSourceError,
+    SourceAuthRequired,
+    SourceCredentialsRejected,
+    SourceUnavailable,
+)
 from braidio.mcp.metering import (
     MeteringMiddleware,
     UsageLedger,
@@ -140,6 +146,10 @@ __all__ = [
     "UsageLedger",
     "current_email",
     "token_email",
+    "MediaSourceError",
+    "SourceAuthRequired",
+    "SourceCredentialsRejected",
+    "SourceUnavailable",
     "Workspace",
     "data_root",
 ]
