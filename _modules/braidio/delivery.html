@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.delivery &mdash; braidio 0.0.20 documentation</title>
+  <title>braidio.delivery &mdash; braidio 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
@@ -114,7 +115,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for braidio.delivery</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Narration *delivery* presets — model + voice settings (issue #10, expressiveness).</span>
+<span></span><span class="sd">"""Narration *delivery* presets — model + voice settings (issue #10, expressiveness).</span>
 
 <span class="sd">A :class:`Delivery` bundles the ElevenLabs ``model_id`` and ``voice_settings``</span>
 <span class="sd">that shape how expressive vs flat a narration reads. The renderer takes one so</span>
@@ -125,7 +126,7 @@
 <span class="sd">narration.md``; refine as we learn what sounds best. The key monotony levers:</span>
 <span class="sd">lower ``stability`` and raise ``style`` add variation (at some cost in</span>
 <span class="sd">consistency); ``eleven_v3`` adds inline audio tags for real expressive control.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -136,56 +137,56 @@
 <a class="viewcode-back" href="../../module_docs/braidio/delivery.html#braidio.Delivery">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Delivery</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A named narration delivery: which model + voice settings to synthesize with.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A named narration delivery: which model + voice settings to synthesize with."""</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">voice_settings</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
     <span class="n">supports_audio_tags</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># True for eleven_v3 (bracketed [tags])</span>
-    <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
+    <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span></div>
 
 
 
 <span class="c1"># --- presets -----------------------------------------------------------------</span>
 
 <span class="n">BASELINE</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;baseline&quot;</span><span class="p">,</span>
-    <span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;eleven_multilingual_v2&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"baseline"</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_multilingual_v2"</span><span class="p">,</span>
     <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-        <span class="s2">&quot;similarity_boost&quot;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
-        <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-        <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="mf">0.97</span><span class="p">,</span>
+        <span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="s2">"similarity_boost"</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
+        <span class="s2">"style"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"speed"</span><span class="p">:</span> <span class="mf">0.97</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="n">note</span><span class="o">=</span><span class="s2">&quot;Current default — even, safe, tends flat.&quot;</span><span class="p">,</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">"Current default — even, safe, tends flat."</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># ★ Research-recommended default: v2, moderately loosened + annotated text.</span>
 <span class="n">V2_TUNED</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;v2-tuned&quot;</span><span class="p">,</span>
-    <span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;eleven_multilingual_v2&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"v2-tuned"</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_multilingual_v2"</span><span class="p">,</span>
     <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
-        <span class="s2">&quot;similarity_boost&quot;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
-        <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
-        <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="mf">0.98</span><span class="p">,</span>
+        <span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
+        <span class="s2">"similarity_boost"</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
+        <span class="s2">"style"</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
+        <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"speed"</span><span class="p">:</span> <span class="mf">0.98</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="n">note</span><span class="o">=</span><span class="s2">&quot;★ recommended: lower stability + raised style; pairs with annotated text.&quot;</span><span class="p">,</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">"★ recommended: lower stability + raised style; pairs with annotated text."</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">V2_AGGRESSIVE</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;v2-aggressive&quot;</span><span class="p">,</span>
-    <span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;eleven_multilingual_v2&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"v2-aggressive"</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_multilingual_v2"</span><span class="p">,</span>
     <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.28</span><span class="p">,</span>
-        <span class="s2">&quot;similarity_boost&quot;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
-        <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">,</span>
-        <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="mf">0.98</span><span class="p">,</span>
+        <span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.28</span><span class="p">,</span>
+        <span class="s2">"similarity_boost"</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
+        <span class="s2">"style"</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">,</span>
+        <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"speed"</span><span class="p">:</span> <span class="mf">0.98</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="n">note</span><span class="o">=</span><span class="s2">&quot;More variation, more take-to-take variance; may over-emote.&quot;</span><span class="p">,</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">"More variation, more take-to-take variance; may over-emote."</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># --- role deliveries: a *presenter* (lively) vs a *narrator* (grave) ----------</span>
@@ -195,79 +196,79 @@
 <span class="c1"># per beat via ``Narration.voice_settings`` (see braidio.render).</span>
 
 <span class="n">V2_PRESENTER</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;v2-presenter&quot;</span><span class="p">,</span>
-    <span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;eleven_multilingual_v2&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"v2-presenter"</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_multilingual_v2"</span><span class="p">,</span>
     <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
-        <span class="s2">&quot;similarity_boost&quot;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
-        <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
-        <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="mf">0.98</span><span class="p">,</span>
+        <span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
+        <span class="s2">"similarity_boost"</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
+        <span class="s2">"style"</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
+        <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"speed"</span><span class="p">:</span> <span class="mf">0.98</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="n">note</span><span class="o">=</span><span class="s2">&quot;Host/presenter commentary — lively (== v2-tuned), for the spine voice.&quot;</span><span class="p">,</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">"Host/presenter commentary — lively (== v2-tuned), for the spine voice."</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">V2_NARRATOR</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;v2-narrator&quot;</span><span class="p">,</span>
-    <span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;eleven_multilingual_v2&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"v2-narrator"</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_multilingual_v2"</span><span class="p">,</span>
     <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-        <span class="s2">&quot;similarity_boost&quot;</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
-        <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="mf">0.12</span><span class="p">,</span>
-        <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="mf">0.94</span><span class="p">,</span>
+        <span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="s2">"similarity_boost"</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
+        <span class="s2">"style"</span><span class="p">:</span> <span class="mf">0.12</span><span class="p">,</span>
+        <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"speed"</span><span class="p">:</span> <span class="mf">0.94</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="n">note</span><span class="o">=</span><span class="s2">&quot;Documentary/book-read narrator — steadier, flatter style, a touch &quot;</span>
-    <span class="s2">&quot;slower for gravitas. Modest contrast against v2-presenter.&quot;</span><span class="p">,</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">"Documentary/book-read narrator — steadier, flatter style, a touch "</span>
+    <span class="s2">"slower for gravitas. Modest contrast against v2-presenter."</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">V3_NATURAL</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;v3-natural&quot;</span><span class="p">,</span>
-    <span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;eleven_v3&quot;</span><span class="p">,</span>
-    <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"v3-natural"</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_v3"</span><span class="p">,</span>
+    <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
     <span class="n">supports_audio_tags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">note</span><span class="o">=</span><span class="s2">&quot;Eleven v3, clean text (no tags) — v3&#39;s baseline is more dynamic.&quot;</span><span class="p">,</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">"Eleven v3, clean text (no tags) — v3's baseline is more dynamic."</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">V3_CREATIVE</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;v3-creative&quot;</span><span class="p">,</span>
-    <span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;eleven_v3&quot;</span><span class="p">,</span>
-    <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"v3-creative"</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_v3"</span><span class="p">,</span>
+    <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
     <span class="n">supports_audio_tags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">note</span><span class="o">=</span><span class="s2">&quot;Eleven v3, low stability, driven by inline audio tags. Alpha; per-take variance.&quot;</span><span class="p">,</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">"Eleven v3, low stability, driven by inline audio tags. Alpha; per-take variance."</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># --- register presets: narration (reading) vs conversational (talking) --------</span>
-<span class="c1"># The two named &quot;registers&quot; (issue #1). ``narration`` = the default reading</span>
-<span class="c1"># register (kept in lock-step with V2_TUNED, render_production&#39;s default).</span>
-<span class="c1"># ``conversational`` makes a single narrator sound like they&#39;re *talking*, not</span>
+<span class="c1"># The two named "registers" (issue #1). ``narration`` = the default reading</span>
+<span class="c1"># register (kept in lock-step with V2_TUNED, render_production's default).</span>
+<span class="c1"># ``conversational`` makes a single narrator sound like they're *talking*, not</span>
 <span class="c1"># reading: eleven_v3 with loosened stability so inline audio tags / disfluencies</span>
 <span class="c1"># written into the text actually fire. NOTE this is the *single-voice* register —</span>
 <span class="c1"># distinct from the multi-speaker Dialogue path (render_dialogue / eleven_v3</span>
 <span class="c1"># Text-to-Dialogue), which renders two voices in an exchange.</span>
 
 <span class="n">NARRATION</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;narration&quot;</span><span class="p">,</span>
-    <span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;eleven_multilingual_v2&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"narration"</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_multilingual_v2"</span><span class="p">,</span>
     <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
-        <span class="s2">&quot;similarity_boost&quot;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
-        <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
-        <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="mf">0.98</span><span class="p">,</span>
+        <span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
+        <span class="s2">"similarity_boost"</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
+        <span class="s2">"style"</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
+        <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"speed"</span><span class="p">:</span> <span class="mf">0.98</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="n">note</span><span class="o">=</span><span class="s2">&quot;Default register: reading a script cleanly (voice settings == v2-tuned).&quot;</span><span class="p">,</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">"Default register: reading a script cleanly (voice settings == v2-tuned)."</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">CONVERSATIONAL</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conversational&quot;</span><span class="p">,</span>
-    <span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;eleven_v3&quot;</span><span class="p">,</span>
-    <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span> <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"conversational"</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_v3"</span><span class="p">,</span>
+    <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span> <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
     <span class="n">supports_audio_tags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">note</span><span class="o">=</span><span class="s2">&quot;Register that sounds like talking, not reading: eleven_v3 with loosened &quot;</span>
-    <span class="s2">&quot;stability so audio tags/disfluencies in the text fire. Pair with a &quot;</span>
-    <span class="s2">&quot;conversationalized script (contractions, [tags], ellipses). Single-voice — &quot;</span>
-    <span class="s2">&quot;for a two-host exchange use the Dialogue path instead.&quot;</span><span class="p">,</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">"Register that sounds like talking, not reading: eleven_v3 with loosened "</span>
+    <span class="s2">"stability so audio tags/disfluencies in the text fire. Pair with a "</span>
+    <span class="s2">"conversationalized script (contractions, [tags], ellipses). Single-voice — "</span>
+    <span class="s2">"for a two-host exchange use the Dialogue path instead."</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">DELIVERIES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Delivery</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.textprep &mdash; braidio 0.0.20 documentation</title>
+  <title>braidio.textprep &mdash; braidio 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
@@ -114,19 +115,19 @@
            <div itemprop="articleBody">
              
   <h1>Source code for braidio.textprep</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Text preparation for scripts — clean OCR&#39;d source, tidy authored lines.</span>
+<span></span><span class="sd">"""Text preparation for scripts — clean OCR'd source, tidy authored lines.</span>
 
 <span class="sd">Small, reusable helpers a commentary production reaches for repeatedly:</span>
 
 <span class="sd">- :func:`clean_ocr` — normalize text extracted from PDFs/scans (ligatures,</span>
 <span class="sd">  soft-hyphens, doubled hyphens, whitespace) so a TTS voice reads it cleanly.</span>
-<span class="sd">- :func:`strip_speaker_labels` — drop a leaked ``&quot;Host: &quot;`` / ``&quot;Chris: &quot;``</span>
+<span class="sd">- :func:`strip_speaker_labels` — drop a leaked ``"Host: "`` / ``"Chris: "``</span>
 <span class="sd">  prefix that a writing model sometimes prepends and that would otherwise be</span>
 <span class="sd">  read aloud.</span>
 
 <span class="sd">These were duplicated in ad-hoc rendering scripts; they belong here so any</span>
 <span class="sd">consumer (Hamilton and the next app) shares one implementation.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -134,36 +135,36 @@
 
 <span class="c1">#: Latin ligatures that OCR emits as single code points.</span>
 <span class="n">LIGATURES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;ﬁ&quot;</span><span class="p">:</span> <span class="s2">&quot;fi&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;ﬂ&quot;</span><span class="p">:</span> <span class="s2">&quot;fl&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;ﬀ&quot;</span><span class="p">:</span> <span class="s2">&quot;ff&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;ﬃ&quot;</span><span class="p">:</span> <span class="s2">&quot;ffi&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;ﬄ&quot;</span><span class="p">:</span> <span class="s2">&quot;ffl&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;ﬅ&quot;</span><span class="p">:</span> <span class="s2">&quot;ft&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;ﬆ&quot;</span><span class="p">:</span> <span class="s2">&quot;st&quot;</span><span class="p">,</span>
+    <span class="s2">"ﬁ"</span><span class="p">:</span> <span class="s2">"fi"</span><span class="p">,</span>
+    <span class="s2">"ﬂ"</span><span class="p">:</span> <span class="s2">"fl"</span><span class="p">,</span>
+    <span class="s2">"ﬀ"</span><span class="p">:</span> <span class="s2">"ff"</span><span class="p">,</span>
+    <span class="s2">"ﬃ"</span><span class="p">:</span> <span class="s2">"ffi"</span><span class="p">,</span>
+    <span class="s2">"ﬄ"</span><span class="p">:</span> <span class="s2">"ffl"</span><span class="p">,</span>
+    <span class="s2">"ﬅ"</span><span class="p">:</span> <span class="s2">"ft"</span><span class="p">,</span>
+    <span class="s2">"ﬆ"</span><span class="p">:</span> <span class="s2">"st"</span><span class="p">,</span>
 <span class="p">}</span>
-<span class="n">_SOFT_HYPHEN</span> <span class="o">=</span> <span class="s2">&quot;­&quot;</span>
+<span class="n">_SOFT_HYPHEN</span> <span class="o">=</span> <span class="s2">"­"</span>
 <span class="n">_SPEAKER_LABEL</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-    <span class="sa">r</span><span class="s2">&quot;^\s*(?:[A-Z][a-z]+|Host|Narrator|Presenter|Speaker)\s*:\s+&quot;</span>
+    <span class="sa">r</span><span class="s2">"^\s*(?:[A-Z][a-z]+|Host|Narrator|Presenter|Speaker)\s*:\s+"</span>
 <span class="p">)</span>
-<span class="n">_WS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">)</span>
+<span class="n">_WS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\s+"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="clean_ocr">
 <a class="viewcode-back" href="../../module_docs/braidio/textprep.html#braidio.clean_ocr">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">clean_ocr</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">collapse_whitespace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalize OCR/PDF-extracted text for clean narration.</span>
+<span class="w">    </span><span class="sd">"""Normalize OCR/PDF-extracted text for clean narration.</span>
 
 <span class="sd">    Expands ligatures, removes soft-hyphens (used at scan line-breaks), turns a</span>
 <span class="sd">    doubled hyphen ``--`` into an em-dash (so TTS phrases it as a pause), and</span>
 <span class="sd">    (by default) collapses runs of whitespace to single spaces.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">LIGATURES</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
-    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">_SOFT_HYPHEN</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="s2">&quot;—&quot;</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">_SOFT_HYPHEN</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"--"</span><span class="p">,</span> <span class="s2">"—"</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">collapse_whitespace</span><span class="p">:</span>
-        <span class="n">text</span> <span class="o">=</span> <span class="n">_WS</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">_WS</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">text</span></div>
 
 
@@ -171,12 +172,12 @@
 <div class="viewcode-block" id="strip_speaker_labels">
 <a class="viewcode-back" href="../../module_docs/braidio/textprep.html#braidio.strip_speaker_labels">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">strip_speaker_labels</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove a leading speaker-label prefix (e.g. ``&quot;Chris: &quot;``) if present.</span>
+<span class="w">    </span><span class="sd">"""Remove a leading speaker-label prefix (e.g. ``"Chris: "``) if present.</span>
 
-<span class="sd">    Only strips a single leading ``Word:`` / ``Host:`` style label so it isn&#39;t</span>
+<span class="sd">    Only strips a single leading ``Word:`` / ``Host:`` style label so it isn't</span>
 <span class="sd">    read aloud; leaves colons that are part of the sentence untouched.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_SPEAKER_LABEL</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_SPEAKER_LABEL</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
 
 </pre></div>
 

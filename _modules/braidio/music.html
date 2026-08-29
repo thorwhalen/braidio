@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.music &mdash; braidio 0.0.20 documentation</title>
+  <title>braidio.music &mdash; braidio 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
@@ -114,7 +115,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for braidio.music</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Music bed — an instrumental underscore laid under the whole production, ducked.</span>
+<span></span><span class="sd">"""Music bed — an instrumental underscore laid under the whole production, ducked.</span>
 
 <span class="sd">The bed is the spanning generalization of a per-clip ``under`` placement: instead</span>
 <span class="sd">of one clip beneath one talk beat, an app-supplied **instrumental** asset runs</span>
@@ -124,11 +125,11 @@
 <span class="sd">~1.5s fade-in, *posted* after the start; beds must be instrumental).</span>
 
 <span class="sd">braidio ships **no music** — the caller supplies the asset (a licensed/owned</span>
-<span class="sd">instrumental). A :class:`~braidio.formats.Format`&#39;s ``music_bed`` *intensity*</span>
+<span class="sd">instrumental). A :class:`~braidio.formats.Format`'s ``music_bed`` *intensity*</span>
 <span class="sd">(continuous / light / sparse / none) picks a sensible gain via</span>
 <span class="sd">:data:`BED_GAIN_BY_INTENSITY`; :func:`render_format` builds the bed for you when</span>
 <span class="sd">given a ``bed_asset``.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -137,13 +138,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="c1"># Bed gain (dB under the mixed voice) by a Format&#39;s music_bed intensity.</span>
-<span class="c1"># None means &quot;no bed&quot; for that intensity.</span>
+<span class="c1"># Bed gain (dB under the mixed voice) by a Format's music_bed intensity.</span>
+<span class="c1"># None means "no bed" for that intensity.</span>
 <span class="n">BED_GAIN_BY_INTENSITY</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;continuous&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">20.0</span><span class="p">,</span>
-    <span class="s2">&quot;light&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">24.0</span><span class="p">,</span>
-    <span class="s2">&quot;sparse&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">28.0</span><span class="p">,</span>
-    <span class="s2">&quot;none&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s2">"continuous"</span><span class="p">:</span> <span class="o">-</span><span class="mf">20.0</span><span class="p">,</span>
+    <span class="s2">"light"</span><span class="p">:</span> <span class="o">-</span><span class="mf">24.0</span><span class="p">,</span>
+    <span class="s2">"sparse"</span><span class="p">:</span> <span class="o">-</span><span class="mf">28.0</span><span class="p">,</span>
+    <span class="s2">"none"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">}</span>
 
 
@@ -151,13 +152,13 @@
 <a class="viewcode-back" href="../../module_docs/braidio/music.html#braidio.MusicBed">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MusicBed</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;An instrumental underscore spanning the production, mixed under the talk.</span>
+<span class="w">    </span><span class="sd">"""An instrumental underscore spanning the production, mixed under the talk.</span>
 
 <span class="sd">    ``asset_path`` is an app-supplied instrumental. ``gain_db`` sets how far under</span>
 <span class="sd">    the voice it sits; ``lead_in_s`` posts the bed *after* speech onset so its</span>
 <span class="sd">    entrance feels motivated; ``start_s`` is the in-point into the asset;</span>
 <span class="sd">    ``loop`` repeats the asset to cover a timeline longer than it.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">asset_path</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">gain_db</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">22.0</span>
@@ -172,11 +173,11 @@
 <div class="viewcode-block" id="bed_for_intensity">
 <a class="viewcode-back" href="../../module_docs/braidio/music.html#braidio.bed_for_intensity">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">bed_for_intensity</span><span class="p">(</span><span class="n">asset_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">intensity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MusicBed</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a :class:`MusicBed` at the gain for a Format ``music_bed`` intensity.</span>
+<span class="w">    </span><span class="sd">"""Build a :class:`MusicBed` at the gain for a Format ``music_bed`` intensity.</span>
 
-<span class="sd">    Returns ``None`` for ``&quot;none&quot;`` (or an unknown intensity), so callers can do</span>
+<span class="sd">    Returns ``None`` for ``"none"`` (or an unknown intensity), so callers can do</span>
 <span class="sd">    ``bed = bed_for_intensity(asset, fmt.music_bed)`` and skip when falsy.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">gain</span> <span class="o">=</span> <span class="n">BED_GAIN_BY_INTENSITY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">intensity</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">gain</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -185,8 +186,8 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_require_ffmpeg</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;ffmpeg not found on PATH (brew install ffmpeg).&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"ffmpeg"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"ffmpeg not found on PATH (brew install ffmpeg)."</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="prepare_bed">
@@ -194,12 +195,12 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">prepare_bed</span><span class="p">(</span>
     <span class="n">bed</span><span class="p">:</span> <span class="n">MusicBed</span><span class="p">,</span> <span class="n">target_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">44100</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render ``bed`` to a ready-to-mix underscore of length ``target_s - lead_in_s``.</span>
+<span class="w">    </span><span class="sd">"""Render ``bed`` to a ready-to-mix underscore of length ``target_s - lead_in_s``.</span>
 
 <span class="sd">    Seeks to ``bed.start_s`` (looping if needed), trims to the covered length, and</span>
 <span class="sd">    bakes in fades + ``gain_db`` + stereo. The caller mixes the result delayed by</span>
 <span class="sd">    ``bed.lead_in_s``. Returns ``out_path``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">_require_ffmpeg</span><span class="p">()</span>
     <span class="n">length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">target_s</span> <span class="o">-</span> <span class="n">bed</span><span class="o">.</span><span class="n">lead_in_s</span><span class="p">)</span>
     <span class="n">fo_start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">length</span> <span class="o">-</span> <span class="n">bed</span><span class="o">.</span><span class="n">fade_out_s</span><span class="p">)</span>
@@ -207,25 +208,25 @@
     <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">pre_input</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">bed</span><span class="o">.</span><span class="n">loop</span><span class="p">:</span>
-        <span class="n">pre_input</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;-stream_loop&quot;</span><span class="p">,</span> <span class="s2">&quot;-1&quot;</span><span class="p">]</span>
+        <span class="n">pre_input</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"-stream_loop"</span><span class="p">,</span> <span class="s2">"-1"</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">bed</span><span class="o">.</span><span class="n">start_s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">pre_input</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;-ss&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">bed</span><span class="o">.</span><span class="n">start_s</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+        <span class="n">pre_input</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"-ss"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">bed</span><span class="o">.</span><span class="n">start_s</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
     <span class="n">af</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;afade=t=in:st=0:d=</span><span class="si">{</span><span class="n">bed</span><span class="o">.</span><span class="n">fade_in_s</span><span class="si">}</span><span class="s2">,&quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;afade=t=out:st=</span><span class="si">{</span><span class="n">fo_start</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">:d=</span><span class="si">{</span><span class="n">bed</span><span class="o">.</span><span class="n">fade_out_s</span><span class="si">}</span><span class="s2">,&quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;volume=</span><span class="si">{</span><span class="n">bed</span><span class="o">.</span><span class="n">gain_db</span><span class="si">}</span><span class="s2">dB,&quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;aformat=sample_rates=</span><span class="si">{</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">:channel_layouts=stereo&quot;</span>
+        <span class="sa">f</span><span class="s2">"afade=t=in:st=0:d=</span><span class="si">{</span><span class="n">bed</span><span class="o">.</span><span class="n">fade_in_s</span><span class="si">}</span><span class="s2">,"</span>
+        <span class="sa">f</span><span class="s2">"afade=t=out:st=</span><span class="si">{</span><span class="n">fo_start</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">:d=</span><span class="si">{</span><span class="n">bed</span><span class="o">.</span><span class="n">fade_out_s</span><span class="si">}</span><span class="s2">,"</span>
+        <span class="sa">f</span><span class="s2">"volume=</span><span class="si">{</span><span class="n">bed</span><span class="o">.</span><span class="n">gain_db</span><span class="si">}</span><span class="s2">dB,"</span>
+        <span class="sa">f</span><span class="s2">"aformat=sample_rates=</span><span class="si">{</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">:channel_layouts=stereo"</span>
     <span class="p">)</span>
     <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
         <span class="p">[</span>
-            <span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-y&quot;</span><span class="p">,</span>
+            <span class="s2">"ffmpeg"</span><span class="p">,</span>
+            <span class="s2">"-y"</span><span class="p">,</span>
             <span class="o">*</span><span class="n">pre_input</span><span class="p">,</span>
-            <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+            <span class="s2">"-i"</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">bed</span><span class="o">.</span><span class="n">asset_path</span><span class="p">),</span>
-            <span class="s2">&quot;-t&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">length</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-af&quot;</span><span class="p">,</span>
+            <span class="s2">"-t"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">length</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="s2">"-af"</span><span class="p">,</span>
             <span class="n">af</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
         <span class="p">],</span>

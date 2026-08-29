@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.formats &mdash; braidio 0.0.20 documentation</title>
+  <title>braidio.formats &mdash; braidio 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
@@ -114,7 +115,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for braidio.formats</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Ready-made **format templates** — high-quality presets under standard names.</span>
+<span></span><span class="sd">"""Ready-made **format templates** — high-quality presets under standard names.</span>
 
 <span class="sd">braidio parametrizes *any* commentary style (a :class:`~braidio.script.Script` of</span>
 <span class="sd">``Narration`` / ``Dialogue`` / ``SegmentBeat`` beats, cast via</span>
@@ -128,19 +129,19 @@
 <span class="sd">The taxonomy + recipes are in</span>
 <span class="sd">``misc/docs/research/commentary-formats-and-styles.md``. The organizing rule:</span>
 <span class="sd">**the talk is the spine; narration bridges and source clips are optional</span>
-<span class="sd">&quot;illustration&quot; layers** attached to it.</span>
+<span class="sd">"illustration" layers** attached to it.</span>
 
 <span class="sd">What a :class:`Format` actually drives at render time **today**: the dialogue</span>
 <span class="sd">**cast** (role→voice), the **narration voice + delivery**, the **clip</span>
 <span class="sd">weave/duck + loudness** (:class:`WeaveConfig`). Per-clip placement renders too —</span>
 <span class="sd">set it on each ``SegmentBeat(placement=…)``; ``Format.clip_placement`` is the</span>
 <span class="sd">recommended *default* for the format. A **music bed** renders when you pass a</span>
-<span class="sd">``bed_asset`` to :func:`render_format` — the format&#39;s ``music_bed`` *intensity*</span>
+<span class="sd">``bed_asset`` to :func:`render_format` — the format's ``music_bed`` *intensity*</span>
 <span class="sd">picks the gain. Fields tagged *(authoring)* — ``roles``, ``scripting`` — are</span>
 <span class="sd">conventions for whoever writes (or generates) the ``Script``; scene stings remain</span>
 <span class="sd">**roadmap** on the render side (braidio#25). Preset ids mirror the standard names</span>
-<span class="sd">so a UI can label them (&quot;Deep Dive&quot;, &quot;Song Exploder-style&quot;).</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">so a UI can label them ("Deep Dive", "Song Exploder-style").</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -156,26 +157,26 @@
 
 <span class="c1"># --- extra role voices (from the curated premade pools, distinct timbres) -----</span>
 <span class="n">GEORGE</span> <span class="o">=</span> <span class="n">DEFAULT_VOICE_ID</span>  <span class="c1"># warm, captivating storyteller (M) — narrator</span>
-<span class="n">MATILDA</span> <span class="o">=</span> <span class="s2">&quot;XrExE9yKIg1WjnnlVkGX&quot;</span>  <span class="c1"># professional (F) — neutral moderator</span>
-<span class="n">SARAH</span> <span class="o">=</span> <span class="s2">&quot;EXAVITQu4vr4xnSDxMaL&quot;</span>  <span class="c1"># mature, reassuring (F)</span>
-<span class="n">CHARLIE</span> <span class="o">=</span> <span class="s2">&quot;IKne3meq5aSn9XLyUdCD&quot;</span>  <span class="c1"># deep, energetic (M, Australian)</span>
-<span class="n">ERIC</span> <span class="o">=</span> <span class="s2">&quot;cjVigY5qzO86Huf0OWal&quot;</span>  <span class="c1"># smooth, trustworthy (M)</span>
-<span class="n">BILL</span> <span class="o">=</span> <span class="s2">&quot;pqHfZKP75CvOlQylNhV4&quot;</span>  <span class="c1"># wise, mature (M)</span>
+<span class="n">MATILDA</span> <span class="o">=</span> <span class="s2">"XrExE9yKIg1WjnnlVkGX"</span>  <span class="c1"># professional (F) — neutral moderator</span>
+<span class="n">SARAH</span> <span class="o">=</span> <span class="s2">"EXAVITQu4vr4xnSDxMaL"</span>  <span class="c1"># mature, reassuring (F)</span>
+<span class="n">CHARLIE</span> <span class="o">=</span> <span class="s2">"IKne3meq5aSn9XLyUdCD"</span>  <span class="c1"># deep, energetic (M, Australian)</span>
+<span class="n">ERIC</span> <span class="o">=</span> <span class="s2">"cjVigY5qzO86Huf0OWal"</span>  <span class="c1"># smooth, trustworthy (M)</span>
+<span class="n">BILL</span> <span class="o">=</span> <span class="s2">"pqHfZKP75CvOlQylNhV4"</span>  <span class="c1"># wise, mature (M)</span>
 
 
 <div class="viewcode-block" id="Format">
 <a class="viewcode-back" href="../../module_docs/braidio/formats.html#braidio.Format">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Format</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A named commentary-format preset: a bundle of high-quality defaults.</span>
+<span class="w">    </span><span class="sd">"""A named commentary-format preset: a bundle of high-quality defaults.</span>
 
 <span class="sd">    Rendered fields drive :func:`render_format` → :func:`braidio.render.render_production`.</span>
 <span class="sd">    Authoring fields document how to write a ``Script`` for this format (and, for</span>
 <span class="sd">    ``clip_placement`` / ``music_bed``, flag render features still on the roadmap).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># preset id (mirrors the standard name), e.g. &quot;deep_dive&quot;</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># standard / industry name for UI labels, e.g. &#39;Two-Host Conversation (&quot;Deep Dive&quot;)&#39;</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># preset id (mirrors the standard name), e.g. "deep_dive"</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># standard / industry name for UI labels, e.g. 'Two-Host Conversation ("Deep Dive")'</span>
     <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">aka</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># alternate names / exemplar shows</span>
 
@@ -191,9 +192,9 @@
     <span class="n">roles</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span>
     <span class="p">)</span>  <span class="c1"># role → semantic (narrator/host/guest/…)</span>
-    <span class="n">clip_placement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;before&quot;</span>  <span class="c1"># recommended default SegmentBeat.placement (renders; before|under|after)</span>
-    <span class="n">music_bed</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;light&quot;</span>  <span class="c1"># continuous | light | sparse | none (authoring / roadmap)</span>
-    <span class="n">scripting</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># how to author a Script for this format (authoring)</span>
+    <span class="n">clip_placement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"before"</span>  <span class="c1"># recommended default SegmentBeat.placement (renders; before|under|after)</span>
+    <span class="n">music_bed</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"light"</span>  <span class="c1"># continuous | light | sparse | none (authoring / roadmap)</span>
+    <span class="n">scripting</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>  <span class="c1"># how to author a Script for this format (authoring)</span>
 
 <div class="viewcode-block" id="Format.render">
 <a class="viewcode-back" href="../../module_docs/braidio/formats.html#braidio.Format.render">[docs]</a>
@@ -206,7 +207,7 @@
         <span class="n">profile</span><span class="p">:</span> <span class="n">Profile</span> <span class="o">=</span> <span class="n">Profile</span><span class="o">.</span><span class="n">PERSONAL</span><span class="p">,</span>
         <span class="o">**</span><span class="n">overrides</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render ``script`` with this format&#39;s defaults (see :func:`render_format`).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Render ``script`` with this format's defaults (see :func:`render_format`)."""</span>
         <span class="k">return</span> <span class="n">render_format</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">script</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span> <span class="n">out_path</span><span class="o">=</span><span class="n">out_path</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span>
         <span class="p">)</span></div>
@@ -226,18 +227,18 @@
     <span class="n">bed_asset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">overrides</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render ``script`` under ``fmt``&#39;s defaults; ``overrides`` win over them.</span>
+<span class="w">    </span><span class="sd">"""Render ``script`` under ``fmt``'s defaults; ``overrides`` win over them.</span>
 
-<span class="sd">    Wires the format&#39;s ``cast`` / ``narration_voice`` / ``narration_delivery`` /</span>
+<span class="sd">    Wires the format's ``cast`` / ``narration_voice`` / ``narration_delivery`` /</span>
 <span class="sd">    ``weave`` into :func:`braidio.render.render_production`. Any beat may still</span>
 <span class="sd">    override voice/settings per-beat (e.g. a graver book-narrator inside an</span>
 <span class="sd">    otherwise lively presenter piece — pass ``V2_NARRATOR.voice_settings`` on that</span>
 <span class="sd">    ``Narration`` beat).</span>
 
 <span class="sd">    ``bed_asset`` (a path to an app-supplied instrumental) adds a music bed at the</span>
-<span class="sd">    gain implied by ``fmt.music_bed`` (skipped when the format&#39;s intensity is</span>
-<span class="sd">    ``&quot;none&quot;``); pass ``music_bed=MusicBed(...)`` in ``overrides`` for full control.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    gain implied by ``fmt.music_bed`` (skipped when the format's intensity is</span>
+<span class="sd">    ``"none"``); pass ``music_bed=MusicBed(...)`` in ``overrides`` for full control.</span>
+<span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.music</span><span class="w"> </span><span class="kn">import</span> <span class="n">bed_for_intensity</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.render</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_production</span>
 
@@ -249,13 +250,13 @@
         <span class="n">out_path</span><span class="o">=</span><span class="n">out_path</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="n">fmt</span><span class="o">.</span><span class="n">cast</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;cast&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">cast</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">"cast"</span><span class="p">]</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">cast</span>
     <span class="k">if</span> <span class="n">fmt</span><span class="o">.</span><span class="n">narration_voice</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;voice_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">narration_voice</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">"voice_id"</span><span class="p">]</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">narration_voice</span>
     <span class="k">if</span> <span class="n">bed_asset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">bed</span> <span class="o">=</span> <span class="n">bed_for_intensity</span><span class="p">(</span><span class="n">bed_asset</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">music_bed</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">bed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;music_bed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bed</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"music_bed"</span><span class="p">]</span> <span class="o">=</span> <span class="n">bed</span>
     <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">overrides</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">render_production</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
@@ -266,179 +267,179 @@
 <span class="c1"># =============================================================================</span>
 
 <span class="n">SOLO_EXPLAINER</span> <span class="o">=</span> <span class="n">Format</span><span class="p">(</span>
-    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;solo_explainer&quot;</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Solo-Presenter Explainer&quot;</span><span class="p">,</span>
-    <span class="n">aka</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;video essay&quot;</span><span class="p">,</span> <span class="s2">&quot;audio-essay&quot;</span><span class="p">,</span> <span class="s2">&quot;close reading&quot;</span><span class="p">,</span> <span class="s2">&quot;Dissect&quot;</span><span class="p">,</span> <span class="s2">&quot;audio guide&quot;</span><span class="p">),</span>
-    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;One presenter advances a thesis over exhibits; narration is the spine.&quot;</span><span class="p">,</span>
+    <span class="nb">id</span><span class="o">=</span><span class="s2">"solo_explainer"</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Solo-Presenter Explainer"</span><span class="p">,</span>
+    <span class="n">aka</span><span class="o">=</span><span class="p">(</span><span class="s2">"video essay"</span><span class="p">,</span> <span class="s2">"audio-essay"</span><span class="p">,</span> <span class="s2">"close reading"</span><span class="p">,</span> <span class="s2">"Dissect"</span><span class="p">,</span> <span class="s2">"audio guide"</span><span class="p">),</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"One presenter advances a thesis over exhibits; narration is the spine."</span><span class="p">,</span>
     <span class="n">cast</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># no dialogue — a single voice throughout</span>
     <span class="n">narration_voice</span><span class="o">=</span><span class="n">GEORGE</span><span class="p">,</span>
     <span class="n">narration_delivery</span><span class="o">=</span><span class="n">V2_PRESENTER</span><span class="p">,</span>
-    <span class="n">weave</span><span class="o">=</span><span class="n">WeaveConfig</span><span class="p">(</span><span class="n">voices</span><span class="o">=</span><span class="p">(</span><span class="n">GEORGE</span><span class="p">,),</span> <span class="n">pool_label</span><span class="o">=</span><span class="s2">&quot;single&quot;</span><span class="p">,</span> <span class="n">min_turn</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_turn</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
-    <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;presenter&quot;</span><span class="p">:</span> <span class="s2">&quot;narrator=host=expert, collapsed into one authoritative voice&quot;</span><span class="p">},</span>
-    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">,</span>  <span class="c1"># set up every exhibit before it plays</span>
-    <span class="n">music_bed</span><span class="o">=</span><span class="s2">&quot;continuous&quot;</span><span class="p">,</span>
+    <span class="n">weave</span><span class="o">=</span><span class="n">WeaveConfig</span><span class="p">(</span><span class="n">voices</span><span class="o">=</span><span class="p">(</span><span class="n">GEORGE</span><span class="p">,),</span> <span class="n">pool_label</span><span class="o">=</span><span class="s2">"single"</span><span class="p">,</span> <span class="n">min_turn</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_turn</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+    <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">"presenter"</span><span class="p">:</span> <span class="s2">"narrator=host=expert, collapsed into one authoritative voice"</span><span class="p">},</span>
+    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>  <span class="c1"># set up every exhibit before it plays</span>
+    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"continuous"</span><span class="p">,</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
-        <span class="s2">&quot;Intro (hook + thesis) → body as repeated (claim → clip → analysis) → &quot;</span>
-        <span class="s2">&quot;conclusion. Per-exhibit micro-shape: hook → describe → meaning → memorable &quot;</span>
-        <span class="s2">&quot;detail → prompt (~60–90s). Scripted, dense; every exhibit is set up first. &quot;</span>
-        <span class="s2">&quot;Serialize by emitting one Script per sub-topic with an end-of-episode hook.&quot;</span>
+        <span class="s2">"Intro (hook + thesis) → body as repeated (claim → clip → analysis) → "</span>
+        <span class="s2">"conclusion. Per-exhibit micro-shape: hook → describe → meaning → memorable "</span>
+        <span class="s2">"detail → prompt (~60–90s). Scripted, dense; every exhibit is set up first. "</span>
+        <span class="s2">"Serialize by emitting one Script per sub-topic with an end-of-episode hook."</span>
     <span class="p">),</span>
 <span class="p">)</span>
 
 <span class="n">DEEP_DIVE</span> <span class="o">=</span> <span class="n">Format</span><span class="p">(</span>
-    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;deep_dive&quot;</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Two-Host Conversation (&quot;Deep Dive&quot;)&#39;</span><span class="p">,</span>
+    <span class="nb">id</span><span class="o">=</span><span class="s2">"deep_dive"</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">'Two-Host Conversation ("Deep Dive")'</span><span class="p">,</span>
     <span class="n">aka</span><span class="o">=</span><span class="p">(</span>
-        <span class="s2">&quot;co-hosted chat&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;two-host teaching dialogue&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;Switched on Pop&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;NotebookLM Deep Dive&quot;</span><span class="p">,</span>
+        <span class="s2">"co-hosted chat"</span><span class="p">,</span>
+        <span class="s2">"two-host teaching dialogue"</span><span class="p">,</span>
+        <span class="s2">"Switched on Pop"</span><span class="p">,</span>
+        <span class="s2">"NotebookLM Deep Dive"</span><span class="p">,</span>
     <span class="p">),</span>
-    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;Two complementary hosts talk it through; one teaches, one probes.&quot;</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Two complementary hosts talk it through; one teaches, one probes."</span><span class="p">,</span>
     <span class="n">cast</span><span class="o">=</span><span class="n">ConversationCast</span><span class="p">(</span>
-        <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host_a&quot;</span><span class="p">:</span> <span class="n">JESSICA</span><span class="p">,</span> <span class="s2">&quot;host_b&quot;</span><span class="p">:</span> <span class="n">CHRIS</span><span class="p">},</span> <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">}</span>
+        <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">"host_a"</span><span class="p">:</span> <span class="n">JESSICA</span><span class="p">,</span> <span class="s2">"host_b"</span><span class="p">:</span> <span class="n">CHRIS</span><span class="p">},</span> <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">}</span>
     <span class="p">),</span>
     <span class="n">narration_voice</span><span class="o">=</span><span class="n">GEORGE</span><span class="p">,</span>  <span class="c1"># for optional bridges between segments</span>
     <span class="n">narration_delivery</span><span class="o">=</span><span class="n">V2_NARRATOR</span><span class="p">,</span>
     <span class="n">weave</span><span class="o">=</span><span class="n">WeaveConfig</span><span class="p">(),</span>
-    <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host_a&quot;</span><span class="p">:</span> <span class="s2">&quot;explainer / driver&quot;</span><span class="p">,</span> <span class="s2">&quot;host_b&quot;</span><span class="p">:</span> <span class="s2">&quot;prober / curious surrogate&quot;</span><span class="p">},</span>
-    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">,</span>  <span class="c1"># hosts cue, then play/react (the cue is the bridge)</span>
-    <span class="n">music_bed</span><span class="o">=</span><span class="s2">&quot;light&quot;</span><span class="p">,</span>
+    <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">"host_a"</span><span class="p">:</span> <span class="s2">"explainer / driver"</span><span class="p">,</span> <span class="s2">"host_b"</span><span class="p">:</span> <span class="s2">"prober / curious surrogate"</span><span class="p">},</span>
+    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"after"</span><span class="p">,</span>  <span class="c1"># hosts cue, then play/react (the cue is the bridge)</span>
+    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"light"</span><span class="p">,</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
-        <span class="s2">&quot;Cold banter → frame the artifact → segment-by-segment walkthrough where one &quot;</span>
-        <span class="s2">&quot;host teaches the other (roles may trade) → recap → sign-off. Prove each claim &quot;</span>
-        <span class="s2">&quot;with a clip or a described demonstration. For the DEBATE sub-preset, give the &quot;</span>
-        <span class="s2">&quot;two hosts opposing stances (raise disagreement) for tension without a third voice.&quot;</span>
+        <span class="s2">"Cold banter → frame the artifact → segment-by-segment walkthrough where one "</span>
+        <span class="s2">"host teaches the other (roles may trade) → recap → sign-off. Prove each claim "</span>
+        <span class="s2">"with a clip or a described demonstration. For the DEBATE sub-preset, give the "</span>
+        <span class="s2">"two hosts opposing stances (raise disagreement) for tension without a third voice."</span>
     <span class="p">),</span>
 <span class="p">)</span>
 
 <span class="n">INTERVIEW</span> <span class="o">=</span> <span class="n">Format</span><span class="p">(</span>
-    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;interview&quot;</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Interview (Host + Guest)&quot;</span><span class="p">,</span>
-    <span class="n">aka</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;host + subject&quot;</span><span class="p">,</span> <span class="s2">&quot;Q&amp;A&quot;</span><span class="p">),</span>
-    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;Host questions a guest to elicit their first-person account.&quot;</span><span class="p">,</span>
+    <span class="nb">id</span><span class="o">=</span><span class="s2">"interview"</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Interview (Host + Guest)"</span><span class="p">,</span>
+    <span class="n">aka</span><span class="o">=</span><span class="p">(</span><span class="s2">"host + subject"</span><span class="p">,</span> <span class="s2">"Q&amp;A"</span><span class="p">),</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Host questions a guest to elicit their first-person account."</span><span class="p">,</span>
     <span class="n">cast</span><span class="o">=</span><span class="n">ConversationCast</span><span class="p">(</span>
-        <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="n">JESSICA</span><span class="p">,</span> <span class="s2">&quot;guest&quot;</span><span class="p">:</span> <span class="n">CHRIS</span><span class="p">},</span> <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">}</span>
+        <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">"host"</span><span class="p">:</span> <span class="n">JESSICA</span><span class="p">,</span> <span class="s2">"guest"</span><span class="p">:</span> <span class="n">CHRIS</span><span class="p">},</span> <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">}</span>
     <span class="p">),</span>
     <span class="n">narration_voice</span><span class="o">=</span><span class="n">GEORGE</span><span class="p">,</span>  <span class="c1"># optional chapter bridges only</span>
     <span class="n">narration_delivery</span><span class="o">=</span><span class="n">V2_NARRATOR</span><span class="p">,</span>
     <span class="n">weave</span><span class="o">=</span><span class="n">WeaveConfig</span><span class="p">(),</span>
     <span class="n">roles</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;curious interviewer&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;guest&quot;</span><span class="p">:</span> <span class="s2">&quot;first-person authority (the center)&quot;</span><span class="p">,</span>
+        <span class="s2">"host"</span><span class="p">:</span> <span class="s2">"curious interviewer"</span><span class="p">,</span>
+        <span class="s2">"guest"</span><span class="p">:</span> <span class="s2">"first-person authority (the center)"</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">,</span>
-    <span class="n">music_bed</span><span class="o">=</span><span class="s2">&quot;light&quot;</span><span class="p">,</span>
+    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>
+    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"light"</span><span class="p">,</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
-        <span class="s2">&quot;Host question → guest answer (Q-then-A). Host or guest sets up each exhibit &quot;</span>
-        <span class="s2">&quot;before it plays. Narration bridges only between chapters. See SONG_EXPLODER &quot;</span>
-        <span class="s2">&quot;for the host-removed variant.&quot;</span>
+        <span class="s2">"Host question → guest answer (Q-then-A). Host or guest sets up each exhibit "</span>
+        <span class="s2">"before it plays. Narration bridges only between chapters. See SONG_EXPLODER "</span>
+        <span class="s2">"for the host-removed variant."</span>
     <span class="p">),</span>
 <span class="p">)</span>
 
-<span class="c1"># Song Exploder architecture — the sharpest &quot;illustration&quot; model.</span>
+<span class="c1"># Song Exploder architecture — the sharpest "illustration" model.</span>
 <span class="n">SONG_EXPLODER</span> <span class="o">=</span> <span class="n">Format</span><span class="p">(</span>
-    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;interview_host_removed&quot;</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Song Exploder-style (host-removed interview)&quot;</span><span class="p">,</span>
-    <span class="n">aka</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Song Exploder&quot;</span><span class="p">,</span> <span class="s2">&quot;deconstruction&quot;</span><span class="p">,</span> <span class="s2">&quot;stems&quot;</span><span class="p">),</span>
-    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;Guest narrates in first person; every claim illustrated by its isolated stem; full artifact at the tail.&quot;</span><span class="p">,</span>
+    <span class="nb">id</span><span class="o">=</span><span class="s2">"interview_host_removed"</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Song Exploder-style (host-removed interview)"</span><span class="p">,</span>
+    <span class="n">aka</span><span class="o">=</span><span class="p">(</span><span class="s2">"Song Exploder"</span><span class="p">,</span> <span class="s2">"deconstruction"</span><span class="p">,</span> <span class="s2">"stems"</span><span class="p">),</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Guest narrates in first person; every claim illustrated by its isolated stem; full artifact at the tail."</span><span class="p">,</span>
     <span class="n">cast</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># host removed → continuous guest monologue (Narration voiced by the guest)</span>
     <span class="n">narration_voice</span><span class="o">=</span><span class="n">CHRIS</span><span class="p">,</span>  <span class="c1"># the maker, first person</span>
     <span class="n">narration_delivery</span><span class="o">=</span><span class="n">V2_PRESENTER</span><span class="p">,</span>
     <span class="n">weave</span><span class="o">=</span><span class="n">WeaveConfig</span><span class="p">(),</span>
-    <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;guest&quot;</span><span class="p">:</span> <span class="s2">&quot;the maker, sole voice; host is the invisible editor/curator&quot;</span><span class="p">},</span>
-    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">,</span>  <span class="c1"># name the element, then play the isolated stem</span>
-    <span class="n">music_bed</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>  <span class="c1"># the artifact&#39;s own segments ARE the score</span>
+    <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">"guest"</span><span class="p">:</span> <span class="s2">"the maker, sole voice; host is the invisible editor/curator"</span><span class="p">},</span>
+    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>  <span class="c1"># name the element, then play the isolated stem</span>
+    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"none"</span><span class="p">,</span>  <span class="c1"># the artifact's own segments ARE the score</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
-        <span class="s2">&quot;Interview the maker, strip the host&#39;s questions → guest narrates first-person &quot;</span>
-        <span class="s2">&quot;→ drop the exact isolated stem as each element is named → close with the &quot;</span>
-        <span class="s2">&quot;complete, un-narrated artifact (the payoff). ~15–20 min.&quot;</span>
+        <span class="s2">"Interview the maker, strip the host's questions → guest narrates first-person "</span>
+        <span class="s2">"→ drop the exact isolated stem as each element is named → close with the "</span>
+        <span class="s2">"complete, un-narrated artifact (the payoff). ~15–20 min."</span>
     <span class="p">),</span>
 <span class="p">)</span>
 
 <span class="n">PANEL</span> <span class="o">=</span> <span class="n">Format</span><span class="p">(</span>
-    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;panel&quot;</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Panel / Roundtable&quot;</span><span class="p">,</span>
-    <span class="n">aka</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;roundtable&quot;</span><span class="p">,</span> <span class="s2">&quot;Pop Culture Happy Hour&quot;</span><span class="p">),</span>
-    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;A moderator routes a group of distinct voices around a shared topic.&quot;</span><span class="p">,</span>
+    <span class="nb">id</span><span class="o">=</span><span class="s2">"panel"</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Panel / Roundtable"</span><span class="p">,</span>
+    <span class="n">aka</span><span class="o">=</span><span class="p">(</span><span class="s2">"roundtable"</span><span class="p">,</span> <span class="s2">"Pop Culture Happy Hour"</span><span class="p">),</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"A moderator routes a group of distinct voices around a shared topic."</span><span class="p">,</span>
     <span class="n">cast</span><span class="o">=</span><span class="n">ConversationCast</span><span class="p">(</span>
         <span class="n">roles</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;moderator&quot;</span><span class="p">:</span> <span class="n">MATILDA</span><span class="p">,</span>
-            <span class="s2">&quot;panelist_1&quot;</span><span class="p">:</span> <span class="n">CHARLIE</span><span class="p">,</span>
-            <span class="s2">&quot;panelist_2&quot;</span><span class="p">:</span> <span class="n">SARAH</span><span class="p">,</span>
-            <span class="s2">&quot;panelist_3&quot;</span><span class="p">:</span> <span class="n">ERIC</span><span class="p">,</span>
+            <span class="s2">"moderator"</span><span class="p">:</span> <span class="n">MATILDA</span><span class="p">,</span>
+            <span class="s2">"panelist_1"</span><span class="p">:</span> <span class="n">CHARLIE</span><span class="p">,</span>
+            <span class="s2">"panelist_2"</span><span class="p">:</span> <span class="n">SARAH</span><span class="p">,</span>
+            <span class="s2">"panelist_3"</span><span class="p">:</span> <span class="n">ERIC</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">},</span>
+        <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">},</span>
     <span class="p">),</span>
     <span class="n">narration_voice</span><span class="o">=</span><span class="n">GEORGE</span><span class="p">,</span>
     <span class="n">narration_delivery</span><span class="o">=</span><span class="n">V2_NARRATOR</span><span class="p">,</span>
     <span class="n">weave</span><span class="o">=</span><span class="n">WeaveConfig</span><span class="p">(),</span>
     <span class="n">roles</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;moderator&quot;</span><span class="p">:</span> <span class="s2">&quot;neutral routing voice (spine + traffic control)&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;panelist_1&quot;</span><span class="p">:</span> <span class="s2">&quot;distinct viewpoint&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;panelist_2&quot;</span><span class="p">:</span> <span class="s2">&quot;distinct viewpoint&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;panelist_3&quot;</span><span class="p">:</span> <span class="s2">&quot;distinct viewpoint&quot;</span><span class="p">,</span>
+        <span class="s2">"moderator"</span><span class="p">:</span> <span class="s2">"neutral routing voice (spine + traffic control)"</span><span class="p">,</span>
+        <span class="s2">"panelist_1"</span><span class="p">:</span> <span class="s2">"distinct viewpoint"</span><span class="p">,</span>
+        <span class="s2">"panelist_2"</span><span class="p">:</span> <span class="s2">"distinct viewpoint"</span><span class="p">,</span>
+        <span class="s2">"panelist_3"</span><span class="p">:</span> <span class="s2">"distinct viewpoint"</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">,</span>
-    <span class="n">music_bed</span><span class="o">=</span><span class="s2">&quot;light&quot;</span><span class="p">,</span>  <span class="c1"># segment stings mark each round (signposting is critical with many voices)</span>
+    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>
+    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"light"</span><span class="p">,</span>  <span class="c1"># segment stings mark each round (signposting is critical with many voices)</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
-        <span class="s2">&quot;Moderator frames topic → round-robin takes (&#39;a trip around the table&#39;) → clip &quot;</span>
-        <span class="s2">&quot;drops as shared reference → moderator synthesizes → next topic → close on a &quot;</span>
-        <span class="s2">&quot;recurring ritual. Keep voices maximally distinct (accent/gender) for legibility.&quot;</span>
+        <span class="s2">"Moderator frames topic → round-robin takes ('a trip around the table') → clip "</span>
+        <span class="s2">"drops as shared reference → moderator synthesizes → next topic → close on a "</span>
+        <span class="s2">"recurring ritual. Keep voices maximally distinct (accent/gender) for legibility."</span>
     <span class="p">),</span>
 <span class="p">)</span>
 
 <span class="n">DEBATE</span> <span class="o">=</span> <span class="n">Format</span><span class="p">(</span>
-    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;debate&quot;</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Debate (Oxford-style)&quot;</span><span class="p">,</span>
-    <span class="n">aka</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;two opposing takes + moderator&quot;</span><span class="p">,),</span>
-    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;Two advocates argue a stated motion; a neutral moderator enforces phases.&quot;</span><span class="p">,</span>
+    <span class="nb">id</span><span class="o">=</span><span class="s2">"debate"</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Debate (Oxford-style)"</span><span class="p">,</span>
+    <span class="n">aka</span><span class="o">=</span><span class="p">(</span><span class="s2">"two opposing takes + moderator"</span><span class="p">,),</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Two advocates argue a stated motion; a neutral moderator enforces phases."</span><span class="p">,</span>
     <span class="n">cast</span><span class="o">=</span><span class="n">ConversationCast</span><span class="p">(</span>
-        <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;moderator&quot;</span><span class="p">:</span> <span class="n">BILL</span><span class="p">,</span> <span class="s2">&quot;proposition&quot;</span><span class="p">:</span> <span class="n">JESSICA</span><span class="p">,</span> <span class="s2">&quot;opposition&quot;</span><span class="p">:</span> <span class="n">CHRIS</span><span class="p">},</span>
-        <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">},</span>
+        <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">"moderator"</span><span class="p">:</span> <span class="n">BILL</span><span class="p">,</span> <span class="s2">"proposition"</span><span class="p">:</span> <span class="n">JESSICA</span><span class="p">,</span> <span class="s2">"opposition"</span><span class="p">:</span> <span class="n">CHRIS</span><span class="p">},</span>
+        <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">},</span>
     <span class="p">),</span>
     <span class="n">narration_voice</span><span class="o">=</span><span class="n">BILL</span><span class="p">,</span>  <span class="c1"># structural announcements, voiced by the moderator</span>
     <span class="n">narration_delivery</span><span class="o">=</span><span class="n">V2_NARRATOR</span><span class="p">,</span>
     <span class="n">weave</span><span class="o">=</span><span class="n">WeaveConfig</span><span class="p">(),</span>
     <span class="n">roles</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;moderator&quot;</span><span class="p">:</span> <span class="s2">&quot;neutral; frames + routes, never argues&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;proposition&quot;</span><span class="p">:</span> <span class="s2">&quot;advocate A&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;opposition&quot;</span><span class="p">:</span> <span class="s2">&quot;advocate B&quot;</span><span class="p">,</span>
+        <span class="s2">"moderator"</span><span class="p">:</span> <span class="s2">"neutral; frames + routes, never argues"</span><span class="p">,</span>
+        <span class="s2">"proposition"</span><span class="p">:</span> <span class="s2">"advocate A"</span><span class="p">,</span>
+        <span class="s2">"opposition"</span><span class="p">:</span> <span class="s2">"advocate B"</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">,</span>  <span class="c1"># evidence entered by a side, then argued (clips may be re-used across sides)</span>
-    <span class="n">music_bed</span><span class="o">=</span><span class="s2">&quot;sparse&quot;</span><span class="p">,</span>  <span class="c1"># phase stings (open / rebuttal / close) keep structure legible</span>
+    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>  <span class="c1"># evidence entered by a side, then argued (clips may be re-used across sides)</span>
+    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"sparse"</span><span class="p">,</span>  <span class="c1"># phase stings (open / rebuttal / close) keep structure legible</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
-        <span class="s2">&quot;State the motion up front → phased turns: opening remarks → moderated &quot;</span>
-        <span class="s2">&quot;exchange/rebuttals → cross-examination → closing arguments. The same clip may &quot;</span>
-        <span class="s2">&quot;be entered and re-interpreted by both sides. Oxford variant: announce a &quot;</span>
-        <span class="s2">&quot;before/after opinion frame.&quot;</span>
+        <span class="s2">"State the motion up front → phased turns: opening remarks → moderated "</span>
+        <span class="s2">"exchange/rebuttals → cross-examination → closing arguments. The same clip may "</span>
+        <span class="s2">"be entered and re-interpreted by both sides. Oxford variant: announce a "</span>
+        <span class="s2">"before/after opinion frame."</span>
     <span class="p">),</span>
 <span class="p">)</span>
 
 <span class="n">DOCUMENTARY_VO</span> <span class="o">=</span> <span class="n">Format</span><span class="p">(</span>
-    <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;documentary_vo&quot;</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Documentary Voice-Over (expository &quot;Voice of God&quot;)&#39;</span><span class="p">,</span>
-    <span class="n">aka</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;expository documentary&quot;</span><span class="p">,</span> <span class="s2">&quot;This American Life&quot;</span><span class="p">,</span> <span class="s2">&quot;99% Invisible&quot;</span><span class="p">),</span>
-    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;An authoritative narrator drives; interviews, clips and actuality illustrate beneath.&quot;</span><span class="p">,</span>
+    <span class="nb">id</span><span class="o">=</span><span class="s2">"documentary_vo"</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">'Documentary Voice-Over (expository "Voice of God")'</span><span class="p">,</span>
+    <span class="n">aka</span><span class="o">=</span><span class="p">(</span><span class="s2">"expository documentary"</span><span class="p">,</span> <span class="s2">"This American Life"</span><span class="p">,</span> <span class="s2">"99% Invisible"</span><span class="p">),</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"An authoritative narrator drives; interviews, clips and actuality illustrate beneath."</span><span class="p">,</span>
     <span class="n">cast</span><span class="o">=</span><span class="n">ConversationCast</span><span class="p">(</span>
-        <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;guest&quot;</span><span class="p">:</span> <span class="n">CHRIS</span><span class="p">,</span> <span class="s2">&quot;expert&quot;</span><span class="p">:</span> <span class="n">LAURA</span><span class="p">},</span> <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">}</span>
+        <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">"guest"</span><span class="p">:</span> <span class="n">CHRIS</span><span class="p">,</span> <span class="s2">"expert"</span><span class="p">:</span> <span class="n">LAURA</span><span class="p">},</span> <span class="n">settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.45</span><span class="p">}</span>
     <span class="p">),</span>
     <span class="n">narration_voice</span><span class="o">=</span><span class="n">GEORGE</span><span class="p">,</span>  <span class="c1"># omniscient narrator — the top, driest layer</span>
     <span class="n">narration_delivery</span><span class="o">=</span><span class="n">V2_NARRATOR</span><span class="p">,</span>
     <span class="n">weave</span><span class="o">=</span><span class="n">WeaveConfig</span><span class="p">(</span><span class="n">min_turn</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_turn</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
     <span class="n">roles</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;narrator&quot;</span><span class="p">:</span> <span class="s2">&quot;omniscient, authoritative — the spine, top layer&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;guest&quot;</span><span class="p">:</span> <span class="s2">&quot;first-person testimony&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;expert&quot;</span><span class="p">:</span> <span class="s2">&quot;borrowed-credibility interpretation&quot;</span><span class="p">,</span>
+        <span class="s2">"narrator"</span><span class="p">:</span> <span class="s2">"omniscient, authoritative — the spine, top layer"</span><span class="p">,</span>
+        <span class="s2">"guest"</span><span class="p">:</span> <span class="s2">"first-person testimony"</span><span class="p">,</span>
+        <span class="s2">"expert"</span><span class="p">:</span> <span class="s2">"borrowed-credibility interpretation"</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">&quot;before&quot;</span><span class="p">,</span>  <span class="c1"># narration states → clip/interview demonstrates → narration bridges</span>
-    <span class="n">music_bed</span><span class="o">=</span><span class="s2">&quot;continuous&quot;</span><span class="p">,</span>  <span class="c1"># scored; announce scoring early; stings/swells mark scenes</span>
+    <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>  <span class="c1"># narration states → clip/interview demonstrates → narration bridges</span>
+    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"continuous"</span><span class="p">,</span>  <span class="c1"># scored; announce scoring early; stings/swells mark scenes</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
-        <span class="s2">&quot;Ira-Glass engine: anecdote → anecdote → a beat of reflection; run on a theme &quot;</span>
-        <span class="s2">&quot;in numbered &#39;acts&#39; with a prologue stating the theme; land a &#39;turn&#39;. Layer &quot;</span>
-        <span class="s2">&quot;bottom→top: ambience → bed (ducked) → clips/actuality → testimony → narration &quot;</span>
-        <span class="s2">&quot;on top. Optional cold open (best tape pulled forward). Narration is always the &quot;</span>
-        <span class="s2">&quot;top layer; everything below illustrates.&quot;</span>
+        <span class="s2">"Ira-Glass engine: anecdote → anecdote → a beat of reflection; run on a theme "</span>
+        <span class="s2">"in numbered 'acts' with a prologue stating the theme; land a 'turn'. Layer "</span>
+        <span class="s2">"bottom→top: ambience → bed (ducked) → clips/actuality → testimony → narration "</span>
+        <span class="s2">"on top. Optional cold open (best tape pulled forward). Narration is always the "</span>
+        <span class="s2">"top layer; everything below illustrates."</span>
     <span class="p">),</span>
 <span class="p">)</span>
 

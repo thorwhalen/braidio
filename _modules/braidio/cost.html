@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.cost &mdash; braidio 0.0.20 documentation</title>
+  <title>braidio.cost &mdash; braidio 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
@@ -114,9 +115,9 @@
            <div itemprop="articleBody">
              
   <h1>Source code for braidio.cost</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Cost model for braidio&#39;s paid operations (ElevenLabs TTS).</span>
+<span></span><span class="sd">"""Cost model for braidio's paid operations (ElevenLabs TTS).</span>
 
-<span class="sd">braidio&#39;s only spend is ElevenLabs synthesis — :func:`braidio.narrate` /</span>
+<span class="sd">braidio's only spend is ElevenLabs synthesis — :func:`braidio.narrate` /</span>
 <span class="sd">:func:`braidio.text_to_dialogue` and the renderers built on them — billed by</span>
 <span class="sd">ElevenLabs **per character** of submitted text. Everything else (ffmpeg</span>
 <span class="sd">extraction, weaving, loudness normalization) is local and free.</span>
@@ -128,7 +129,7 @@
 <span class="sd">**The figure is an ESTIMATE**, priced at a configurable per-1000-character rate</span>
 <span class="sd">(env :data:`RATE_ENV_VAR`, the per-model :data:`MODEL_USD_PER_1K_CHARS` table, or</span>
 <span class="sd">:data:`DEFAULT_USD_PER_1K_CHARS`). It equals what ElevenLabs bills for a *live*</span>
-<span class="sd">synthesis at that rate — not the provider&#39;s exact invoice. braidio does not yet</span>
+<span class="sd">synthesis at that rate — not the provider's exact invoice. braidio does not yet</span>
 <span class="sd">see the lower-level ``mixing`` on-disk cache, so a render served from that cache</span>
 <span class="sd">still reports its rate estimate rather than ``$0`` (a safe over-estimate for a</span>
 <span class="sd">spend ledger; see thorwhalen/braidio#8 to make it exact).</span>
@@ -139,7 +140,7 @@
 <span class="sd">never a fake ``0.0`` for real text) when the rate is explicitly disabled or</span>
 <span class="sd">invalid. Characters are always counted exactly, so a dollar figure can be</span>
 <span class="sd">recomputed if the rate changes.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -152,13 +153,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_MODEL_ID</span><span class="p">,</span> <span class="n">DIALOGUE_MODEL_ID</span>
 
 <span class="c1">#: Env var overriding the USD-per-1000-characters rate (global default for models</span>
-<span class="c1">#: not in :data:`MODEL_USD_PER_1K_CHARS`). Set it to your ElevenLabs plan&#39;s real</span>
+<span class="c1">#: not in :data:`MODEL_USD_PER_1K_CHARS`). Set it to your ElevenLabs plan's real</span>
 <span class="c1">#: rate for exact ledgers; set it to ``none`` to mark spend as *unpriced*.</span>
-<span class="n">RATE_ENV_VAR</span> <span class="o">=</span> <span class="s2">&quot;BRAIDIO_TTS_USD_PER_1K_CHARS&quot;</span>
+<span class="n">RATE_ENV_VAR</span> <span class="o">=</span> <span class="s2">"BRAIDIO_TTS_USD_PER_1K_CHARS"</span>
 
 <span class="c1">#: Default USD per 1000 characters when nothing else is configured. Approximate:</span>
 <span class="c1">#: ElevenLabs bills per credit and the $/credit depends on your plan, so set</span>
-<span class="c1">#: :data:`RATE_ENV_VAR` to your plan&#39;s real rate. Kept slightly conservative so a</span>
+<span class="c1">#: :data:`RATE_ENV_VAR` to your plan's real rate. Kept slightly conservative so a</span>
 <span class="c1">#: budget over- rather than under-estimates spend.</span>
 <span class="n">DEFAULT_USD_PER_1K_CHARS</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.30</span>
 
@@ -171,20 +172,20 @@
 
 <span class="c1">#: Env values (case-insensitive) that explicitly mark the rate as *unknown* so</span>
 <span class="c1">#: costs report ``None`` (unpriced) rather than defaulting.</span>
-<span class="n">_UNPRICED_SENTINELS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;unpriced&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
+<span class="n">_UNPRICED_SENTINELS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">,</span> <span class="s2">"unpriced"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="usd_per_1k_chars">
 <a class="viewcode-back" href="../../module_docs/braidio/cost.html#braidio.usd_per_1k_chars">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">usd_per_1k_chars</span><span class="p">(</span><span class="n">model_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolved USD-per-1000-characters rate (most specific source first).</span>
+<span class="w">    </span><span class="sd">"""Resolved USD-per-1000-characters rate (most specific source first).</span>
 
 <span class="sd">    Resolution: a confirmed per-model rate in :data:`MODEL_USD_PER_1K_CHARS` →</span>
 <span class="sd">    the env override :data:`RATE_ENV_VAR` → :data:`DEFAULT_USD_PER_1K_CHARS`.</span>
 <span class="sd">    Returns ``None`` (*unpriced*, not free) when the env override is explicitly</span>
 <span class="sd">    disabled (one of :data:`_UNPRICED_SENTINELS`) or is not a finite, non-negative</span>
 <span class="sd">    number — a bad rate must never silently become a dishonest negative/NaN spend.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">model_id</span> <span class="ow">and</span> <span class="n">model_id</span> <span class="ow">in</span> <span class="n">MODEL_USD_PER_1K_CHARS</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">MODEL_USD_PER_1K_CHARS</span><span class="p">[</span><span class="n">model_id</span><span class="p">]</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">RATE_ENV_VAR</span><span class="p">)</span>
@@ -203,18 +204,18 @@
 <div class="viewcode-block" id="billable_chars">
 <a class="viewcode-back" href="../../module_docs/braidio/cost.html#braidio.billable_chars">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">billable_chars</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Characters ElevenLabs bills for ``text`` (the whole submitted string).</span>
+<span class="w">    </span><span class="sd">"""Characters ElevenLabs bills for ``text`` (the whole submitted string).</span>
 
 <span class="sd">    ElevenLabs charges for everything sent — including ``eleven_v3`` audio tags</span>
 <span class="sd">    like ``[excited]`` — so this is just ``len(text)``. A named function keeps the</span>
 <span class="sd">    billing definition in one place if it ever needs to change.</span>
 
-<span class="sd">    &gt;&gt;&gt; billable_chars(&quot;hello&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; billable_chars("hello")</span>
 <span class="sd">    5</span>
 <span class="sd">    &gt;&gt;&gt; billable_chars(None)</span>
 <span class="sd">    0</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span></div>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span></div>
 
 
 
@@ -223,14 +224,14 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">tts_cost_usd</span><span class="p">(</span>
     <span class="n">text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Estimated USD to synthesize ``text``; ``0.0`` for empty, ``None`` if unpriced.</span>
+<span class="w">    </span><span class="sd">"""Estimated USD to synthesize ``text``; ``0.0`` for empty, ``None`` if unpriced.</span>
 
 <span class="sd">    Empty text is genuinely free (``0.0``) regardless of the rate; non-empty text</span>
 <span class="sd">    is ``None`` only when :func:`usd_per_1k_chars` is unpriced.</span>
 
-<span class="sd">    &gt;&gt;&gt; tts_cost_usd(&quot;&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; tts_cost_usd("")</span>
 <span class="sd">    0.0</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">chars</span> <span class="o">=</span> <span class="n">billable_chars</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">chars</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="mf">0.0</span>
@@ -245,15 +246,15 @@
 <a class="viewcode-back" href="../../module_docs/braidio/cost.html#braidio.CostLine">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CostLine</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;One billable line of an estimate (a narration beat or a dialogue beat).</span>
+<span class="w">    </span><span class="sd">"""One billable line of an estimate (a narration beat or a dialogue beat).</span>
 
 <span class="sd">    Named to echo ``falaw.CostLine`` (a line within a rollup) rather than</span>
 <span class="sd">    ``falaw.CostEstimate`` (which means a per-call price spec) — so the vocabulary</span>
 <span class="sd">    is consistent across the federation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">label</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># &#39;narration&#39; | &#39;dialogue&#39;</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># 'narration' | 'dialogue'</span>
     <span class="n">characters</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">usd</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
     <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span></div>
@@ -264,13 +265,13 @@
 <a class="viewcode-back" href="../../module_docs/braidio/cost.html#braidio.CostRollup">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CostRollup</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A production&#39;s estimated TTS spend, exact on characters, honest on dollars.</span>
+<span class="w">    </span><span class="sd">"""A production's estimated TTS spend, exact on characters, honest on dollars.</span>
 
 <span class="sd">    ``usd`` is the sum of the *priced* lines; ``unpriced`` is ``True`` when some</span>
 <span class="sd">    billable text had no configured rate (so ``usd`` is a lower bound). No billable</span>
 <span class="sd">    lines (e.g. an all-segment script) gives ``characters=0, usd=0.0,</span>
 <span class="sd">    unpriced=False``. Named ``CostRollup`` to match ``falaw.CostRollup``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">characters</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">usd</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
@@ -279,41 +280,41 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;One-line human summary (handy for a CLI/MCP preview).&quot;&quot;&quot;</span>
-        <span class="n">dollars</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">usd</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;$</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">usd</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">tail</span> <span class="o">=</span> <span class="s2">&quot; (+ unpriced parts)&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unpriced</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">characters</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> chars → </span><span class="si">{</span><span class="n">dollars</span><span class="si">}{</span><span class="n">tail</span><span class="si">}</span><span class="s2">&quot;</span></div>
+<span class="w">        </span><span class="sd">"""One-line human summary (handy for a CLI/MCP preview)."""</span>
+        <span class="n">dollars</span> <span class="o">=</span> <span class="s2">"unknown"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">usd</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"$</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">usd</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">tail</span> <span class="o">=</span> <span class="s2">" (+ unpriced parts)"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unpriced</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">characters</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> chars → </span><span class="si">{</span><span class="n">dollars</span><span class="si">}{</span><span class="n">tail</span><span class="si">}</span><span class="s2">"</span></div>
 
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_script_lines</span><span class="p">(</span><span class="n">script</span><span class="p">:</span> <span class="n">Script</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CostLine</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Billable lines of ``script``: narration + dialogue beats (segments are free).</span>
+<span class="w">    </span><span class="sd">"""Billable lines of ``script``: narration + dialogue beats (segments are free).</span>
 
 <span class="sd">    Estimates the *default* (personal) cut. Published-cut costing (rights-safe</span>
 <span class="sd">    rewrites + synthesized clip substitutes) must reuse :func:`braidio.plan_production`</span>
 <span class="sd">    rather than re-deriving the rights rules here — a follow-up.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CostLine</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">beat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">script</span><span class="o">.</span><span class="n">beats</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">beat</span><span class="p">,</span> <span class="n">Narration</span><span class="p">):</span>
             <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">CostLine</span><span class="p">(</span>
-                    <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;beat[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] narration&quot;</span><span class="p">,</span>
-                    <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;narration&quot;</span><span class="p">,</span>
+                    <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"beat[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] narration"</span><span class="p">,</span>
+                    <span class="n">kind</span><span class="o">=</span><span class="s2">"narration"</span><span class="p">,</span>
                     <span class="n">characters</span><span class="o">=</span><span class="n">billable_chars</span><span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">text</span><span class="p">),</span>
                     <span class="n">usd</span><span class="o">=</span><span class="n">tts_cost_usd</span><span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">DEFAULT_MODEL_ID</span><span class="p">),</span>
                     <span class="n">model_id</span><span class="o">=</span><span class="n">DEFAULT_MODEL_ID</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">beat</span><span class="p">,</span> <span class="n">Dialogue</span><span class="p">):</span>
-            <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">_role</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">beat</span><span class="o">.</span><span class="n">turns</span><span class="p">)</span>
-            <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;beat[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] dialogue&quot;</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">_role</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">beat</span><span class="o">.</span><span class="n">turns</span><span class="p">)</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"beat[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] dialogue"</span>
             <span class="k">if</span> <span class="n">beat</span><span class="o">.</span><span class="n">label</span><span class="p">:</span>
-                <span class="n">label</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="n">beat</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="n">label</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">" (</span><span class="si">{</span><span class="n">beat</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">)"</span>
             <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">CostLine</span><span class="p">(</span>
                     <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
-                    <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;dialogue&quot;</span><span class="p">,</span>
+                    <span class="n">kind</span><span class="o">=</span><span class="s2">"dialogue"</span><span class="p">,</span>
                     <span class="n">characters</span><span class="o">=</span><span class="n">billable_chars</span><span class="p">(</span><span class="n">text</span><span class="p">),</span>
                     <span class="n">usd</span><span class="o">=</span><span class="n">tts_cost_usd</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">DIALOGUE_MODEL_ID</span><span class="p">),</span>
                     <span class="n">model_id</span><span class="o">=</span><span class="n">DIALOGUE_MODEL_ID</span><span class="p">,</span>
@@ -328,23 +329,23 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">estimate_cost</span><span class="p">(</span>
     <span class="n">source</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Script</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CostRollup</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Estimate ElevenLabs spend for a :class:`braidio.Script` or a raw string.</span>
+<span class="w">    </span><span class="sd">"""Estimate ElevenLabs spend for a :class:`braidio.Script` or a raw string.</span>
 
 <span class="sd">    Free/local work (segment extraction, weaving) contributes nothing. The returned</span>
 <span class="sd">    :class:`CostRollup` reports exact characters and an honest dollar sum (a lower</span>
 <span class="sd">    bound when some text is unpriced; see :func:`usd_per_1k_chars`).</span>
 
 <span class="sd">    &gt;&gt;&gt; from braidio import Script, Narration, SegmentBeat</span>
-<span class="sd">    &gt;&gt;&gt; s = Script(title=&quot;x&quot;, id_slug=&quot;01&quot;, beats=[</span>
-<span class="sd">    ...     Narration(text=&quot;a&quot; * 500), SegmentBeat(reference=&quot;clip:1&quot;)])</span>
+<span class="sd">    &gt;&gt;&gt; s = Script(title="x", id_slug="01", beats=[</span>
+<span class="sd">    ...     Narration(text="a" * 500), SegmentBeat(reference="clip:1")])</span>
 <span class="sd">    &gt;&gt;&gt; estimate_cost(s).characters  # only the narration counts; the clip is free</span>
 <span class="sd">    500</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">CostLine</span><span class="p">(</span>
-                <span class="n">label</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
-                <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;narration&quot;</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">"text"</span><span class="p">,</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"narration"</span><span class="p">,</span>
                 <span class="n">characters</span><span class="o">=</span><span class="n">billable_chars</span><span class="p">(</span><span class="n">source</span><span class="p">),</span>
                 <span class="n">usd</span><span class="o">=</span><span class="n">tts_cost_usd</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span> <span class="ow">or</span> <span class="n">DEFAULT_MODEL_ID</span><span class="p">),</span>
                 <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span> <span class="ow">or</span> <span class="n">DEFAULT_MODEL_ID</span><span class="p">,</span>

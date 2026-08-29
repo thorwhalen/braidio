@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.compose &mdash; braidio 0.0.20 documentation</title>
+  <title>braidio.compose &mdash; braidio 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
@@ -114,7 +115,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for braidio.compose</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Config-driven narration composition (#20) — the reusable entrypoint.</span>
+<span></span><span class="sd">"""Config-driven narration composition (#20) — the reusable entrypoint.</span>
 
 <span class="sd">Turn a list of narration segments + a :class:`WeaveConfig` into audio. Dispatches</span>
 <span class="sd">single-voice and multi-voice uniformly (single = a pool of one), reading *every*</span>
@@ -123,7 +124,7 @@
 
 <span class="sd">Clip weaving (padded extraction + ducking) is composed separately (#21); this</span>
 <span class="sd">module renders the narration track.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -137,12 +138,12 @@
 <span class="c1"># fall back to the id itself.</span>
 <span class="n">_KNOWN_VOICES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Voice</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">POOL_MANY</span><span class="p">}</span>
 <span class="n">_KNOWN_VOICES</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
-    <span class="n">DEFAULT_VOICE_ID</span><span class="p">,</span> <span class="n">Voice</span><span class="p">(</span><span class="n">DEFAULT_VOICE_ID</span><span class="p">,</span> <span class="s2">&quot;George&quot;</span><span class="p">,</span> <span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="s2">&quot;British&quot;</span><span class="p">,</span> <span class="s2">&quot;storyteller&quot;</span><span class="p">)</span>
+    <span class="n">DEFAULT_VOICE_ID</span><span class="p">,</span> <span class="n">Voice</span><span class="p">(</span><span class="n">DEFAULT_VOICE_ID</span><span class="p">,</span> <span class="s2">"George"</span><span class="p">,</span> <span class="s2">"M"</span><span class="p">,</span> <span class="s2">"British"</span><span class="p">,</span> <span class="s2">"storyteller"</span><span class="p">)</span>
 <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_pool_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">WeaveConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Voice</span><span class="p">]:</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">_KNOWN_VOICES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">vid</span><span class="p">,</span> <span class="n">Voice</span><span class="p">(</span><span class="n">vid</span><span class="p">,</span> <span class="n">vid</span><span class="p">[:</span><span class="mi">6</span><span class="p">],</span> <span class="s2">&quot;?&quot;</span><span class="p">))</span> <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">voices</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_KNOWN_VOICES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">vid</span><span class="p">,</span> <span class="n">Voice</span><span class="p">(</span><span class="n">vid</span><span class="p">,</span> <span class="n">vid</span><span class="p">[:</span><span class="mi">6</span><span class="p">],</span> <span class="s2">"?"</span><span class="p">))</span> <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">voices</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="compose_narration">
@@ -153,9 +154,9 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
     <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">work_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;data/tts/compose&quot;</span><span class="p">,</span>
+    <span class="n">work_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">"data/tts/compose"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Voice</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render ``segments`` under ``config`` → ``out_path``.</span>
+<span class="w">    </span><span class="sd">"""Render ``segments`` under ``config`` → ``out_path``.</span>
 
 <span class="sd">    Single-voice and multi-voice go through the same turn-based path (a single</span>
 <span class="sd">    voice is just a one-voice pool). Returns the ``(voice, turn_text)``</span>
@@ -164,7 +165,7 @@
 <span class="sd">    ``api_key`` is an optional per-request ElevenLabs key threaded to</span>
 <span class="sd">    :func:`braidio.multivoice.render_multivoice` (and thence every synthesized</span>
 <span class="sd">    turn); ``None`` (default) keeps the ``$ELEVENLABS_API_KEY`` fallback.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="n">render_multivoice</span><span class="p">(</span>
         <span class="n">segments</span><span class="p">,</span>
         <span class="n">_pool_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>

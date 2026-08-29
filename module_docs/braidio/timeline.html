@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.timeline &mdash; braidio 0.0.20 documentation</title>
+  <title>braidio.timeline &mdash; braidio 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -58,6 +58,7 @@
 <li class="toctree-l1"><a class="reference internal" href="conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downloads.html">braidio.downloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="genre.html">braidio.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kinds.html">braidio.kinds</a></li>
@@ -138,9 +139,9 @@ queryable object: for each beat, its <strong>kind</strong>, <strong>source inter
 actual mix.</p>
 <p>Get one straight from the renderer:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">out</span><span class="p">,</span> <span class="n">tl</span> <span class="o">=</span> <span class="n">render_production</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">return_timeline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">tl</span><span class="o">.</span><span class="n">totals</span><span class="p">()</span>          <span class="c1"># {&quot;clip&quot;: 78.6, &quot;book-passage&quot;: 346.4, &quot;narration&quot;: 616.5}</span>
+<span class="n">tl</span><span class="o">.</span><span class="n">totals</span><span class="p">()</span>          <span class="c1"># {"clip": 78.6, "book-passage": 346.4, "narration": 616.5}</span>
 <span class="n">tl</span><span class="o">.</span><span class="n">shares</span><span class="p">()</span>          <span class="c1"># same, as fractions</span>
-<span class="nb">open</span><span class="p">(</span><span class="s2">&quot;anatomy.html&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tl</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span><span class="s2">&quot;Episode anatomy&quot;</span><span class="p">))</span>
+<span class="nb">open</span><span class="p">(</span><span class="s2">"anatomy.html"</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tl</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span><span class="s2">"Episode anatomy"</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>or build one from raw render data with <a class="reference internal" href="#braidio.timeline.build_timeline" title="braidio.timeline.build_timeline"><code class="xref py py-func docutils literal notranslate"><span class="pre">build_timeline()</span></code></a>. This is the

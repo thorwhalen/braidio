@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.weave &mdash; braidio 0.0.20 documentation</title>
+  <title>braidio.weave &mdash; braidio 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
@@ -114,7 +115,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for braidio.weave</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Weave narration + audio clips on a timeline (#21) — the reusable mix engine.</span>
+<span></span><span class="sd">"""Weave narration + audio clips on a timeline (#21) — the reusable mix engine.</span>
 
 <span class="sd">Two generic, Hamilton-agnostic primitives:</span>
 
@@ -132,7 +133,7 @@
 <span class="sd">``graph/align.py`` and the Hamilton adapters). Ducking here is achieved by</span>
 <span class="sd">fade-shaped overlap; a dynamic sidechain duck (``duck_db``) is a documented</span>
 <span class="sd">refinement (see #21 / the research).</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -144,19 +145,19 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_require_ffmpeg</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;ffprobe&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;ffmpeg/ffprobe not found on PATH (brew install ffmpeg).&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"ffmpeg"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"ffprobe"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"ffmpeg/ffprobe not found on PATH (brew install ffmpeg)."</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">duration_s</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
     <span class="n">_require_ffmpeg</span><span class="p">()</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-        <span class="p">[</span><span class="s2">&quot;ffprobe&quot;</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">,</span> <span class="s2">&quot;quiet&quot;</span><span class="p">,</span> <span class="s2">&quot;-print_format&quot;</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="s2">&quot;-show_format&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)],</span>
+        <span class="p">[</span><span class="s2">"ffprobe"</span><span class="p">,</span> <span class="s2">"-v"</span><span class="p">,</span> <span class="s2">"quiet"</span><span class="p">,</span> <span class="s2">"-print_format"</span><span class="p">,</span> <span class="s2">"json"</span><span class="p">,</span> <span class="s2">"-show_format"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)],</span>
         <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">stdout</span><span class="p">)[</span><span class="s2">&quot;format&quot;</span><span class="p">][</span><span class="s2">&quot;duration&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">stdout</span><span class="p">)[</span><span class="s2">"format"</span><span class="p">][</span><span class="s2">"duration"</span><span class="p">])</span>
 
 
 <div class="viewcode-block" id="extract_padded">
@@ -173,7 +174,7 @@
     <span class="n">fade_out_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
     <span class="n">min_len_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.2</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract ``[start_s-pre_roll, end_s+post_roll]`` with in/out fades.</span>
+<span class="w">    </span><span class="sd">"""Extract ``[start_s-pre_roll, end_s+post_roll]`` with in/out fades.</span>
 
 <span class="sd">    The target words sit in the middle; the padded, faded head/tail are the</span>
 <span class="sd">    parts that overlap (tuck under) neighbouring narration in the weave.</span>
@@ -184,7 +185,7 @@
 <span class="sd">      fade somewhere to breathe;</span>
 <span class="sd">    - the fades are **adaptive** — capped to a fraction of the clip so they never</span>
 <span class="sd">      swallow it (a 1.5 s clip gets ~0.3 s fades, not 0.5 s + 0.8 s).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">_require_ffmpeg</span><span class="p">()</span>
     <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">start_s</span> <span class="o">-</span> <span class="n">pre_roll_s</span><span class="p">)</span>
     <span class="n">end</span> <span class="o">=</span> <span class="n">end_s</span> <span class="o">+</span> <span class="n">post_roll_s</span>
@@ -200,16 +201,16 @@
     <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
         <span class="p">[</span>
-            <span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-y&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-ss&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">start</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+            <span class="s2">"ffmpeg"</span><span class="p">,</span>
+            <span class="s2">"-y"</span><span class="p">,</span>
+            <span class="s2">"-ss"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">start</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="s2">"-i"</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">asset_path</span><span class="p">),</span>
-            <span class="s2">&quot;-t&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dur</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-af&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;afade=t=in:st=0:d=</span><span class="si">{</span><span class="n">fi</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">,afade=t=out:st=</span><span class="si">{</span><span class="n">fo_start</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">:d=</span><span class="si">{</span><span class="n">fo</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">"-t"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dur</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="s2">"-af"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"afade=t=in:st=0:d=</span><span class="si">{</span><span class="n">fi</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">,afade=t=out:st=</span><span class="si">{</span><span class="n">fo_start</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">:d=</span><span class="si">{</span><span class="n">fo</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
         <span class="p">],</span>
         <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -223,19 +224,19 @@
 <a class="viewcode-back" href="../../module_docs/braidio/weave.html#braidio.TimelineItem">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TimelineItem</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;One part on the weave timeline.</span>
+<span class="w">    </span><span class="sd">"""One part on the weave timeline.</span>
 
-<span class="sd">    ``placement`` ``&quot;sequential&quot;`` (default — narration, and clean ``before`` /</span>
-<span class="sd">    ``after`` clips) lays the part in its own slot. ``&quot;under&quot;`` overlays the part</span>
+<span class="sd">    ``placement`` ``"sequential"`` (default — narration, and clean ``before`` /</span>
+<span class="sd">    ``after`` clips) lays the part in its own slot. ``"under"`` overlays the part</span>
 <span class="sd">    beneath the *following* sequential part (it does not consume its own slot),</span>
 <span class="sd">    attenuated by ``duck_db`` — a ducked underlay (a clip talked over, or later a</span>
 <span class="sd">    music bed).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># &quot;narration&quot; | &quot;clip&quot;</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># "narration" | "clip"</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">placement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sequential&quot;</span>  <span class="c1"># &quot;sequential&quot; | &quot;under&quot;</span>
-    <span class="n">duck_db</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># attenuation applied when placement == &quot;under&quot; (e.g. -15)</span></div>
+    <span class="n">placement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"sequential"</span>  <span class="c1"># "sequential" | "under"</span>
+    <span class="n">duck_db</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># attenuation applied when placement == "under" (e.g. -15)</span></div>
 
 
 
@@ -249,27 +250,27 @@
     <span class="n">clip_edge_overlap_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">narration_crossfade_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Start offset (s) of each part, placement-aware. Pure function.</span>
+<span class="w">    </span><span class="sd">"""Start offset (s) of each part, placement-aware. Pure function.</span>
 
 <span class="sd">    Sequential parts advance a running cursor: a clip (or a part following a clip)</span>
 <span class="sd">    starts ``clip_edge_overlap_s`` before the cursor so its faded edges tuck under</span>
 <span class="sd">    the neighbour; narration-after-narration overlaps by ``narration_crossfade_s``.</span>
-<span class="sd">    An ``&quot;under&quot;`` part starts *at* the cursor (concurrent with the next</span>
+<span class="sd">    An ``"under"`` part starts *at* the cursor (concurrent with the next</span>
 <span class="sd">    sequential part) and does **not** advance it — so it overlays what follows.</span>
 <span class="sd">    Clamped ≥ 0.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">starts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">kinds</span><span class="p">)</span>
     <span class="n">cursor</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="n">prev_seq_kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">kind</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">kinds</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">placements</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;under&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">placements</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"under"</span><span class="p">:</span>
             <span class="n">starts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">cursor</span>  <span class="c1"># overlay the following sequential part; cursor unchanged</span>
             <span class="p">)</span>
             <span class="k">continue</span>
         <span class="k">if</span> <span class="n">prev_seq_kind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">start</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;clip&quot;</span> <span class="ow">or</span> <span class="n">prev_seq_kind</span> <span class="o">==</span> <span class="s2">&quot;clip&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"clip"</span> <span class="ow">or</span> <span class="n">prev_seq_kind</span> <span class="o">==</span> <span class="s2">"clip"</span><span class="p">:</span>
             <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">cursor</span> <span class="o">-</span> <span class="n">clip_edge_overlap_s</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">cursor</span> <span class="o">-</span> <span class="n">narration_crossfade_s</span><span class="p">)</span>
@@ -289,12 +290,12 @@
     <span class="n">clip_edge_overlap_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">narration_crossfade_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Start offset (s) of each part (all sequential). Thin wrapper over</span>
-<span class="sd">    :func:`layout_placed` — kept for callers that don&#39;t use placement.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Start offset (s) of each part (all sequential). Thin wrapper over</span>
+<span class="sd">    :func:`layout_placed` — kept for callers that don't use placement."""</span>
     <span class="k">return</span> <span class="n">layout_placed</span><span class="p">(</span>
         <span class="n">kinds</span><span class="p">,</span>
         <span class="n">durs</span><span class="p">,</span>
-        <span class="p">[</span><span class="s2">&quot;sequential&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">kinds</span><span class="p">),</span>
+        <span class="p">[</span><span class="s2">"sequential"</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">kinds</span><span class="p">),</span>
         <span class="n">clip_edge_overlap_s</span><span class="o">=</span><span class="n">clip_edge_overlap_s</span><span class="p">,</span>
         <span class="n">narration_crossfade_s</span><span class="o">=</span><span class="n">narration_crossfade_s</span><span class="p">,</span>
     <span class="p">)</span></div>
@@ -314,18 +315,18 @@
     <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">44100</span><span class="p">,</span>
     <span class="n">bed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># optional braidio.music.MusicBed — instrumental underscore under all</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Place items on a timeline and mix. Clips overlap neighbours by</span>
+<span class="w">    </span><span class="sd">"""Place items on a timeline and mix. Clips overlap neighbours by</span>
 <span class="sd">    ``clip_edge_overlap_s`` (their faded edges tuck under narration); narration</span>
 <span class="sd">    parts butt-join with a small crossfade. Returns ``out_path``.</span>
 
 <span class="sd">    ``bed`` (a :class:`~braidio.music.MusicBed`) lays an instrumental underscore</span>
-<span class="sd">    under the whole production: it&#39;s rendered to cover the timeline, attenuated,</span>
+<span class="sd">    under the whole production: it's rendered to cover the timeline, attenuated,</span>
 <span class="sd">    and mixed in posted by ``bed.lead_in_s``. Falls back to a plain concat feel</span>
-<span class="sd">    when ``clip_edge_overlap_s == 0`` and there&#39;s nothing to overlay.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    when ``clip_edge_overlap_s == 0`` and there's nothing to overlay.</span>
+<span class="sd">    """</span>
     <span class="n">_require_ffmpeg</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">items</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;weave_timeline needs at least one item&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"weave_timeline needs at least one item"</span><span class="p">)</span>
 
     <span class="n">durs</span> <span class="o">=</span> <span class="p">[</span><span class="n">duration_s</span><span class="p">(</span><span class="n">it</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">items</span><span class="p">]</span>
     <span class="n">starts</span> <span class="o">=</span> <span class="n">layout_placed</span><span class="p">(</span>
@@ -341,21 +342,21 @@
     <span class="c1"># Build one amix graph: (duck →) delay each input to its start, then sum.</span>
     <span class="n">inputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
-        <span class="n">inputs</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;-i&quot;</span><span class="p">,</span> <span class="n">it</span><span class="o">.</span><span class="n">path</span><span class="p">]</span>
+        <span class="n">inputs</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"-i"</span><span class="p">,</span> <span class="n">it</span><span class="o">.</span><span class="n">path</span><span class="p">]</span>
     <span class="n">filters</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">it</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">starts</span><span class="p">,</span> <span class="n">items</span><span class="p">)):</span>
         <span class="n">delay_ms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">start</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">))</span>
-        <span class="n">lbl</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;a</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">lbl</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"a</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span>
         <span class="c1"># normalize every input to stereo @ sample_rate so amix keeps stereo</span>
         <span class="c1"># (narration is mono, song clips are stereo) — else it collapses to mono.</span>
-        <span class="n">chain</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">:a]aformat=sample_rates=</span><span class="si">{</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">:channel_layouts=stereo&quot;</span>
+        <span class="n">chain</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">:a]aformat=sample_rates=</span><span class="si">{</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">:channel_layouts=stereo"</span>
         <span class="c1"># ducked underlay: attenuate before delaying so it sits beneath the talk.</span>
-        <span class="k">if</span> <span class="n">it</span><span class="o">.</span><span class="n">placement</span> <span class="o">==</span> <span class="s2">&quot;under&quot;</span> <span class="ow">and</span> <span class="n">it</span><span class="o">.</span><span class="n">duck_db</span><span class="p">:</span>
-            <span class="n">chain</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;,volume=</span><span class="si">{</span><span class="n">it</span><span class="o">.</span><span class="n">duck_db</span><span class="si">}</span><span class="s2">dB&quot;</span>
-        <span class="n">chain</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;,adelay=</span><span class="si">{</span><span class="n">delay_ms</span><span class="si">}</span><span class="s2">:all=1[</span><span class="si">{</span><span class="n">lbl</span><span class="si">}</span><span class="s2">]&quot;</span>
+        <span class="k">if</span> <span class="n">it</span><span class="o">.</span><span class="n">placement</span> <span class="o">==</span> <span class="s2">"under"</span> <span class="ow">and</span> <span class="n">it</span><span class="o">.</span><span class="n">duck_db</span><span class="p">:</span>
+            <span class="n">chain</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">",volume=</span><span class="si">{</span><span class="n">it</span><span class="o">.</span><span class="n">duck_db</span><span class="si">}</span><span class="s2">dB"</span>
+        <span class="n">chain</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">",adelay=</span><span class="si">{</span><span class="n">delay_ms</span><span class="si">}</span><span class="s2">:all=1[</span><span class="si">{</span><span class="n">lbl</span><span class="si">}</span><span class="s2">]"</span>
         <span class="n">filters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
-        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">lbl</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">lbl</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
 
     <span class="c1"># Optional music bed: prepare it to cover the timeline, then mix it in posted.</span>
     <span class="k">if</span> <span class="n">bed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -363,39 +364,39 @@
 
         <span class="n">total_s</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="n">d</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">starts</span><span class="p">,</span> <span class="n">durs</span><span class="p">))</span>
         <span class="n">bed_path</span> <span class="o">=</span> <span class="n">prepare_bed</span><span class="p">(</span>
-            <span class="n">bed</span><span class="p">,</span> <span class="n">total_s</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;_bed_</span><span class="si">{</span><span class="n">out</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">.mp3&quot;</span><span class="p">,</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">sample_rate</span>
+            <span class="n">bed</span><span class="p">,</span> <span class="n">total_s</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"_bed_</span><span class="si">{</span><span class="n">out</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">.mp3"</span><span class="p">,</span> <span class="n">sample_rate</span><span class="o">=</span><span class="n">sample_rate</span>
         <span class="p">)</span>
         <span class="n">idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
-        <span class="n">inputs</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;-i&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">bed_path</span><span class="p">)]</span>
+        <span class="n">inputs</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"-i"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">bed_path</span><span class="p">)]</span>
         <span class="n">lead_ms</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">bed</span><span class="o">.</span><span class="n">lead_in_s</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">))</span>
         <span class="n">filters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">:a]aformat=sample_rates=</span><span class="si">{</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">:channel_layouts=stereo,&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;adelay=</span><span class="si">{</span><span class="n">lead_ms</span><span class="si">}</span><span class="s2">:all=1[bed]&quot;</span>
+            <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">:a]aformat=sample_rates=</span><span class="si">{</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">:channel_layouts=stereo,"</span>
+            <span class="sa">f</span><span class="s2">"adelay=</span><span class="si">{</span><span class="n">lead_ms</span><span class="si">}</span><span class="s2">:all=1[bed]"</span>
         <span class="p">)</span>
-        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;[bed]&quot;</span><span class="p">)</span>
+        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"[bed]"</span><span class="p">)</span>
 
     <span class="n">n_inputs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
     <span class="n">mix</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;amix=inputs=</span><span class="si">{</span><span class="n">n_inputs</span><span class="si">}</span><span class="s2">:normalize=0:dropout_transition=0[m]&quot;</span>
+        <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">"amix=inputs=</span><span class="si">{</span><span class="n">n_inputs</span><span class="si">}</span><span class="s2">:normalize=0:dropout_transition=0[m]"</span>
     <span class="p">)</span>
-    <span class="n">norm</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[m]loudnorm=I=</span><span class="si">{</span><span class="n">target_lufs</span><span class="si">}</span><span class="s2">:TP=</span><span class="si">{</span><span class="n">true_peak</span><span class="si">}</span><span class="s2">:LRA=11[out]&quot;</span>
-    <span class="n">filtergraph</span> <span class="o">=</span> <span class="s2">&quot;;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span> <span class="o">+</span> <span class="p">[</span><span class="n">mix</span><span class="p">,</span> <span class="n">norm</span><span class="p">])</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"[m]loudnorm=I=</span><span class="si">{</span><span class="n">target_lufs</span><span class="si">}</span><span class="s2">:TP=</span><span class="si">{</span><span class="n">true_peak</span><span class="si">}</span><span class="s2">:LRA=11[out]"</span>
+    <span class="n">filtergraph</span> <span class="o">=</span> <span class="s2">";"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filters</span> <span class="o">+</span> <span class="p">[</span><span class="n">mix</span><span class="p">,</span> <span class="n">norm</span><span class="p">])</span>
 
     <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
         <span class="p">[</span>
-            <span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-y&quot;</span><span class="p">,</span>
+            <span class="s2">"ffmpeg"</span><span class="p">,</span>
+            <span class="s2">"-y"</span><span class="p">,</span>
             <span class="o">*</span><span class="n">inputs</span><span class="p">,</span>
-            <span class="s2">&quot;-filter_complex&quot;</span><span class="p">,</span>
+            <span class="s2">"-filter_complex"</span><span class="p">,</span>
             <span class="n">filtergraph</span><span class="p">,</span>
-            <span class="s2">&quot;-map&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;[out]&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-ar&quot;</span><span class="p">,</span>
+            <span class="s2">"-map"</span><span class="p">,</span>
+            <span class="s2">"[out]"</span><span class="p">,</span>
+            <span class="s2">"-ar"</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">sample_rate</span><span class="p">),</span>
-            <span class="s2">&quot;-ac&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;2&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-b:a&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;192k&quot;</span><span class="p">,</span>
+            <span class="s2">"-ac"</span><span class="p">,</span>
+            <span class="s2">"2"</span><span class="p">,</span>
+            <span class="s2">"-b:a"</span><span class="p">,</span>
+            <span class="s2">"192k"</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
         <span class="p">],</span>
         <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>

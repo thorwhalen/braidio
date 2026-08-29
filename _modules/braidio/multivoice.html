@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.multivoice &mdash; braidio 0.0.20 documentation</title>
+  <title>braidio.multivoice &mdash; braidio 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
@@ -114,21 +115,21 @@
            <div itemprop="articleBody">
              
   <h1>Source code for braidio.multivoice</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Multi-voice narration: cycle a pool of voices across segments (issue #10).</span>
+<span></span><span class="sd">"""Multi-voice narration: cycle a pool of voices across segments (issue #10).</span>
 
 <span class="sd">When one voice reads flat, variety across voices is a stronger lever than any</span>
 <span class="sd">single-voice setting. This renders narration by splitting it into segments</span>
 <span class="sd">(sentences) and assigning each a voice drawn from a pool — randomly (seeded, so</span>
-<span class="sd">it&#39;s reproducible) and avoiding immediate repeats so it doesn&#39;t feel like a</span>
+<span class="sd">it's reproducible) and avoiding immediate repeats so it doesn't feel like a</span>
 <span class="sd">rigid round-robin. Speed is jittered slightly per segment, even within one</span>
 <span class="sd">speaker, to break regularity.</span>
 
 <span class="sd">Two curated pools of **premade** ElevenLabs voices (all production quality,</span>
-<span class="sd">deliberately less familiar than &quot;George&quot;, 2M/2F in :data:`POOL_4`, wider in</span>
-<span class="sd">:data:`POOL_MANY`). For a truly large &quot;many people / interviews&quot; pool, the</span>
+<span class="sd">deliberately less familiar than "George", 2M/2F in :data:`POOL_4`, wider in</span>
+<span class="sd">:data:`POOL_MANY`). For a truly large "many people / interviews" pool, the</span>
 <span class="sd">shared Voice Library (thousands) can be tapped, but quality varies there, so</span>
 <span class="sd">those need curation — the premade pools below are the safe default.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -143,65 +144,65 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="n">narrate</span>
 
-<span class="n">_MARKUP_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;&lt;[^&gt;]*&gt;|\[[^\]]*\]&quot;</span><span class="p">)</span>
-<span class="n">_SENT_SPLIT</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?&lt;=[.?!])\s+(?=[</span><span class="se">\&quot;</span><span class="s2">“&#39;]?[A-Z])&quot;</span><span class="p">)</span>
+<span class="n">_MARKUP_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"&lt;[^&gt;]*&gt;|\[[^\]]*\]"</span><span class="p">)</span>
+<span class="n">_SENT_SPLIT</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?&lt;=[.?!])\s+(?=[</span><span class="se">\"</span><span class="s2">“']?[A-Z])"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Voice">
 <a class="viewcode-back" href="../../module_docs/braidio/multivoice.html#braidio.Voice">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Voice</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A pooled narration voice.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A pooled narration voice."""</span>
 
     <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">gender</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># &quot;M&quot; | &quot;F&quot;</span>
-    <span class="n">accent</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
+    <span class="n">gender</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># "M" | "F"</span>
+    <span class="n">accent</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span></div>
 
 
 
-<span class="c1"># 2M / 2F, mixed accents/registers, all less familiar than &quot;George&quot;.</span>
+<span class="c1"># 2M / 2F, mixed accents/registers, all less familiar than "George".</span>
 <span class="n">POOL_4</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Voice</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">Voice</span><span class="p">(</span><span class="s2">&quot;EXAVITQu4vr4xnSDxMaL&quot;</span><span class="p">,</span> <span class="s2">&quot;Sarah&quot;</span><span class="p">,</span> <span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="s2">&quot;American&quot;</span><span class="p">,</span> <span class="s2">&quot;mature, reassuring&quot;</span><span class="p">),</span>
-    <span class="n">Voice</span><span class="p">(</span><span class="s2">&quot;Xb7hH8MSUJpSbSDYk0k2&quot;</span><span class="p">,</span> <span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="s2">&quot;British&quot;</span><span class="p">,</span> <span class="s2">&quot;clear, engaging&quot;</span><span class="p">),</span>
-    <span class="n">Voice</span><span class="p">(</span><span class="s2">&quot;IKne3meq5aSn9XLyUdCD&quot;</span><span class="p">,</span> <span class="s2">&quot;Charlie&quot;</span><span class="p">,</span> <span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="s2">&quot;Australian&quot;</span><span class="p">,</span> <span class="s2">&quot;deep, energetic&quot;</span><span class="p">),</span>
-    <span class="n">Voice</span><span class="p">(</span><span class="s2">&quot;cjVigY5qzO86Huf0OWal&quot;</span><span class="p">,</span> <span class="s2">&quot;Eric&quot;</span><span class="p">,</span> <span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="s2">&quot;American&quot;</span><span class="p">,</span> <span class="s2">&quot;smooth, trustworthy&quot;</span><span class="p">),</span>
+    <span class="n">Voice</span><span class="p">(</span><span class="s2">"EXAVITQu4vr4xnSDxMaL"</span><span class="p">,</span> <span class="s2">"Sarah"</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">,</span> <span class="s2">"American"</span><span class="p">,</span> <span class="s2">"mature, reassuring"</span><span class="p">),</span>
+    <span class="n">Voice</span><span class="p">(</span><span class="s2">"Xb7hH8MSUJpSbSDYk0k2"</span><span class="p">,</span> <span class="s2">"Alice"</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">,</span> <span class="s2">"British"</span><span class="p">,</span> <span class="s2">"clear, engaging"</span><span class="p">),</span>
+    <span class="n">Voice</span><span class="p">(</span><span class="s2">"IKne3meq5aSn9XLyUdCD"</span><span class="p">,</span> <span class="s2">"Charlie"</span><span class="p">,</span> <span class="s2">"M"</span><span class="p">,</span> <span class="s2">"Australian"</span><span class="p">,</span> <span class="s2">"deep, energetic"</span><span class="p">),</span>
+    <span class="n">Voice</span><span class="p">(</span><span class="s2">"cjVigY5qzO86Huf0OWal"</span><span class="p">,</span> <span class="s2">"Eric"</span><span class="p">,</span> <span class="s2">"M"</span><span class="p">,</span> <span class="s2">"American"</span><span class="p">,</span> <span class="s2">"smooth, trustworthy"</span><span class="p">),</span>
 <span class="p">]</span>
 
-<span class="c1"># Wider pool for a &quot;lots of different people / interviews&quot; feel (5M / 5F).</span>
+<span class="c1"># Wider pool for a "lots of different people / interviews" feel (5M / 5F).</span>
 <span class="n">POOL_MANY</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Voice</span><span class="p">]</span> <span class="o">=</span> <span class="n">POOL_4</span> <span class="o">+</span> <span class="p">[</span>
-    <span class="n">Voice</span><span class="p">(</span><span class="s2">&quot;cgSgspJ2msm6clMCkdW9&quot;</span><span class="p">,</span> <span class="s2">&quot;Jessica&quot;</span><span class="p">,</span> <span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="s2">&quot;American&quot;</span><span class="p">,</span> <span class="s2">&quot;playful, bright&quot;</span><span class="p">),</span>
-    <span class="n">Voice</span><span class="p">(</span><span class="s2">&quot;XrExE9yKIg1WjnnlVkGX&quot;</span><span class="p">,</span> <span class="s2">&quot;Matilda&quot;</span><span class="p">,</span> <span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="s2">&quot;American&quot;</span><span class="p">,</span> <span class="s2">&quot;professional&quot;</span><span class="p">),</span>
-    <span class="n">Voice</span><span class="p">(</span><span class="s2">&quot;pFZP5JQG7iQjIQuC4Bku&quot;</span><span class="p">,</span> <span class="s2">&quot;Lily&quot;</span><span class="p">,</span> <span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="s2">&quot;British&quot;</span><span class="p">,</span> <span class="s2">&quot;velvety&quot;</span><span class="p">),</span>
-    <span class="n">Voice</span><span class="p">(</span><span class="s2">&quot;N2lVS1w4EtoT3dr4eOWO&quot;</span><span class="p">,</span> <span class="s2">&quot;Callum&quot;</span><span class="p">,</span> <span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="s2">&quot;American&quot;</span><span class="p">,</span> <span class="s2">&quot;husky&quot;</span><span class="p">),</span>
-    <span class="n">Voice</span><span class="p">(</span><span class="s2">&quot;bIHbv24MWmeRgasZH58o&quot;</span><span class="p">,</span> <span class="s2">&quot;Will&quot;</span><span class="p">,</span> <span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="s2">&quot;American&quot;</span><span class="p">,</span> <span class="s2">&quot;relaxed&quot;</span><span class="p">),</span>
-    <span class="n">Voice</span><span class="p">(</span><span class="s2">&quot;pqHfZKP75CvOlQylNhV4&quot;</span><span class="p">,</span> <span class="s2">&quot;Bill&quot;</span><span class="p">,</span> <span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="s2">&quot;American&quot;</span><span class="p">,</span> <span class="s2">&quot;wise, mature&quot;</span><span class="p">),</span>
+    <span class="n">Voice</span><span class="p">(</span><span class="s2">"cgSgspJ2msm6clMCkdW9"</span><span class="p">,</span> <span class="s2">"Jessica"</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">,</span> <span class="s2">"American"</span><span class="p">,</span> <span class="s2">"playful, bright"</span><span class="p">),</span>
+    <span class="n">Voice</span><span class="p">(</span><span class="s2">"XrExE9yKIg1WjnnlVkGX"</span><span class="p">,</span> <span class="s2">"Matilda"</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">,</span> <span class="s2">"American"</span><span class="p">,</span> <span class="s2">"professional"</span><span class="p">),</span>
+    <span class="n">Voice</span><span class="p">(</span><span class="s2">"pFZP5JQG7iQjIQuC4Bku"</span><span class="p">,</span> <span class="s2">"Lily"</span><span class="p">,</span> <span class="s2">"F"</span><span class="p">,</span> <span class="s2">"British"</span><span class="p">,</span> <span class="s2">"velvety"</span><span class="p">),</span>
+    <span class="n">Voice</span><span class="p">(</span><span class="s2">"N2lVS1w4EtoT3dr4eOWO"</span><span class="p">,</span> <span class="s2">"Callum"</span><span class="p">,</span> <span class="s2">"M"</span><span class="p">,</span> <span class="s2">"American"</span><span class="p">,</span> <span class="s2">"husky"</span><span class="p">),</span>
+    <span class="n">Voice</span><span class="p">(</span><span class="s2">"bIHbv24MWmeRgasZH58o"</span><span class="p">,</span> <span class="s2">"Will"</span><span class="p">,</span> <span class="s2">"M"</span><span class="p">,</span> <span class="s2">"American"</span><span class="p">,</span> <span class="s2">"relaxed"</span><span class="p">),</span>
+    <span class="n">Voice</span><span class="p">(</span><span class="s2">"pqHfZKP75CvOlQylNhV4"</span><span class="p">,</span> <span class="s2">"Bill"</span><span class="p">,</span> <span class="s2">"M"</span><span class="p">,</span> <span class="s2">"American"</span><span class="p">,</span> <span class="s2">"wise, mature"</span><span class="p">),</span>
 <span class="p">]</span>
 
-<span class="n">POOLS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Voice</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;four&quot;</span><span class="p">:</span> <span class="n">POOL_4</span><span class="p">,</span> <span class="s2">&quot;many&quot;</span><span class="p">:</span> <span class="n">POOL_MANY</span><span class="p">}</span>
+<span class="n">POOLS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Voice</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"four"</span><span class="p">:</span> <span class="n">POOL_4</span><span class="p">,</span> <span class="s2">"many"</span><span class="p">:</span> <span class="n">POOL_MANY</span><span class="p">}</span>
 
 <span class="n">_BASE_SETTINGS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;stability&quot;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span>
-    <span class="s2">&quot;similarity_boost&quot;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
-    <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
-    <span class="s2">&quot;use_speaker_boost&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span>
+    <span class="s2">"similarity_boost"</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
+    <span class="s2">"style"</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
+    <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">strip_markup</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">_MARKUP_RE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_MARKUP_RE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="split_segments">
 <a class="viewcode-back" href="../../module_docs/braidio/multivoice.html#braidio.split_segments">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">split_segments</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split narration into sentence-level segments (markup removed).</span>
+<span class="w">    </span><span class="sd">"""Split narration into sentence-level segments (markup removed).</span>
 
 <span class="sd">    Splits on sentence-final ``.?!`` (not the ``…`` used for in-thought pacing),</span>
 <span class="sd">    so connected clauses stay with one speaker.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">clean</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">strip_markup</span><span class="p">(</span><span class="n">text</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<span class="sd">    """</span>
+    <span class="n">clean</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\s+"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">,</span> <span class="n">strip_markup</span><span class="p">(</span><span class="n">text</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">_SENT_SPLIT</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">clean</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span></div>
 
 
@@ -211,8 +212,8 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">assign_voices</span><span class="p">(</span>
     <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pool</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Voice</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">avoid_repeats</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Voice</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Assign a voice to each of ``n`` turns — random, seeded, no immediate</span>
-<span class="sd">    repeats (so it isn&#39;t a rigid round-robin).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Assign a voice to each of ``n`` turns — random, seeded, no immediate</span>
+<span class="sd">    repeats (so it isn't a rigid round-robin)."""</span>
     <span class="n">rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
     <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Voice</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">prev</span><span class="p">:</span> <span class="n">Voice</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -230,21 +231,21 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">group_turns</span><span class="p">(</span>
     <span class="n">segments</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">min_turn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">max_turn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Group consecutive segments into *turns* of ``min_turn..max_turn`` segments.</span>
+<span class="w">    </span><span class="sd">"""Group consecutive segments into *turns* of ``min_turn..max_turn`` segments.</span>
 
 <span class="sd">    A turn is what one voice speaks before the next takes over. Bigger turns =</span>
-<span class="sd">    each speaker talks longer (fewer switches). Each turn&#39;s segments are joined</span>
+<span class="sd">    each speaker talks longer (fewer switches). Each turn's segments are joined</span>
 <span class="sd">    into one utterance so prosody is continuous within a speaker. Turn sizes are</span>
 <span class="sd">    seeded-random within the range.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="n">min_turn</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">max_turn</span> <span class="o">&lt;</span> <span class="n">min_turn</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;require 1 &lt;= min_turn &lt;= max_turn&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"require 1 &lt;= min_turn &lt;= max_turn"</span><span class="p">)</span>
     <span class="n">rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span> <span class="o">*</span> <span class="mi">17</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span>
     <span class="n">turns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">):</span>
         <span class="n">k</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">min_turn</span><span class="p">,</span> <span class="n">max_turn</span><span class="p">)</span>
-        <span class="n">turns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">segments</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">k</span><span class="p">]))</span>
+        <span class="n">turns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">segments</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">k</span><span class="p">]))</span>
         <span class="n">i</span> <span class="o">+=</span> <span class="n">k</span>
     <span class="k">return</span> <span class="n">turns</span></div>
 
@@ -253,19 +254,19 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_loudnorm</span><span class="p">(</span>
     <span class="n">src</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">target_lufs</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">16.0</span><span class="p">,</span> <span class="n">true_peak</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.5</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;ffmpeg&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;ffmpeg not found on PATH.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"ffmpeg"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"ffmpeg not found on PATH."</span><span class="p">)</span>
     <span class="n">dst</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
         <span class="p">[</span>
-            <span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-y&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+            <span class="s2">"ffmpeg"</span><span class="p">,</span>
+            <span class="s2">"-y"</span><span class="p">,</span>
+            <span class="s2">"-i"</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
-            <span class="s2">&quot;-af&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;loudnorm=I=</span><span class="si">{</span><span class="n">target_lufs</span><span class="si">}</span><span class="s2">:TP=</span><span class="si">{</span><span class="n">true_peak</span><span class="si">}</span><span class="s2">:LRA=11&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-ar&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;44100&quot;</span><span class="p">,</span>
+            <span class="s2">"-af"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"loudnorm=I=</span><span class="si">{</span><span class="n">target_lufs</span><span class="si">}</span><span class="s2">:TP=</span><span class="si">{</span><span class="n">true_peak</span><span class="si">}</span><span class="s2">:LRA=11"</span><span class="p">,</span>
+            <span class="s2">"-ar"</span><span class="p">,</span>
+            <span class="s2">"44100"</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">dst</span><span class="p">),</span>
         <span class="p">],</span>
         <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -282,12 +283,12 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
     <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">work_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;data/tts/multivoice&quot;</span><span class="p">,</span>
+    <span class="n">work_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">"data/tts/multivoice"</span><span class="p">,</span>
     <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
     <span class="n">min_turn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
     <span class="n">max_turn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
     <span class="n">avoid_immediate_repeat</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;eleven_multilingual_v2&quot;</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"eleven_multilingual_v2"</span><span class="p">,</span>
     <span class="n">base_settings</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">speed_base</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="n">speed_jitter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.04</span><span class="p">,</span>
@@ -295,7 +296,7 @@
     <span class="n">gap_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="n">target_lufs</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">16.0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Voice</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render ``segments`` cycling ``pool`` → ``out_path``.</span>
+<span class="w">    </span><span class="sd">"""Render ``segments`` cycling ``pool`` → ``out_path``.</span>
 
 <span class="sd">    Segments are first grouped into *turns* of ``min_turn..max_turn`` segments</span>
 <span class="sd">    (bigger = each voice talks longer). One voice per turn, no immediate repeat,</span>
@@ -308,7 +309,7 @@
 
 <span class="sd">    NOTE: overlapping/interrupting speakers and clip ducking are separate,</span>
 <span class="sd">    upcoming parameters (tracked as issues) — this renders turns sequentially.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">base_settings</span> <span class="k">if</span> <span class="n">base_settings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_BASE_SETTINGS</span><span class="p">)</span>
     <span class="n">turns</span> <span class="o">=</span> <span class="n">group_turns</span><span class="p">(</span><span class="n">segments</span><span class="p">,</span> <span class="n">min_turn</span><span class="o">=</span><span class="n">min_turn</span><span class="p">,</span> <span class="n">max_turn</span><span class="o">=</span><span class="n">max_turn</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
     <span class="n">rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span> <span class="o">*</span> <span class="mi">31</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
@@ -322,13 +323,13 @@
         <span class="n">speed</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">speed_base</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">speed_jitter</span><span class="p">,</span> <span class="n">speed_jitter</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
         <span class="n">raw</span> <span class="o">=</span> <span class="n">narrate</span><span class="p">(</span>
             <span class="n">turn</span><span class="p">,</span>
-            <span class="n">work</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;turn</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.mp3&quot;</span><span class="p">,</span>
+            <span class="n">work</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"turn</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.mp3"</span><span class="p">,</span>
             <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
             <span class="n">voice_id</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
             <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
-            <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">settings</span><span class="p">,</span> <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="n">speed</span><span class="p">},</span>
+            <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">settings</span><span class="p">,</span> <span class="s2">"speed"</span><span class="p">:</span> <span class="n">speed</span><span class="p">},</span>
         <span class="p">)</span>
-        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_loudnorm</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">work</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;norm</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">.mp3&quot;</span><span class="p">,</span> <span class="n">target_lufs</span><span class="o">=</span><span class="n">target_lufs</span><span class="p">))</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_loudnorm</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">work</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"norm</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">.mp3"</span><span class="p">,</span> <span class="n">target_lufs</span><span class="o">=</span><span class="n">target_lufs</span><span class="p">))</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
     <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">gap_s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -342,7 +343,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_concat_with_gaps</span><span class="p">(</span><span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span> <span class="n">out</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">gap_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Concatenate audio parts with ``gap_s`` seconds of silence between them.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Concatenate audio parts with ``gap_s`` seconds of silence between them."""</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">mixing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Audio</span>  <span class="c1"># local import; audio object model</span>
 
     <span class="n">silence</span> <span class="o">=</span> <span class="kc">None</span>
@@ -350,17 +351,17 @@
     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
         <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
     <span class="c1"># Build via ffmpeg: create a silence file and interleave.</span>
-    <span class="n">sil</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;_gap.mp3&quot;</span>
+    <span class="n">sil</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"_gap.mp3"</span>
     <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
         <span class="p">[</span>
-            <span class="s2">&quot;ffmpeg&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-y&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-f&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;lavfi&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;anullsrc=r=44100:cl=stereo&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;-t&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">gap_s</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">"ffmpeg"</span><span class="p">,</span>
+            <span class="s2">"-y"</span><span class="p">,</span>
+            <span class="s2">"-f"</span><span class="p">,</span>
+            <span class="s2">"lavfi"</span><span class="p">,</span>
+            <span class="s2">"-i"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"anullsrc=r=44100:cl=stereo"</span><span class="p">,</span>
+            <span class="s2">"-t"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">gap_s</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">sil</span><span class="p">),</span>
         <span class="p">],</span>
         <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>

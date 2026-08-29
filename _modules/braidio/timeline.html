@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.timeline &mdash; braidio 0.0.20 documentation</title>
+  <title>braidio.timeline &mdash; braidio 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
@@ -114,27 +115,27 @@
            <div itemprop="articleBody">
              
   <h1>Source code for braidio.timeline</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Timeline breakdown — what a production spends its time on, and in what order.</span>
+<span></span><span class="sd">"""Timeline breakdown — what a production spends its time on, and in what order.</span>
 
 <span class="sd">A rendered production is a walk of beats; this module turns that walk into a</span>
 <span class="sd">queryable object: for each beat, its **kind**, **source interval** (for clips),</span>
 <span class="sd">**rendered duration**, and **offset on the episode timeline** — plus per-kind</span>
-<span class="sd">**totals** and a self-contained **HTML view**. It&#39;s built on the same layout math</span>
+<span class="sd">**totals** and a self-contained **HTML view**. It's built on the same layout math</span>
 <span class="sd">(:func:`braidio.weave.layout_placed`) the renderer uses, so the offsets match the</span>
 <span class="sd">actual mix.</span>
 
 <span class="sd">Get one straight from the renderer::</span>
 
 <span class="sd">    out, tl = render_production(script, source=src, return_timeline=True)</span>
-<span class="sd">    tl.totals()          # {&quot;clip&quot;: 78.6, &quot;book-passage&quot;: 346.4, &quot;narration&quot;: 616.5}</span>
+<span class="sd">    tl.totals()          # {"clip": 78.6, "book-passage": 346.4, "narration": 616.5}</span>
 <span class="sd">    tl.shares()          # same, as fractions</span>
-<span class="sd">    open(&quot;anatomy.html&quot;, &quot;w&quot;).write(tl.to_html(&quot;Episode anatomy&quot;))</span>
+<span class="sd">    open("anatomy.html", "w").write(tl.to_html("Episode anatomy"))</span>
 
 <span class="sd">or build one from raw render data with :func:`build_timeline`. This is the</span>
 <span class="sd">first-class, reusable form of what used to be reconstructed by ad-hoc scripts</span>
 <span class="sd">(braidio#3): the render now *records* its timeline instead of anyone probing the</span>
 <span class="sd">output after the fact.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -145,33 +146,33 @@
 
 <span class="c1"># Neutral kind → accent colour for the HTML view (falls back to a grey).</span>
 <span class="n">KIND_COLORS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;clip&quot;</span><span class="p">:</span> <span class="s2">&quot;#cf9526&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;segment&quot;</span><span class="p">:</span> <span class="s2">&quot;#cf9526&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;song&quot;</span><span class="p">:</span> <span class="s2">&quot;#cf9526&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;book-passage&quot;</span><span class="p">:</span> <span class="s2">&quot;#3f5183&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;book&quot;</span><span class="p">:</span> <span class="s2">&quot;#3f5183&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;narration&quot;</span><span class="p">:</span> <span class="s2">&quot;#a98f68&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;commentary&quot;</span><span class="p">:</span> <span class="s2">&quot;#a98f68&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;dialogue&quot;</span><span class="p">:</span> <span class="s2">&quot;#4c8a6a&quot;</span><span class="p">,</span>
+    <span class="s2">"clip"</span><span class="p">:</span> <span class="s2">"#cf9526"</span><span class="p">,</span>
+    <span class="s2">"segment"</span><span class="p">:</span> <span class="s2">"#cf9526"</span><span class="p">,</span>
+    <span class="s2">"song"</span><span class="p">:</span> <span class="s2">"#cf9526"</span><span class="p">,</span>
+    <span class="s2">"book-passage"</span><span class="p">:</span> <span class="s2">"#3f5183"</span><span class="p">,</span>
+    <span class="s2">"book"</span><span class="p">:</span> <span class="s2">"#3f5183"</span><span class="p">,</span>
+    <span class="s2">"narration"</span><span class="p">:</span> <span class="s2">"#a98f68"</span><span class="p">,</span>
+    <span class="s2">"commentary"</span><span class="p">:</span> <span class="s2">"#a98f68"</span><span class="p">,</span>
+    <span class="s2">"dialogue"</span><span class="p">:</span> <span class="s2">"#4c8a6a"</span><span class="p">,</span>
 <span class="p">}</span>
-<span class="n">_FALLBACK_COLOR</span> <span class="o">=</span> <span class="s2">&quot;#8a8577&quot;</span>
+<span class="n">_FALLBACK_COLOR</span> <span class="o">=</span> <span class="s2">"#8a8577"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_mmss</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">60</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="p">))</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">60</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="p">))</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">"</span>
 
 
 <div class="viewcode-block" id="BeatSpan">
 <a class="viewcode-back" href="../../module_docs/braidio/timeline.html#braidio.BeatSpan">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">BeatSpan</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;One beat&#39;s place on the timeline.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""One beat's place on the timeline."""</span>
 
     <span class="n">index</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">kind</span><span class="p">:</span> <span class="p">(</span>
-        <span class="nb">str</span>  <span class="c1"># aggregation label: &quot;clip&quot; | &quot;narration&quot; | &quot;book-passage&quot; | &quot;dialogue&quot; | …</span>
+        <span class="nb">str</span>  <span class="c1"># aggregation label: "clip" | "narration" | "book-passage" | "dialogue" | …</span>
     <span class="p">)</span>
-    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
     <span class="n">source_start</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># clips: [start, end) in the source media</span>
     <span class="n">source_end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># rendered length (s)</span>
@@ -187,15 +188,15 @@
 <a class="viewcode-back" href="../../module_docs/braidio/timeline.html#braidio.TimelineBreakdown">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TimelineBreakdown</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The ordered beats of a production, with per-kind totals and an HTML view.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The ordered beats of a production, with per-kind totals and an HTML view."""</span>
 
     <span class="n">beats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">BeatSpan</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">tuple</span><span class="p">)</span>
-    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
 
 <div class="viewcode-block" id="TimelineBreakdown.totals">
 <a class="viewcode-back" href="../../module_docs/braidio/timeline.html#braidio.TimelineBreakdown.totals">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">totals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Seconds spent per ``kind`` (insertion-ordered by first appearance).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Seconds spent per ``kind`` (insertion-ordered by first appearance)."""</span>
         <span class="n">t</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">beats</span><span class="p">:</span>
             <span class="n">t</span><span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
@@ -204,13 +205,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">duration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Total timeline length (s) — the max beat end, accounting for overlaps.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Total timeline length (s) — the max beat end, accounting for overlaps."""</span>
         <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="nb">max</span><span class="p">((</span><span class="n">b</span><span class="o">.</span><span class="n">end</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">beats</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TimelineBreakdown.shares">
 <a class="viewcode-back" href="../../module_docs/braidio/timeline.html#braidio.TimelineBreakdown.shares">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">shares</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fraction of spoken+clip time per ``kind`` (sums to 1).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Fraction of spoken+clip time per ``kind`` (sums to 1)."""</span>
         <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">totals</span><span class="p">()</span>
         <span class="n">tot</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="ow">or</span> <span class="mf">1.0</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="o">/</span> <span class="n">tot</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
@@ -218,22 +219,22 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
-            <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
-            <span class="s2">&quot;totals&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">totals</span><span class="p">(),</span>
-            <span class="s2">&quot;beats&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="s2">"duration"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+            <span class="s2">"totals"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">totals</span><span class="p">(),</span>
+            <span class="s2">"beats"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
-                    <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span>
-                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
-                    <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">"index"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                    <span class="s2">"kind"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span>
+                    <span class="s2">"label"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                    <span class="s2">"source"</span><span class="p">:</span> <span class="p">(</span>
                         <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">source_start</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">source_end</span><span class="p">]</span>
                         <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">source_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                         <span class="k">else</span> <span class="kc">None</span>
                     <span class="p">),</span>
-                    <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
-                    <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
-                    <span class="s2">&quot;end&quot;</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
+                    <span class="s2">"duration"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                    <span class="s2">"start"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
+                    <span class="s2">"end"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
                 <span class="p">}</span>
                 <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">beats</span>
             <span class="p">],</span>
@@ -241,10 +242,10 @@
 
 <div class="viewcode-block" id="TimelineBreakdown.to_html">
 <a class="viewcode-back" href="../../module_docs/braidio/timeline.html#braidio.TimelineBreakdown.to_html">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">to_html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">subtitle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;A self-contained HTML view: totals bar, walking-order timeline, table.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">subtitle</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""A self-contained HTML view: totals bar, walking-order timeline, table."""</span>
         <span class="k">return</span> <span class="n">_render_html</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">title</span> <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="ow">or</span> <span class="s2">&quot;Timeline&quot;</span><span class="p">),</span> <span class="n">subtitle</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">title</span> <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="ow">or</span> <span class="s2">"Timeline"</span><span class="p">),</span> <span class="n">subtitle</span>
         <span class="p">)</span></div>
 </div>
 
@@ -261,20 +262,20 @@
     <span class="n">source_spans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">clip_edge_overlap_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
     <span class="n">narration_crossfade_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.12</span><span class="p">,</span>
-    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimelineBreakdown</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Assemble a :class:`TimelineBreakdown` from per-beat render data (pure).</span>
+<span class="w">    </span><span class="sd">"""Assemble a :class:`TimelineBreakdown` from per-beat render data (pure).</span>
 
-<span class="sd">    ``kinds`` are the aggregation labels (any string; ``&quot;clip&quot;`` is the only one</span>
+<span class="sd">    ``kinds`` are the aggregation labels (any string; ``"clip"`` is the only one</span>
 <span class="sd">    the layout treats specially — as an overlapping segment). ``placements`` is</span>
-<span class="sd">    the per-beat ``&quot;sequential&quot;``/``&quot;under&quot;`` used by the weave; offsets are</span>
+<span class="sd">    the per-beat ``"sequential"``/``"under"`` used by the weave; offsets are</span>
 <span class="sd">    computed with the same :func:`~braidio.weave.layout_placed` the renderer uses.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">kinds</span><span class="p">)</span>
-    <span class="n">placements</span> <span class="o">=</span> <span class="n">placements</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">&quot;sequential&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
-    <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="n">placements</span> <span class="o">=</span> <span class="n">placements</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">"sequential"</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">""</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
     <span class="n">source_spans</span> <span class="o">=</span> <span class="n">source_spans</span> <span class="ow">or</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
-    <span class="n">layout_kinds</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;clip&quot;</span> <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;clip&quot;</span> <span class="k">else</span> <span class="s2">&quot;narration&quot;</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kinds</span><span class="p">]</span>
+    <span class="n">layout_kinds</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"clip"</span> <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">"clip"</span> <span class="k">else</span> <span class="s2">"narration"</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kinds</span><span class="p">]</span>
     <span class="n">starts</span> <span class="o">=</span> <span class="n">layout_placed</span><span class="p">(</span>
         <span class="n">layout_kinds</span><span class="p">,</span>
         <span class="n">durations</span><span class="p">,</span>
@@ -305,43 +306,43 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">color</span><span class="p">(</span><span class="n">k</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">KIND_COLORS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">_FALLBACK_COLOR</span><span class="p">)</span>
 
-    <span class="n">stack</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s1">&#39;&lt;div style=&quot;flex:</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1"> 1 0;background:</span><span class="si">{</span><span class="n">color</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="si">}</span><span class="s1">&quot; title=&quot;</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">_mmss</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s1">&quot;&gt;&lt;/div&gt;&#39;</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'&lt;div style="flex:</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1"> 1 0;background:</span><span class="si">{</span><span class="n">color</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="si">}</span><span class="s1">" title="</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">_mmss</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s1">"&gt;&lt;/div&gt;'</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">totals</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span>
     <span class="p">)</span>
-    <span class="n">chips</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s1">&#39;&lt;div class=&quot;chip&quot;&gt;&lt;span class=&quot;sw&quot; style=&quot;background:</span><span class="si">{</span><span class="n">color</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="si">}</span><span class="s1">&quot;&gt;&lt;/span&gt;&#39;</span>
-        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="si">}</span><span class="s2"> &lt;b&gt;</span><span class="si">{</span><span class="n">_mmss</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/b&gt; · </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">grand</span><span class="p">)</span><span class="si">}</span><span class="s2">%&lt;/div&gt;&quot;</span>
+    <span class="n">chips</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'&lt;div class="chip"&gt;&lt;span class="sw" style="background:</span><span class="si">{</span><span class="n">color</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="si">}</span><span class="s1">"&gt;&lt;/span&gt;'</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="si">}</span><span class="s2"> &lt;b&gt;</span><span class="si">{</span><span class="n">_mmss</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/b&gt; · </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">grand</span><span class="p">)</span><span class="si">}</span><span class="s2">%&lt;/div&gt;"</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">totals</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span>
     <span class="p">)</span>
     <span class="n">total_dur</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">duration</span>
-    <span class="n">segs</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s1">&#39;&lt;div class=&quot;seg&quot; style=&quot;flex:</span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">)</span><span class="si">}</span><span class="s1"> 1 0;background:</span><span class="si">{</span><span class="n">color</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span><span class="si">}</span><span class="s1">;&#39;</span>
-        <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="s2">&quot;min-width:6px;&quot;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;clip&quot;</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="si">}</span><span class="s1">&quot; &#39;</span>
-        <span class="sa">f</span><span class="s1">&#39;title=&quot;</span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s1">. </span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span><span class="si">}</span><span class="s1"> · </span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">duration</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">s&#39;</span>
-        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="p">(</span><span class="s1">&#39; · song &#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">_mmss</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">source_start</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">chr</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">_mmss</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">source_end</span><span class="p">))</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">b</span><span class="o">.</span><span class="n">source_start</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="p">(</span><span class="nb">chr</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">label</span><span class="p">))</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">b</span><span class="o">.</span><span class="n">label</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="si">}</span><span class="s1">&quot;&gt;&lt;/div&gt;&#39;</span>
+    <span class="n">segs</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'&lt;div class="seg" style="flex:</span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">)</span><span class="si">}</span><span class="s1"> 1 0;background:</span><span class="si">{</span><span class="n">color</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span><span class="si">}</span><span class="s1">;'</span>
+        <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="s2">"min-width:6px;"</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"clip"</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s2">""</span><span class="si">}</span><span class="s1">" '</span>
+        <span class="sa">f</span><span class="s1">'title="</span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s1">. </span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span><span class="si">}</span><span class="s1"> · </span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">duration</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">s'</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="p">(</span><span class="s1">' · song '</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">_mmss</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">source_start</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">chr</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">_mmss</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">source_end</span><span class="p">))</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">b</span><span class="o">.</span><span class="n">source_start</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2">"</span>
+        <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="p">(</span><span class="nb">chr</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">label</span><span class="p">))</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">b</span><span class="o">.</span><span class="n">label</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s2">""</span><span class="si">}</span><span class="s1">"&gt;&lt;/div&gt;'</span>
         <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">tl</span><span class="o">.</span><span class="n">beats</span>
     <span class="p">)</span>
-    <span class="n">rows</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;&lt;tr&gt;&lt;td class=num&gt;</span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">&lt;/td&gt;&quot;</span>
-        <span class="sa">f</span><span class="s1">&#39;&lt;td&gt;&lt;span class=&quot;sw&quot; style=&quot;background:</span><span class="si">{</span><span class="n">color</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span><span class="si">}</span><span class="s1">&quot;&gt;&lt;/span&gt;</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/td&gt;&#39;</span>
-        <span class="sa">f</span><span class="s2">&quot;&lt;td class=num&gt;</span><span class="si">{</span><span class="n">_mmss</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">start</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/td&gt;&lt;td class=num&gt;</span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">duration</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">s&lt;/td&gt;&quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;&lt;td class=num&gt;</span><span class="si">{</span><span class="p">(</span><span class="n">_mmss</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">source_start</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39;–&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">_mmss</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">source_end</span><span class="p">))</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">b</span><span class="o">.</span><span class="n">source_start</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;—&#39;</span><span class="si">}</span><span class="s2">&lt;/td&gt;&quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;&lt;td&gt;</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">label</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/td&gt;&lt;/tr&gt;&quot;</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"&lt;tr&gt;&lt;td class=num&gt;</span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">&lt;/td&gt;"</span>
+        <span class="sa">f</span><span class="s1">'&lt;td&gt;&lt;span class="sw" style="background:</span><span class="si">{</span><span class="n">color</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span><span class="si">}</span><span class="s1">"&gt;&lt;/span&gt;</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/td&gt;'</span>
+        <span class="sa">f</span><span class="s2">"&lt;td class=num&gt;</span><span class="si">{</span><span class="n">_mmss</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">start</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/td&gt;&lt;td class=num&gt;</span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">duration</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">s&lt;/td&gt;"</span>
+        <span class="sa">f</span><span class="s2">"&lt;td class=num&gt;</span><span class="si">{</span><span class="p">(</span><span class="n">_mmss</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">source_start</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">'–'</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">_mmss</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">source_end</span><span class="p">))</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">b</span><span class="o">.</span><span class="n">source_start</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'—'</span><span class="si">}</span><span class="s2">&lt;/td&gt;"</span>
+        <span class="sa">f</span><span class="s2">"&lt;td&gt;</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">label</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/td&gt;&lt;/tr&gt;"</span>
         <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">tl</span><span class="o">.</span><span class="n">beats</span>
     <span class="p">)</span>
-    <span class="n">sub</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&lt;p class=&quot;sub&quot;&gt;</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">subtitle</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/p&gt;&#39;</span> <span class="k">if</span> <span class="n">subtitle</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;&lt;!doctype html&gt;&lt;meta charset=utf-8&gt;&lt;title&gt;</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/title&gt;</span>
+    <span class="n">sub</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'&lt;p class="sub"&gt;</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">subtitle</span><span class="p">)</span><span class="si">}</span><span class="s1">&lt;/p&gt;'</span> <span class="k">if</span> <span class="n">subtitle</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"""&lt;!doctype html&gt;&lt;meta charset=utf-8&gt;&lt;title&gt;</span><span class="si">{</span><span class="n">_html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/title&gt;</span>
 <span class="s2">&lt;style&gt;</span>
 <span class="s2">:root</span><span class="se">{{</span><span class="s2">--bg:#f4f2ec;--fg:#26231d;--soft:#6b6558;--hair:#dcd7cc;--card:#fbfaf6</span><span class="se">}}</span>
 <span class="s2">@media(prefers-color-scheme:dark)</span><span class="se">{{</span><span class="s2">:root</span><span class="se">{{</span><span class="s2">--bg:#161512;--fg:#ece7db;--soft:#a49c8b;--hair:#322f28;--card:#1c1a16</span><span class="se">}}}}</span>
 <span class="s2">*</span><span class="se">{{</span><span class="s2">box-sizing:border-box</span><span class="se">}}</span>
 <span class="s2">body</span><span class="se">{{</span><span class="s2">margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif</span><span class="se">}}</span>
 <span class="s2">.wrap</span><span class="se">{{</span><span class="s2">max-width:900px;margin:0 auto;padding:2.5rem 1.25rem 4rem</span><span class="se">}}</span>
-<span class="s2">h1</span><span class="se">{{</span><span class="s2">font:600 1.7rem/1.1 &quot;Iowan Old Style&quot;,Palatino,Georgia,serif;margin:0 0 .3rem;letter-spacing:-.01em</span><span class="se">}}</span>
+<span class="s2">h1</span><span class="se">{{</span><span class="s2">font:600 1.7rem/1.1 "Iowan Old Style",Palatino,Georgia,serif;margin:0 0 .3rem;letter-spacing:-.01em</span><span class="se">}}</span>
 <span class="s2">.sub</span><span class="se">{{</span><span class="s2">color:var(--soft);margin:0 0 1.5rem</span><span class="se">}}</span>
 <span class="s2">.card</span><span class="se">{{</span><span class="s2">background:var(--card);border:1px solid var(--hair);border-radius:12px;padding:1.2rem;margin-bottom:1.5rem</span><span class="se">}}</span>
 <span class="s2">.stack</span><span class="se">{{</span><span class="s2">display:flex;height:34px;border-radius:7px;overflow:hidden;gap:2px;background:var(--bg)</span><span class="se">}}</span>
@@ -370,7 +371,7 @@
 <span class="s2">&lt;div class=scroll&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th class=num&gt;#&lt;/th&gt;&lt;th&gt;Kind&lt;/th&gt;&lt;th class=num&gt;At&lt;/th&gt;&lt;th class=num&gt;Length&lt;/th&gt;&lt;th class=num&gt;In source&lt;/th&gt;&lt;th&gt;Label&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;</span>
 <span class="s2">&lt;tbody&gt;</span><span class="si">{</span><span class="n">rows</span><span class="si">}</span><span class="s2">&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;</span>
 <span class="s2">&lt;/div&gt;</span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">"""</span>
 </pre></div>
 
            </div>

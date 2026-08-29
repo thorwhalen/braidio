@@ -11,6 +11,7 @@
    module_docs/braidio/conversation
    module_docs/braidio/cost
    module_docs/braidio/delivery
+   module_docs/braidio/downloads
    module_docs/braidio/formats
    module_docs/braidio/genre
    module_docs/braidio/kinds

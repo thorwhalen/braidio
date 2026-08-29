@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.mcp._guide &mdash; braidio 0.0.20 documentation</title>
+  <title>braidio.mcp._guide &mdash; braidio 0.0.21 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=056c92e6"></script>
+      <script src="../../../_static/documentation_options.js?v=a11416ff"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/cost.html">braidio.cost</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/formats.html">braidio.formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/genre.html">braidio.genre</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
@@ -114,19 +115,19 @@
            <div itemprop="articleBody">
              
   <h1>Source code for braidio.mcp._guide</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;The braidio MCP server&#39;s self-description — one SSOT for both the server-level</span>
+<span></span><span class="sd">"""The braidio MCP server's self-description — one SSOT for both the server-level</span>
 <span class="sd">``instructions`` (shown to the model automatically) and the ``help`` tool (called</span>
 <span class="sd">when a user asks what braidio can do).</span>
 
-<span class="sd">Keep this in step with the tool surface in :mod:`braidio.mcp` — it is the connector&#39;s</span>
+<span class="sd">Keep this in step with the tool surface in :mod:`braidio.mcp` — it is the connector's</span>
 <span class="sd">front door.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="c1">#: Natural-language server instructions (FastMCP ``instructions=``). The model sees</span>
 <span class="c1">#: this without calling any tool, so lead with what braidio is and the happy path.</span>
-<span class="n">INSTRUCTIONS</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="n">INSTRUCTIONS</span> <span class="o">=</span> <span class="s2">"""</span><span class="se">\</span>
 <span class="s2">braidio turns source material into a narrated audio production — it weaves authored</span>
 <span class="s2">narration (ElevenLabs text-to-speech) together with extracted segments of source</span>
 <span class="s2">media into one mixed audio file. (Video is on the roadmap.)</span>
@@ -136,9 +137,9 @@
 <span class="s2">2. ingest_document(project_id, uri=...) OR (project_id, text=...) — pull in the source</span>
 <span class="s2">   (a public URL, a PDF, or pasted text). It returns the extracted plaintext for you</span>
 <span class="s2">   to read and analyze.</span>
-<span class="s2">3. Analyze that text and author a Script: an ordered list of beats — &quot;narration&quot; beats</span>
+<span class="s2">3. Analyze that text and author a Script: an ordered list of beats — "narration" beats</span>
 <span class="s2">   (spoken commentary you write, in your own words = rights-safe) and, when there is</span>
-<span class="s2">   source audio to quote, &quot;segment&quot; beats. Break the material into a natural spoken</span>
+<span class="s2">   source audio to quote, "segment" beats. Break the material into a natural spoken</span>
 <span class="s2">   sequence.</span>
 <span class="s2">4. estimate_cost(script) — preview the ElevenLabs spend BEFORE rendering (free).</span>
 <span class="s2">5. save_script(project_id, script) — link the beats into the project graph (free,</span>
@@ -146,7 +147,7 @@
 <span class="s2">6. render_production(script, ...) OR weave_project(project_id, script, ...) — synthesize</span>
 <span class="s2">   and mix into one audio file. This SPENDS ElevenLabs credits (metered per user).</span>
 
-<span class="s2">If the Script has &quot;segment&quot; beats that quote source audio/video, first put the media</span>
+<span class="s2">If the Script has "segment" beats that quote source audio/video, first put the media</span>
 <span class="s2">in your library: download_audio(url) when you have a song/video *link* (YouTube,</span>
 <span class="s2">SoundCloud, … — it pulls the audio; respect copyright), or</span>
 <span class="s2">upload_asset(uri=... or data_b64=...) for a direct file URL or bytes. Either returns</span>
@@ -160,100 +161,100 @@
 <span class="s2">compose_narration, and weave_project; the rest (catalog, planning, ingest, assets,</span>
 <span class="s2">text-prep) are free. Every call is metered to the authenticated caller. Ask a clarifying question if the desired voice, format, or</span>
 <span class="s2">length is unclear before spending on a render.</span><span class="se">\</span>
-<span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">"""</span>
 
 
 <div class="viewcode-block" id="capabilities">
 <a class="viewcode-back" href="../../../module_docs/braidio/mcp/_guide.html#braidio.mcp._guide.capabilities">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">capabilities</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Structured capability guide (returned by the ``help`` tool).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Structured capability guide (returned by the ``help`` tool)."""</span>
     <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;what_is_braidio&quot;</span><span class="p">:</span> <span class="p">(</span>
-            <span class="s2">&quot;A tool for turning source material into narrated audio productions: it &quot;</span>
-            <span class="s2">&quot;weaves authored narration (ElevenLabs TTS) with extracted segments of &quot;</span>
-            <span class="s2">&quot;source media into one mixed audio file. Video is roadmap.&quot;</span>
+        <span class="s2">"what_is_braidio"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">"A tool for turning source material into narrated audio productions: it "</span>
+            <span class="s2">"weaves authored narration (ElevenLabs TTS) with extracted segments of "</span>
+            <span class="s2">"source media into one mixed audio file. Video is roadmap."</span>
         <span class="p">),</span>
-        <span class="s2">&quot;workflow&quot;</span><span class="p">:</span> <span class="p">[</span>
-            <span class="s2">&quot;create_project(project_id) — a workspace for the production.&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ingest_document(project_id, uri= or text=) — pull in source material; &quot;</span>
-            <span class="s2">&quot;returns the extracted text to analyze.&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Author a Script from that text: ordered narration + segment beats.&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;estimate_cost(script) — preview the ElevenLabs spend (free).&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;save_script(project_id, script) — link the beats into the graph (free), &quot;</span>
-            <span class="s2">&quot;or render directly.&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;render_production(script) or weave_project(project_id, script) — &quot;</span>
-            <span class="s2">&quot;synthesize + mix to audio (COSTED, metered per user).&quot;</span><span class="p">,</span>
+        <span class="s2">"workflow"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"create_project(project_id) — a workspace for the production."</span><span class="p">,</span>
+            <span class="s2">"ingest_document(project_id, uri= or text=) — pull in source material; "</span>
+            <span class="s2">"returns the extracted text to analyze."</span><span class="p">,</span>
+            <span class="s2">"Author a Script from that text: ordered narration + segment beats."</span><span class="p">,</span>
+            <span class="s2">"estimate_cost(script) — preview the ElevenLabs spend (free)."</span><span class="p">,</span>
+            <span class="s2">"save_script(project_id, script) — link the beats into the graph (free), "</span>
+            <span class="s2">"or render directly."</span><span class="p">,</span>
+            <span class="s2">"render_production(script) or weave_project(project_id, script) — "</span>
+            <span class="s2">"synthesize + mix to audio (COSTED, metered per user)."</span><span class="p">,</span>
         <span class="p">],</span>
-        <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;assistance&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;help&quot;</span><span class="p">],</span>
-            <span class="s2">&quot;discover&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="s2">&quot;list_formats&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;list_presets&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;list_deliveries&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;list_voice_pools&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;describe_genre&quot;</span><span class="p">,</span>
+        <span class="s2">"tools"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"assistance"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"help"</span><span class="p">],</span>
+            <span class="s2">"discover"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">"list_formats"</span><span class="p">,</span>
+                <span class="s2">"list_presets"</span><span class="p">,</span>
+                <span class="s2">"list_deliveries"</span><span class="p">,</span>
+                <span class="s2">"list_voice_pools"</span><span class="p">,</span>
+                <span class="s2">"describe_genre"</span><span class="p">,</span>
             <span class="p">],</span>
-            <span class="s2">&quot;source_and_authoring_free&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="s2">&quot;ingest_document&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;clean_text&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;find_forbidden_quotes&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;audit_platitudes&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;narration_segments&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;assign_voices&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;find_segment&quot;</span><span class="p">,</span>
+            <span class="s2">"source_and_authoring_free"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">"ingest_document"</span><span class="p">,</span>
+                <span class="s2">"clean_text"</span><span class="p">,</span>
+                <span class="s2">"find_forbidden_quotes"</span><span class="p">,</span>
+                <span class="s2">"audit_platitudes"</span><span class="p">,</span>
+                <span class="s2">"narration_segments"</span><span class="p">,</span>
+                <span class="s2">"assign_voices"</span><span class="p">,</span>
+                <span class="s2">"find_segment"</span><span class="p">,</span>
             <span class="p">],</span>
-            <span class="s2">&quot;plan_and_estimate_free&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="s2">&quot;estimate_cost&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;plan_production&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;build_timeline&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;content_violations&quot;</span><span class="p">,</span>
+            <span class="s2">"plan_and_estimate_free"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">"estimate_cost"</span><span class="p">,</span>
+                <span class="s2">"plan_production"</span><span class="p">,</span>
+                <span class="s2">"build_timeline"</span><span class="p">,</span>
+                <span class="s2">"content_violations"</span><span class="p">,</span>
             <span class="p">],</span>
-            <span class="s2">&quot;projects_free&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="s2">&quot;create_project&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;list_projects&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;project_status&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;save_script&quot;</span><span class="p">,</span>
+            <span class="s2">"projects_free"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">"create_project"</span><span class="p">,</span>
+                <span class="s2">"list_projects"</span><span class="p">,</span>
+                <span class="s2">"project_status"</span><span class="p">,</span>
+                <span class="s2">"save_script"</span><span class="p">,</span>
             <span class="p">],</span>
-            <span class="s2">&quot;assets_free&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="s2">&quot;download_audio&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;upload_asset&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;list_assets&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;get_asset&quot;</span><span class="p">,</span>
+            <span class="s2">"assets_free"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">"download_audio"</span><span class="p">,</span>
+                <span class="s2">"upload_asset"</span><span class="p">,</span>
+                <span class="s2">"list_assets"</span><span class="p">,</span>
+                <span class="s2">"get_asset"</span><span class="p">,</span>
             <span class="p">],</span>
-            <span class="s2">&quot;render_COSTED&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="s2">&quot;render_production&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;render_format&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;weave_project&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;narrate&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;render_dialogue&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;render_multivoice&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;compose_narration&quot;</span><span class="p">,</span>
+            <span class="s2">"render_COSTED"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">"render_production"</span><span class="p">,</span>
+                <span class="s2">"render_format"</span><span class="p">,</span>
+                <span class="s2">"weave_project"</span><span class="p">,</span>
+                <span class="s2">"narrate"</span><span class="p">,</span>
+                <span class="s2">"render_dialogue"</span><span class="p">,</span>
+                <span class="s2">"render_multivoice"</span><span class="p">,</span>
+                <span class="s2">"compose_narration"</span><span class="p">,</span>
             <span class="p">],</span>
         <span class="p">},</span>
-        <span class="s2">&quot;script_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;id_slug&quot;</span><span class="p">:</span> <span class="s2">&quot;short stable id, e.g. &#39;01&#39;&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;beats&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;narration&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;spoken commentary you author&quot;</span><span class="p">},</span>
+        <span class="s2">"script_shape"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"string"</span><span class="p">,</span>
+            <span class="s2">"id_slug"</span><span class="p">:</span> <span class="s2">"short stable id, e.g. '01'"</span><span class="p">,</span>
+            <span class="s2">"beats"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"narration"</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"spoken commentary you author"</span><span class="p">},</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;segment&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;reference&quot;</span><span class="p">:</span> <span class="s2">&quot;a quote/label to resolve against source audio&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;rights&quot;</span><span class="p">:</span> <span class="s2">&quot;owned-local | public-domain | copyrighted&quot;</span><span class="p">,</span>
+                    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"segment"</span><span class="p">,</span>
+                    <span class="s2">"reference"</span><span class="p">:</span> <span class="s2">"a quote/label to resolve against source audio"</span><span class="p">,</span>
+                    <span class="s2">"rights"</span><span class="p">:</span> <span class="s2">"owned-local | public-domain | copyrighted"</span><span class="p">,</span>
                 <span class="p">},</span>
-                <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;dialogue&quot;</span><span class="p">,</span> <span class="s2">&quot;turns&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;line&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;reply&quot;</span><span class="p">]]},</span>
+                <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"dialogue"</span><span class="p">,</span> <span class="s2">"turns"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"A"</span><span class="p">,</span> <span class="s2">"line"</span><span class="p">],</span> <span class="p">[</span><span class="s2">"B"</span><span class="p">,</span> <span class="s2">"reply"</span><span class="p">]]},</span>
             <span class="p">],</span>
         <span class="p">},</span>
-        <span class="s2">&quot;notes&quot;</span><span class="p">:</span> <span class="p">[</span>
-            <span class="s2">&quot;Costed tools (narrate, render_*, weave_project) spend ElevenLabs &quot;</span>
-            <span class="s2">&quot;credits — call estimate_cost first.&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Segment beats need a `source` (timed lines + audio): upload the media &quot;</span>
-            <span class="s2">&quot;with upload_asset and pass its itemId as `source.asset_id`, or point &quot;</span>
-            <span class="s2">&quot;`source.asset_path` at a server-local file. A narration-only script &quot;</span>
-            <span class="s2">&quot;needs no source.&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Dialogue beats aren&#39;t in the graph pipeline yet — use render_production &quot;</span>
-            <span class="s2">&quot;for dialogue.&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;Every call is metered to the authenticated user; the connector is &quot;</span>
-            <span class="s2">&quot;restricted to its allowlisted users.&quot;</span><span class="p">,</span>
+        <span class="s2">"notes"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"Costed tools (narrate, render_*, weave_project) spend ElevenLabs "</span>
+            <span class="s2">"credits — call estimate_cost first."</span><span class="p">,</span>
+            <span class="s2">"Segment beats need a `source` (timed lines + audio): upload the media "</span>
+            <span class="s2">"with upload_asset and pass its itemId as `source.asset_id`, or point "</span>
+            <span class="s2">"`source.asset_path` at a server-local file. A narration-only script "</span>
+            <span class="s2">"needs no source."</span><span class="p">,</span>
+            <span class="s2">"Dialogue beats aren't in the graph pipeline yet — use render_production "</span>
+            <span class="s2">"for dialogue."</span><span class="p">,</span>
+            <span class="s2">"Every call is metered to the authenticated user; the connector is "</span>
+            <span class="s2">"restricted to its allowlisted users."</span><span class="p">,</span>
         <span class="p">],</span>
     <span class="p">}</span></div>
 
