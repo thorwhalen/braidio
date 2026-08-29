@@ -579,7 +579,6 @@ def _delivery(name: str):
     return braidio.DELIVERIES[name]
 
 
-
 def _retrieval(out) -> dict:
     """What a REMOTE caller needs to hold this file, plus how to ask for it.
 
@@ -599,6 +598,7 @@ def _retrieval(out) -> dict:
             f"You can refer to it as \u201c{out.stem}\u201d."
         ),
     }
+
 
 def narrate(
     text: str,
