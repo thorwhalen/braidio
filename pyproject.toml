@@ -77,7 +77,7 @@ graph = ["lacing"]
 # feature, so nw#27's git log reads one release earlier than it ships. Verified by
 # reading the published artifacts, not the changelog — 0.0.28 still has the old
 # signature; 0.0.29 is the first release with the new one.
-nw-app = ["lacing", "nw>=0.0.29", "falaw"]
+nw-app = ["lacing", "nw>=0.0.34", "falaw"]
 # The MCP server (`braidio.mcp`): a Claude.ai connector's tool surface + usage
 # metering. `fastmcp` + `py2mcp` build and serve it; the nw-app powers the project
 # and weave tools. The usage-ledger store is dependency-injected by the connector

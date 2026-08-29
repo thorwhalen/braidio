@@ -579,6 +579,27 @@ def _delivery(name: str):
     return braidio.DELIVERIES[name]
 
 
+
+def _retrieval(out) -> dict:
+    """What a REMOTE caller needs to hold this file, plus how to ask for it.
+
+    `out.as_uri()` is a path on the connector's own disk — meaningless at the
+    other end of an MCP connection, and for months the only thing these tools
+    returned. `path` is kept because it is genuinely useful to an operator
+    reading logs server-side; it is no longer the ONLY thing offered.
+    """
+    from braidio.downloads import claim
+
+    return {
+        "path": str(out),
+        "download": claim("", out.stem),
+        "note": (
+            f"Call `reelee_get_download_url(genre='braidio', "
+            f"artifact_id='{out.stem}')` for a link to play and download this. "
+            f"You can refer to it as \u201c{out.stem}\u201d."
+        ),
+    }
+
 def narrate(
     text: str,
     voice_id: str | None = None,
@@ -602,8 +623,7 @@ def narrate(
         voice_settings=d.voice_settings,
     )
     return {
-        "url": out.as_uri(),
-        "path": str(out),
+        **_retrieval(out),
         "cost_usd": braidio.tts_cost_usd(text, model_id=d.model_id),
         "characters": braidio.billable_chars(text),
         "cost_basis": "estimate",
@@ -618,8 +638,7 @@ def render_dialogue(turns: list[list[str]], name: str = "dialogue") -> dict:
     braidio.render_dialogue(pairs, out_path=out)
     text = "".join(t for _r, t in pairs)
     return {
-        "url": out.as_uri(),
-        "path": str(out),
+        **_retrieval(out),
         "cost_usd": braidio.tts_cost_usd(text, model_id="eleven_v3"),
         "characters": braidio.billable_chars(text),
         "cost_basis": "estimate",
@@ -639,8 +658,7 @@ def render_multivoice(
     )
     text = "".join(segments)
     return {
-        "url": out.as_uri(),
-        "path": str(out),
+        **_retrieval(out),
         "cost_usd": braidio.tts_cost_usd(text),
         "characters": braidio.billable_chars(text),
         "cost_basis": "estimate",
@@ -662,8 +680,7 @@ def compose_narration(
     )
     text = "".join(segments)
     return {
-        "url": out.as_uri(),
-        "path": str(out),
+        **_retrieval(out),
         "cost_usd": braidio.tts_cost_usd(text),
         "characters": braidio.billable_chars(text),
         "cost_basis": "estimate",
@@ -702,7 +719,7 @@ def render_production(
         clips_dir=_work_dir(ws, stem) + "/clips",
         episodes_dir=str(ws.renders_dir),
     )
-    return {"url": out.as_uri(), "path": str(out), **_render_cost(scr, profile)}
+    return {**_retrieval(out), **_render_cost(scr, profile)}
 
 
 def render_format(
@@ -735,7 +752,7 @@ def render_format(
         clips_dir=_work_dir(ws, stem) + "/clips",
         episodes_dir=str(ws.renders_dir),
     )
-    return {"url": out.as_uri(), "path": str(out), **_render_cost(scr, profile)}
+    return {**_retrieval(out), **_render_cost(scr, profile)}
 
 
 def weave_project(project_id: str, script: dict, source: dict | None = None) -> dict:
