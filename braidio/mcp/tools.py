@@ -231,13 +231,21 @@ def list_projects() -> dict:
 
 
 def project_status(project_id: str) -> dict:
-    """A project's status: its finished episode renders (url + duration), if any."""
+    """A project's status: its finished episode renders (url + duration), if any.
+
+    Each episode row carries ``episode_id`` — the id ``resolve`` accepts and a
+    download claim is minted against. The body's own ``artifact_id`` is the
+    lacing CONTENT hash: an identity for provenance, not a retrieval key
+    (braidio#32 — the tool used to return only the body, so the one id a
+    caller could see was the one no download tool accepted).
+    """
     _require_nw("project_status")
     import nw
 
     proj = _workspace().open_project(project_id)
     episodes = [
-        to_json(a.body) for a in nw.annotations_at_tier(proj.root, "episode-renders")
+        {"episode_id": str(a.id), **to_json(a.body)}
+        for a in nw.annotations_at_tier(proj.root, "episode-renders")
     ]
     return {"project_id": project_id, "episodes": episodes}
 
@@ -579,6 +587,29 @@ def _delivery(name: str):
     return braidio.DELIVERIES[name]
 
 
+def _episode_retrieval(project_id: str, episode_id: str) -> dict:
+    """The claim a caller hands to ``reelee_get_download_url`` for a woven episode.
+
+    The episode body's ``artifact_id`` is the lacing CONTENT hash — an identity
+    for provenance, not a retrieval key; ``resolve()`` accepts the episode
+    annotation id (the file's stem). Returning the resolvable id is what makes
+    "weave, then download what you just made" one step instead of a
+    ``my_renders`` detour (braidio#32).
+    """
+    from braidio.downloads import claim
+
+    return {
+        "retrieval": {
+            "download": claim(project_id, episode_id),
+            "note": (
+                f"Call `reelee_get_download_url(genre='braidio', "
+                f"project_id='{project_id}', artifact_id='{episode_id}')` "
+                "for a link to play and download this episode."
+            ),
+        }
+    }
+
+
 def _retrieval(out) -> dict:
     """What a REMOTE caller needs to hold this file, plus how to ask for it.
 
@@ -773,5 +804,6 @@ def weave_project(project_id: str, script: dict, source: dict | None = None) -> 
     return {
         "episode": to_json(body),
         "url": body.get("url"),
+        **_episode_retrieval(project_id, str(episode.id)),
         **_render_cost(scr, "personal"),
     }

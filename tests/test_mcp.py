@@ -433,7 +433,23 @@ def test_weave_project_records_cost(monkeypatch):
     server = _local_server(ledger={})
     _call(server, "create_project", {"project_id": "demo", "title": "Demo"})
 
-    episode = type("Ann", (), {"body": {"url": "file:///x.mp3", "duration_s": 1.0}})()
+    episode = type(
+        "Ann",
+        (),
+        {
+            "id": "9a23da78-0a3e-4acf-a557-48bd6e519038",
+            # artifact_id here is the lacing CONTENT hash — deliberately NOT
+            # what resolve() accepts. The tool must hand back the annotation
+            # id, the one id a download claim can be minted against
+            # (braidio#32: returning only the body left callers holding an id
+            # every retrieval tool refused).
+            "body": {
+                "url": "file:///x.mp3",
+                "duration_s": 1.0,
+                "artifact_id": "c" * 64,
+            },
+        },
+    )()
     monkeypatch.setattr(
         braidio, "weave_project", lambda proj, scr, source=None: episode
     )
@@ -453,6 +469,14 @@ def test_weave_project_records_cost(monkeypatch):
     )
     assert r.structured_content["cost_usd"] == pytest.approx(0.30)
     assert r.structured_content["url"] == "file:///x.mp3"
+    retrieval = r.structured_content["retrieval"]
+    assert retrieval["download"] == {
+        "genre": "braidio",
+        "project_id": "demo",
+        "artifact_id": "9a23da78-0a3e-4acf-a557-48bd6e519038",
+    }
+    assert "9a23da78-0a3e-4acf-a557-48bd6e519038" in retrieval["note"]
+    assert "c" * 64 not in retrieval["note"]
 
 
 # --- assistance + document ingestion ----------------------------------------

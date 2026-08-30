@@ -153,6 +153,149 @@ def test_listing_skips_non_media_without_dropping_the_rest(tmp_path, monkeypatch
     assert {d.ref for d in list_deliverables(OWNER)} == {"Real"}
 
 
+EPISODE_ID = "9a23da78-0a3e-4acf-a557-48bd6e519038"
+
+
+def _episode(tmp_path, monkeypatch, *, email=OWNER, project_id="braidio_test_02",
+             title="Sky Colours", episode_id=EPISODE_ID, data=b"episode-bytes"):
+    """An episode exactly where ``weave_project``'s pipeline writes one:
+    ``{project}/data/episodes/{annotation_id}.mp3`` (braidio#32)."""
+    import json
+
+    monkeypatch.setenv("BRAIDIO_DATA_HOME", str(tmp_path))
+    from braidio.mcp.workspace import Workspace
+
+    ws = Workspace.for_email(email)
+    root = ws.project_root(project_id)
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "project.json").write_text(json.dumps({"title": title}))
+    episodes = root / "data" / "episodes"
+    episodes.mkdir(parents=True, exist_ok=True)
+    path = episodes / f"{episode_id}.mp3"
+    path.write_bytes(data)
+    return path
+
+
+def test_a_weave_project_episode_is_retrievable_by_its_id(tmp_path, monkeypatch):
+    """The braidio#32 defect verbatim: the one render made through the path we
+    told the caller was CORRECT was the one no tool could return."""
+    path = _episode(tmp_path, monkeypatch)
+    got = resolve(OWNER, "braidio_test_02", EPISODE_ID)
+    assert isinstance(got, Deliverable)
+    assert got.path == path
+    assert got.content_type == "audio/mpeg"
+    assert got.project_id == "braidio_test_02"
+    assert got.artifact_id == EPISODE_ID
+
+
+def test_an_episode_resolves_whatever_project_id_the_claim_carries(
+    tmp_path, monkeypatch
+):
+    """Callers guess project_id — nothing validates it against where the file
+    lives — so trusting it would refuse a claim for an episode that exists."""
+    _episode(tmp_path, monkeypatch)
+    for pid in ("", "some_reelee_project", "braidio_test_02"):
+        assert resolve(OWNER, pid, EPISODE_ID).artifact_id == EPISODE_ID
+
+
+def test_episodes_appear_in_the_listing_beside_flat_renders(tmp_path, monkeypatch):
+    """Listing is how a reference becomes discoverable; an episode absent from
+    the listing is unreachable by anyone who did not memorise a uuid."""
+    _render(tmp_path, monkeypatch, name="Standalone")
+    _episode(tmp_path, monkeypatch)
+    rows = list_deliverables(OWNER)
+    by_id = {d.artifact_id: d for d in rows}
+    assert set(by_id) == {"Standalone", EPISODE_ID}
+    ep = by_id[EPISODE_ID]
+    assert ep.project_id == "braidio_test_02"
+    # The stem is a uuid nobody can say: no ref is honest, the label falls back
+    # to the id, and the title borrows the project's so the row reads humanly.
+    assert ep.ref is None
+    assert ep.label == EPISODE_ID
+    assert ep.title == "Sky Colours — episode"
+    assert ep.filename.startswith("braidio_test_02-episode-")
+
+
+def test_an_episode_of_another_caller_is_refused_without_naming_them(
+    tmp_path, monkeypatch
+):
+    _episode(tmp_path, monkeypatch, email=OTHER)
+    with pytest.raises(KeyError) as exc:
+        resolve(OWNER, "braidio_test_02", EPISODE_ID)
+    assert OTHER not in str(exc.value)
+
+
+def test_episode_lookup_refuses_traversal_and_symlinks(tmp_path, monkeypatch):
+    _episode(tmp_path, monkeypatch)
+    # Something worth stealing, outside every episodes dir.
+    secret = tmp_path / "secret.mp3"
+    secret.write_bytes(b"not yours")
+    for bad in ("../secret", "../../../secret", "a/b"):
+        with pytest.raises(KeyError):
+            resolve(OWNER, "braidio_test_02", bad)
+    # A symlink planted inside the episodes dir must not escape it.
+    from braidio.mcp.workspace import Workspace
+
+    episodes = (
+        Workspace.for_email(OWNER).project_root("braidio_test_02")
+        / "data" / "episodes"
+    )
+    (episodes / "planted.mp3").symlink_to(secret)
+    with pytest.raises(KeyError):
+        resolve(OWNER, "braidio_test_02", "planted")
+
+
+def test_a_symlinked_project_component_cannot_reach_another_tenant(
+    tmp_path, monkeypatch
+):
+    """The per-file parent check follows a symlinked DIRECTORY component first,
+    so it alone would serve a victim's episodes through a symlinked project
+    root or a symlinked episodes dir. The containment check in _episode_dirs
+    is what refuses both."""
+    import json
+
+    victim_path = _episode(tmp_path, monkeypatch, email=OTHER, data=b"victim-bytes")
+    from braidio.mcp.workspace import Workspace
+
+    ws = Workspace.for_email(OWNER)
+    ws.projects_dir.mkdir(parents=True, exist_ok=True)
+
+    # Attack 1: the caller's project root IS a symlink to the victim's project.
+    (ws.projects_dir / "stolen").symlink_to(victim_path.parents[2])
+    with pytest.raises(KeyError):
+        resolve(OWNER, "stolen", EPISODE_ID)
+    assert EPISODE_ID not in {d.artifact_id for d in list_deliverables(OWNER)}
+
+    # Attack 2: a real project whose data/episodes is a symlink to the victim's.
+    mine = ws.projects_dir / "mine"
+    (mine / "data").mkdir(parents=True)
+    (mine / "project.json").write_text(json.dumps({"title": "Mine"}))
+    (mine / "data" / "episodes").symlink_to(victim_path.parent)
+    with pytest.raises(KeyError):
+        resolve(OWNER, "mine", EPISODE_ID)
+    assert EPISODE_ID not in {d.artifact_id for d in list_deliverables(OWNER)}
+
+
+def test_one_damaged_project_does_not_take_down_the_listing(tmp_path, monkeypatch):
+    """A project.json holding a JSON LIST used to raise AttributeError out of
+    the title read, turning every braidio lookup for that caller into a 500 —
+    one malformed project must degrade to its directory name, not knock the
+    whole genre out of my_renders."""
+    _episode(tmp_path, monkeypatch)
+    from braidio.mcp.workspace import Workspace
+
+    broken = Workspace.for_email(OWNER).projects_dir / "broken"
+    broken.mkdir(parents=True)
+    (broken / "project.json").write_text('["not a dict"]')
+
+    rows = list_deliverables(OWNER)
+    assert EPISODE_ID in {d.artifact_id for d in rows}
+    assert {p["project_id"] for p in Workspace.for_email(OWNER).list_projects()} == {
+        "braidio_test_02",
+        "broken",
+    }
+
+
 def test_claim_is_the_connectors_registry_shape():
     assert claim("p", "Ep") == {
         "genre": "braidio",
