@@ -94,14 +94,23 @@ class Workspace:
             if not (child.is_dir() and spec.exists()):
                 continue
             try:
-                title = json.loads(spec.read_text()).get("title", child.name)
+                loaded = json.loads(spec.read_text())
+                # A valid-JSON-but-non-dict project.json must degrade the same
+                # way invalid JSON does — one damaged project falling back to
+                # its directory name, never an AttributeError that turns the
+                # caller's whole listing into a 500.
+                title = loaded.get("title") if isinstance(loaded, dict) else None
             except (OSError, ValueError):
-                title = child.name
+                title = None
+            try:
+                mtime = spec.stat().st_mtime
+            except OSError:
+                continue  # vanished mid-scan — genuinely absent, not swallowed
             rows.append(
                 {
                     "project_id": child.name,
-                    "title": title,
-                    "mtime": spec.stat().st_mtime,
+                    "title": title or child.name,
+                    "mtime": mtime,
                 }
             )
         rows.sort(key=lambda r: r["mtime"], reverse=True)

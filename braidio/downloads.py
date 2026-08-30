@@ -31,16 +31,34 @@ That is not an inconsistency in the seam — it is the seam working. A genre
 supplies whatever reference is natural for it; ``Deliverable.ref`` means "the
 label a human should say", and only the genre knows what that is.
 
-One flat directory, deliberately
---------------------------------
-Every render site — ``render_production``, ``render_format``,
-``weave_project``, ``narrate``, ``render_dialogue``, ``compose_narration`` —
-writes through ``Workspace.render_path``, and the project weaves pass
-``episodes_dir=ws.renders_dir`` too. So a caller's audio is one flat set keyed
-by title, and ``project_id`` does not narrow it. It is accepted and ignored
-rather than removed, because the seam's signature is shared with genres for
-which it IS meaningful, and a resolver that silently ignores an argument is
-better than one that refuses a well-formed claim.
+Two locations, one caller-facing set (braidio#32)
+-------------------------------------------------
+A caller's audio lives in two places, and resolution spans both:
+
+- **Flat renders** — every standalone render site (``render_production``,
+  ``render_format``, ``narrate``, ``render_dialogue``, ``compose_narration``)
+  writes through ``Workspace.render_path``: one flat per-caller directory keyed
+  by the title the caller gave the render.
+- **Project episodes** — the graph pipeline (``weave_project``) writes each
+  assembled episode inside its project, at
+  ``{project}/data/episodes/{annotation_id}.mp3``. That location is
+  load-bearing: the episode annotation's body records that ``url``, and the
+  partial-re-render DAG hangs off it. Delivery adapts to the graph's layout,
+  never the other way around.
+
+An earlier revision of this module claimed the project weaves wrote into the
+flat directory too. They never did, and the one episode a paying caller
+produced through the *documented* project-attached path was exactly the one no
+tool could return (braidio#32). The lesson is the module's own founding lesson
+one directory over: a resolver that covers only the layout its author
+remembered is a resolver with an unreachable population.
+
+``project_id`` still does not narrow anything: it is accepted and ignored.
+Callers guess it — the connector requires *some* project_id for braidio but
+never validates which, and nothing ties the value in a claim to where the
+file actually lives — so treating it as a filter would refuse resolvable
+claims over a field that carries no information. Episodes are found by
+scanning the caller's own projects, which is bounded and email-scoped.
 """
 
 from __future__ import annotations
@@ -96,6 +114,65 @@ def _deliverable(path: Path, email: str, project_id: str = "") -> Deliverable:
     )
 
 
+def _episode_deliverable(path: Path, project_id: str, project_title: str) -> Deliverable:
+    """A project episode as a Deliverable — id-keyed, so it reads differently.
+
+    The stem is an annotation uuid nobody can say, so ``ref`` stays ``None``
+    (``label`` falls back to the id) rather than pretending the uuid is a
+    reference, and the human-facing fields borrow the project's title so a
+    listing row and a Downloads-folder filename both say whose episode it is.
+    """
+    stat = path.stat()
+    return Deliverable(
+        path=path,
+        content_type=_CONTENT_TYPES[path.suffix.lower()],
+        filename=f"{project_id}-episode-{path.stem[:8]}{path.suffix}",
+        artifact_id=path.stem,
+        project_id=project_id,
+        genre=GENRE,
+        ref=None,
+        title=f"{project_title} — episode",
+        size_bytes=stat.st_size,
+        created_at=stat.st_mtime,
+        meta={"kind": "episode"},
+    )
+
+
+def _episode_dirs(email: str):
+    """``(project_id, title, episodes_dir)`` for each of the caller's projects.
+
+    Bounded: ``list_projects`` only yields directories under the caller's own
+    email-scoped tree that carry a ``project.json``. Two hardenings on top:
+
+    - A project whose *resolved* episodes dir escapes the caller's projects
+      tree (a symlinked project root or a symlinked ``data/episodes``) is
+      skipped — the per-file parent check alone follows the symlinked
+      component first and so would happily serve another tenant's directory.
+      Nothing reachable creates such a symlink today; this is the check that
+      keeps that sentence from having to stay true forever.
+    - A directory name that fails the component rule is skipped rather than
+      raised: it cannot hold an episode our tools wrote (``create_project``
+      applies the same rule), and one out-of-band directory must not turn
+      every braidio lookup into a 500.
+
+    Note the ``project.json`` filter's flip side: an episode whose project has
+    lost its ``project.json`` is invisible here — acceptable, because
+    ``weave_project`` cannot have written it without one (``open_project``
+    requires it), so the state only arises from out-of-band damage.
+    """
+    ws = _workspace(email)
+    projects_root = ws.projects_dir.resolve()
+    for row in ws.list_projects():
+        pid = row["project_id"]
+        try:
+            episodes = ws.project_root(pid) / "data" / "episodes"
+            if not episodes.resolve().is_relative_to(projects_root):
+                continue
+        except (ValueError, OSError):
+            continue
+        yield pid, row.get("title", pid), episodes
+
+
 def resolve(email: str, project_id: str, artifact_id: str) -> Deliverable:
     """The caller's rendered audio as a servable file — braidio's download authority.
 
@@ -126,26 +203,47 @@ def resolve(email: str, project_id: str, artifact_id: str) -> Deliverable:
         # component check above already refuses `..` and separators.
         if candidate.is_file() and candidate.resolve().parent == renders.resolve():
             return _deliverable(candidate, email, project_id)
+
+    # Not a flat render — try it as a project episode id (braidio#32). Every
+    # project of the caller's is checked, not just ``project_id``: callers
+    # guess that argument (nothing validates it against where the file lives),
+    # so trusting it would refuse a claim for an episode that exists.
+    for pid, title, episodes in _episode_dirs(email):
+        for ext in _CONTENT_TYPES:
+            candidate = episodes / f"{stem}{ext}"
+            if candidate.is_file() and candidate.resolve().parent == episodes.resolve():
+                return _episode_deliverable(candidate, pid, title)
+
     raise KeyError(f"no render named {name!r}")
 
 
 def list_deliverables(email: str, project_id: str = None) -> "list[Deliverable]":
-    """Every render this caller can be handed, newest first.
+    """Everything this caller can be handed — flat renders AND project episodes,
+    newest first.
 
     Without this a reference is undiscoverable — a user could only name a render
     they still remembered from an earlier conversation, which is exactly the
-    state that left a paid episode unreachable. ``project_id`` is accepted and
-    ignored: braidio's renders are one flat per-caller set.
+    state that left a paid episode unreachable (braidio#32: the episode existed,
+    resolved by nothing, and appeared in no listing). ``project_id`` is accepted
+    and ignored (see the module docstring).
     """
-    renders = _workspace(email).renders_dir
-    if not renders.is_dir():
-        return []
     out = []
-    for child in sorted(renders.iterdir()):
-        if child.is_file() and child.suffix.lower() in _CONTENT_TYPES:
-            try:
-                out.append(_deliverable(child, email))
-            except OSError:
-                continue
+    renders = _workspace(email).renders_dir
+    if renders.is_dir():
+        for child in sorted(renders.iterdir()):
+            if child.is_file() and child.suffix.lower() in _CONTENT_TYPES:
+                try:
+                    out.append(_deliverable(child, email))
+                except OSError:
+                    continue
+    for pid, title, episodes in _episode_dirs(email):
+        if not episodes.is_dir():
+            continue
+        for child in sorted(episodes.iterdir()):
+            if child.is_file() and child.suffix.lower() in _CONTENT_TYPES:
+                try:
+                    out.append(_episode_deliverable(child, pid, title))
+                except OSError:
+                    continue
     out.sort(key=lambda d: d.created_at or 0, reverse=True)
     return out
