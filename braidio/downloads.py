@@ -114,7 +114,9 @@ def _deliverable(path: Path, email: str, project_id: str = "") -> Deliverable:
     )
 
 
-def _episode_deliverable(path: Path, project_id: str, project_title: str) -> Deliverable:
+def _episode_deliverable(
+    path: Path, project_id: str, project_title: str
+) -> Deliverable:
     """A project episode as a Deliverable — id-keyed, so it reads differently.
 
     The stem is an annotation uuid nobody can say, so ``ref`` stays ``None``
