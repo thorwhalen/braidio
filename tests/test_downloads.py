@@ -332,3 +332,53 @@ def test_no_render_tool_still_hands_back_a_bare_file_uri():
         "caller a server-local file:// URI they cannot read. Return a retrieval "
         "claim instead (braidio#10 item 1)."
     )
+
+
+# ---------------------------------------------------------------------------
+# list_projects — braidio's half of nw.delivery.ProjectLister (reelee#333)
+# ---------------------------------------------------------------------------
+
+
+def test_a_project_with_no_episode_yet_is_findable_at_zero(tmp_path, monkeypatch):
+    """The reelee#333 acceptance case for braidio: a production someone is
+    mid-way through must list as "no episode yet", not vanish."""
+    import json
+
+    monkeypatch.setenv("BRAIDIO_DATA_HOME", str(tmp_path))
+    from braidio.downloads import list_projects
+    from braidio.mcp.workspace import Workspace
+
+    ws = Workspace.for_email(OWNER)
+    wip = ws.projects_dir / "wip"
+    wip.mkdir(parents=True)
+    (wip / "project.json").write_text(json.dumps({"title": "Work In Progress"}))
+
+    rows = list_projects(OWNER)
+    assert [r.project_id for r in rows] == ["wip"]
+    assert rows[0].title == "Work In Progress"
+    assert rows[0].genre == GENRE
+    assert rows[0].deliverable_count == 0
+    assert rows[0].modified_at is not None
+
+
+def test_episodes_are_counted_and_flat_renders_are_not(tmp_path, monkeypatch):
+    """Episodes are the project-scoped population; the flat per-caller
+    renders belong to no project and are the Lister's to show."""
+    _episode(tmp_path, monkeypatch)          # braidio_test_02 gets 1 episode
+    _render(tmp_path, monkeypatch, name="Flat One")  # belongs to no project
+    from braidio.downloads import list_projects
+
+    rows = list_projects(OWNER)
+    assert [r.project_id for r in rows] == ["braidio_test_02"]
+    assert rows[0].deliverable_count == 1
+
+
+def test_listing_is_blind_to_other_callers_and_never_mints_dirs(
+    tmp_path, monkeypatch
+):
+    _episode(tmp_path, monkeypatch, email=OTHER)
+    from braidio.downloads import list_projects
+    from braidio.mcp.workspace import Workspace
+
+    assert list_projects(OWNER) == []
+    assert not Workspace.for_email(OWNER).projects_dir.exists()

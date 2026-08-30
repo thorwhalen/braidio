@@ -82,7 +82,7 @@ _CONTENT_TYPES = {
     ".mp4": "video/mp4",
 }
 
-__all__ = ["GENRE", "claim", "resolve", "list_deliverables"]
+__all__ = ["GENRE", "claim", "resolve", "list_deliverables", "list_projects"]
 
 
 def claim(project_id: str, artifact_id: str) -> dict:
@@ -249,3 +249,50 @@ def list_deliverables(email: str, project_id: str = None) -> "list[Deliverable]"
                     continue
     out.sort(key=lambda d: d.created_at or 0, reverse=True)
     return out
+
+
+def list_projects(email: str) -> list:
+    """Every project of this caller's — rendered or not (reelee#333).
+
+    braidio's half of ``nw.delivery.ProjectLister``. Rows are
+    ``nw.delivery.ProjectSummary``, newest-modified first (the workspace
+    already orders them). ``deliverable_count`` counts the project's
+    EPISODES — the one braidio population that is project-scoped; the flat
+    per-caller renders belong to no project and are the ``Lister``'s to
+    show. ``0`` is the load-bearing answer: a production with a script and
+    no weave yet must list as "no episode yet" rather than vanish.
+
+    The seam's error contract applies: ``[]`` is a positive claim, an
+    infrastructure failure raises, and nothing here creates a workspace
+    directory just to list it. The nw import is lazy so an environment
+    carrying an older ``nw`` loses exactly this capability, never the
+    module (and with it ``resolve``).
+    """
+    from nw.delivery import ProjectSummary
+
+    ws = _workspace(email)
+    rows = []
+    for r in ws.list_projects():
+        pid = r["project_id"]
+        episodes = ws.project_root(pid) / "data" / "episodes"
+        count = 0
+        if episodes.is_dir():
+            try:
+                count = sum(
+                    1
+                    for c in episodes.iterdir()
+                    if c.is_file() and c.suffix.lower() in _CONTENT_TYPES
+                )
+            except OSError:
+                count = None  # unreadable is not zero — None means "not counted"
+        rows.append(
+            ProjectSummary(
+                project_id=pid,
+                title=r.get("title") or pid,
+                genre=GENRE,
+                created_at=r.get("created"),
+                modified_at=r.get("modified"),
+                deliverable_count=count,
+            )
+        )
+    return rows
