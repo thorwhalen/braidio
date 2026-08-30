@@ -193,7 +193,9 @@ def test_workspace_open_missing_and_list(tmp_path):
     with pytest.raises(FileNotFoundError):
         ws.open_project("nope")
     ws.create_project("p1", title="One")
-    assert ws.list_projects() == [{"project_id": "p1", "title": "One"}]
+    (row,) = ws.list_projects()
+    assert row["project_id"] == "p1" and row["title"] == "One"
+    assert row["modified"] is not None and row["created"] is None
     assert ws.open_project("p1").root == ws.project_root("p1")
 
 
@@ -425,7 +427,11 @@ def test_create_and_list_projects():
     server = _local_server(ledger={})
     _call(server, "create_project", {"project_id": "demo", "title": "Demo"})
     r = _call(server, "list_projects", {})
-    assert r.structured_content["projects"] == [{"project_id": "demo", "title": "Demo"}]
+    (row,) = r.structured_content["projects"]
+    assert row["project_id"] == "demo" and row["title"] == "Demo"
+    # `modified` stays on the row now (the delivery seam's cross-genre union
+    # sorts on it); `created` is None because project.json records no stamp.
+    assert row["modified"] is not None and row["created"] is None
 
 
 @_NW

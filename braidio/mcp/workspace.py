@@ -93,6 +93,7 @@ class Workspace:
             spec = child / "project.json"
             if not (child.is_dir() and spec.exists()):
                 continue
+            loaded = None
             try:
                 loaded = json.loads(spec.read_text())
                 # A valid-JSON-but-non-dict project.json must degrade the same
@@ -106,16 +107,20 @@ class Workspace:
                 mtime = spec.stat().st_mtime
             except OSError:
                 continue  # vanished mid-scan — genuinely absent, not swallowed
+            # `modified` stays on the row (it used to be computed, sorted on,
+            # and popped): the delivery seam's ProjectLister sorts a
+            # cross-genre union on what the row carries.
             rows.append(
                 {
                     "project_id": child.name,
                     "title": title or child.name,
-                    "mtime": mtime,
+                    "created": (
+                        loaded.get("created") if isinstance(loaded, dict) else None
+                    ),
+                    "modified": mtime,
                 }
             )
-        rows.sort(key=lambda r: r["mtime"], reverse=True)
-        for r in rows:
-            r.pop("mtime")
+        rows.sort(key=lambda r: r["modified"], reverse=True)
         return rows
 
     def render_path(self, name: str, *, suffix: str = ".mp3") -> Path:
