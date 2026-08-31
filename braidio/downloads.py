@@ -82,7 +82,14 @@ _CONTENT_TYPES = {
     ".mp4": "video/mp4",
 }
 
-__all__ = ["GENRE", "claim", "resolve", "list_deliverables", "list_projects", "organise"]
+__all__ = [
+    "GENRE",
+    "claim",
+    "resolve",
+    "list_deliverables",
+    "list_projects",
+    "organise",
+]
 
 
 def claim(project_id: str, artifact_id: str) -> dict:
@@ -320,10 +327,7 @@ def resolve(email: str, project_id: str, artifact_id: str) -> Deliverable:
             continue
         for ext in _CONTENT_TYPES:
             candidate = episodes / f"{assigned}{ext}"
-            if (
-                candidate.is_file()
-                and candidate.resolve().parent == episodes.resolve()
-            ):
+            if candidate.is_file() and candidate.resolve().parent == episodes.resolve():
                 return _episode_deliverable(candidate, pid, title)
 
     raise KeyError(f"no render named {name!r}")
