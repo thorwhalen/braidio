@@ -20,7 +20,6 @@ from pathlib import Path
 
 from falaw import Plan
 from lacing import Annotation
-from mixing._cache import sha256_key
 from nw import BaseTransform, TransformInputs, TransformResult, register_transform
 from nw.transforms._provenance import derive_provenance
 
@@ -52,8 +51,22 @@ from braidio.transforms._common import (
 NAME = "narration_render.tts"
 
 
-def _narration_cache_key(text: str, voice_id: str, model_id: str, settings) -> str:
-    return sha256_key(
+def _narration_cache_key(
+    transform, text: str, voice_id: str, model_id: str, settings
+) -> str:
+    """The output identity for one TTS render — nw's shared derivation.
+
+    ``nw.transforms.cache_key`` folds ``impl_version`` with the same
+    omit-if-default rule as the falaw salt, so keys are byte-identical to
+    the hand-rolled predecessor until this transform's first real behaviour
+    bump — which is then the first salt (nw#54; drift in the previous
+    private ``mixing._cache`` import would have silently changed cache keys
+    on PAID calls).
+    """
+    from nw.transforms import cache_key as transform_cache_key
+
+    return transform_cache_key(
+        transform,
         "narration",
         text,
         voice_id,
@@ -82,7 +95,7 @@ class NarrationRenderTTS(BaseTransform):
         model_id = config.get("model_id", DEFAULT_MODEL_ID)
         settings = config.get("voice_settings", {})
         cache_key = _narration_cache_key(
-            beat.body.get("text", ""), voice_id, model_id, settings
+            self, beat.body.get("text", ""), voice_id, model_id, settings
         )
 
         full = TransformInputs(

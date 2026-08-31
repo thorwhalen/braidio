@@ -16,7 +16,6 @@ from pathlib import Path
 
 from falaw import Plan
 from lacing import Annotation
-from mixing._cache import sha256_key
 from nw import BaseTransform, TransformInputs, TransformResult, register_transform
 from nw.transforms._provenance import derive_provenance
 
@@ -78,7 +77,12 @@ class SegmentExtractionFFmpeg(BaseTransform):
 
         cfg = singleton(project, TIER_WEAVE_CONFIG)
         pads, fades, min_len = _pads_fades(cfg.body.get("config", {}))
-        cache_key = sha256_key(
+        from nw.transforms import cache_key as transform_cache_key
+
+        # nw's shared derivation (nw#54): byte-identical to the hand-rolled
+        # key at the default impl_version; a behaviour bump is the salt.
+        cache_key = transform_cache_key(
+            self,
             "segment",
             asset_path,
             str(start_s),

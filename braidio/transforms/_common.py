@@ -119,15 +119,14 @@ def cached_output(project, tier: str, cache_key: str):
 
     Non-fal renders (ElevenLabs TTS, ffmpeg extraction) aren't covered by
     falaw's content-addressed cache, so each carries an explicit ``cache_key``
-    and compares-and-skips here before doing billable/expensive work.
+    and compares-and-skips here before doing billable/expensive work. The
+    lookup itself is nw's (``nw.transforms.cached_output``, nw#54) — one
+    convention, not one per genre; this wrapper only adapts ``project`` to
+    its root.
     """
-    import nw
+    from nw.transforms import cached_output as transform_cached_output
 
-    for ann in nw.annotations_at_tier(project.root, tier):
-        body = ann.body or {}
-        if body.get("cache_key") == cache_key and body.get("artifact_id"):
-            return ann
-    return None
+    return transform_cached_output(project.root, tier, cache_key)
 
 
 def audio_artifact(
