@@ -124,8 +124,28 @@ class Workspace:
         return rows
 
     def render_path(self, name: str, *, suffix: str = ".mp3") -> Path:
-        """A path for a one-shot (non-project) render, inside this user's renders dir."""
+        """A path for a one-shot (non-project) render, inside this user's renders dir.
+
+        Refuses a name that is another render's organise-ASSIGNED title:
+        resolution prefers stems over assigned titles, so a new render minted
+        under that name would silently take over a spoken reference the
+        caller was already taught (the seam's accepted-title-resolves
+        guarantee, defended at the create side too — organise's collision
+        scan can only see names that exist when IT runs).
+        """
         stem = _safe_component(name, label="render name")
+        from braidio.downloads import _media_exists, _stem_for_assigned_title
+
+        holder = _stem_for_assigned_title(self.renders_dir, stem.casefold())
+        if (
+            holder is not None
+            and holder != stem
+            and _media_exists(self.renders_dir, holder)
+        ):
+            raise ValueError(
+                f"{name!r} is already the assigned title of render {holder!r} — "
+                "pick another name, or clear that title first"
+            )
         self.renders_dir.mkdir(parents=True, exist_ok=True)
         return self.renders_dir / f"{stem}{suffix}"
 

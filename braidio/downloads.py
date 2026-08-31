@@ -82,7 +82,7 @@ _CONTENT_TYPES = {
     ".mp4": "video/mp4",
 }
 
-__all__ = ["GENRE", "claim", "resolve", "list_deliverables", "list_projects"]
+__all__ = ["GENRE", "claim", "resolve", "list_deliverables", "list_projects", "organise"]
 
 
 def claim(project_id: str, artifact_id: str) -> dict:
@@ -96,21 +96,103 @@ def _workspace(email: str):
     return Workspace.for_email(email)
 
 
+def _sidecar_path(media_path: Path) -> Path:
+    """The organise sidecar beside one render/episode file.
+
+    ``<stem>.organise.json`` — invisible to every listing (the ``.json``
+    suffix is outside ``_CONTENT_TYPES``) and gone with its render. Naming
+    state lives HERE, in the genre's own workspace, never in a host store,
+    and never by renaming the file: the stem IS the artifact_id a signed
+    token was minted against.
+    """
+    return media_path.with_name(media_path.stem + ".organise.json")
+
+
+def _read_sidecar(media_path: Path) -> dict:
+    import json
+
+    sc = _sidecar_path(media_path)
+    if not sc.exists():
+        return {}
+    try:
+        loaded = json.loads(sc.read_text())
+        return loaded if isinstance(loaded, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _overlay(d: Deliverable) -> Deliverable:
+    """Apply the organise sidecar to a built deliverable.
+
+    braidio's ``ref`` IS its title, so an assigned title mirrors into ``ref``
+    (the seam's rule for title-reffed genres) — the label follows the rename
+    while ``artifact_id`` stays put.
+    """
+    side = _read_sidecar(d.path)
+    if not side:
+        return d
+    from dataclasses import replace
+
+    changes: dict = {}
+    title = side.get("title")
+    if isinstance(title, str) and title.strip():
+        changes["title"] = title
+        changes["ref"] = title
+        # The FILE never moves, but the host-facing filename ("what it should
+        # be called in someone's Downloads folder") follows the label.
+        changes["filename"] = f"{title}{d.path.suffix}"
+    meta = dict(d.meta)
+    if side.get("tags"):
+        meta["tags"] = list(side["tags"])
+    if side.get("note"):
+        meta["note"] = side["note"]
+    if meta != d.meta:
+        changes["meta"] = meta
+    return replace(d, **changes) if changes else d
+
+
+def _stem_for_assigned_title(dirpath: Path, want: str) -> "str | None":
+    """The stem whose organise sidecar assigns this title (case-folded), or None."""
+    import json
+
+    if not dirpath.is_dir():
+        return None
+    suffix = ".organise.json"
+    for sc in dirpath.glob(f"*{suffix}"):
+        try:
+            loaded = json.loads(sc.read_text())
+        except (OSError, ValueError):
+            continue
+        title = loaded.get("title") if isinstance(loaded, dict) else None
+        if isinstance(title, str) and title.strip().casefold() == want:
+            return sc.name[: -len(suffix)]
+    return None
+
+
+def _media_exists(dirpath: Path, stem: str) -> bool:
+    """Whether a media file for this stem still exists — an ORPHANED organise
+    sidecar (media removed out of band) must neither hold a title against
+    reuse nor resolve to anything."""
+    return any((dirpath / f"{stem}{ext}").is_file() for ext in _CONTENT_TYPES)
+
+
 def _deliverable(path: Path, email: str, project_id: str = "") -> Deliverable:
     stat = path.stat()
-    return Deliverable(
-        path=path,
-        content_type=_CONTENT_TYPES[path.suffix.lower()],
-        # The title IS the filename here, so it needs no rewriting to be
-        # recognisable in a Downloads folder.
-        filename=path.name,
-        artifact_id=path.stem,
-        project_id=project_id,
-        genre=GENRE,
-        ref=path.stem,
-        title=path.stem,
-        size_bytes=stat.st_size,
-        created_at=stat.st_mtime,
+    return _overlay(
+        Deliverable(
+            path=path,
+            content_type=_CONTENT_TYPES[path.suffix.lower()],
+            # The title IS the filename here, so it needs no rewriting to be
+            # recognisable in a Downloads folder.
+            filename=path.name,
+            artifact_id=path.stem,
+            project_id=project_id,
+            genre=GENRE,
+            ref=path.stem,
+            title=path.stem,
+            size_bytes=stat.st_size,
+            created_at=stat.st_mtime,
+        )
     )
 
 
@@ -125,18 +207,20 @@ def _episode_deliverable(
     listing row and a Downloads-folder filename both say whose episode it is.
     """
     stat = path.stat()
-    return Deliverable(
-        path=path,
-        content_type=_CONTENT_TYPES[path.suffix.lower()],
-        filename=f"{project_id}-episode-{path.stem[:8]}{path.suffix}",
-        artifact_id=path.stem,
-        project_id=project_id,
-        genre=GENRE,
-        ref=None,
-        title=f"{project_title} — episode",
-        size_bytes=stat.st_size,
-        created_at=stat.st_mtime,
-        meta={"kind": "episode"},
+    return _overlay(
+        Deliverable(
+            path=path,
+            content_type=_CONTENT_TYPES[path.suffix.lower()],
+            filename=f"{project_id}-episode-{path.stem[:8]}{path.suffix}",
+            artifact_id=path.stem,
+            project_id=project_id,
+            genre=GENRE,
+            ref=None,
+            title=f"{project_title} — episode",
+            size_bytes=stat.st_size,
+            created_at=stat.st_mtime,
+            meta={"kind": "episode"},
+        )
     )
 
 
@@ -214,6 +298,32 @@ def resolve(email: str, project_id: str, artifact_id: str) -> Deliverable:
         for ext in _CONTENT_TYPES:
             candidate = episodes / f"{stem}{ext}"
             if candidate.is_file() and candidate.resolve().parent == episodes.resolve():
+                return _episode_deliverable(candidate, pid, title)
+
+    # Not an id — an organise-ASSIGNED title must resolve from the moment it
+    # is accepted (the seam's accepted-title-resolves obligation). Matched on
+    # the suffix-STRIPPED input, same as the stem probes above — titles never
+    # carry a media extension (organise refuses them), so "Sky Final.mp3"
+    # unambiguously means the title "Sky Final". Flat renders first, then
+    # episodes; every candidate passes the same containment check as the id
+    # probes (the fallback must not be a symlink side door).
+    want = stem.strip().casefold()
+    assigned = _stem_for_assigned_title(renders, want)
+    if assigned is not None:
+        for ext in _CONTENT_TYPES:
+            candidate = renders / f"{assigned}{ext}"
+            if candidate.is_file() and candidate.resolve().parent == renders.resolve():
+                return _deliverable(candidate, email, project_id)
+    for pid, title, episodes in _episode_dirs(email):
+        assigned = _stem_for_assigned_title(episodes, want)
+        if assigned is None:
+            continue
+        for ext in _CONTENT_TYPES:
+            candidate = episodes / f"{assigned}{ext}"
+            if (
+                candidate.is_file()
+                and candidate.resolve().parent == episodes.resolve()
+            ):
                 return _episode_deliverable(candidate, pid, title)
 
     raise KeyError(f"no render named {name!r}")
@@ -296,3 +406,126 @@ def list_projects(email: str) -> list:
             )
         )
     return rows
+
+
+def organise(
+    email: str,
+    project_id: str,
+    artifact_id: str,
+    *,
+    title: "str | None" = None,
+    tags: "list | None" = None,
+    note: "str | None" = None,
+) -> Deliverable:
+    """Rename, tag or annotate one render or episode — braidio's Organiser half.
+
+    Persistence is a genre-owned sidecar beside the file (see
+    :func:`_sidecar_path`) — the file itself is NEVER renamed: braidio's
+    ``artifact_id`` IS the stem, a signed token is minted against it, and an
+    episode's location is load-bearing for the graph. braidio's ``ref`` IS
+    its title, so an accepted title mirrors into ``ref`` — the label follows
+    the rename, the identity does not.
+
+    Collisions are refused naming the holder, over the whole set this genre
+    resolves names against: flat render stems, episode ids, and every
+    already-assigned title (flat and episode, case-folded). ``None`` leaves a
+    field unchanged; ``""``/``[]`` clears. All-or-nothing; the return is the
+    deliverable AS RE-READ through ``resolve`` (the receipt rule).
+
+    Auth is ``resolve``'s exactly — ``KeyError`` for anything that is not
+    this caller's, ``ValueError`` for a refused request.
+    """
+    import json
+
+    from nw.delivery import check_title
+
+    if title is None and tags is None and note is None:
+        raise ValueError("nothing to change: pass title=, tags= and/or note=")
+
+    target = resolve(email, project_id, artifact_id)
+
+    new_title: "str | None" = None
+    if title is not None and title != "":
+        new_title = check_title(title)
+        from pathlib import Path as _P
+
+        if _P(new_title).suffix.lower() in _CONTENT_TYPES:
+            raise ValueError(
+                f"{new_title!r} ends in a media extension — resolve strips "
+                "those to find files, so the name would collide with the "
+                "stem namespace; pick a name without the extension"
+            )
+        want = new_title.casefold()
+        ws = _workspace(email)
+        renders = ws.renders_dir
+
+        def _holder() -> "str | None":
+            # Flat stems + their assigned titles.
+            if renders.is_dir():
+                for child in renders.iterdir():
+                    if child.suffix.lower() in _CONTENT_TYPES and child.is_file():
+                        if (
+                            child.stem.casefold() == want
+                            and child.stem != target.artifact_id
+                        ):
+                            return child.stem
+                own = _stem_for_assigned_title(renders, want)
+                if (
+                    own is not None
+                    and own != target.artifact_id
+                    and _media_exists(renders, own)
+                ):
+                    return own
+            # Episode ids + their assigned titles, across every project.
+            for pid, _t, episodes in _episode_dirs(email):
+                if not episodes.is_dir():
+                    continue
+                for child in episodes.iterdir():
+                    if child.suffix.lower() in _CONTENT_TYPES and child.is_file():
+                        if (
+                            child.stem.casefold() == want
+                            and child.stem != target.artifact_id
+                        ):
+                            return child.stem
+                own = _stem_for_assigned_title(episodes, want)
+                if (
+                    own is not None
+                    and own != target.artifact_id
+                    and _media_exists(episodes, own)
+                ):
+                    return own
+            return None
+
+        holder = _holder()
+        if holder is not None:
+            raise ValueError(f"{new_title!r} is already held by {holder!r}")
+    if tags is not None and not isinstance(tags, (list, tuple)):
+        raise ValueError("tags must be a list of strings (or [] to clear)")
+
+    side = _read_sidecar(target.path)
+    if title is not None:
+        if title == "":
+            side.pop("title", None)
+        else:
+            side["title"] = new_title
+    if tags is not None:
+        if len(tags) == 0:
+            side.pop("tags", None)
+        else:
+            side["tags"] = [str(t) for t in tags]
+    if note is not None:
+        if note == "":
+            side.pop("note", None)
+        else:
+            side["note"] = str(note)
+
+    sc = _sidecar_path(target.path)
+    if side:
+        sc.write_text(json.dumps(side, indent=2))
+    else:
+        sc.unlink(missing_ok=True)  # everything cleared — leave no empty sidecar
+
+    # The receipt: re-resolve from storage, never echo the request — with an
+    # EMPTY project_id, so the receipt's project_id matches what every later
+    # listing shows (a flat render's is "", an episode's is discovered).
+    return resolve(email, "", target.artifact_id)
