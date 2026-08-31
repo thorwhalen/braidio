@@ -382,3 +382,185 @@ def test_listing_is_blind_to_other_callers_and_never_mints_dirs(
 
     assert list_projects(OWNER) == []
     assert not Workspace.for_email(OWNER).projects_dir.exists()
+
+
+# ---------------------------------------------------------------------------
+# organise — braidio's half of nw.delivery.Organiser (ADR asset-surfaces §3.3/§4)
+# ---------------------------------------------------------------------------
+
+
+def test_an_accepted_title_mirrors_into_ref_and_resolves(tmp_path, monkeypatch):
+    """braidio's ref IS its title — the label follows the rename, the
+    identity (stem, file, outstanding tokens) does not."""
+    from braidio.downloads import organise
+
+    path = _render(tmp_path, monkeypatch, name="Why the Sky Looks Blue")
+    got = organise(
+        OWNER, "", "Why the Sky Looks Blue",
+        title="Sky Final", tags=["keeper"], note="the good one",
+    )
+    assert got.artifact_id == "Why the Sky Looks Blue"  # identity untouched
+    assert got.ref == "Sky Final"  # the mirror rule
+    assert got.title == "Sky Final"
+    assert got.meta["tags"] == ["keeper"]
+    assert got.meta["note"] == "the good one"
+    assert path.exists()  # the file did not move
+    # Accepted-title-resolves, and the old spellings keep working too.
+    assert resolve(OWNER, "", "Sky Final").artifact_id == "Why the Sky Looks Blue"
+    assert resolve(OWNER, "", "sky final").artifact_id == "Why the Sky Looks Blue"
+    assert resolve(OWNER, "", "Why the Sky Looks Blue").artifact_id == (
+        "Why the Sky Looks Blue"
+    )
+
+
+def test_an_episode_can_finally_be_named(tmp_path, monkeypatch):
+    """The uuid-keyed population gains a speakable name — the eight-rows-
+    called-cut-1-to-8 gap (ADR §4), closed for braidio's episodes."""
+    from braidio.downloads import organise
+
+    _episode(tmp_path, monkeypatch)
+    got = organise(OWNER, "braidio_test_02", EPISODE_ID, title="Sky Episode One")
+    assert got.artifact_id == EPISODE_ID
+    assert got.ref == "Sky Episode One"
+    assert resolve(OWNER, "", "Sky Episode One").artifact_id == EPISODE_ID
+    # The episode file itself never moved (its location is load-bearing).
+    assert got.path.name == f"{EPISODE_ID}.mp3"
+
+
+def test_collisions_are_refused_across_the_whole_resolvable_set(
+    tmp_path, monkeypatch
+):
+    from braidio.downloads import organise
+
+    _render(tmp_path, monkeypatch, name="First")
+    _render(tmp_path, monkeypatch, name="Second")
+    _episode(tmp_path, monkeypatch)
+    # Colliding with another flat render's STEM.
+    with pytest.raises(ValueError, match="already held"):
+        organise(OWNER, "", "First", title="Second")
+    # Colliding with an EPISODE id.
+    with pytest.raises(ValueError, match="already held"):
+        organise(OWNER, "", "First", title=EPISODE_ID)
+    # Colliding with an already-ASSIGNED title, case-folded.
+    organise(OWNER, "", "First", title="The Slow Open")
+    with pytest.raises(ValueError, match="already held"):
+        organise(OWNER, "", "Second", title="the slow open")
+    # Re-assigning the same title to the SAME target is not a collision.
+    assert organise(OWNER, "", "First", title="The Slow Open").ref == "The Slow Open"
+
+
+def test_clearing_restores_the_stem_identity(tmp_path, monkeypatch):
+    from braidio.downloads import organise
+
+    _render(tmp_path, monkeypatch, name="Ep")
+    organise(OWNER, "", "Ep", title="Named", tags=["x"], note="y")
+    got = organise(OWNER, "", "Ep", title="", tags=[], note="")
+    assert got.ref == "Ep" and got.title == "Ep"
+    assert "tags" not in got.meta and "note" not in got.meta
+    # A fully-cleared sidecar is removed, not left as an empty file.
+    from braidio.downloads import _sidecar_path
+
+    assert not _sidecar_path(got.path).exists()
+    with pytest.raises(KeyError):
+        resolve(OWNER, "", "Named")
+
+
+def test_sidecars_never_appear_in_listings(tmp_path, monkeypatch):
+    from braidio.downloads import organise
+
+    _render(tmp_path, monkeypatch, name="Ep")
+    organise(OWNER, "", "Ep", note="noted")
+    rows = list_deliverables(OWNER)
+    assert [d.artifact_id for d in rows] == ["Ep"]
+    assert rows[0].meta["note"] == "noted"
+
+
+def test_organise_authorizes_like_resolve(tmp_path, monkeypatch):
+    from braidio.downloads import organise
+
+    _render(tmp_path, monkeypatch, name="Private")
+    with pytest.raises(KeyError):
+        organise(OTHER, "", "Private", title="Mine Now")
+    with pytest.raises(ValueError, match="nothing to change"):
+        organise(OWNER, "", "Private")
+    for bad in ("cut 4", "#7", "12"):
+        with pytest.raises(ValueError, match="reads as a reference"):
+            organise(OWNER, "", "Private", title=bad)
+
+
+def test_extension_shaped_titles_are_refused(tmp_path, monkeypatch):
+    """resolve() strips media suffixes to find files, so 'Intro.mp3' as a
+    TITLE would collide with the stem namespace and resolve to the WRONG
+    artifact (adversarial-review major)."""
+    from braidio.downloads import organise
+
+    _render(tmp_path, monkeypatch, name="Intro")
+    _render(tmp_path, monkeypatch, name="Other")
+    with pytest.raises(ValueError, match="media extension"):
+        organise(OWNER, "", "Other", title="Intro.mp3")
+    # And the extension-optional courtesy works for assigned titles too.
+    from braidio.downloads import organise as _org
+
+    _org(OWNER, "", "Other", title="Sky Final")
+    assert resolve(OWNER, "", "Sky Final.mp3").artifact_id == "Other"
+
+
+def test_the_title_fallback_is_not_a_symlink_side_door(tmp_path, monkeypatch):
+    """The id probes refuse a planted symlink; the assigned-title path must
+    too, or the defense has a named back entrance (adversarial-review major)."""
+    import json
+
+    _render(tmp_path, monkeypatch, name="Real")
+    secret = tmp_path / "secret.mp3"
+    secret.write_bytes(b"not yours")
+    from braidio.mcp.workspace import Workspace
+
+    renders = Workspace.for_email(OWNER).renders_dir
+    (renders / "planted.mp3").unlink(missing_ok=True)
+    (renders / "planted.mp3").symlink_to(secret)
+    (renders / "planted.organise.json").write_text(json.dumps({"title": "Nice Name"}))
+    with pytest.raises(KeyError):
+        resolve(OWNER, "", "Nice Name")
+
+
+def test_a_new_render_cannot_take_over_an_assigned_title(tmp_path, monkeypatch):
+    """Stems beat assigned titles at resolution, so the CREATE path must
+    refuse minting a render under a name organise already taught the caller
+    (adversarial-review major)."""
+    from braidio.downloads import organise
+    from braidio.mcp.workspace import Workspace
+
+    _render(tmp_path, monkeypatch, name="Ep")
+    organise(OWNER, "", "Ep", title="Sky Final")
+    ws = Workspace.for_email(OWNER)
+    with pytest.raises(ValueError, match="already the assigned title"):
+        ws.render_path("Sky Final")
+    # Unrelated names still mint fine.
+    assert ws.render_path("Something Else").name == "Something Else.mp3"
+
+
+def test_an_orphaned_sidecar_neither_resolves_nor_blocks_reuse(
+    tmp_path, monkeypatch
+):
+    from braidio.downloads import organise
+
+    path = _render(tmp_path, monkeypatch, name="Gone")
+    organise(OWNER, "", "Gone", title="Held Name")
+    path.unlink()  # media removed out of band; sidecar orphaned
+
+    with pytest.raises(KeyError):
+        resolve(OWNER, "", "Held Name")
+    # The orphaned sidecar does not hold the title against a living render.
+    _render(tmp_path, monkeypatch, name="Alive")
+    assert organise(OWNER, "", "Alive", title="Held Name").ref == "Held Name"
+
+
+def test_the_receipt_matches_what_the_listing_shows(tmp_path, monkeypatch):
+    from braidio.downloads import organise
+
+    _render(tmp_path, monkeypatch, name="Ep")
+    got = organise(OWNER, "some_guessed_project", "Ep", title="Named")
+    row = next(d for d in list_deliverables(OWNER) if d.artifact_id == "Ep")
+    assert got.project_id == row.project_id == ""
+    assert got.ref == row.ref == "Named"
+    assert got.filename == row.filename == "Named.mp3"
