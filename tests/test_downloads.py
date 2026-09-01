@@ -115,10 +115,17 @@ def test_resolve_refuses_a_missing_render_without_saying_whose_it_is(
     assert OTHER not in str(exc.value)
 
 
-def test_project_id_is_accepted_and_ignored(tmp_path, monkeypatch):
-    """Every render site writes to one flat per-caller dir, so project_id does
-    not narrow anything. It is ignored rather than refused, because the seam's
-    signature is shared with genres for which it IS meaningful."""
+def test_resolve_accepts_and_ignores_project_id(tmp_path, monkeypatch):
+    """Callers GUESS project_id — the connector requires some value for
+    braidio and validates none of them — so for resolution the field carries
+    no information and filtering on it would refuse resolvable claims. It is
+    ignored rather than refused, because the seam's signature is shared with
+    genres for which it IS meaningful.
+
+    Scoped to ``resolve`` in its name, because the module's other half does
+    the opposite: :func:`list_deliverables` narrows on the same field
+    (braidio#37). There ignoring it widens the ANSWER rather than the search,
+    which is a wrong answer to what was asked."""
     _render(tmp_path, monkeypatch)
     a = resolve(OWNER, "", "Why the Sky Looks Blue")
     b = resolve(OWNER, "some_project", "Why the Sky Looks Blue")
@@ -214,6 +221,204 @@ def test_episodes_appear_in_the_listing_beside_flat_renders(tmp_path, monkeypatc
     assert ep.label == EPISODE_ID
     assert ep.title == "Sky Colours — episode"
     assert ep.filename.startswith("braidio_test_02-episode-")
+
+
+OTHER_EPISODE_ID = "1111ffff-2222-3333-4444-555566667777"
+
+
+def _two_projects_and_a_flat_render(tmp_path, monkeypatch):
+    """One caller, one flat render, two projects with an episode each."""
+    _render(tmp_path, monkeypatch, name="Standalone")
+    _episode(tmp_path, monkeypatch)
+    _episode(
+        tmp_path,
+        monkeypatch,
+        project_id="other_project",
+        title="Other",
+        episode_id=OTHER_EPISODE_ID,
+    )
+
+
+def test_a_project_scoped_listing_answers_only_about_that_project(
+    tmp_path, monkeypatch
+):
+    """braidio#37 verbatim: the filter used to be accepted and ignored, so
+    asking about ONE project answered with every project of the caller's plus
+    the flat renders — three rows for a one-row question, one of them saying
+    ``project_id='other_project'`` in its own field.
+
+    ``nw.delivery.Lister``'s contract is that ``project_id=None`` means every
+    project of that caller's in this genre; a value therefore means one.
+
+    Stated as **selection, not a second query**: the narrowed answer must be
+    exactly the rows the unscoped answer already carries for that project,
+    field for field. Asserting only the ids would pass a narrowing that
+    trusts the caller's string and rebuilds the row from it — which silently
+    loses the project TITLE the row borrows (``"braidio_test_02 — episode"``
+    where the unscoped listing says ``"Sky Colours — episode"``), because
+    only the project.json scan knows it."""
+    _two_projects_and_a_flat_render(tmp_path, monkeypatch)
+
+    rows = list_deliverables(OWNER, "braidio_test_02")
+    assert [d.artifact_id for d in rows] == [EPISODE_ID]
+    assert {d.project_id for d in rows} == {"braidio_test_02"}
+    assert rows == [
+        d for d in list_deliverables(OWNER) if d.project_id == "braidio_test_02"
+    ]
+
+
+def test_narrowing_does_not_invent_a_project_the_unscoped_listing_denies(
+    tmp_path, monkeypatch
+):
+    """The two directions must agree on which projects EXIST, not just on
+    which rows they hold.
+
+    ``_episode_dirs`` counts a directory as a project only when it carries a
+    ``project.json`` — ``weave_project`` cannot have written an episode
+    without one, so a directory lacking it is out-of-band damage. A narrowing
+    that builds the episodes path straight from the caller's string skips that
+    scan, and the same id then lists one way when scoped and another way when
+    not."""
+    _episode(tmp_path, monkeypatch)
+    from braidio.mcp.workspace import Workspace
+
+    orphan = Workspace.for_email(OWNER).project_root("no_project_json")
+    episodes = orphan / "data" / "episodes"
+    episodes.mkdir(parents=True)
+    (episodes / f"{OTHER_EPISODE_ID}.mp3").write_bytes(b"orphaned")
+
+    assert [
+        d for d in list_deliverables(OWNER) if d.project_id == "no_project_json"
+    ] == []
+    assert list_deliverables(OWNER, "no_project_json") == []
+
+
+def test_a_project_scoped_listing_skips_the_flat_renders_entirely(
+    tmp_path, monkeypatch
+):
+    """A flat render belongs to NO project — its ``project_id`` is ``""`` and
+    no filter value can equal that — so it is never a member of a
+    project-scoped answer. Not a ranking or a fallback: a skip.
+
+    Guarded separately from the narrowing above because it is a separate
+    decision: a listing narrowed to a project that happens to hold no episodes
+    must be empty, not "here are your loose renders instead"."""
+    _render(tmp_path, monkeypatch, name="Standalone")
+    _episode(tmp_path, monkeypatch)
+
+    # The project exists and IS the caller's, but holds no episode.
+    import json
+
+    from braidio.mcp.workspace import Workspace
+
+    empty = Workspace.for_email(OWNER).project_root("empty_project")
+    empty.mkdir(parents=True, exist_ok=True)
+    (empty / "project.json").write_text(json.dumps({"title": "Empty"}))
+
+    assert list_deliverables(OWNER, "empty_project") == []
+    # ...while the render is still there for the unscoped question.
+    assert "Standalone" in {d.artifact_id for d in list_deliverables(OWNER)}
+
+
+@pytest.mark.parametrize(
+    "pid",
+    [
+        "not_a_project",  # nothing of that name
+        "../secret",  # not even a legal component
+        "a/b",
+        ".",
+    ],
+)
+def test_an_unresolvable_project_id_lists_nothing_rather_than_raising(
+    tmp_path, monkeypatch, pid
+):
+    """The host fans ONE id across every genre's lister
+    (``reelee_my_renders`` → ``lister(caller, project_id or None)``, filtering
+    nothing itself) and genre namespaces are disjoint, so an id this genre has
+    never heard of is the ordinary case. A raise would become a "could not list
+    your braidio work" problems entry about work that was never in scope —
+    which reads to the caller as "some of your work is unreachable".
+
+    Malformed ids ride the same path: the walk filters the rows it already
+    yields instead of building a path from the caller's string, so
+    ``project_root``'s ``ValueError`` is never reached."""
+    _two_projects_and_a_flat_render(tmp_path, monkeypatch)
+    assert list_deliverables(OWNER, pid) == []
+
+
+def test_a_project_scoped_listing_cannot_reach_another_callers_project(
+    tmp_path, monkeypatch
+):
+    """Naming a real project id that is somebody ELSE's is the same skip, and
+    for the same reason the unscoped listing is blind to them: the walk starts
+    from the caller's own email-scoped ``list_projects``, so a foreign id
+    matches no row."""
+    _episode(tmp_path, monkeypatch, email=OTHER, project_id="theirs", title="Theirs")
+    _episode(tmp_path, monkeypatch)  # OWNER has one of their own
+
+    assert list_deliverables(OWNER, "theirs") == []
+    assert list_deliverables(OWNER, "braidio_test_02") != []
+
+
+def test_narrowing_does_not_bypass_the_symlink_containment_check(
+    tmp_path, monkeypatch
+):
+    """The containment check lives in the walk, so it applies to a NARROWED
+    walk too — naming the symlinked project explicitly must not be the door
+    that the unscoped listing already refuses."""
+    import json
+
+    victim_path = _episode(tmp_path, monkeypatch, email=OTHER, data=b"victim-bytes")
+    from braidio.mcp.workspace import Workspace
+
+    ws = Workspace.for_email(OWNER)
+    ws.projects_dir.mkdir(parents=True, exist_ok=True)
+
+    # A project root that IS a symlink to the victim's project.
+    (ws.projects_dir / "stolen").symlink_to(victim_path.parents[2])
+    assert list_deliverables(OWNER, "stolen") == []
+
+    # A real project whose data/episodes is a symlink to the victim's.
+    mine = ws.projects_dir / "mine"
+    (mine / "data").mkdir(parents=True)
+    (mine / "project.json").write_text(json.dumps({"title": "Mine"}))
+    (mine / "data" / "episodes").symlink_to(victim_path.parent)
+    assert list_deliverables(OWNER, "mine") == []
+
+
+def test_an_unscoped_listing_still_spans_every_project_and_the_flat_renders(
+    tmp_path, monkeypatch
+):
+    """The other direction of the same contract: narrowing must not have
+    narrowed the DEFAULT. ``project_id=None`` — and ``""``, which is what the
+    host passes through as ``None`` — still means everything."""
+    _two_projects_and_a_flat_render(tmp_path, monkeypatch)
+
+    expected = {"Standalone", EPISODE_ID, OTHER_EPISODE_ID}
+    assert {d.artifact_id for d in list_deliverables(OWNER)} == expected
+    assert {d.artifact_id for d in list_deliverables(OWNER, None)} == expected
+    assert {d.artifact_id for d in list_deliverables(OWNER, "")} == expected
+
+
+def test_resolve_still_ignores_project_id_while_the_listing_honours_it(
+    tmp_path, monkeypatch
+):
+    """The asymmetry is the point, so it is pinned as one fact rather than two.
+
+    For ``resolve`` the field is a GUESS (the connector requires some
+    project_id for braidio and validates none of them), so ignoring it only
+    widens what resolves and narrowing would refuse resolvable claims. For the
+    listing the field IS the question, so ignoring it widens the ANSWER — a
+    wrong answer to what was asked."""
+    _two_projects_and_a_flat_render(tmp_path, monkeypatch)
+
+    # resolve: the wrong project id, and the right episode comes back anyway.
+    assert resolve(OWNER, "other_project", EPISODE_ID).artifact_id == EPISODE_ID
+    assert resolve(OWNER, "not_a_project", EPISODE_ID).artifact_id == EPISODE_ID
+    # list: the wrong project id excludes it.
+    assert EPISODE_ID not in {
+        d.artifact_id for d in list_deliverables(OWNER, "other_project")
+    }
 
 
 def test_an_episode_of_another_caller_is_refused_without_naming_them(
@@ -447,6 +652,43 @@ def test_collisions_are_refused_across_the_whole_resolvable_set(
         organise(OWNER, "", "Second", title="the slow open")
     # Re-assigning the same title to the SAME target is not a collision.
     assert organise(OWNER, "", "First", title="The Slow Open").ref == "The Slow Open"
+
+
+def test_the_collision_scan_spans_projects_even_when_one_is_named(
+    tmp_path, monkeypatch
+):
+    """``organise``'s scan must stay as WIDE as ``resolve``'s namespace, even
+    though the caller hands it a project_id and the listing now narrows on one.
+
+    The two are different questions about the same field. A listing asks
+    "what is in this project"; the collision scan asks "can this name be
+    resolved to something else", and ``resolve`` searches every project of the
+    caller's — so a scan narrowed to the named project would accept a name
+    that already resolves elsewhere, and the caller would be taught a
+    reference that lands on the wrong file.
+
+    Pinned because ``_episode_dirs`` grew a narrowing argument for braidio#37
+    and applying it here would look like consistency."""
+    from braidio.downloads import organise
+
+    _episode(tmp_path, monkeypatch)  # EPISODE_ID in braidio_test_02
+    _episode(
+        tmp_path,
+        monkeypatch,
+        project_id="other_project",
+        title="Other",
+        episode_id=OTHER_EPISODE_ID,
+    )
+
+    # Naming one project's episode after ANOTHER project's episode id, with
+    # the first project named in the call.
+    with pytest.raises(ValueError, match="already held"):
+        organise(OWNER, "braidio_test_02", EPISODE_ID, title=OTHER_EPISODE_ID)
+
+    # ...and the same for an already-ASSIGNED title held in the other project.
+    organise(OWNER, "other_project", OTHER_EPISODE_ID, title="The Slow Open")
+    with pytest.raises(ValueError, match="already held"):
+        organise(OWNER, "braidio_test_02", EPISODE_ID, title="the slow open")
 
 
 def test_clearing_restores_the_stem_identity(tmp_path, monkeypatch):

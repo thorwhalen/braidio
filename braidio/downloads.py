@@ -53,12 +53,29 @@ tool could return (braidio#32). The lesson is the module's own founding lesson
 one directory over: a resolver that covers only the layout its author
 remembered is a resolver with an unreachable population.
 
-``project_id`` still does not narrow anything: it is accepted and ignored.
-Callers guess it — the connector requires *some* project_id for braidio but
-never validates which, and nothing ties the value in a claim to where the
-file actually lives — so treating it as a filter would refuse resolvable
-claims over a field that carries no information. Episodes are found by
-scanning the caller's own projects, which is bounded and email-scoped.
+``project_id``: ignored when resolving, honoured when listing (braidio#37)
+-------------------------------------------------------------------------
+The same field means opposite things to the module's two halves, and the
+asymmetry is not an oversight — it falls out of which direction ignoring it
+moves the answer.
+
+- **:func:`resolve` accepts and ignores it.** Callers guess it — the connector
+  requires *some* project_id for braidio but never validates which, and
+  nothing ties the value in a claim to where the file actually lives — so
+  treating it as a filter would refuse resolvable claims over a field that
+  carries no information. Ignoring it only WIDENS the set searched, and the
+  widening is bounded and email-scoped: episodes are found by scanning the
+  caller's own projects.
+- **:func:`list_deliverables` honours it, and narrows.** Here the field is not
+  a guess but the question — ``nw.delivery.Lister``'s contract is that
+  ``project_id=None`` means every project of that caller's in this genre, so a
+  value means one. Ignoring it widens the ANSWER instead of the search, which
+  is simply a wrong one: a project-scoped listing used to return every other
+  project's episodes (each row saying so in its own ``project_id``) plus the
+  flat renders, under a filter that claimed to have excluded them.
+
+Cross-tenant containment never depended on this in either direction — it is
+``_episode_dirs``'s email scoping and symlink checks, which both halves share.
 """
 
 from __future__ import annotations
@@ -231,8 +248,16 @@ def _episode_deliverable(
     )
 
 
-def _episode_dirs(email: str):
+def _episode_dirs(email: str, project_id: "str | None" = None):
     """``(project_id, title, episodes_dir)`` for each of the caller's projects.
+
+    ``project_id`` narrows the walk to that one project, by matching the
+    ROWS this scan already yields rather than by building a path out of the
+    caller's string. That is what makes an unknown, malformed or not-owned
+    id a silent skip yielding nothing, never a ``ValueError`` out of
+    ``project_root`` — the rule :func:`list_deliverables` needs (a lister
+    is handed ids only one genre knows) and the one containment property
+    below stays intact under.
 
     Bounded: ``list_projects`` only yields directories under the caller's own
     email-scoped tree that carry a ``project.json``. Two hardenings on top:
@@ -257,6 +282,8 @@ def _episode_dirs(email: str):
     projects_root = ws.projects_dir.resolve()
     for row in ws.list_projects():
         pid = row["project_id"]
+        if project_id and pid != project_id:
+            continue
         try:
             episodes = ws.project_root(pid) / "data" / "episodes"
             if not episodes.resolve().is_relative_to(projects_root):
@@ -340,19 +367,38 @@ def list_deliverables(email: str, project_id: str = None) -> "list[Deliverable]"
     Without this a reference is undiscoverable — a user could only name a render
     they still remembered from an earlier conversation, which is exactly the
     state that left a paid episode unreachable (braidio#32: the episode existed,
-    resolved by nothing, and appeared in no listing). ``project_id`` is accepted
-    and ignored (see the module docstring).
+    resolved by nothing, and appeared in no listing).
+
+    ``project_id`` NARROWS, per the seam's contract (:data:`nw.delivery.Lister`:
+    ``None`` means every project of that caller's in this genre, so a value
+    means one). Two consequences, and both are the point:
+
+    - the flat renders dir is skipped entirely — a flat render belongs to no
+      project, so it can never be a member of a project-scoped answer; and
+    - an unknown, malformed or not-owned id yields ``[]``, never an error. The
+      host fans one id out across every genre's lister (``reelee_my_renders``
+      → ``lister(caller, project_id or None)``, filtering nothing itself) and
+      genre namespaces are disjoint, so "an id this genre has never heard of"
+      is the ordinary case, not a failure — raising would fabricate a "could
+      not list your braidio work" problems entry about work never in scope.
+
+    This is the opposite of :func:`resolve`, deliberately. There the same
+    field is accepted and ignored, because ignoring it only WIDENS what
+    resolves; here ignoring it widens the ANSWER, which is a wrong answer to
+    the question asked (braidio#37).
     """
     out = []
-    renders = _workspace(email).renders_dir
-    if renders.is_dir():
+    # Skipped outright under a project filter: a flat render's project_id is
+    # "" and no filter value can equal it.
+    renders = _workspace(email).renders_dir if not project_id else None
+    if renders is not None and renders.is_dir():
         for child in sorted(renders.iterdir()):
             if child.is_file() and child.suffix.lower() in _CONTENT_TYPES:
                 try:
                     out.append(_deliverable(child, email))
                 except OSError:
                     continue
-    for pid, title, episodes in _episode_dirs(email):
+    for pid, title, episodes in _episode_dirs(email, project_id):
         if not episodes.is_dir():
             continue
         for child in sorted(episodes.iterdir()):
