@@ -83,7 +83,9 @@ class Format:
     roles: Mapping[str, str] = field(
         default_factory=dict
     )  # role → semantic (narrator/host/guest/…)
-    clip_placement: str = "before"  # recommended default SegmentBeat.placement (before|under|after)
+    clip_placement: str = (
+        "before"  # recommended default SegmentBeat.placement (before|under|after)
+    )
     music_bed: str = "light"  # bed intensity when a bed_asset is given: continuous | light | sparse | none
     scripting: str = ""  # how to author a Script for this format (authoring)
 
@@ -334,7 +336,9 @@ DOCUMENTARY_VO = Format(
     },
     clip_placement="before",  # narration states → clip/interview demonstrates → narration bridges
     music_bed="continuous",  # scored; announce scoring early
-    structure=MusicStructure(scene_marker="sting"),  # a sting marks each act's SceneBreak
+    structure=MusicStructure(
+        scene_marker="sting"
+    ),  # a sting marks each act's SceneBreak
     scripting=(
         "Ira-Glass engine: anecdote → anecdote → a beat of reflection; run on a theme "
         "in numbered 'acts' with a prologue stating the theme; land a 'turn'. Layer "
