@@ -506,6 +506,24 @@ def test_render_format_wires_bed_and_sting_assets(monkeypatch):
     assert calls["sting_asset"] == ws.asset_path(sting_id)
 
 
+def test_render_production_rejects_empty_asset_id():
+    server = _local_server(ledger={})
+    with pytest.raises(Exception) as ei:
+        _call(
+            server,
+            "render_production",
+            {
+                "script": {
+                    "title": "t",
+                    "id_slug": "01",
+                    "beats": [{"type": "narration", "text": "hi"}],
+                },
+                "bed_asset_id": "",
+            },
+        )
+    assert "empty" in str(ei.value)
+
+
 def test_render_format_omits_bed_and_sting_by_default(monkeypatch):
     calls = {}
 

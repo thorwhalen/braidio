@@ -140,9 +140,9 @@ def capabilities() -> dict:
             "debate's phases or a panel's rounds). Upload a bed/sting instrumental "
             "with upload_asset, then pass its itemId as render_production's or "
             "render_format's `bed_asset_id` (continuous underscore) / "
-            "`sting_asset_id` (plays at each scene_break) — without them a "
-            "scene_break is just a pause and a segment beat's spotlight flag has "
-            "no effect.",
+            "`sting_asset_id` (plays at each scene_break) — without a sting a "
+            "scene_break is just a pause, and a segment beat's spotlight flag "
+            "needs `bed_asset_id` specifically (there's no bed to drop out).",
             "Dialogue and scene_break beats aren't in the graph pipeline yet "
             "(save_script / weave_project reject them) — use render_production or "
             "render_format for those.",

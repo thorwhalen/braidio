@@ -524,11 +524,18 @@ def _resolve_source(source: dict | None):
 
 
 def _resolve_asset(ws: Workspace, asset_id: str | None) -> str | None:
-    """Resolve an uploaded asset-library id to its server-local path (or ``None``).
+    """Resolve an uploaded asset-library id to its server-local path.
 
-    Same resolver as ``source.asset_id`` — never a raw server path from the caller.
+    ``None`` (the field omitted) means "no asset" and resolves to ``None``; an
+    empty string is a caller mistake, not "no asset", and raises like any other
+    unknown id would. Same resolver as ``source.asset_id`` — never a raw server
+    path from the caller.
     """
-    return ws.asset_path(asset_id) if asset_id else None
+    if asset_id is None:
+        return None
+    if asset_id == "":
+        raise ToolError("asset id must not be empty")
+    return ws.asset_path(asset_id)
 
 
 # --- [COSTED] renders (spend ElevenLabs money) ------------------------------
