@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from braidio.conversation import ConversationCast
 from braidio.delivery import Delivery
 from braidio.formats import (
@@ -12,8 +14,10 @@ from braidio.formats import (
     SOLO_EXPLAINER,
     SONG_EXPLODER,
     Format,
+    describe_asset_application,
     render_format,
 )
+from braidio.script import SceneBreak, Script
 from braidio.weave_config import WeaveConfig
 
 _VALID_PLACEMENTS = {"before", "under", "after"}
@@ -78,6 +82,66 @@ def test_render_format_wires_defaults(monkeypatch):
     captured.clear()
     render_format(DOCUMENTARY_VO, "S", source="SRC", voice_id="OVERRIDE")
     assert captured["voice_id"] == "OVERRIDE"
+
+
+def test_render_format_refuses_bed_asset_under_music_bed_none():
+    # braidio#43: a music_bed="none" format never renders a bed, so bed_asset
+    # must be refused BEFORE any render (the caller would otherwise pay for a
+    # bed the format silently drops).
+    assert SONG_EXPLODER.music_bed == "none"
+    with pytest.raises(ValueError, match="music_bed='none'|music_bed=.none."):
+        render_format(SONG_EXPLODER, "S", source=None, bed_asset="bed.wav")
+
+
+def test_render_format_bed_asset_still_works_for_a_bedded_format(monkeypatch):
+    captured = {}
+    import braidio.render as render_mod
+
+    monkeypatch.setattr(
+        render_mod,
+        "render_production",
+        lambda script, **kw: captured.update(kw) or "OUT",
+    )
+    render_format(SOLO_EXPLAINER, "S", source=None, bed_asset="bed.wav")
+    assert captured["music_bed"].asset_path == "bed.wav"
+
+
+def test_describe_asset_application_bed_none_format():
+    result = describe_asset_application(SONG_EXPLODER, "S", bed_asset="bed.wav")
+    assert result["bed_applied"] is False
+    assert "music_bed" in result["bed_ignored_reason"]
+    assert result["sting_applied"] is None  # no sting_asset supplied
+
+
+def test_describe_asset_application_bed_applied_when_intensity_has_a_gain():
+    result = describe_asset_application(SOLO_EXPLAINER, "S", bed_asset="bed.wav")
+    assert result["bed_applied"] is True
+    assert result["bed_ignored_reason"] is None
+
+
+def test_describe_asset_application_sting_ignored_without_a_playing_scene_break():
+    # SONG_EXPLODER's default scene_marker is "none" and this script has no
+    # scene_break at all — the sting is legitimately unused, not refused.
+    script = Script(title="t", id_slug="01", beats=[])
+    result = describe_asset_application(SONG_EXPLODER, script, sting_asset="hit.wav")
+    assert result["sting_applied"] is False
+    reason = result["sting_ignored_reason"]
+    assert "sting" in reason or "marker" in reason
+    assert result["bed_applied"] is None  # no bed_asset supplied
+
+
+def test_describe_asset_application_sting_applied_via_per_beat_override():
+    # a SceneBreak.marker override plays the sting even under a "none" default.
+    script = Script(title="t", id_slug="01", beats=[SceneBreak(marker="sting")])
+    result = describe_asset_application(SONG_EXPLODER, script, sting_asset="hit.wav")
+    assert result["sting_applied"] is True
+    assert result["sting_ignored_reason"] is None
+
+
+def test_describe_asset_application_sting_applied_under_default_sting_marker():
+    script = Script(title="t", id_slug="01", beats=[SceneBreak()])
+    result = describe_asset_application(DEEP_DIVE, script, sting_asset="hit.wav")
+    assert result["sting_applied"] is True
 
 
 def test_format_render_method_delegates(monkeypatch):

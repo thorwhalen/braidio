@@ -873,7 +873,9 @@ def render_format(
 
     ``bed_asset_id`` / ``sting_asset_id`` (from ``upload_asset``/``list_assets``) add
     a music bed (at the format's intensity) and a scene-break sting; without them a
-    scene_break is a pause and spotlight is inert.
+    scene_break is a pause and spotlight is inert. A ``music_bed="none"`` format
+    refuses ``bed_asset_id`` up front; the result's ``sting_applied`` says whether a
+    supplied sting actually played (see ``help`` for why).
     """
     fmt = _format(format_id)
     scr = script_from_json(script)
@@ -881,6 +883,17 @@ def render_format(
     _check_source(scr, src)
     ws = _workspace()
     stem = name or scr.id_slug
+    bed_path = _resolve_asset(ws, bed_asset_id)
+    sting_path = _resolve_asset(ws, sting_asset_id)
+    application = braidio.describe_asset_application(
+        fmt, scr, bed_asset=bed_path, sting_asset=sting_path
+    )
+    if application["bed_applied"] is False:
+        raise ToolError(
+            f"render_format: format {format_id!r} declares music_bed='none' — "
+            "bed_asset_id would be paid for and dropped; omit it, or use a format "
+            "whose music_bed isn't 'none'"
+        )
     out = ws.render_path(stem)
     braidio.render_format(
         fmt,
@@ -891,10 +904,15 @@ def render_format(
         tts_dir=_work_dir(ws, stem) + "/tts",
         clips_dir=_work_dir(ws, stem) + "/clips",
         episodes_dir=str(ws.renders_dir),
-        bed_asset=_resolve_asset(ws, bed_asset_id),
-        sting_asset=_resolve_asset(ws, sting_asset_id),
+        bed_asset=bed_path,
+        sting_asset=sting_path,
     )
-    return {**_retrieval(out), **_render_cost(scr, profile)}
+    return {
+        **_retrieval(out),
+        **_render_cost(scr, profile),
+        "sting_applied": application["sting_applied"],
+        "sting_ignored_reason": application["sting_ignored_reason"],
+    }
 
 
 def weave_project(

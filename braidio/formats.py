@@ -124,14 +124,26 @@ def render_format(
     on that ``Narration`` beat).
 
     ``bed_asset`` (a path to an app-supplied instrumental) adds a music bed at the
-    gain implied by ``fmt.music_bed`` (skipped when the format's intensity is
-    ``"none"``); pass ``music_bed=MusicBed(...)`` in ``overrides`` for full control.
-    ``sting_asset`` (a path to an app-supplied short marker) is what a
-    ``SceneBreak`` plays under the format's ``structure``; pass
-    ``structure=MusicStructure(...)`` in ``overrides`` for full control.
+    gain implied by ``fmt.music_bed``; pass ``music_bed=MusicBed(...)`` in
+    ``overrides`` for full control. A format whose ``music_bed`` is ``"none"``
+    (e.g. ``SONG_EXPLODER``) never renders a bed at all, so ``bed_asset`` there
+    raises ``ValueError`` *before* any rendering — the caller would otherwise pay
+    for a bed the format silently drops (braidio#43). ``sting_asset`` (a path to
+    an app-supplied short marker) is what a ``SceneBreak`` plays under the
+    format's ``structure``; pass ``structure=MusicStructure(...)`` in
+    ``overrides`` for full control. Unlike the bed, a format's ``scene_marker``
+    is only the *default* — an individual ``SceneBreak.marker`` override can
+    still play the sting even under a ``"none"`` default — so a sting that ends
+    up unused is not refused, only reported (see :func:`describe_asset_application`).
     """
-    from braidio.music import bed_for_intensity
     from braidio.render import render_production
+
+    if bed_asset is not None and not _bed_usable(fmt):
+        raise ValueError(
+            f"format {fmt.id!r} declares music_bed={fmt.music_bed!r} — it never "
+            "renders a bed, so bed_asset would be paid for and then dropped; omit "
+            "bed_asset, or render under a format whose music_bed isn't 'none'"
+        )
 
     kwargs = dict(
         source=source,
@@ -146,6 +158,8 @@ def render_format(
     if fmt.narration_voice is not None:
         kwargs["voice_id"] = fmt.narration_voice
     if bed_asset is not None:
+        from braidio.music import bed_for_intensity
+
         bed = bed_for_intensity(bed_asset, fmt.music_bed)
         if bed is not None:
             kwargs["music_bed"] = bed
@@ -153,6 +167,72 @@ def render_format(
         kwargs["structure"] = replace(fmt.structure, sting=Sting(sting_asset))
     kwargs.update(overrides)
     return render_production(script, **kwargs)
+
+
+def _bed_usable(fmt: Format) -> bool:
+    """Whether ``fmt``'s ``music_bed`` intensity ever renders a bed at all."""
+    from braidio.music import BED_GAIN_BY_INTENSITY
+
+    return BED_GAIN_BY_INTENSITY.get(fmt.music_bed) is not None
+
+
+def _sting_would_play(fmt: Format, script, sting_asset: str) -> bool:
+    """Whether some ``SceneBreak`` in ``script`` resolves to marker ``"sting"``
+    under ``fmt.structure`` once ``sting_asset`` is wired in as the sting."""
+    from braidio.script import SceneBreak
+
+    structure = replace(fmt.structure, sting=Sting(sting_asset))
+    beats = getattr(script, "beats", None) or ()
+    return any(
+        structure.plays_sting_of(b.marker) for b in beats if isinstance(b, SceneBreak)
+    )
+
+
+def describe_asset_application(
+    fmt: Format,
+    script,
+    *,
+    bed_asset: str | None = None,
+    sting_asset: str | None = None,
+) -> dict[str, bool | str | None]:
+    """Which of the supplied ``bed_asset`` / ``sting_asset`` this format will
+    actually render, and why not otherwise (braidio#43).
+
+    Pure and pre-render — safe to call before paying for anything. A key stays
+    ``None`` when its asset wasn't supplied. ``bed_asset``'s fate is fixed by
+    ``fmt.music_bed`` alone: ``"none"`` never renders a bed, and
+    :func:`render_format` refuses ``bed_asset`` there rather than spend on one
+    that would be dropped, so ``bed_applied`` is ``False`` only via that refusal
+    path, never in a result you got back from a successful render.
+    ``sting_asset``'s fate additionally depends on ``script``: a scene break's
+    marker can override the format's default, so a sting can still legitimately
+    go unused in one script and play in another under the same format — that
+    case is reported here, not refused.
+    """
+    result: dict[str, bool | str | None] = {
+        "bed_applied": None,
+        "bed_ignored_reason": None,
+        "sting_applied": None,
+        "sting_ignored_reason": None,
+    }
+    if bed_asset is not None:
+        if _bed_usable(fmt):
+            result["bed_applied"] = True
+        else:
+            result["bed_applied"] = False
+            result["bed_ignored_reason"] = (
+                f"format {fmt.id!r} declares music_bed={fmt.music_bed!r} (no bed)"
+            )
+    if sting_asset is not None:
+        if _sting_would_play(fmt, script, sting_asset):
+            result["sting_applied"] = True
+        else:
+            result["sting_applied"] = False
+            result["sting_ignored_reason"] = (
+                "no scene break in this script resolves to marker='sting' under "
+                f"format {fmt.id!r} (default scene_marker={fmt.structure.scene_marker!r})"
+            )
+    return result
 
 
 # =============================================================================
