@@ -16,6 +16,7 @@ monkeypatched, so no ElevenLabs / ffmpeg runs. Asserts:
 from __future__ import annotations
 
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
@@ -533,8 +534,12 @@ def test_profile_change_restales_only_the_episode(
     """The rights profile is a real graph input, so changing it re-stales the
     episode through ordinary freshness — no special case (braidio#47).
 
-    Only the episode: the members were already filtered at ingest, so their
-    audio is still the audio this profile asked for.
+    Read this together with ``test_episode_refuses_members_its_profile_forbids``:
+    the stale signal says *this episode no longer matches its inputs*, NOT
+    "re-run the weave". Because the filter ran at ingest, only re-ingest can
+    honour a changed profile, and re-weaving alone is refused rather than
+    allowed to mislabel the old cut. (That re-ingest is itself blocked today by
+    the once-per-project singleton — braidio#51.)
     """
     import nw
 
@@ -549,6 +554,42 @@ def test_profile_change_restales_only_the_episode(
     )
     stale = {a.id for a in nw.stale_after(project.root, profile_node.id)}
     assert stale == {episode_id}
+
+
+def test_episode_refuses_members_its_profile_forbids(
+    project, script_and_source, patched_synthesis
+):
+    """A profile flipped after ingest must not produce a mislabelled episode.
+
+    The filtering happens once, at ingest. Re-staling the episode alone
+    therefore *invites* the wrong repair: re-run only ``weave_to_episode`` and
+    it would weave the members the OLD profile chose while stamping the NEW
+    profile's name on them — a published-labelled episode with an owned-local
+    clip in it. The transform verifies its members against the profile it is
+    about to claim, and refuses (braidio#47 review).
+    """
+    import nw
+
+    script, source = script_and_source
+    braidio.weave_project(
+        project, script, source=source, profile=braidio.Profile.PERSONAL
+    )
+    (profile_node,) = nw.annotations_at_tier(project.root, "render-profiles")
+    episode = nw.annotations_at_tier(project.root, "episode-renders")[-1]
+    index = {a.id: a for a in nw.iter_all_annotations(project.root)}
+    members = tuple(
+        index[UUID(m)] for m in episode.body["ordered_member_ids"]
+    )
+    _rewrite_in_place(
+        project, profile_node, body={**profile_node.body, "profile": "published"}
+    )
+
+    with pytest.raises(braidio.RightsViolation) as ei:
+        nw.get_transform(braidio.transforms.EPISODE_TRANSFORM).plan(
+            project, nw.TransformInputs(primary=members)
+        )
+    # names the beat and what to do about it, not just "invalid"
+    assert "hook" in str(ei.value) and "re-ingest" in str(ei.value)
 
 
 def test_no_declared_profile_writes_no_render_profile_node(

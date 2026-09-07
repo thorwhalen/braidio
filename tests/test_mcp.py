@@ -965,6 +965,33 @@ def test_save_script_applies_the_rights_profile(tmp_path, monkeypatch):
     assert personal["profile"] == "personal" and personal["dropped"] == []
 
 
+@pytest.mark.parametrize(
+    "tool,args",
+    [
+        ("plan_production", {}),
+        ("render_production", {}),
+        ("render_format", {"format_id": "solo_explainer"}),
+    ],
+)
+def test_an_unknown_profile_is_a_tool_error_naming_the_choices(tool, args):
+    """A bad `profile` must arrive as a ToolError listing the valid values, not
+    as whatever raw ValueError `Profile()` happens to raise (braidio#47 review).
+    """
+    server = _local_server(ledger={})
+    with pytest.raises(Exception) as ei:
+        _call(
+            server,
+            tool,
+            {
+                **args,
+                "script": {"title": "t", "id_slug": "01", "beats": []},
+                "profile": "commercial",
+            },
+        )
+    message = str(ei.value)
+    assert "commercial" in message and "personal" in message and "published" in message
+
+
 @_NW
 def test_weave_project_costs_the_profile_it_was_given(monkeypatch):
     """The tool reported ``_render_cost(scr, "personal")`` whatever profile was

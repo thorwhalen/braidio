@@ -96,10 +96,51 @@ class RenderPlan:
     substituted: list[str] = field(default_factory=list)
 
 
+class RightsViolation(ValueError):
+    """A render would play source audio the profile it claims forbids.
+
+    Raised where a rights decision is *verified* rather than made — today by the
+    graph path's episode transform, which checks the members it is about to
+    weave against the profile it is about to stamp on them. A ``ValueError``
+    subclass so existing callers keep catching it, typed so a caller that cares
+    can tell a rights refusal from a malformed input.
+    """
+
+
 def segment_is_publishable(
     beat: SegmentBeat, publishable: frozenset[str] = PUBLISHABLE_CLIP_RIGHTS
 ) -> bool:
-    return beat.rights in publishable
+    """Whether ``beat``'s audio may play in the published cut."""
+    return rights_are_publishable(beat.rights, publishable)
+
+
+def rights_are_publishable(
+    rights: str, publishable: frozenset[str] = PUBLISHABLE_CLIP_RIGHTS
+) -> bool:
+    """The publishable test at the level of a bare ``rights`` string.
+
+    The graph records rights on nodes, not on ``SegmentBeat``\\ s, so the check
+    has to be askable without a beat in hand — but it must stay the *same*
+    check. :func:`segment_is_publishable` is this function with a beat
+    unwrapped, never a parallel rule.
+    """
+    return rights in publishable
+
+
+def clip_plays_under(
+    profile: Profile,
+    rights: str,
+    publishable: frozenset[str] = PUBLISHABLE_CLIP_RIGHTS,
+) -> bool:
+    """Whether a segment with ``rights`` plays as audio under ``profile``.
+
+    The whole clip-routing rule, in one place: ``PERSONAL`` plays everything,
+    ``PUBLISHED`` plays only publishable rights. :func:`plan_production` asks it
+    when it filters a script, and the graph's episode transform re-asks it at
+    weave time to verify that the members it inherited still match the profile
+    the production now declares — one rule, asked twice, never copied.
+    """
+    return profile is Profile.PERSONAL or rights_are_publishable(rights, publishable)
 
 
 def plan_production(
@@ -112,9 +153,7 @@ def plan_production(
     plan = RenderPlan(profile=profile)
     for i, beat in enumerate(script.beats):
         if isinstance(beat, SegmentBeat):
-            if profile is Profile.PERSONAL or segment_is_publishable(
-                beat, publishable_clip_rights
-            ):
+            if clip_plays_under(profile, beat.rights, publishable_clip_rights):
                 plan.beats.append(PlannedBeat("clip", beat.reference, i))
             elif beat.published_substitute:
                 plan.beats.append(

@@ -15,14 +15,23 @@ a ``production-structure/v1`` node the episode also derives from it, so
 swapping the sting asset or flipping fade-to-spotlight re-stales exactly the
 episode; when it does not, nothing about the plan or the render changes.
 
-The **rights profile** rides the same seam (thorwhalen/braidio#47). The
-episode's ``profile`` used to be the literal ``"personal"``, so a graph render
-claimed a personal cut whatever was actually asked for. It is now read from the
-``render-profile/v1`` node the ingest wrote — a declared input of this
-Transform, so a profile change re-stales the episode like any other input. The
-filtering itself already happened at ingest, through the same
-:func:`braidio.rights.plan_production` the no-graph path uses; this Transform
-records the decision, it does not make one.
+The **rights profile** rides the same seam (thorwhalen/braidio#47), with one
+difference that matters. The episode's ``profile`` used to be the literal
+``"personal"``, so a graph render claimed a personal cut whatever was actually
+asked for. It is now read from the ``render-profile/v1`` node the ingest wrote,
+a declared input of this Transform.
+
+But the filtering happens **once, at ingest**, so — unlike the sting asset — a
+changed profile cannot be repaired by re-running this Transform. Re-staling
+only the episode is therefore a *hazard*, not the feature it is for the other
+inputs: it invites exactly the wrong repair, re-weaving the members the old
+profile chose under the new profile's name. So this Transform does not trust
+the label. It re-asks :func:`braidio.rights.clip_plays_under` — the same rule
+:func:`~braidio.rights.plan_production` applied at ingest, asked again, never
+reimplemented — over its clip members, and raises
+:class:`~braidio.rights.RightsViolation` when they disagree with the profile it
+is about to stamp on them. A profile change is only correctly applied by
+re-ingesting the script.
 
 This is the genre's ``projection_entrypoint``: the step that turns the graph
 into the delivered artifact.
@@ -39,7 +48,13 @@ from nw.transforms._provenance import derive_provenance
 
 from braidio.weave import TimelineItem
 from braidio.bodies._domain import SCENE_BREAK_V1
-from braidio.rights import DEFAULT_PROFILE
+from braidio.rights import (
+    DEFAULT_PROFILE,
+    PUBLISHABLE_CLIP_RIGHTS,
+    Profile,
+    RightsViolation,
+    clip_plays_under,
+)
 from braidio.bodies._render_nodes import (
     WEAVE_CONFIG_V1,
     PRODUCTION_STRUCTURE_V1,
@@ -55,6 +70,7 @@ from braidio.transforms._common import (
     TIER_PRODUCTION_STRUCTURE,
     TIER_RENDER_PROFILE,
     TIER_NARRATION_RENDER,
+    TIER_SEGMENT_EXTRACTION,
     TIER_SCENE_BREAK,
     TIER_EPISODE_RENDER,
     singleton,
@@ -113,6 +129,57 @@ def _profile_value(node: Annotation | None) -> str:
     return DEFAULT_PROFILE.value if node is None else str(node.body["profile"])
 
 
+def _verify_members_against_profile(members, index, node: Annotation | None) -> None:
+    """Refuse to weave members the declared profile forbids.
+
+    The rights filter runs **once, at ingest**, which leaves one way to get a
+    lying episode: change the profile afterwards and re-run only this transform
+    — precisely the repair a "the episode is stale" signal invites. The members
+    would still be the ones the *old* profile chose, and the episode would
+    stamp the *new* profile's name on them.
+
+    So this transform verifies rather than trusts: every clip member is
+    re-checked with :func:`braidio.rights.clip_plays_under` — the same rule
+    :func:`~braidio.rights.plan_production` applied, asked again, not
+    reimplemented — against the profile now declared. A mismatch means the
+    graph must be rebuilt from the script, so it raises rather than quietly
+    producing a mislabelled cut (thorwhalen/braidio#47).
+
+    The refusal is the right answer even though re-ingest into an existing
+    project is itself blocked today by the once-per-project singleton
+    (thorwhalen/braidio#51): refusing points at a real fix, whereas rendering
+    would ship a cut whose label is a lie.
+    """
+    if node is None:  # undeclared → DEFAULT_PROFILE, which refuses nothing
+        return
+    profile = Profile(node.body["profile"])
+    publishable = frozenset(
+        node.body.get("publishable_clip_rights") or PUBLISHABLE_CLIP_RIGHTS
+    )
+    refused = [
+        clip.body.get("label") or str(clip.id)
+        for clip in _clip_parents(members, index)
+        if not clip_plays_under(profile, clip.body.get("rights", ""), publishable)
+    ]
+    if refused:
+        raise RightsViolation(
+            f"profile {profile.value!r} forbids source audio still in this "
+            f"episode's members: {', '.join(refused)}. The rights filter runs at "
+            "ingest, so a profile change must go through re-ingest (re-run "
+            "weave_project on a fresh project) — re-running the weave alone "
+            "would mislabel the old cut."
+        )
+
+
+def _clip_parents(members, index):
+    """The ``audio-clip`` node behind each segment-extraction member."""
+    for member in members:
+        if member.tier != TIER_SEGMENT_EXTRACTION:
+            continue
+        parents = resolve_parents(member, index)
+        yield require_tier(parents, TIER_AUDIO_CLIP)
+
+
 @register_transform(NAME)
 class WeaveToEpisode(BaseTransform):
     """All members — renders and scene breaks — (+ weave-config, + the
@@ -138,6 +205,9 @@ class WeaveToEpisode(BaseTransform):
         cfg = singleton(project, TIER_WEAVE_CONFIG)
         structure = optional_singleton(project, TIER_PRODUCTION_STRUCTURE)
         render_profile = optional_singleton(project, TIER_RENDER_PROFILE)
+        # Verify before planning anything: a profile that no longer matches the
+        # members must fail here, not become a mislabelled render.
+        _verify_members_against_profile(members, graph_index(project), render_profile)
         ordered_member_ids = tuple(str(a.id) for a in members)
 
         context = {WEAVE_CONFIG_V1: (cfg,)}

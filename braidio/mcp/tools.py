@@ -91,6 +91,25 @@ def _format(format_id: str | None):
     return braidio.FORMATS[format_id]
 
 
+def _profile(profile: str):
+    """The :class:`~braidio.rights.Profile` for ``profile``.
+
+    Every tool that takes a rights profile resolves it here, so an unknown value
+    is one ToolError naming the choices rather than whichever raw ``ValueError``
+    ``Profile()`` happens to produce — the same courtesy :func:`_format` does
+    for ``format_id``.
+    """
+    from braidio import Profile
+
+    try:
+        return Profile(profile)
+    except ValueError:
+        raise ToolError(
+            f"unknown profile {profile!r}; use one of "
+            f"{sorted(p.value for p in Profile)}"
+        ) from None
+
+
 # --- assistance -------------------------------------------------------------
 
 
@@ -162,9 +181,7 @@ def plan_production(script: dict, profile: str = DEFAULT_PROFILE.value) -> dict:
     substitute non-publishable clips). Returns the planned beats + what was
     dropped/substituted — a dry run, nothing is rendered.
     """
-    from braidio import Profile
-
-    plan = braidio.plan_production(script_from_json(script), Profile(profile))
+    plan = braidio.plan_production(script_from_json(script), _profile(profile))
     return to_json(plan)
 
 
@@ -179,9 +196,7 @@ def content_violations(
     script: dict, forbidden: list[str], profile: str = "published", min_words: int = 5
 ) -> dict:
     """Scan a production's render plan for non-publishable clips + forbidden quotes."""
-    from braidio import Profile
-
-    plan = braidio.plan_production(script_from_json(script), Profile(profile))
+    plan = braidio.plan_production(script_from_json(script), _profile(profile))
     return {
         "violations": braidio.content_violations(plan, forbidden, min_words=min_words)
     }
@@ -360,8 +375,6 @@ def save_script(
     ``profile`` is the rights cut: ``"published"`` links only clips it may use.
     Free — no synthesis.
     """
-    from braidio import Profile
-
     _require_nw("save_script")
     scr = script_from_json(script)
     _reject_graph_unsupported(scr, "save_script")
@@ -382,7 +395,7 @@ def save_script(
         source=src,
         structure=structure,
         bed=bed,
-        profile=Profile(profile),
+        profile=_profile(profile),
     )
     return {
         "project_id": project_id,
@@ -636,9 +649,7 @@ def _render_cost(scr, profile: str) -> dict:
     substitutes are billed — unlike costing the raw script. The figure is a rate
     estimate (``cost_basis="estimate"``; see :mod:`braidio.cost` + braidio#8).
     """
-    from braidio import Profile
-
-    plan = braidio.plan_production(scr, Profile(profile))
+    plan = braidio.plan_production(scr, _profile(profile))
     chars = 0
     priced: list[float] = []
     unpriced = False
@@ -823,7 +834,6 @@ def render_production(
     ``upload_asset``) add a music bed and a scene-break sting; without them a
     scene_break is a pause and spotlight is inert.
     """
-    from braidio import Profile
     from braidio.music import MusicBed
     from braidio.structure import MusicStructure, Sting
 
@@ -838,7 +848,7 @@ def render_production(
     braidio.render_production(
         scr,
         source=src,
-        profile=Profile(profile),
+        profile=_profile(profile),
         delivery=_delivery(delivery),
         out_path=out,
         tts_dir=_work_dir(ws, stem) + "/tts",
@@ -865,8 +875,6 @@ def render_format(
     a music bed (at the format's intensity) and a scene-break sting; without them a
     scene_break is a pause and spotlight is inert.
     """
-    from braidio import Profile
-
     fmt = _format(format_id)
     scr = script_from_json(script)
     src = _resolve_source(source)
@@ -878,7 +886,7 @@ def render_format(
         fmt,
         scr,
         source=src,
-        profile=Profile(profile),
+        profile=_profile(profile),
         out_path=out,
         tts_dir=_work_dir(ws, stem) + "/tts",
         clips_dir=_work_dir(ws, stem) + "/clips",
@@ -907,8 +915,6 @@ def weave_project(
     sting. ``profile`` is the rights cut: ``"published"`` renders only the clips
     it is allowed to use.
     """
-    from braidio import Profile
-
     _require_nw("weave_project")
     scr = script_from_json(script)
     _reject_graph_unsupported(scr, "weave_project")
@@ -929,7 +935,7 @@ def weave_project(
         fmt=fmt,
         structure=structure,
         bed=bed,
-        profile=Profile(profile),
+        profile=_profile(profile),
     )
     body = episode.body
     return {
