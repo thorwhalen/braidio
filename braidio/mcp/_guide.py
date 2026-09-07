@@ -144,6 +144,14 @@ def capabilities() -> dict:
             "without a sting a scene_break is just a pause, and a segment beat's "
             "spotlight flag needs `bed_asset_id` specifically (there's no bed to "
             "drop out).",
+            "render_format formats vary in what they use a bed/sting for: a "
+            "format with music_bed='none' (e.g. song_exploder) never renders a "
+            "bed at all, so render_format refuses `bed_asset_id` there up front "
+            "rather than charge you and drop it. A sting can still legitimately "
+            "go unused (e.g. the format's default scene_marker is 'none' and the "
+            "script never overrides it per scene_break) — render_format's result "
+            "carries `sting_applied` / `sting_ignored_reason` so you know either "
+            "way.",
             "Dialogue beats aren't in the graph pipeline yet (save_script / "
             "weave_project reject them) — use render_production or render_format "
             "for those.",

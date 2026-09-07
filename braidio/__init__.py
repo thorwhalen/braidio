@@ -135,6 +135,7 @@ from braidio.structure import (  # noqa: F401
 from braidio.formats import (  # noqa: F401
     Format,
     render_format,
+    describe_asset_application,
     FORMATS,
     SOLO_EXPLAINER,
     DEEP_DIVE,
@@ -303,6 +304,7 @@ __all__ = [
     # formats (ready-made templates)
     "Format",
     "render_format",
+    "describe_asset_application",
     "FORMATS",
     "SOLO_EXPLAINER",
     "DEEP_DIVE",

@@ -524,6 +524,98 @@ def test_render_production_rejects_empty_asset_id():
     assert "empty" in str(ei.value)
 
 
+def test_render_format_refuses_bed_asset_under_music_bed_none_format(monkeypatch):
+    # braidio#43: a music_bed="none" format (e.g. interview_host_removed / the
+    # "song_exploder" style) never renders a bed — bed_asset_id must be refused
+    # BEFORE any render, and braidio.render_format must never even be called.
+    import base64
+
+    called = []
+    monkeypatch.setattr(
+        braidio, "render_format", lambda *a, **kw: called.append(1) or Path("x")
+    )
+    server = _local_server(ledger={})
+    bed_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"BED").decode()}
+    ).structured_content["itemId"]
+    with pytest.raises(Exception) as ei:
+        _call(
+            server,
+            "render_format",
+            {
+                "format_id": "interview_host_removed",
+                "script": {
+                    "title": "t",
+                    "id_slug": "01",
+                    "beats": [{"type": "narration", "text": "hi"}],
+                },
+                "bed_asset_id": bed_id,
+            },
+        )
+    assert "music_bed" in str(ei.value)
+    assert not called
+
+
+def test_render_format_reports_sting_applied_in_result(monkeypatch):
+    def _stub(fmt, scr, *, out_path, **kw):
+        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(out_path).write_bytes(b"EP")
+        return Path(out_path)
+
+    monkeypatch.setattr(braidio, "render_format", _stub)
+    server = _local_server(ledger={})
+    result = _call(
+        server,
+        "render_format",
+        {
+            "format_id": "deep_dive",
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [{"type": "scene_break"}],
+            },
+        },
+    ).structured_content
+    assert result["sting_applied"] is None  # no sting_asset_id supplied
+
+    import base64
+
+    sting_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"STING").decode()}
+    ).structured_content["itemId"]
+    applied = _call(
+        server,
+        "render_format",
+        {
+            "format_id": "deep_dive",
+            "script": {
+                "title": "t",
+                "id_slug": "02",
+                "beats": [{"type": "scene_break"}],
+            },
+            "sting_asset_id": sting_id,
+        },
+    ).structured_content
+    assert applied["sting_applied"] is True
+    assert applied["sting_ignored_reason"] is None
+
+    ignored = _call(
+        server,
+        "render_format",
+        {
+            "format_id": "interview_host_removed",  # scene_marker default "none"
+            "script": {
+                "title": "t",
+                "id_slug": "03",
+                "beats": [{"type": "scene_break"}],
+            },
+            "sting_asset_id": sting_id,
+        },
+    ).structured_content
+    assert ignored["sting_applied"] is False
+    assert ignored["sting_ignored_reason"]
+
+
 def test_render_format_omits_bed_and_sting_by_default(monkeypatch):
     calls = {}
 
