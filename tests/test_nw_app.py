@@ -18,7 +18,9 @@ def test_domain_and_render_schemas_registered():
 
     # braidio#39 added scene-break/v1 (domain) + production-structure/v1 (render);
     # braidio#47 added render-profile/v1 (render) — the rights decision the graph
-    # path used to leave unrecorded.
+    # path used to leave unrecorded. This count is a coarse smoke check only —
+    # test_body_schema_stability.py pins the actual URIs and their serialized
+    # shapes (braidio#48).
     assert len(SCHEMA_URIS) == 14  # 6 domain + 8 render
     for uri in SCHEMA_URIS:
         assert is_registered(uri), uri

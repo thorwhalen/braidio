@@ -113,6 +113,28 @@ the profile re-stales the episode through ordinary freshness. Same absence rule
 as the structure node: undeclared writes nothing, which is what keeps a legacy
 project byte-identical.
 
+## Body schemas are a federation contract
+
+`braidio/bodies/` registers 14 lacing body-schema URIs (6 domain, 8 render —
+see `braidio.bodies.SCHEMA_URIS`). These are **on the wire**: the nw pipeline
+persists them in project graphs, and both deployed MCP connectors read and
+write them live. Renaming a URI, or renaming, removing, retyping, or
+re-defaulting a serialized field is a **federation event** — it silently
+breaks every stored annotation and every downstream round-trip. It needs a
+new schema version plus a `lacing.register_migration` from the old one,
+landed together with the nw/connector updates that depend on it. Adding an
+**optional** field with a default is additive and needs no migration — that
+is how `AudioClipBodyV1.spotlight` and the `scene-break/v1` /
+`production-structure/v1` / `render-profile/v1` bodies themselves arrived.
+
+`tests/test_body_schema_stability.py` pins all 14 URIs and every field's
+serialized shape (name, JSON type, required/optional, default), and fails
+additive vs. breaking changes in separate tests with different advice. It is
+not derived from the models it protects — the pinned table is literal,
+generated once from the current models and committed. If that test fails,
+the paragraph above is the rule it is enforcing; do not edit the pin to make
+a change pass without doing the migration first.
+
 ## `mixing` owns the audio DSP — do not wrap it in a blindfold
 
 Everything braidio does to actual samples goes through `mixing` (or a direct
@@ -229,7 +251,9 @@ which is worse than red.
 The suite is mostly characterization: `test_mcp.py` pins the tool surface and
 its error messages, `test_wire_descriptions.py` pins what the model sees,
 `test_cost.py` pins the unpriced/priced semantics, `test_transforms.py` pins the
-graph pipeline including the `$0`-on-cache-hit attribution. **Do not edit an
+graph pipeline including the `$0`-on-cache-hit attribution,
+`test_body_schema_stability.py` pins every body schema's URI and serialized
+shape (see "Body schemas are a federation contract" above). **Do not edit an
 assertion to make a refactor pass** — if behaviour must change, change the
 assertion deliberately and say why in the commit.
 
@@ -253,6 +277,8 @@ assertion deliberately and say why in the commit.
   by the caller.
 - Never change `narrate` / `render_dialogue` / `ConversationCast` signatures
   without checking `reelee` first.
+- Never rename/remove/retype/re-default a body-schema field, or a URI, without
+  a `lacing.register_migration` — see "Body schemas are a federation contract".
 
 Research and style references live in `misc/docs/` (never inside the importable
 package): `research/commentary-formats-and-styles.md` is the taxonomy the
