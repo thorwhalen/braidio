@@ -242,6 +242,22 @@ def test_a_caller_supplied_rights_policy_decides_what_is_publishable(
     assert _member_kinds(project, episode) == ["narration", "clip", "narration"]
 
 
+@needs_ffmpeg
+def test_a_profile_that_refuses_everything_fails_like_the_fast_path(
+    project, source, tone_narration
+):
+    """Filtering at ingest makes "the profile left nothing to render" reachable on
+    the graph path for the first time. It must land the way the fast path lands
+    it — a ValueError naming the empty mix, not an opaque ffmpeg abort."""
+    script = _script(
+        braidio.SegmentBeat(reference="the hook", label="hook", rights="owned-local")
+    )
+    with pytest.raises(ValueError):
+        braidio.weave_project(
+            project, script, source=source, profile=braidio.Profile.PUBLISHED
+        )
+
+
 # --- the decision is recorded, not just enacted -----------------------------
 
 
