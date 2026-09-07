@@ -23,6 +23,7 @@ import braidio  # attr access (braidio.narrate, ...) so tests can monkeypatch
 from fastmcp.exceptions import ToolError
 
 from braidio.mcp._helpers import script_from_json, source_from_json, to_json
+from braidio.rights import DEFAULT_PROFILE
 from braidio.mcp.metering import current_email
 from braidio.mcp.workspace import Workspace
 from braidio.tts import DEFAULT_MODEL_ID, DIALOGUE_MODEL_ID
@@ -154,7 +155,7 @@ def estimate_cost(script: dict) -> dict:
     return out
 
 
-def plan_production(script: dict, profile: str = "personal") -> dict:
+def plan_production(script: dict, profile: str = DEFAULT_PROFILE.value) -> dict:
     """Filter a script into the beats renderable under a rights ``profile``.
 
     ``profile`` is ``"personal"`` (play everything) or ``"published"`` (drop /
@@ -348,6 +349,7 @@ def save_script(
     format_id: str | None = None,
     bed_asset_id: str | None = None,
     sting_asset_id: str | None = None,
+    profile: str = DEFAULT_PROFILE.value,
 ) -> dict:
     """Link a Script's beats into a project's graph (free authoring; render later).
 
@@ -355,8 +357,11 @@ def save_script(
     so you can review (project_status) and render with weave_project when ready
     (Dialogue is not in the graph pipeline yet). ``format_id`` +
     ``bed_asset_id`` / ``sting_asset_id`` record the production's music.
+    ``profile`` is the rights cut: ``"published"`` links only clips it may use.
     Free — no synthesis.
     """
+    from braidio import Profile
+
     _require_nw("save_script")
     scr = script_from_json(script)
     _reject_graph_unsupported(scr, "save_script")
@@ -377,10 +382,14 @@ def save_script(
         source=src,
         structure=structure,
         bed=bed,
+        profile=Profile(profile),
     )
     return {
         "project_id": project_id,
+        "profile": profile,
         "beats": [{"kind": k, "id": str(a.id)} for k, a in ingested.ordered],
+        "dropped": list(ingested.plan.dropped),
+        "substituted": list(ingested.plan.substituted),
     }
 
 
@@ -799,7 +808,7 @@ def compose_narration(
 def render_production(
     script: dict,
     source: dict | None = None,
-    profile: str = "personal",
+    profile: str = DEFAULT_PROFILE.value,
     delivery: str = "narration",
     name: str | None = None,
     bed_asset_id: str | None = None,
@@ -845,7 +854,7 @@ def render_format(
     format_id: str,
     script: dict,
     source: dict | None = None,
-    profile: str = "personal",
+    profile: str = DEFAULT_PROFILE.value,
     name: str | None = None,
     bed_asset_id: str | None = None,
     sting_asset_id: str | None = None,
@@ -887,15 +896,19 @@ def weave_project(
     format_id: str | None = None,
     bed_asset_id: str | None = None,
     sting_asset_id: str | None = None,
+    profile: str = DEFAULT_PROFILE.value,
 ) -> dict:
     """[COSTED] Ingest a script into your project and run the full commentary_weave pipeline.
 
     Uses the nw graph, so re-running re-synthesizes only what changed (partial
     re-render) and records provenance. Narration, Segment and scene_break beats
     (not Dialogue yet). ``format_id`` applies a ready-made format;
-    ``bed_asset_id`` / ``sting_asset_id`` (from ``upload_asset``) add a music bed
-    and a scene-break sting — without a sting a scene_break is just a pause.
+    ``bed_asset_id`` / ``sting_asset_id`` add a music bed and a scene-break
+    sting. ``profile`` is the rights cut: ``"published"`` renders only the clips
+    it is allowed to use.
     """
+    from braidio import Profile
+
     _require_nw("weave_project")
     scr = script_from_json(script)
     _reject_graph_unsupported(scr, "weave_project")
@@ -910,12 +923,18 @@ def weave_project(
     )
     proj = ws.open_project(project_id)
     episode = braidio.weave_project(
-        proj, scr, source=src, fmt=fmt, structure=structure, bed=bed
+        proj,
+        scr,
+        source=src,
+        fmt=fmt,
+        structure=structure,
+        bed=bed,
+        profile=Profile(profile),
     )
     body = episode.body
     return {
         "episode": to_json(body),
         "url": body.get("url"),
         **_episode_retrieval(project_id, str(episode.id)),
-        **_render_cost(scr, "personal"),
+        **_render_cost(scr, profile),
     }

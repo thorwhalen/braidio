@@ -527,6 +527,45 @@ def test_structure_change_restales_only_the_episode(
     assert stale == {episode_id}
 
 
+def test_profile_change_restales_only_the_episode(
+    project, script_and_source, patched_synthesis
+):
+    """The rights profile is a real graph input, so changing it re-stales the
+    episode through ordinary freshness — no special case (braidio#47).
+
+    Only the episode: the members were already filtered at ingest, so their
+    audio is still the audio this profile asked for.
+    """
+    import nw
+
+    script, source = script_and_source
+    braidio.weave_project(
+        project, script, source=source, profile=braidio.Profile.PERSONAL
+    )
+    (profile_node,) = nw.annotations_at_tier(project.root, "render-profiles")
+    (episode_id,) = _tier_ids(project, "episode-renders")
+    _rewrite_in_place(
+        project, profile_node, body={**profile_node.body, "profile": "published"}
+    )
+    stale = {a.id for a in nw.stale_after(project.root, profile_node.id)}
+    assert stale == {episode_id}
+
+
+def test_no_declared_profile_writes_no_render_profile_node(
+    project, script_and_source, patched_synthesis
+):
+    """The absence is load-bearing: an undeclared profile leaves the graph — and
+    so the episode's provenance — exactly as it was before braidio#47, while the
+    episode still reports the profile the fast path would have used."""
+    import nw
+
+    script, source = script_and_source
+    episode = braidio.weave_project(project, script, source=source)
+
+    assert nw.annotations_at_tier(project.root, "render-profiles") == []
+    assert episode.body["profile"] == braidio.DEFAULT_PROFILE.value
+
+
 def test_weave_project_applies_a_format_and_its_declared_structure(
     project, script_and_source, patched_synthesis
 ):

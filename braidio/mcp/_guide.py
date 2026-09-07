@@ -147,6 +147,12 @@ def capabilities() -> dict:
             "Dialogue beats aren't in the graph pipeline yet (save_script / "
             "weave_project reject them) — use render_production or render_format "
             "for those.",
+            "`profile` is the rights cut, and it now applies on BOTH render "
+            "paths: 'personal' plays every clip, 'published' plays only clips "
+            "whose rights allow it (dropping the rest, or swapping in a beat's "
+            "published_substitute). Pass it to render_production, render_format, "
+            "save_script or weave_project; call plan_production first to see what "
+            "a profile would drop, free.",
             "Every call is metered to the authenticated user; the connector is "
             "restricted to its allowlisted users.",
         ],
