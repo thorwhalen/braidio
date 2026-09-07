@@ -12,7 +12,8 @@ Everything is written **through** ``project.graph.add_annotation`` so the
 whole pipeline (authoring → render) lives in one graph that
 ``nw.stale_after`` can traverse. :class:`~braidio.script.Dialogue` beats are
 not yet ingested (a documented follow-up — they need ``render_dialogue``
-wiring and a turns-carrying beat body).
+wiring and a turns-carrying beat body), and neither are
+:class:`~braidio.script.SceneBreak` beats (they need a structural tier).
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ from dataclasses import dataclass
 
 from lacing import Annotation, MediaRef, TimeInterval
 
-from braidio.script import Script, Narration, SegmentBeat, Dialogue
+from braidio.script import Script, Narration, SceneBreak, SegmentBeat, Dialogue
 from braidio.weave_config import WeaveConfig
 from braidio.bodies._domain import (
     NARRATIVE_BEAT_V1,
@@ -112,6 +113,11 @@ def ingest_script(
             raise NotImplementedError(
                 "Dialogue beats are not yet ingested into the graph pipeline "
                 "(follow-up: render_dialogue wiring). Use Narration for v1."
+            )
+        elif isinstance(beat, SceneBreak):
+            raise NotImplementedError(
+                "SceneBreak beats are not yet ingested into the graph pipeline "
+                "(no structural tier). Use render_production / render_format."
             )
         else:  # pragma: no cover — Beat is a closed union
             raise TypeError(f"unknown beat type {type(beat).__name__}")

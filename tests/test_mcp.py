@@ -138,6 +138,8 @@ def test_script_from_json_dispatches_beat_types():
                 {"type": "narration", "text": "hi"},
                 {"type": "segment", "reference": "clip"},
                 {"type": "dialogue", "turns": [["A", "x"], ["B", "y"]]},
+                {"type": "scene_break", "label": "act 2"},
+                {"type": "segment", "reference": "key exhibit", "spotlight": True},
             ],
         }
     )
@@ -145,8 +147,12 @@ def test_script_from_json_dispatches_beat_types():
         "Narration",
         "SegmentBeat",
         "Dialogue",
+        "SceneBreak",
+        "SegmentBeat",
     ]
     assert script.beats[2].turns == (("A", "x"), ("B", "y"))
+    assert script.beats[3].label == "act 2" and script.beats[3].marker is None
+    assert script.beats[4].spotlight is True
 
 
 def test_script_from_json_rejects_unknown_beat_type():
@@ -726,6 +732,25 @@ def test_save_script_rejects_dialogue_before_mutating():
             },
         )
     assert "Dialogue" in str(ei.value)
+
+
+def test_save_script_rejects_scene_break_before_mutating():
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "ps", "title": "PS"})
+    with pytest.raises(Exception) as ei:
+        _call(
+            server,
+            "save_script",
+            {
+                "project_id": "ps",
+                "script": {
+                    "title": "t",
+                    "id_slug": "01",
+                    "beats": [{"type": "scene_break"}],
+                },
+            },
+        )
+    assert "scene_break" in str(ei.value)
 
 
 # --- download_audio (yt-dlp via yb) + identity fallback (reelee#232) ---------

@@ -394,3 +394,18 @@ def test_commentary_weave_genre_ready():
     assert all(t.params["format_id"] in FORMATS for t in genre.templates)
     assert genre.intake_kinds and genre.cost_profile == "tts"
     assert genre.defaults["format_id"] in FORMATS
+
+
+def test_ingest_rejects_scene_break_with_a_clear_message(project, script_and_source):
+    """No structural tier in the graph yet — the ingest says so up front rather
+    than silently dropping the boundary."""
+    from braidio import SceneBreak
+
+    script, source = script_and_source
+    with_break = braidio.Script(
+        title=script.title,
+        id_slug=script.id_slug,
+        beats=[*script.beats, SceneBreak(label="act 2")],
+    )
+    with pytest.raises(NotImplementedError, match="SceneBreak"):
+        braidio.transforms.ingest_script(project, with_break, source=source)

@@ -64,12 +64,18 @@ def script_from_json(payload: Mapping[str, Any]):
     Each beat dispatches on a ``"type"`` discriminator: ``"narration"`` →
     :class:`Narration`, ``"segment"`` → :class:`SegmentBeat`, ``"dialogue"`` →
     :class:`Dialogue` (its ``turns`` are normalized to a tuple of ``(role, text)``
-    tuples). Extra keys per beat are passed through to the dataclass, so an unknown
-    key raises a clear ``TypeError`` rather than being silently dropped.
+    tuples), ``"scene_break"`` → :class:`SceneBreak`. Extra keys per beat are
+    passed through to the dataclass, so an unknown key raises a clear
+    ``TypeError`` rather than being silently dropped.
     """
-    from braidio import Script, Narration, SegmentBeat, Dialogue
+    from braidio import Script, Narration, SegmentBeat, Dialogue, SceneBreak
 
-    builders = {"narration": Narration, "segment": SegmentBeat, "dialogue": Dialogue}
+    builders = {
+        "narration": Narration,
+        "segment": SegmentBeat,
+        "dialogue": Dialogue,
+        "scene_break": SceneBreak,
+    }
     beats = []
     for i, raw in enumerate(payload.get("beats", [])):
         spec = dict(raw)

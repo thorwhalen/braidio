@@ -123,6 +123,10 @@ def capabilities() -> dict:
                     "rights": "owned-local | public-domain | copyrighted",
                 },
                 {"type": "dialogue", "turns": [["A", "line"], ["B", "reply"]]},
+                {
+                    "type": "scene_break",
+                    "label": "a new section starts here (a sting or a pause; free)",
+                },
             ],
         },
         "notes": [
@@ -132,7 +136,13 @@ def capabilities() -> dict:
             "with upload_asset and pass its itemId as `source.asset_id`, or point "
             "`source.asset_path` at a server-local file. A narration-only script "
             "needs no source.",
-            "Dialogue beats aren't in the graph pipeline yet — use render_production "
+            "A scene_break beat marks a section boundary: the render plays a short "
+            "musical sting there (when the production has one) or leaves a beat of "
+            "silence. Put one between a debate's phases or a panel's rounds. "
+            "Segment beats take spotlight=true to drop the music bed out under "
+            "that clip.",
+            "Dialogue and scene_break beats aren't in the graph pipeline yet — use "
+            "render_production "
             "for dialogue.",
             "Every call is metered to the authenticated user; the connector is "
             "restricted to its allowlisted users.",

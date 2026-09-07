@@ -39,13 +39,19 @@ def _require_nw(tool: str) -> None:
 
 
 def _reject_dialogue(scr, tool: str) -> None:
-    """The nw graph pipeline can't ingest Dialogue beats yet — fail BEFORE mutating."""
-    from braidio import Dialogue
+    """The nw graph pipeline can't ingest Dialogue or SceneBreak beats yet — fail
+    BEFORE mutating."""
+    from braidio import Dialogue, SceneBreak
 
     if any(isinstance(b, Dialogue) for b in scr.beats):
         raise ToolError(
             f"{tool}: Dialogue beats aren't supported by the graph pipeline yet — "
             "use render_production for dialogue"
+        )
+    if any(isinstance(b, SceneBreak) for b in scr.beats):
+        raise ToolError(
+            f"{tool}: scene_break beats aren't supported by the graph pipeline yet — "
+            "use render_production / render_format for scene stings"
         )
 
 

@@ -14,27 +14,33 @@ The taxonomy + recipes are in
 **the talk is the spine; narration bridges and source clips are optional
 "illustration" layers** attached to it.
 
-What a :class:`Format` actually drives at render time **today**: the dialogue
-**cast** (role→voice), the **narration voice + delivery**, the **clip
-weave/duck + loudness** (:class:`WeaveConfig`). Per-clip placement renders too —
-set it on each ``SegmentBeat(placement=…)``; ``Format.clip_placement`` is the
-recommended *default* for the format. A **music bed** renders when you pass a
-``bed_asset`` to :func:`render_format` — the format's ``music_bed`` *intensity*
-picks the gain. Fields tagged *(authoring)* — ``roles``, ``scripting`` — are
-conventions for whoever writes (or generates) the ``Script``; scene stings remain
-**roadmap** on the render side (braidio#25). Preset ids mirror the standard names
-so a UI can label them ("Deep Dive", "Song Exploder-style").
+What a :class:`Format` drives at render time: the dialogue **cast**
+(role→voice), the **narration voice + delivery**, the **clip weave/duck +
+loudness** (:class:`WeaveConfig`), and the **structural music**
+(:class:`~braidio.structure.MusicStructure`) — whether a
+``SceneBreak`` beat plays a sting, and whether the bed drops out under exhibits
+(fade-to-spotlight). Per-clip placement renders too — set it on each
+``SegmentBeat(placement=…)``; ``Format.clip_placement`` is the recommended
+*default* for the format. Music is app-supplied: a **music bed** renders when you
+pass a ``bed_asset`` to :func:`render_format` (the format's ``music_bed``
+*intensity* picks the gain) and scene **stings** play when you pass a
+``sting_asset`` (without one a scene break is a beat of silence). Fields tagged
+*(authoring)* — ``roles``, ``scripting`` — are conventions for whoever writes
+(or generates) the ``Script``. Preset ids mirror the standard names so a UI can
+label them ("Deep Dive", "Song Exploder-style"). The structural-music design
+history is braidio#25.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Mapping
 
 from braidio.conversation import CHRIS, JESSICA, LAURA, WILL, ConversationCast
 from braidio.delivery import Delivery, V2_NARRATOR, V2_PRESENTER
 from braidio.rights import Profile
+from braidio.structure import MusicStructure, Sting
 from braidio.tts import DEFAULT_VOICE_ID
 from braidio.weave_config import WeaveConfig
 
@@ -52,8 +58,9 @@ class Format:
     """A named commentary-format preset: a bundle of high-quality defaults.
 
     Rendered fields drive :func:`render_format` → :func:`braidio.render.render_production`.
-    Authoring fields document how to write a ``Script`` for this format (and, for
-    ``clip_placement`` / ``music_bed``, flag render features still on the roadmap).
+    Authoring fields document how to write a ``Script`` for this format;
+    ``clip_placement`` is the recommended per-beat default and ``music_bed`` the
+    bed intensity applied when a ``bed_asset`` is supplied.
     """
 
     id: str  # preset id (mirrors the standard name), e.g. "deep_dive"
@@ -68,13 +75,16 @@ class Format:
     narration_voice: str | None = None  # default voice for Narration beats
     narration_delivery: Delivery = V2_PRESENTER  # delivery for Narration beats
     weave: WeaveConfig = field(default_factory=WeaveConfig)
+    # structural music: does a SceneBreak play a sting; does the bed drop out
+    # under exhibits. The sting asset itself comes from render_format(sting_asset=).
+    structure: MusicStructure = field(default_factory=MusicStructure)
 
-    # --- authoring guidance (documented; render support varies) -------------
+    # --- authoring guidance -------------------------------------------------
     roles: Mapping[str, str] = field(
         default_factory=dict
     )  # role → semantic (narrator/host/guest/…)
-    clip_placement: str = "before"  # recommended default SegmentBeat.placement (renders; before|under|after)
-    music_bed: str = "light"  # continuous | light | sparse | none (authoring / roadmap)
+    clip_placement: str = "before"  # recommended default SegmentBeat.placement (before|under|after)
+    music_bed: str = "light"  # bed intensity when a bed_asset is given: continuous | light | sparse | none
     scripting: str = ""  # how to author a Script for this format (authoring)
 
     def render(
@@ -100,19 +110,23 @@ def render_format(
     out_path: str | Path | None = None,
     profile: Profile = Profile.PERSONAL,
     bed_asset: str | None = None,
+    sting_asset: str | None = None,
     **overrides,
 ) -> Path:
     """Render ``script`` under ``fmt``'s defaults; ``overrides`` win over them.
 
     Wires the format's ``cast`` / ``narration_voice`` / ``narration_delivery`` /
-    ``weave`` into :func:`braidio.render.render_production`. Any beat may still
-    override voice/settings per-beat (e.g. a graver book-narrator inside an
-    otherwise lively presenter piece — pass ``V2_NARRATOR.voice_settings`` on that
-    ``Narration`` beat).
+    ``weave`` / ``structure`` into :func:`braidio.render.render_production`. Any
+    beat may still override voice/settings per-beat (e.g. a graver book-narrator
+    inside an otherwise lively presenter piece — pass ``V2_NARRATOR.voice_settings``
+    on that ``Narration`` beat).
 
     ``bed_asset`` (a path to an app-supplied instrumental) adds a music bed at the
     gain implied by ``fmt.music_bed`` (skipped when the format's intensity is
     ``"none"``); pass ``music_bed=MusicBed(...)`` in ``overrides`` for full control.
+    ``sting_asset`` (a path to an app-supplied short marker) is what a
+    ``SceneBreak`` plays under the format's ``structure``; pass
+    ``structure=MusicStructure(...)`` in ``overrides`` for full control.
     """
     from braidio.music import bed_for_intensity
     from braidio.render import render_production
@@ -123,6 +137,7 @@ def render_format(
         profile=profile,
         delivery=fmt.narration_delivery,
         out_path=out_path,
+        structure=fmt.structure,
     )
     if fmt.cast is not None:
         kwargs["cast"] = fmt.cast
@@ -132,6 +147,8 @@ def render_format(
         bed = bed_for_intensity(bed_asset, fmt.music_bed)
         if bed is not None:
             kwargs["music_bed"] = bed
+    if sting_asset is not None:
+        kwargs["structure"] = replace(fmt.structure, sting=Sting(sting_asset))
     kwargs.update(overrides)
     return render_production(script, **kwargs)
 
@@ -152,6 +169,8 @@ SOLO_EXPLAINER = Format(
     roles={"presenter": "narrator=host=expert, collapsed into one authoritative voice"},
     clip_placement="before",  # set up every exhibit before it plays
     music_bed="continuous",
+    # the bed drops out under every exhibit so the close reading lands in silence
+    structure=MusicStructure(scene_marker="sting", spotlight_clips=True),
     scripting=(
         "Intro (hook + thesis) → body as repeated (claim → clip → analysis) → "
         "conclusion. Per-exhibit micro-shape: hook → describe → meaning → memorable "
@@ -179,6 +198,7 @@ DEEP_DIVE = Format(
     roles={"host_a": "explainer / driver", "host_b": "prober / curious surrogate"},
     clip_placement="after",  # hosts cue, then play/react (the cue is the bridge)
     music_bed="light",
+    structure=MusicStructure(scene_marker="sting"),  # stings between segments
     scripting=(
         "Cold banter → frame the artifact → segment-by-segment walkthrough where one "
         "host teaches the other (roles may trade) → recap → sign-off. Prove each claim "
@@ -204,6 +224,7 @@ INTERVIEW = Format(
     },
     clip_placement="before",
     music_bed="light",
+    structure=MusicStructure(scene_marker="sting"),  # a sting between chapters
     scripting=(
         "Host question → guest answer (Q-then-A). Host or guest sets up each exhibit "
         "before it plays. Narration bridges only between chapters. See SONG_EXPLODER "
@@ -224,6 +245,7 @@ SONG_EXPLODER = Format(
     roles={"guest": "the maker, sole voice; host is the invisible editor/curator"},
     clip_placement="before",  # name the element, then play the isolated stem
     music_bed="none",  # the artifact's own segments ARE the score
+    structure=MusicStructure(scene_marker="none"),  # no added music: a break is a pause
     scripting=(
         "Interview the maker, strip the host's questions → guest narrates first-person "
         "→ drop the exact isolated stem as each element is named → close with the "
@@ -255,7 +277,9 @@ PANEL = Format(
         "panelist_3": "distinct viewpoint",
     },
     clip_placement="before",
-    music_bed="light",  # segment stings mark each round (signposting is critical with many voices)
+    music_bed="light",
+    # a sting at each round's SceneBreak (signposting is critical with many voices)
+    structure=MusicStructure(scene_marker="sting"),
     scripting=(
         "Moderator frames topic → round-robin takes ('a trip around the table') → clip "
         "drops as shared reference → moderator synthesizes → next topic → close on a "
@@ -281,7 +305,9 @@ DEBATE = Format(
         "opposition": "advocate B",
     },
     clip_placement="before",  # evidence entered by a side, then argued (clips may be re-used across sides)
-    music_bed="sparse",  # phase stings (open / rebuttal / close) keep structure legible
+    music_bed="sparse",
+    # a sting at each phase's SceneBreak (open / rebuttal / close) keeps structure legible
+    structure=MusicStructure(scene_marker="sting"),
     scripting=(
         "State the motion up front → phased turns: opening remarks → moderated "
         "exchange/rebuttals → cross-examination → closing arguments. The same clip may "
@@ -307,7 +333,8 @@ DOCUMENTARY_VO = Format(
         "expert": "borrowed-credibility interpretation",
     },
     clip_placement="before",  # narration states → clip/interview demonstrates → narration bridges
-    music_bed="continuous",  # scored; announce scoring early; stings/swells mark scenes
+    music_bed="continuous",  # scored; announce scoring early
+    structure=MusicStructure(scene_marker="sting"),  # a sting marks each act's SceneBreak
     scripting=(
         "Ira-Glass engine: anecdote → anecdote → a beat of reflection; run on a theme "
         "in numbered 'acts' with a prologue stating the theme; land a 'turn'. Layer "

@@ -37,6 +37,8 @@ KIND_COLORS: dict[str, str] = {
     "narration": "#a98f68",
     "commentary": "#a98f68",
     "dialogue": "#4c8a6a",
+    "sting": "#7a5c99",
+    "scene-break": "#7a5c99",
 }
 _FALLBACK_COLOR = "#8a8577"
 

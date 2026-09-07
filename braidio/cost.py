@@ -188,7 +188,8 @@ def _script_lines(script: Script) -> list[CostLine]:
                     model_id=DIALOGUE_MODEL_ID,
                 )
             )
-        # a SegmentBeat is extracted media = free; it contributes no line.
+        # a SegmentBeat is extracted media and a SceneBreak is structure (a
+        # sting or silence, nothing synthesized) = free; neither contributes a line.
     return lines
 
 

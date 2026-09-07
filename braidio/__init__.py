@@ -24,6 +24,8 @@ from braidio.script import (  # noqa: F401
     Narration,
     SegmentBeat,
     Dialogue,
+    SceneBreak,
+    SCENE_MARKERS,
     Beat,
     narration_segments,
 )
@@ -118,6 +120,13 @@ from braidio.music import (  # noqa: F401
     BED_GAIN_BY_INTENSITY,
 )
 
+# --- structural music (stings at scene breaks, fade-to-spotlight) ---
+from braidio.structure import (  # noqa: F401
+    Sting,
+    MusicStructure,
+    DEFAULT_STRUCTURE,
+)
+
 # --- ready-made format templates (standard-named presets) ---
 from braidio.formats import (  # noqa: F401
     Format,
@@ -210,6 +219,11 @@ __all__ = [
     "Narration",
     "SegmentBeat",
     "Dialogue",
+    "SceneBreak",
+    "SCENE_MARKERS",
+    "Sting",
+    "MusicStructure",
+    "DEFAULT_STRUCTURE",
     "Beat",
     "narration_segments",
     # rights
