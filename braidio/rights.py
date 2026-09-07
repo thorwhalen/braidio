@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable, Iterable
 
-from braidio.script import Dialogue, Narration, Script, SegmentBeat
+from braidio.script import Dialogue, Narration, SceneBreak, Script, SegmentBeat
 
 # Segment ``rights`` values safe to render in the published cut.
 PUBLISHABLE_CLIP_RIGHTS: frozenset[str] = frozenset({"public-domain"})
@@ -64,12 +64,14 @@ class RightsPolicy:
 class PlannedBeat:
     """A beat resolved for a profile — what the renderer actually plays.
 
-    ``kind`` is ``"narration"`` (synthesize ``content``) or ``"clip"`` (resolve
-    ``content`` as a segment reference and cut audio). ``from_index`` points at
-    the source beat; ``note`` records any substitution/drop reasoning.
+    ``kind`` is ``"narration"`` (synthesize ``content``), ``"clip"`` (resolve
+    ``content`` as a segment reference and cut audio), ``"dialogue"`` (synthesize
+    ``turns``) or ``"scene_break"`` (a structural boundary — no content; the
+    renderer marks it with music). ``from_index`` points at the source beat;
+    ``note`` records any substitution/drop reasoning.
     """
 
-    kind: str  # "narration" | "clip" | "dialogue"
+    kind: str  # "narration" | "clip" | "dialogue" | "scene_break"
     content: str  # narration/dialogue text (for scanning); clip = the reference
     from_index: int
     note: str = ""
@@ -134,6 +136,9 @@ def plan_production(
                     turns=tuple(beat.turns),
                 )
             )
+        elif isinstance(beat, SceneBreak):
+            # structure, not content → rendered under every profile, never scanned
+            plan.beats.append(PlannedBeat("scene_break", "", i))
         else:  # pragma: no cover - exhaustive
             raise TypeError(f"unknown beat type {type(beat).__name__}")
     return plan

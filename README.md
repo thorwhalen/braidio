@@ -35,7 +35,8 @@ A production is a **`Script`** — an ordered list of **beats**:
 |---|---|
 | `Narration(text, voice?, voice_settings?, …)` | one voice reading — a narrator **or** a solo presenter. `voice` / `voice_settings` override per beat, so one timeline can carry a lively **presenter** *and* a graver **book-narrator**. |
 | `Dialogue(turns=[(role, text)])` | a multi-speaker exchange, synthesized in **one pass** (so it sounds like people *talking to each other*, not alternating monologues). A `ConversationCast` maps roles → voices. |
-| `SegmentBeat(reference)` | a span of source media to cut and weave in (resolved by a pluggable `SegmentSource` — quote → `[start, end]`). |
+| `SegmentBeat(reference)` | a span of source media to cut and weave in (resolved by a pluggable `SegmentSource` — quote → `[start, end]`). `spotlight=True` drops the music bed out under it. |
+| `SceneBreak(label?)` | a structural boundary — "a new section starts here". Renders as a short musical **sting** (your asset) or a beat of silence; costs nothing. |
 
 `WeaveConfig` holds every editing knob (casting, turns, pacing, clip pre/post-roll,
 duck, crossfades, loudness). `Delivery` presets bundle the TTS model + voice
@@ -72,9 +73,15 @@ full template specs are in
 *Render support note:* the cast, per-role voices, narration deliveries, loudness
 master, **per-clip placement** — `SegmentBeat(placement="before" | "under" |
 "after")`, where `under` lays the clip concurrently beneath the talk, ducked —
-and a **music bed** (`MusicBed`, an app-supplied instrumental laid under the whole
-production) are applied today. Scene stings and fade-to-spotlight (dropping the
-bed before a key exhibit) remain on the render-side roadmap — tracked in
+a **music bed** (`MusicBed`, an app-supplied instrumental laid under the whole
+production) and the **structural music** are all applied. Structure is a
+`SceneBreak` beat in the Script — "a new section starts here" — which renders as
+a short **sting** when you pass `render_format(..., sting_asset=…)` (or a beat of
+silence when you don't), and `SegmentBeat(spotlight=True)` for
+**fade-to-spotlight**: the bed drops out before that exhibit and resumes after
+it. Each format's `structure` (`MusicStructure`) sets the defaults — whether a
+break stings, whether every clip is spotlit — and a beat overrides them. As with
+the bed, braidio ships no music: the sting is your asset. Design history in
 [braidio#25](https://github.com/thorwhalen/braidio/issues/25).
 
 ## Parametrize anything

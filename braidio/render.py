@@ -2,9 +2,10 @@
 
 Walks the beats (filtered by the rights :class:`~braidio.rights.Profile`):
 narration beats are synthesized (:mod:`braidio.tts`); segment beats are resolved
-via a :class:`~braidio.sources.SegmentSource` and extracted (padded + faded).
-Every part is loudness-normalized, then either woven on a timeline (clips tuck
-under narration — :func:`braidio.weave.weave_timeline`) when a
+via a :class:`~braidio.sources.SegmentSource` and extracted (padded + faded);
+scene breaks become a sting or a pause (:mod:`braidio.structure`). Every spoken
+or clipped part is loudness-normalized, then either woven on a timeline (clips
+tuck under narration — :func:`braidio.weave.weave_timeline`) when a
 :class:`~braidio.weave_config.WeaveConfig` enables it, or concatenated.
 
 This is the no-graph fast path; the same core is reused by the nw-app
@@ -29,12 +30,14 @@ from braidio.rights import (
 )
 from braidio.script import Script
 from braidio.sources import SegmentSource
+from braidio.structure import DEFAULT_STRUCTURE, prepare_pause, prepare_sting
 from braidio.tts import narrate
 from braidio.weave import TimelineItem, extract_padded, weave_timeline
 from braidio.weave_config import WeaveConfig
 
 _DEFAULT_LUFS = -16.0
 _TRUE_PEAK = -1.5
+_LOUDNESS_RANGE = 11  # loudnorm LRA target for a spoken part
 
 
 def _require_ffmpeg() -> None:
@@ -97,7 +100,7 @@ def _loudnorm(src: Path, dst: Path, *, target_lufs: float = _DEFAULT_LUFS) -> Pa
             "-i",
             str(src),
             "-af",
-            f"loudnorm=I={target_lufs}:TP={_TRUE_PEAK}:LRA=11",
+            f"loudnorm=I={target_lufs}:TP={_TRUE_PEAK}:LRA={_LOUDNESS_RANGE}",
             "-ar",
             "44100",
             str(dst),
@@ -123,6 +126,7 @@ def render_production(
     crossfade_s: float = 0.12,
     normalize: bool = True,
     music_bed=None,  # optional braidio.music.MusicBed — instrumental underscore
+    structure=None,  # optional braidio.structure.MusicStructure — stings + spotlight
     end_fade_s: float = 0.35,  # soft landing: fade the last bit + trailing silence
     end_silence_s: float = 0.7,
     return_timeline: bool = False,  # also return a TimelineBreakdown of the render
@@ -143,6 +147,13 @@ def render_production(
     publishable. ``music_bed`` lays an instrumental underscore under the whole
     production (see :class:`braidio.music.MusicBed`).
 
+    ``structure`` (a :class:`braidio.structure.MusicStructure`) is how the
+    production marks its structure with music: a scene-break beat plays its
+    ``sting`` (or a pause when there is none / the break is marked ``"none"``),
+    and a spotlit segment beat drops the bed out for its duration. ``None``
+    uses the inert defaults — no sting asset, no clip spotlit by default — so a
+    script without scene breaks or spotlight flags renders exactly as before.
+
     ``api_key`` is an optional per-request ElevenLabs key threaded to every
     synthesized beat — both narration (:func:`braidio.tts.narrate`) and dialogue
     (:func:`braidio.conversation.render_dialogue`). When ``None`` (default) each
@@ -155,6 +166,7 @@ def render_production(
     plan = plan_production(script, profile, publishable_clip_rights=publishable)
     target_lufs = config.target_lufs if config is not None else _DEFAULT_LUFS
     duck_db = config.duck_db if config is not None else -15.0
+    structure = structure if structure is not None else DEFAULT_STRUCTURE
 
     out = (
         Path(out_path)
@@ -186,9 +198,29 @@ def render_production(
     ] = []  # aggregation label per beat (clip / narration / style / dialogue)
     spans: list[tuple[float, float] | None] = []  # source [start,end) for clips
     labels: list[str] = []
+    spotlights: list[bool] = []  # per part: the bed drops out over it
     for i, pb in enumerate(plan.beats):
         orig = script.beats[pb.from_index]
         clip_span: tuple[float, float] | None = None
+        if pb.kind == "scene_break":
+            # structure: a sting when the production has one and the break asks
+            # for it, else a beat of silence. Both are pre-levelled — no loudnorm.
+            if structure.plays_sting(orig):
+                raw = prepare_sting(
+                    structure.sting,
+                    work / f"sting{i:02d}.mp3",
+                    target_lufs=target_lufs,
+                )
+            else:
+                raw = prepare_pause(structure.pause_s, work / f"pause{i:02d}.mp3")
+            parts.append(raw)
+            kinds.append("sting")
+            placements.append("sequential")
+            roles.append("sting" if structure.plays_sting(orig) else "scene-break")
+            labels.append(orig.label)
+            spans.append(None)
+            spotlights.append(False)
+            continue
         if pb.kind == "narration":
             beat_voice = getattr(orig, "voice", None) or voice_id  # per-beat override
             beat_settings = (
@@ -246,6 +278,8 @@ def render_production(
         placements.append(
             "under" if (pb.kind == "clip" and seg_place == "under") else "sequential"
         )
+        # fade-to-spotlight: a clip's own flag, else the structure's default
+        spotlights.append(pb.kind == "clip" and structure.spotlight_for(orig))
         # per-beat timeline metadata (for the returned TimelineBreakdown)
         if pb.kind == "clip":
             roles.append("clip")
@@ -271,9 +305,13 @@ def render_production(
     if woven:
         items = [
             TimelineItem(
-                k, str(p), placement=pl, duck_db=(duck_db if pl == "under" else 0.0)
+                k,
+                str(p),
+                placement=pl,
+                duck_db=(duck_db if pl == "under" else 0.0),
+                spotlight=sp,
             )
-            for k, p, pl in zip(kinds, parts, placements)
+            for k, p, pl, sp in zip(kinds, parts, placements, spotlights)
         ]
         weave_timeline(
             items,

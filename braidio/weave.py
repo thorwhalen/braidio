@@ -26,6 +26,8 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+_LOUDNESS_RANGE = 11  # loudnorm LRA target for the mastered mix
+
 
 def _require_ffmpeg() -> None:
     if shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None:
@@ -109,12 +111,17 @@ class TimelineItem:
     beneath the *following* sequential part (it does not consume its own slot),
     attenuated by ``duck_db`` — a ducked underlay (a clip talked over, or later a
     music bed).
+
+    ``spotlight`` marks the part the music bed drops out for (fade-to-spotlight):
+    the bed is silent over this part's span and resumes after it. Inert without
+    a bed.
     """
 
-    kind: str  # "narration" | "clip"
+    kind: str  # "narration" | "clip" | "sting" (a sting/pause lays out like narration)
     path: str
     placement: str = "sequential"  # "sequential" | "under"
     duck_db: float = 0.0  # attenuation applied when placement == "under" (e.g. -15)
+    spotlight: bool = False  # the bed drops out over this part (see braidio.structure)
 
 
 def layout_placed(
@@ -190,8 +197,11 @@ def weave_timeline(
 
     ``bed`` (a :class:`~braidio.music.MusicBed`) lays an instrumental underscore
     under the whole production: it's rendered to cover the timeline, attenuated,
-    and mixed in posted by ``bed.lead_in_s``. Falls back to a plain concat feel
-    when ``clip_edge_overlap_s == 0`` and there's nothing to overlay.
+    and mixed in posted by ``bed.lead_in_s``. Items marked ``spotlight`` open a
+    gap in it (the bed is rendered as the regions around them — see
+    :func:`braidio.music.bed_regions`); with none marked the bed is the single
+    whole-span file. Falls back to a plain concat feel when
+    ``clip_edge_overlap_s == 0`` and there's nothing to overlay.
     """
     _require_ffmpeg()
     if not items:
@@ -229,26 +239,49 @@ def weave_timeline(
 
     # Optional music bed: prepare it to cover the timeline, then mix it in posted.
     if bed is not None:
-        from braidio.music import prepare_bed
+        from braidio.music import bed_regions, prepare_bed, prepare_bed_regions
 
         total_s = max(s + d for s, d in zip(starts, durs))
-        bed_path = prepare_bed(
-            bed, total_s, out.parent / f"_bed_{out.stem}.mp3", sample_rate=sample_rate
-        )
-        idx = len(items)
-        inputs += ["-i", str(bed_path)]
-        lead_ms = int(round(bed.lead_in_s * 1000))
-        filters.append(
-            f"[{idx}:a]aformat=sample_rates={sample_rate}:channel_layouts=stereo,"
-            f"adelay={lead_ms}:all=1[bed]"
-        )
-        labels.append("[bed]")
+        spotlights = [
+            (s, s + d) for s, d, it in zip(starts, durs, items) if it.spotlight
+        ]
+        if not spotlights:
+            # one whole-span bed file, posted by its lead-in (the plain path)
+            bed_spans = [
+                (
+                    prepare_bed(
+                        bed,
+                        total_s,
+                        out.parent / f"_bed_{out.stem}.mp3",
+                        sample_rate=sample_rate,
+                    ),
+                    bed.lead_in_s,
+                )
+            ]
+        else:
+            # fade-to-spotlight: the bed as the regions around the spotlit parts
+            bed_spans = prepare_bed_regions(
+                bed,
+                bed_regions(bed, total_s, spotlights),
+                out.parent,
+                stem=f"_bed_{out.stem}",
+                sample_rate=sample_rate,
+            )
+        for k, (bed_path, start_s) in enumerate(bed_spans):
+            idx = len(items) + k
+            inputs += ["-i", str(bed_path)]
+            start_ms = int(round(start_s * 1000))
+            filters.append(
+                f"[{idx}:a]aformat=sample_rates={sample_rate}:channel_layouts=stereo,"
+                f"adelay={start_ms}:all=1[bed{k}]"
+            )
+            labels.append(f"[bed{k}]")
 
     n_inputs = len(labels)
     mix = (
         "".join(labels) + f"amix=inputs={n_inputs}:normalize=0:dropout_transition=0[m]"
     )
-    norm = f"[m]loudnorm=I={target_lufs}:TP={true_peak}:LRA=11[out]"
+    norm = f"[m]loudnorm=I={target_lufs}:TP={true_peak}:LRA={_LOUDNESS_RANGE}[out]"
     filtergraph = ";".join(filters + [mix, norm])
 
     subprocess.run(

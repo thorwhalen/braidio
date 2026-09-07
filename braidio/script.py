@@ -1,9 +1,11 @@
 """Composition model — the ordered beats a render walks.
 
-A :class:`Script` is an ordered list of beats, each either a :class:`Narration`
-(spoken, synthesized) or a :class:`SegmentBeat` (a *reference* to a span of
-source media to resolve and weave in). This is the generic, media-agnostic
-projection a renderer consumes; how a reference maps to audio is a
+A :class:`Script` is an ordered list of beats: a :class:`Narration` (spoken,
+synthesized), a :class:`Dialogue` (a multi-voice exchange), a :class:`SegmentBeat`
+(a *reference* to a span of source media to resolve and weave in), or a
+:class:`SceneBreak` (a structural boundary — "new section" — that the renderer
+marks with music, see :mod:`braidio.structure`). This is the generic,
+media-agnostic projection a renderer consumes; how a reference maps to audio is a
 :class:`braidio.sources.SegmentSource` concern, and what the beats are backed by
 (lyrics, a graph, hand-authoring) is the consumer's concern.
 """
@@ -63,6 +65,13 @@ class SegmentBeat:
     **concurrently beneath the following talk beat**, ducked by ``duck_db`` —
     the "host talks over the clip" technique (place the clip *immediately before*
     the talk it should sit under).
+
+    ``spotlight`` is the fade-to-spotlight override: ``True`` drops the music
+    bed out before this clip so it lands in silence rather than competing with
+    underscore (the bed resumes after it); ``False`` keeps the bed under it.
+    ``None`` (default) defers to the format's
+    :attr:`braidio.structure.MusicStructure.spotlight_clips`. Without a music
+    bed the flag is inert.
     """
 
     reference: str
@@ -70,6 +79,7 @@ class SegmentBeat:
     rights: str = "owned-local"
     published_substitute: str | None = None
     placement: str = "before"
+    spotlight: bool | None = None
 
     def __post_init__(self) -> None:
         if self.placement not in CLIP_PLACEMENTS:
@@ -94,7 +104,41 @@ class Dialogue:
     label: str = ""
 
 
-Beat = Union[Narration, SegmentBeat, Dialogue]
+# How a SceneBreak is marked. "sting" plays the production's sting (a short
+# musical marker) when one is supplied; "none" leaves a beat of silence. A beat's
+# ``marker=None`` defers to the format default (MusicStructure.scene_marker).
+SCENE_MARKERS = ("sting", "none")
+
+
+@dataclass(frozen=True)
+class SceneBreak:
+    """A structural boundary between sections — the "new scene" beat.
+
+    Audio has no visual white space, so a boundary has to be *heard*: the
+    renderer marks it with a sting (a short musical marker) when the production
+    supplies one and the resolved ``marker`` is ``"sting"``, and otherwise with
+    a beat of silence. This is the beat the format templates' structure — a
+    debate's open / rebuttal / close, a panel's rounds, a documentary's acts —
+    is expressed with; the talk on either side is unchanged.
+
+    ``marker`` overrides the format default per break (``None`` = defer to
+    :attr:`braidio.structure.MusicStructure.scene_marker`). ``label`` names the
+    section that starts here (e.g. ``"rebuttal"``) for the timeline breakdown.
+    A scene break synthesizes nothing, so it costs nothing.
+    """
+
+    label: str = ""
+    marker: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.marker is not None and self.marker not in SCENE_MARKERS:
+            raise ValueError(
+                f"SceneBreak.marker must be one of {SCENE_MARKERS} or None, "
+                f"got {self.marker!r}"
+            )
+
+
+Beat = Union[Narration, SegmentBeat, Dialogue, SceneBreak]
 
 
 @dataclass(frozen=True)
