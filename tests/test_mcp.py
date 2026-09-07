@@ -397,6 +397,142 @@ def test_render_production_requires_source_for_segments():
     assert "no `source`" in str(ei.value)
 
 
+def test_render_production_wires_bed_and_sting_assets(monkeypatch):
+    # braidio#41: bed_asset_id/sting_asset_id resolve through the workspace (like
+    # source.asset_id) into a MusicBed / MusicStructure(sting=...), never a raw path.
+    import base64
+
+    from braidio.music import MusicBed
+    from braidio.structure import MusicStructure
+
+    calls = {}
+
+    def _stub(scr, *, out_path, **kw):
+        calls.update(kw)
+        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(out_path).write_bytes(b"EP")
+        return Path(out_path)
+
+    monkeypatch.setattr(braidio, "render_production", _stub)
+    server = _local_server(ledger={})
+    bed_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"BED").decode()}
+    ).structured_content["itemId"]
+    sting_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"STING").decode()}
+    ).structured_content["itemId"]
+    _call(
+        server,
+        "render_production",
+        {
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [{"type": "narration", "text": "hi"}],
+            },
+            "bed_asset_id": bed_id,
+            "sting_asset_id": sting_id,
+        },
+    )
+    ws = Workspace.for_email(OWNER)
+    assert isinstance(calls["music_bed"], MusicBed)
+    assert calls["music_bed"].asset_path == ws.asset_path(bed_id)
+    assert isinstance(calls["structure"], MusicStructure)
+    assert calls["structure"].sting.asset_path == ws.asset_path(sting_id)
+
+
+def test_render_production_omits_bed_and_sting_by_default(monkeypatch):
+    # Additive-only: no bed/sting ids means byte-identical kwargs to before #41.
+    calls = {}
+
+    def _stub(scr, *, out_path, **kw):
+        calls.update(kw)
+        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(out_path).write_bytes(b"EP")
+        return Path(out_path)
+
+    monkeypatch.setattr(braidio, "render_production", _stub)
+    server = _local_server(ledger={})
+    _call(
+        server,
+        "render_production",
+        {
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [{"type": "narration", "text": "hi"}],
+            }
+        },
+    )
+    assert calls["music_bed"] is None
+    assert calls["structure"] is None
+
+
+def test_render_format_wires_bed_and_sting_assets(monkeypatch):
+    import base64
+
+    calls = {}
+
+    def _stub(fmt, scr, *, out_path, **kw):
+        calls.update(kw)
+        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(out_path).write_bytes(b"EP")
+        return Path(out_path)
+
+    monkeypatch.setattr(braidio, "render_format", _stub)
+    server = _local_server(ledger={})
+    bed_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"BED").decode()}
+    ).structured_content["itemId"]
+    sting_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"STING").decode()}
+    ).structured_content["itemId"]
+    _call(
+        server,
+        "render_format",
+        {
+            "format_id": "solo_explainer",
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [{"type": "narration", "text": "hi"}],
+            },
+            "bed_asset_id": bed_id,
+            "sting_asset_id": sting_id,
+        },
+    )
+    ws = Workspace.for_email(OWNER)
+    assert calls["bed_asset"] == ws.asset_path(bed_id)
+    assert calls["sting_asset"] == ws.asset_path(sting_id)
+
+
+def test_render_format_omits_bed_and_sting_by_default(monkeypatch):
+    calls = {}
+
+    def _stub(fmt, scr, *, out_path, **kw):
+        calls.update(kw)
+        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(out_path).write_bytes(b"EP")
+        return Path(out_path)
+
+    monkeypatch.setattr(braidio, "render_format", _stub)
+    server = _local_server(ledger={})
+    _call(
+        server,
+        "render_format",
+        {
+            "format_id": "solo_explainer",
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [{"type": "narration", "text": "hi"}],
+            },
+        },
+    )
+    assert calls["bed_asset"] is None
+    assert calls["sting_asset"] is None
+
+
 def test_metering_records_error_status(monkeypatch):
     def _boom(*a, **kw):
         raise RuntimeError("kaboom")

@@ -523,6 +523,14 @@ def _resolve_source(source: dict | None):
     return source_from_json(source)
 
 
+def _resolve_asset(ws: Workspace, asset_id: str | None) -> str | None:
+    """Resolve an uploaded asset-library id to its server-local path (or ``None``).
+
+    Same resolver as ``source.asset_id`` — never a raw server path from the caller.
+    """
+    return ws.asset_path(asset_id) if asset_id else None
+
+
 # --- [COSTED] renders (spend ElevenLabs money) ------------------------------
 
 
@@ -730,15 +738,21 @@ def render_production(
     profile: str = "personal",
     delivery: str = "narration",
     name: str | None = None,
+    bed_asset_id: str | None = None,
+    sting_asset_id: str | None = None,
 ) -> dict:
     """[COSTED] Render a whole script → one mixed episode mp3 in your workspace.
 
-    ``script`` is a JSON script envelope; ``source`` (``{lines, asset_path, ...}``)
-    is required only if the script has segment beats. ``profile`` = ``"personal"``
-    or ``"published"``. ``delivery`` = the narration register (``"narration"`` =
-    reading, ``"conversational"`` = talking; see ``list_deliveries``).
+    ``script`` is a JSON script envelope; ``source`` is required only for segment
+    beats. ``profile`` = ``"personal"`` or ``"published"``. ``delivery`` =
+    narration register (``"narration"`` or ``"conversational"``; see
+    ``list_deliveries``). ``bed_asset_id`` / ``sting_asset_id`` (from
+    ``upload_asset``) add a music bed and a scene-break sting; without them a
+    scene_break is a pause and spotlight is inert.
     """
     from braidio import Profile
+    from braidio.music import MusicBed
+    from braidio.structure import MusicStructure, Sting
 
     scr = script_from_json(script)
     src = _resolve_source(source)
@@ -746,6 +760,8 @@ def render_production(
     ws = _workspace()
     stem = name or scr.id_slug
     out = ws.render_path(stem)
+    bed_path = _resolve_asset(ws, bed_asset_id)
+    sting_path = _resolve_asset(ws, sting_asset_id)
     braidio.render_production(
         scr,
         source=src,
@@ -755,6 +771,8 @@ def render_production(
         tts_dir=_work_dir(ws, stem) + "/tts",
         clips_dir=_work_dir(ws, stem) + "/clips",
         episodes_dir=str(ws.renders_dir),
+        music_bed=MusicBed(asset_path=bed_path) if bed_path else None,
+        structure=MusicStructure(sting=Sting(sting_path)) if sting_path else None,
     )
     return {**_retrieval(out), **_render_cost(scr, profile)}
 
@@ -765,8 +783,15 @@ def render_format(
     source: dict | None = None,
     profile: str = "personal",
     name: str | None = None,
+    bed_asset_id: str | None = None,
+    sting_asset_id: str | None = None,
 ) -> dict:
-    """[COSTED] Render a script under a ready-made format preset → mp3 in your workspace."""
+    """[COSTED] Render a script under a ready-made format preset → mp3 in your workspace.
+
+    ``bed_asset_id`` / ``sting_asset_id`` (from ``upload_asset``/``list_assets``) add
+    a music bed (at the format's intensity) and a scene-break sting; without them a
+    scene_break is a pause and spotlight is inert.
+    """
     from braidio import Profile
 
     if format_id not in braidio.FORMATS:
@@ -788,6 +813,8 @@ def render_format(
         tts_dir=_work_dir(ws, stem) + "/tts",
         clips_dir=_work_dir(ws, stem) + "/clips",
         episodes_dir=str(ws.renders_dir),
+        bed_asset=_resolve_asset(ws, bed_asset_id),
+        sting_asset=_resolve_asset(ws, sting_asset_id),
     )
     return {**_retrieval(out), **_render_cost(scr, profile)}
 
