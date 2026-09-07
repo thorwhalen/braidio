@@ -18,9 +18,8 @@ by-alias, so the pinned names are the names that land in the annotation body)
 and rendered as short, readable expressions — ``"string|null = null"``,
 ``"array<string>"``, ``"tuple<number,number>|null = null"``. A diff on a
 failing pin therefore says *what* changed, which a checksum could not. The
-table below was generated once from the current models (see
-``gen_pins.py`` in this PR's description / commit) and committed as literals
-— it does not derive from the models it is meant to protect.
+table below was generated once from the current models and committed as
+literals — it does not derive from the models it is meant to protect.
 
 Breaking and additive changes fail in different tests, with different advice:
 
@@ -362,12 +361,22 @@ def test_new_fields_are_additive_and_pinned(model_name):
             f"{model_name}: new REQUIRED field(s) {breaking} — every stored "
             f"body predates them and will now fail validation." + MIGRATION_RULE
         )
+    missing = sorted(set(pinned["fields"]) - set(actual["fields"]))
+    rename_note = (
+        "\nA pinned field also disappeared "
+        f"({missing}): if this new field replaces it, that is a RENAME, not "
+        "an addition — see test_pinned_fields_are_unchanged's advice above, "
+        "not this one."
+        if missing
+        else ""
+    )
     pytest.fail(
         f"{model_name}: new optional field(s) {sorted(unpinned)}. That is an "
         f"ADDITIVE change — old bodies still load, no migration needed — but "
         f"the pin has to record it or this guard silently stops covering the "
         f"body. Add to PINNED[{model_name!r}]['fields'] in this same PR:\n  "
         + "\n  ".join(f"{n!r}: {s!r}," for n, s in sorted(unpinned.items()))
+        + rename_note
     )
 
 
@@ -386,7 +395,10 @@ def _actual_shapes() -> dict[str, dict]:
     """``{model name: {"required": frozenset(...), "fields": {name: shape}}}``
     for the 14 owned bodies. None of them nests another registered model, so
     there are no ``$defs`` to walk (unlike artful's nested carriers)."""
-    return {js["title"]: _entry(js) for js in (m.model_json_schema() for m in OWNED.values())}
+    return {
+        js["title"]: _entry(js)
+        for js in (m.model_json_schema() for m in OWNED.values())
+    }
 
 
 def _entry(js: dict) -> dict:
