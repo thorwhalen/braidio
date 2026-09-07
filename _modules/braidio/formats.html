@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.formats &mdash; braidio 0.0.26 documentation</title>
+  <title>braidio.formats &mdash; braidio 0.0.27 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=6a9d8632"></script>
+      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -75,6 +75,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/rights.html">braidio.rights</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/script.html">braidio.script</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/structure.html">braidio.structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/style.html">braidio.style</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/textprep.html">braidio.textprep</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/timeline.html">braidio.timeline</a></li>
@@ -131,27 +132,33 @@
 <span class="sd">**the talk is the spine; narration bridges and source clips are optional</span>
 <span class="sd">"illustration" layers** attached to it.</span>
 
-<span class="sd">What a :class:`Format` actually drives at render time **today**: the dialogue</span>
-<span class="sd">**cast** (role→voice), the **narration voice + delivery**, the **clip</span>
-<span class="sd">weave/duck + loudness** (:class:`WeaveConfig`). Per-clip placement renders too —</span>
-<span class="sd">set it on each ``SegmentBeat(placement=…)``; ``Format.clip_placement`` is the</span>
-<span class="sd">recommended *default* for the format. A **music bed** renders when you pass a</span>
-<span class="sd">``bed_asset`` to :func:`render_format` — the format's ``music_bed`` *intensity*</span>
-<span class="sd">picks the gain. Fields tagged *(authoring)* — ``roles``, ``scripting`` — are</span>
-<span class="sd">conventions for whoever writes (or generates) the ``Script``; scene stings remain</span>
-<span class="sd">**roadmap** on the render side (braidio#25). Preset ids mirror the standard names</span>
-<span class="sd">so a UI can label them ("Deep Dive", "Song Exploder-style").</span>
+<span class="sd">What a :class:`Format` drives at render time: the dialogue **cast**</span>
+<span class="sd">(role→voice), the **narration voice + delivery**, the **clip weave/duck +</span>
+<span class="sd">loudness** (:class:`WeaveConfig`), and the **structural music**</span>
+<span class="sd">(:class:`~braidio.structure.MusicStructure`) — whether a</span>
+<span class="sd">``SceneBreak`` beat plays a sting, and whether the bed drops out under exhibits</span>
+<span class="sd">(fade-to-spotlight). Per-clip placement renders too — set it on each</span>
+<span class="sd">``SegmentBeat(placement=…)``; ``Format.clip_placement`` is the recommended</span>
+<span class="sd">*default* for the format. Music is app-supplied: a **music bed** renders when you</span>
+<span class="sd">pass a ``bed_asset`` to :func:`render_format` (the format's ``music_bed``</span>
+<span class="sd">*intensity* picks the gain) and scene **stings** play when you pass a</span>
+<span class="sd">``sting_asset`` (without one a scene break is a beat of silence). Fields tagged</span>
+<span class="sd">*(authoring)* — ``roles``, ``scripting`` — are conventions for whoever writes</span>
+<span class="sd">(or generates) the ``Script``. Preset ids mirror the standard names so a UI can</span>
+<span class="sd">label them ("Deep Dive", "Song Exploder-style"). The structural-music design</span>
+<span class="sd">history is braidio#25.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.conversation</span><span class="w"> </span><span class="kn">import</span> <span class="n">CHRIS</span><span class="p">,</span> <span class="n">JESSICA</span><span class="p">,</span> <span class="n">LAURA</span><span class="p">,</span> <span class="n">WILL</span><span class="p">,</span> <span class="n">ConversationCast</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.delivery</span><span class="w"> </span><span class="kn">import</span> <span class="n">Delivery</span><span class="p">,</span> <span class="n">V2_NARRATOR</span><span class="p">,</span> <span class="n">V2_PRESENTER</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.rights</span><span class="w"> </span><span class="kn">import</span> <span class="n">Profile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.structure</span><span class="w"> </span><span class="kn">import</span> <span class="n">MusicStructure</span><span class="p">,</span> <span class="n">Sting</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_VOICE_ID</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.weave_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeaveConfig</span>
 
@@ -171,8 +178,9 @@
 <span class="w">    </span><span class="sd">"""A named commentary-format preset: a bundle of high-quality defaults.</span>
 
 <span class="sd">    Rendered fields drive :func:`render_format` → :func:`braidio.render.render_production`.</span>
-<span class="sd">    Authoring fields document how to write a ``Script`` for this format (and, for</span>
-<span class="sd">    ``clip_placement`` / ``music_bed``, flag render features still on the roadmap).</span>
+<span class="sd">    Authoring fields document how to write a ``Script`` for this format;</span>
+<span class="sd">    ``clip_placement`` is the recommended per-beat default and ``music_bed`` the</span>
+<span class="sd">    bed intensity applied when a ``bed_asset`` is supplied.</span>
 <span class="sd">    """</span>
 
     <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># preset id (mirrors the standard name), e.g. "deep_dive"</span>
@@ -187,13 +195,16 @@
     <span class="n">narration_voice</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># default voice for Narration beats</span>
     <span class="n">narration_delivery</span><span class="p">:</span> <span class="n">Delivery</span> <span class="o">=</span> <span class="n">V2_PRESENTER</span>  <span class="c1"># delivery for Narration beats</span>
     <span class="n">weave</span><span class="p">:</span> <span class="n">WeaveConfig</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">WeaveConfig</span><span class="p">)</span>
+    <span class="c1"># structural music: does a SceneBreak play a sting; does the bed drop out</span>
+    <span class="c1"># under exhibits. The sting asset itself comes from render_format(sting_asset=).</span>
+    <span class="n">structure</span><span class="p">:</span> <span class="n">MusicStructure</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">MusicStructure</span><span class="p">)</span>
 
-    <span class="c1"># --- authoring guidance (documented; render support varies) -------------</span>
+    <span class="c1"># --- authoring guidance -------------------------------------------------</span>
     <span class="n">roles</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span>
     <span class="p">)</span>  <span class="c1"># role → semantic (narrator/host/guest/…)</span>
-    <span class="n">clip_placement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"before"</span>  <span class="c1"># recommended default SegmentBeat.placement (renders; before|under|after)</span>
-    <span class="n">music_bed</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"light"</span>  <span class="c1"># continuous | light | sparse | none (authoring / roadmap)</span>
+    <span class="n">clip_placement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"before"</span>  <span class="c1"># recommended default SegmentBeat.placement (before|under|after)</span>
+    <span class="n">music_bed</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"light"</span>  <span class="c1"># bed intensity when a bed_asset is given: continuous | light | sparse | none</span>
     <span class="n">scripting</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>  <span class="c1"># how to author a Script for this format (authoring)</span>
 
 <div class="viewcode-block" id="Format.render">
@@ -225,19 +236,23 @@
     <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">profile</span><span class="p">:</span> <span class="n">Profile</span> <span class="o">=</span> <span class="n">Profile</span><span class="o">.</span><span class="n">PERSONAL</span><span class="p">,</span>
     <span class="n">bed_asset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sting_asset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">overrides</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Render ``script`` under ``fmt``'s defaults; ``overrides`` win over them.</span>
 
 <span class="sd">    Wires the format's ``cast`` / ``narration_voice`` / ``narration_delivery`` /</span>
-<span class="sd">    ``weave`` into :func:`braidio.render.render_production`. Any beat may still</span>
-<span class="sd">    override voice/settings per-beat (e.g. a graver book-narrator inside an</span>
-<span class="sd">    otherwise lively presenter piece — pass ``V2_NARRATOR.voice_settings`` on that</span>
-<span class="sd">    ``Narration`` beat).</span>
+<span class="sd">    ``weave`` / ``structure`` into :func:`braidio.render.render_production`. Any</span>
+<span class="sd">    beat may still override voice/settings per-beat (e.g. a graver book-narrator</span>
+<span class="sd">    inside an otherwise lively presenter piece — pass ``V2_NARRATOR.voice_settings``</span>
+<span class="sd">    on that ``Narration`` beat).</span>
 
 <span class="sd">    ``bed_asset`` (a path to an app-supplied instrumental) adds a music bed at the</span>
 <span class="sd">    gain implied by ``fmt.music_bed`` (skipped when the format's intensity is</span>
 <span class="sd">    ``"none"``); pass ``music_bed=MusicBed(...)`` in ``overrides`` for full control.</span>
+<span class="sd">    ``sting_asset`` (a path to an app-supplied short marker) is what a</span>
+<span class="sd">    ``SceneBreak`` plays under the format's ``structure``; pass</span>
+<span class="sd">    ``structure=MusicStructure(...)`` in ``overrides`` for full control.</span>
 <span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.music</span><span class="w"> </span><span class="kn">import</span> <span class="n">bed_for_intensity</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.render</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_production</span>
@@ -248,6 +263,7 @@
         <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span>
         <span class="n">delivery</span><span class="o">=</span><span class="n">fmt</span><span class="o">.</span><span class="n">narration_delivery</span><span class="p">,</span>
         <span class="n">out_path</span><span class="o">=</span><span class="n">out_path</span><span class="p">,</span>
+        <span class="n">structure</span><span class="o">=</span><span class="n">fmt</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="n">fmt</span><span class="o">.</span><span class="n">cast</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">"cast"</span><span class="p">]</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">cast</span>
@@ -257,6 +273,8 @@
         <span class="n">bed</span> <span class="o">=</span> <span class="n">bed_for_intensity</span><span class="p">(</span><span class="n">bed_asset</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">music_bed</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">bed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">"music_bed"</span><span class="p">]</span> <span class="o">=</span> <span class="n">bed</span>
+    <span class="k">if</span> <span class="n">sting_asset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">"structure"</span><span class="p">]</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="n">sting</span><span class="o">=</span><span class="n">Sting</span><span class="p">(</span><span class="n">sting_asset</span><span class="p">))</span>
     <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">overrides</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">render_production</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
@@ -278,6 +296,8 @@
     <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">"presenter"</span><span class="p">:</span> <span class="s2">"narrator=host=expert, collapsed into one authoritative voice"</span><span class="p">},</span>
     <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>  <span class="c1"># set up every exhibit before it plays</span>
     <span class="n">music_bed</span><span class="o">=</span><span class="s2">"continuous"</span><span class="p">,</span>
+    <span class="c1"># the bed drops out under every exhibit so the close reading lands in silence</span>
+    <span class="n">structure</span><span class="o">=</span><span class="n">MusicStructure</span><span class="p">(</span><span class="n">scene_marker</span><span class="o">=</span><span class="s2">"sting"</span><span class="p">,</span> <span class="n">spotlight_clips</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
         <span class="s2">"Intro (hook + thesis) → body as repeated (claim → clip → analysis) → "</span>
         <span class="s2">"conclusion. Per-exhibit micro-shape: hook → describe → meaning → memorable "</span>
@@ -305,6 +325,7 @@
     <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">"host_a"</span><span class="p">:</span> <span class="s2">"explainer / driver"</span><span class="p">,</span> <span class="s2">"host_b"</span><span class="p">:</span> <span class="s2">"prober / curious surrogate"</span><span class="p">},</span>
     <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"after"</span><span class="p">,</span>  <span class="c1"># hosts cue, then play/react (the cue is the bridge)</span>
     <span class="n">music_bed</span><span class="o">=</span><span class="s2">"light"</span><span class="p">,</span>
+    <span class="n">structure</span><span class="o">=</span><span class="n">MusicStructure</span><span class="p">(</span><span class="n">scene_marker</span><span class="o">=</span><span class="s2">"sting"</span><span class="p">),</span>  <span class="c1"># stings between segments</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
         <span class="s2">"Cold banter → frame the artifact → segment-by-segment walkthrough where one "</span>
         <span class="s2">"host teaches the other (roles may trade) → recap → sign-off. Prove each claim "</span>
@@ -330,6 +351,7 @@
     <span class="p">},</span>
     <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>
     <span class="n">music_bed</span><span class="o">=</span><span class="s2">"light"</span><span class="p">,</span>
+    <span class="n">structure</span><span class="o">=</span><span class="n">MusicStructure</span><span class="p">(</span><span class="n">scene_marker</span><span class="o">=</span><span class="s2">"sting"</span><span class="p">),</span>  <span class="c1"># a sting between chapters</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
         <span class="s2">"Host question → guest answer (Q-then-A). Host or guest sets up each exhibit "</span>
         <span class="s2">"before it plays. Narration bridges only between chapters. See SONG_EXPLODER "</span>
@@ -350,6 +372,7 @@
     <span class="n">roles</span><span class="o">=</span><span class="p">{</span><span class="s2">"guest"</span><span class="p">:</span> <span class="s2">"the maker, sole voice; host is the invisible editor/curator"</span><span class="p">},</span>
     <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>  <span class="c1"># name the element, then play the isolated stem</span>
     <span class="n">music_bed</span><span class="o">=</span><span class="s2">"none"</span><span class="p">,</span>  <span class="c1"># the artifact's own segments ARE the score</span>
+    <span class="n">structure</span><span class="o">=</span><span class="n">MusicStructure</span><span class="p">(</span><span class="n">scene_marker</span><span class="o">=</span><span class="s2">"none"</span><span class="p">),</span>  <span class="c1"># no added music: a break is a pause</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
         <span class="s2">"Interview the maker, strip the host's questions → guest narrates first-person "</span>
         <span class="s2">"→ drop the exact isolated stem as each element is named → close with the "</span>
@@ -381,7 +404,9 @@
         <span class="s2">"panelist_3"</span><span class="p">:</span> <span class="s2">"distinct viewpoint"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>
-    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"light"</span><span class="p">,</span>  <span class="c1"># segment stings mark each round (signposting is critical with many voices)</span>
+    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"light"</span><span class="p">,</span>
+    <span class="c1"># a sting at each round's SceneBreak (signposting is critical with many voices)</span>
+    <span class="n">structure</span><span class="o">=</span><span class="n">MusicStructure</span><span class="p">(</span><span class="n">scene_marker</span><span class="o">=</span><span class="s2">"sting"</span><span class="p">),</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
         <span class="s2">"Moderator frames topic → round-robin takes ('a trip around the table') → clip "</span>
         <span class="s2">"drops as shared reference → moderator synthesizes → next topic → close on a "</span>
@@ -407,7 +432,9 @@
         <span class="s2">"opposition"</span><span class="p">:</span> <span class="s2">"advocate B"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>  <span class="c1"># evidence entered by a side, then argued (clips may be re-used across sides)</span>
-    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"sparse"</span><span class="p">,</span>  <span class="c1"># phase stings (open / rebuttal / close) keep structure legible</span>
+    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"sparse"</span><span class="p">,</span>
+    <span class="c1"># a sting at each phase's SceneBreak (open / rebuttal / close) keeps structure legible</span>
+    <span class="n">structure</span><span class="o">=</span><span class="n">MusicStructure</span><span class="p">(</span><span class="n">scene_marker</span><span class="o">=</span><span class="s2">"sting"</span><span class="p">),</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
         <span class="s2">"State the motion up front → phased turns: opening remarks → moderated "</span>
         <span class="s2">"exchange/rebuttals → cross-examination → closing arguments. The same clip may "</span>
@@ -433,7 +460,8 @@
         <span class="s2">"expert"</span><span class="p">:</span> <span class="s2">"borrowed-credibility interpretation"</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="n">clip_placement</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span>  <span class="c1"># narration states → clip/interview demonstrates → narration bridges</span>
-    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"continuous"</span><span class="p">,</span>  <span class="c1"># scored; announce scoring early; stings/swells mark scenes</span>
+    <span class="n">music_bed</span><span class="o">=</span><span class="s2">"continuous"</span><span class="p">,</span>  <span class="c1"># scored; announce scoring early</span>
+    <span class="n">structure</span><span class="o">=</span><span class="n">MusicStructure</span><span class="p">(</span><span class="n">scene_marker</span><span class="o">=</span><span class="s2">"sting"</span><span class="p">),</span>  <span class="c1"># a sting marks each act's SceneBreak</span>
     <span class="n">scripting</span><span class="o">=</span><span class="p">(</span>
         <span class="s2">"Ira-Glass engine: anecdote → anecdote → a beat of reflection; run on a theme "</span>
         <span class="s2">"in numbered 'acts' with a prologue stating the theme; land a 'turn'. Layer "</span>

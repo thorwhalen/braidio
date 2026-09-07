@@ -1,0 +1,343 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.structure &mdash; braidio 0.0.27 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp.html">braidio.mcp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_docs.html">braidio.mcp._docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_guide.html">braidio.mcp._guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_helpers.html">braidio.mcp._helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_media.html">braidio.mcp._media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/metering.html">braidio.mcp.metering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/tools.html">braidio.mcp.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/structure.html">braidio.structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/style.html">braidio.style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/timeline.html">braidio.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_voice.html">braidio.transforms._voice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">braidio.structure</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for braidio.structure</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Structural music — stings at scene breaks, fade-to-spotlight on exhibits.</span>
+
+<span class="sd">The music bed (:mod:`braidio.music`) is the *continuous* music layer. This module</span>
+<span class="sd">is the *structural* one: the cues that tell a listener where they are, because</span>
+<span class="sd">audio has no visual white space (``misc/docs/research/commentary-formats-and-</span>
+<span class="sd">styles.md``, "Music as structure"):</span>
+
+<span class="sd">- a **sting** — a short musical marker — at a :class:`~braidio.script.SceneBreak`</span>
+<span class="sd">  ("new section");</span>
+<span class="sd">- **fade-to-spotlight** — the bed drops *out* before a key exhibit so the clip</span>
+<span class="sd">  lands in silence instead of competing with underscore, and resumes after it.</span>
+
+<span class="sd">Both are driven by a :class:`MusicStructure`: the format's defaults</span>
+<span class="sd">(``scene_marker``, ``spotlight_clips``) plus the production's :class:`Sting`</span>
+<span class="sd">asset. It is the single seam :func:`braidio.render.render_production` takes</span>
+<span class="sd">(``structure=``); ``None`` means "no structure" and reproduces the plain weave</span>
+<span class="sd">exactly. A beat overrides the defaults with ``SceneBreak.marker`` /</span>
+<span class="sd">``SegmentBeat.spotlight``.</span>
+
+<span class="sd">braidio ships **no music**: like the bed, the sting is an app-supplied asset</span>
+<span class="sd">(``render_format(..., sting_asset=…)``). A scene break with no sting to play is</span>
+<span class="sd">still audible — as :attr:`MusicStructure.pause_s` of silence — so the structure</span>
+<span class="sd">is never silently lost.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.script</span><span class="w"> </span><span class="kn">import</span> <span class="n">SCENE_MARKERS</span><span class="p">,</span> <span class="n">SceneBreak</span><span class="p">,</span> <span class="n">SegmentBeat</span>
+
+<span class="c1"># A sting is levelled to the production target, then sat this far under the</span>
+<span class="c1"># voice so it marks the boundary without shouting over the talk.</span>
+<span class="n">_DEFAULT_STING_GAIN_DB</span> <span class="o">=</span> <span class="o">-</span><span class="mf">6.0</span>
+<span class="n">_DEFAULT_STING_MAX_LEN_S</span> <span class="o">=</span> <span class="mf">3.0</span>
+<span class="n">_DEFAULT_STING_FADE_OUT_S</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">_DEFAULT_STING_GAP_AFTER_S</span> <span class="o">=</span> <span class="mf">0.3</span>
+<span class="c1"># Silence at a break that has no sting to play: the boundary as white space.</span>
+<span class="n">_DEFAULT_BREAK_PAUSE_S</span> <span class="o">=</span> <span class="mf">0.8</span>
+<span class="c1"># Levelling for a sting part (matches the renderer's true-peak ceiling).</span>
+<span class="n">_STING_TRUE_PEAK</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.5</span>
+<span class="n">_STING_LRA</span> <span class="o">=</span> <span class="mi">11</span>
+
+
+<div class="viewcode-block" id="Sting">
+<a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.Sting">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Sting</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A short musical marker played at a scene break.</span>
+
+<span class="sd">    ``asset_path`` is an app-supplied sound (a hit, a riser, a few notes of the</span>
+<span class="sd">    theme). It is trimmed to ``max_len_s`` with a ``fade_out_s`` tail, levelled</span>
+<span class="sd">    to the production's loudness target, sat ``gain_db`` under the voice, and</span>
+<span class="sd">    followed by ``gap_after_s`` of breathing room before the talk resumes.</span>
+<span class="sd">    """</span>
+
+    <span class="n">asset_path</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">gain_db</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_DEFAULT_STING_GAIN_DB</span>
+    <span class="n">max_len_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_DEFAULT_STING_MAX_LEN_S</span>
+    <span class="n">fade_out_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_DEFAULT_STING_FADE_OUT_S</span>
+    <span class="n">gap_after_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_DEFAULT_STING_GAP_AFTER_S</span></div>
+
+
+
+<div class="viewcode-block" id="MusicStructure">
+<a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.MusicStructure">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MusicStructure</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""How a production marks its structure with music — the render seam.</span>
+
+<span class="sd">    ``scene_marker`` is the default for a :class:`~braidio.script.SceneBreak`</span>
+<span class="sd">    whose ``marker`` is ``None`` (``"sting"`` / ``"none"``). ``spotlight_clips``</span>
+<span class="sd">    is the default for a :class:`~braidio.script.SegmentBeat` whose</span>
+<span class="sd">    ``spotlight`` is ``None`` — ``True`` drops the bed under every exhibit.</span>
+<span class="sd">    ``sting`` is the production's sting asset; with none supplied a</span>
+<span class="sd">    ``"sting"``-marked break falls back to ``pause_s`` of silence.</span>
+
+<span class="sd">    The all-defaults value is inert for a script with no scene breaks and no</span>
+<span class="sd">    spotlight-marked clips: a format that declares no structure renders exactly</span>
+<span class="sd">    as it did without this layer.</span>
+<span class="sd">    """</span>
+
+    <span class="n">sting</span><span class="p">:</span> <span class="n">Sting</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">scene_marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"sting"</span>
+    <span class="n">spotlight_clips</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">pause_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_DEFAULT_BREAK_PAUSE_S</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene_marker</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SCENE_MARKERS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"MusicStructure.scene_marker must be one of </span><span class="si">{</span><span class="n">SCENE_MARKERS</span><span class="si">}</span><span class="s2">, "</span>
+                <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">scene_marker</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="MusicStructure.marker_for">
+<a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.MusicStructure.marker_for">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">marker_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beat</span><span class="p">:</span> <span class="n">SceneBreak</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The marker a scene break renders with (its override, else the default)."""</span>
+        <span class="k">return</span> <span class="n">beat</span><span class="o">.</span><span class="n">marker</span> <span class="k">if</span> <span class="n">beat</span><span class="o">.</span><span class="n">marker</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene_marker</span></div>
+
+
+<div class="viewcode-block" id="MusicStructure.plays_sting">
+<a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.MusicStructure.plays_sting">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plays_sting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beat</span><span class="p">:</span> <span class="n">SceneBreak</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether ``beat`` plays the sting (marked ``"sting"`` *and* one is supplied)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sting</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker_for</span><span class="p">(</span><span class="n">beat</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"sting"</span></div>
+
+
+<div class="viewcode-block" id="MusicStructure.spotlight_for">
+<a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.MusicStructure.spotlight_for">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">spotlight_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beat</span><span class="p">:</span> <span class="n">SegmentBeat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether ``beat`` is spotlit (its override, else the format default)."""</span>
+        <span class="k">return</span> <span class="n">beat</span><span class="o">.</span><span class="n">spotlight</span> <span class="k">if</span> <span class="n">beat</span><span class="o">.</span><span class="n">spotlight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">spotlight_clips</span></div>
+</div>
+
+
+
+<span class="n">DEFAULT_STRUCTURE</span> <span class="o">=</span> <span class="n">MusicStructure</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_require_ffmpeg</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"ffmpeg"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"ffmpeg not found on PATH (brew install ffmpeg)."</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="prepare_sting">
+<a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.prepare_sting">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">prepare_sting</span><span class="p">(</span>
+    <span class="n">sting</span><span class="p">:</span> <span class="n">Sting</span><span class="p">,</span>
+    <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_lufs</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">44100</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render ``sting`` to a ready-to-place part: trimmed, faded, levelled, padded.</span>
+
+<span class="sd">    The result is already at production level (``target_lufs`` then</span>
+<span class="sd">    ``sting.gain_db``), so the caller places it as-is rather than normalizing</span>
+<span class="sd">    it again. Returns ``out_path``.</span>
+<span class="sd">    """</span>
+    <span class="n">_require_ffmpeg</span><span class="p">()</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.weave</span><span class="w"> </span><span class="kn">import</span> <span class="n">duration_s</span>
+
+    <span class="n">length</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">duration_s</span><span class="p">(</span><span class="n">sting</span><span class="o">.</span><span class="n">asset_path</span><span class="p">),</span> <span class="n">sting</span><span class="o">.</span><span class="n">max_len_s</span><span class="p">)</span>
+    <span class="n">fo_start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">length</span> <span class="o">-</span> <span class="n">sting</span><span class="o">.</span><span class="n">fade_out_s</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># The trim is a filter, not an output `-t`: an output duration would also</span>
+    <span class="c1"># cut the `apad` breathing room off the end (the gap would never render).</span>
+    <span class="n">af</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"atrim=end=</span><span class="si">{</span><span class="n">length</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">,"</span>
+        <span class="sa">f</span><span class="s2">"afade=t=out:st=</span><span class="si">{</span><span class="n">fo_start</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">:d=</span><span class="si">{</span><span class="n">sting</span><span class="o">.</span><span class="n">fade_out_s</span><span class="si">}</span><span class="s2">,"</span>
+        <span class="sa">f</span><span class="s2">"loudnorm=I=</span><span class="si">{</span><span class="n">target_lufs</span><span class="si">}</span><span class="s2">:TP=</span><span class="si">{</span><span class="n">_STING_TRUE_PEAK</span><span class="si">}</span><span class="s2">:LRA=</span><span class="si">{</span><span class="n">_STING_LRA</span><span class="si">}</span><span class="s2">,"</span>
+        <span class="sa">f</span><span class="s2">"volume=</span><span class="si">{</span><span class="n">sting</span><span class="o">.</span><span class="n">gain_db</span><span class="si">}</span><span class="s2">dB,"</span>
+        <span class="sa">f</span><span class="s2">"apad=pad_dur=</span><span class="si">{</span><span class="n">sting</span><span class="o">.</span><span class="n">gap_after_s</span><span class="si">}</span><span class="s2">,"</span>
+        <span class="sa">f</span><span class="s2">"aformat=sample_rates=</span><span class="si">{</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">:channel_layouts=stereo"</span>
+    <span class="p">)</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">,</span> <span class="s2">"-y"</span><span class="p">,</span> <span class="s2">"-i"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">sting</span><span class="o">.</span><span class="n">asset_path</span><span class="p">),</span> <span class="s2">"-af"</span><span class="p">,</span> <span class="n">af</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">)],</span>
+        <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="prepare_pause">
+<a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.prepare_pause">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">prepare_pause</span><span class="p">(</span>
+    <span class="n">seconds</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sample_rate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">44100</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render ``seconds`` of stereo silence — a scene break with no sting to play."""</span>
+    <span class="n">_require_ffmpeg</span><span class="p">()</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">"ffmpeg"</span><span class="p">,</span>
+            <span class="s2">"-y"</span><span class="p">,</span>
+            <span class="s2">"-f"</span><span class="p">,</span>
+            <span class="s2">"lavfi"</span><span class="p">,</span>
+            <span class="s2">"-i"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"anullsrc=r=</span><span class="si">{</span><span class="n">sample_rate</span><span class="si">}</span><span class="s2">:cl=stereo"</span><span class="p">,</span>
+            <span class="s2">"-t"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">seconds</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span>
+        <span class="p">],</span>
+        <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

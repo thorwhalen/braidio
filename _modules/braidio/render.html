@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.render &mdash; braidio 0.0.26 documentation</title>
+  <title>braidio.render &mdash; braidio 0.0.27 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=6a9d8632"></script>
+      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -75,6 +75,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/rights.html">braidio.rights</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/script.html">braidio.script</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/structure.html">braidio.structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/style.html">braidio.style</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/textprep.html">braidio.textprep</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/timeline.html">braidio.timeline</a></li>
@@ -119,9 +120,10 @@
 
 <span class="sd">Walks the beats (filtered by the rights :class:`~braidio.rights.Profile`):</span>
 <span class="sd">narration beats are synthesized (:mod:`braidio.tts`); segment beats are resolved</span>
-<span class="sd">via a :class:`~braidio.sources.SegmentSource` and extracted (padded + faded).</span>
-<span class="sd">Every part is loudness-normalized, then either woven on a timeline (clips tuck</span>
-<span class="sd">under narration — :func:`braidio.weave.weave_timeline`) when a</span>
+<span class="sd">via a :class:`~braidio.sources.SegmentSource` and extracted (padded + faded);</span>
+<span class="sd">scene breaks become a sting or a pause (:mod:`braidio.structure`). Every spoken</span>
+<span class="sd">or clipped part is loudness-normalized, then either woven on a timeline (clips</span>
+<span class="sd">tuck under narration — :func:`braidio.weave.weave_timeline`) when a</span>
 <span class="sd">:class:`~braidio.weave_config.WeaveConfig` enables it, or concatenated.</span>
 
 <span class="sd">This is the no-graph fast path; the same core is reused by the nw-app</span>
@@ -146,12 +148,14 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.script</span><span class="w"> </span><span class="kn">import</span> <span class="n">Script</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">SegmentSource</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.structure</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_STRUCTURE</span><span class="p">,</span> <span class="n">prepare_pause</span><span class="p">,</span> <span class="n">prepare_sting</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="n">narrate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.weave</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimelineItem</span><span class="p">,</span> <span class="n">extract_padded</span><span class="p">,</span> <span class="n">weave_timeline</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.weave_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeaveConfig</span>
 
 <span class="n">_DEFAULT_LUFS</span> <span class="o">=</span> <span class="o">-</span><span class="mf">16.0</span>
 <span class="n">_TRUE_PEAK</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.5</span>
+<span class="n">_LOUDNESS_RANGE</span> <span class="o">=</span> <span class="mi">11</span>  <span class="c1"># loudnorm LRA target for a spoken part</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_require_ffmpeg</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -214,7 +218,7 @@
             <span class="s2">"-i"</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">src</span><span class="p">),</span>
             <span class="s2">"-af"</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">"loudnorm=I=</span><span class="si">{</span><span class="n">target_lufs</span><span class="si">}</span><span class="s2">:TP=</span><span class="si">{</span><span class="n">_TRUE_PEAK</span><span class="si">}</span><span class="s2">:LRA=11"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"loudnorm=I=</span><span class="si">{</span><span class="n">target_lufs</span><span class="si">}</span><span class="s2">:TP=</span><span class="si">{</span><span class="n">_TRUE_PEAK</span><span class="si">}</span><span class="s2">:LRA=</span><span class="si">{</span><span class="n">_LOUDNESS_RANGE</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
             <span class="s2">"-ar"</span><span class="p">,</span>
             <span class="s2">"44100"</span><span class="p">,</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">dst</span><span class="p">),</span>
@@ -242,6 +246,7 @@
     <span class="n">crossfade_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.12</span><span class="p">,</span>
     <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">music_bed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># optional braidio.music.MusicBed — instrumental underscore</span>
+    <span class="n">structure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># optional braidio.structure.MusicStructure — stings + spotlight</span>
     <span class="n">end_fade_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.35</span><span class="p">,</span>  <span class="c1"># soft landing: fade the last bit + trailing silence</span>
     <span class="n">end_silence_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">,</span>
     <span class="n">return_timeline</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>  <span class="c1"># also return a TimelineBreakdown of the render</span>
@@ -262,6 +267,13 @@
 <span class="sd">    publishable. ``music_bed`` lays an instrumental underscore under the whole</span>
 <span class="sd">    production (see :class:`braidio.music.MusicBed`).</span>
 
+<span class="sd">    ``structure`` (a :class:`braidio.structure.MusicStructure`) is how the</span>
+<span class="sd">    production marks its structure with music: a scene-break beat plays its</span>
+<span class="sd">    ``sting`` (or a pause when there is none / the break is marked ``"none"``),</span>
+<span class="sd">    and a spotlit segment beat drops the bed out for its duration. ``None``</span>
+<span class="sd">    uses the inert defaults — no sting asset, no clip spotlit by default — so a</span>
+<span class="sd">    script without scene breaks or spotlight flags renders exactly as before.</span>
+
 <span class="sd">    ``api_key`` is an optional per-request ElevenLabs key threaded to every</span>
 <span class="sd">    synthesized beat — both narration (:func:`braidio.tts.narrate`) and dialogue</span>
 <span class="sd">    (:func:`braidio.conversation.render_dialogue`). When ``None`` (default) each</span>
@@ -274,6 +286,7 @@
     <span class="n">plan</span> <span class="o">=</span> <span class="n">plan_production</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">profile</span><span class="p">,</span> <span class="n">publishable_clip_rights</span><span class="o">=</span><span class="n">publishable</span><span class="p">)</span>
     <span class="n">target_lufs</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">target_lufs</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_DEFAULT_LUFS</span>
     <span class="n">duck_db</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">duck_db</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mf">15.0</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="n">structure</span> <span class="k">if</span> <span class="n">structure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">DEFAULT_STRUCTURE</span>
 
     <span class="n">out</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
@@ -305,9 +318,29 @@
     <span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># aggregation label per beat (clip / narration / style / dialogue)</span>
     <span class="n">spans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># source [start,end) for clips</span>
     <span class="n">labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">spotlights</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># per part: the bed drops out over it</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pb</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">plan</span><span class="o">.</span><span class="n">beats</span><span class="p">):</span>
         <span class="n">orig</span> <span class="o">=</span> <span class="n">script</span><span class="o">.</span><span class="n">beats</span><span class="p">[</span><span class="n">pb</span><span class="o">.</span><span class="n">from_index</span><span class="p">]</span>
         <span class="n">clip_span</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">pb</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"scene_break"</span><span class="p">:</span>
+            <span class="c1"># structure: a sting when the production has one and the break asks</span>
+            <span class="c1"># for it, else a beat of silence. Both are pre-levelled — no loudnorm.</span>
+            <span class="k">if</span> <span class="n">structure</span><span class="o">.</span><span class="n">plays_sting</span><span class="p">(</span><span class="n">orig</span><span class="p">):</span>
+                <span class="n">raw</span> <span class="o">=</span> <span class="n">prepare_sting</span><span class="p">(</span>
+                    <span class="n">structure</span><span class="o">.</span><span class="n">sting</span><span class="p">,</span>
+                    <span class="n">work</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"sting</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">.mp3"</span><span class="p">,</span>
+                    <span class="n">target_lufs</span><span class="o">=</span><span class="n">target_lufs</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">raw</span> <span class="o">=</span> <span class="n">prepare_pause</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">pause_s</span><span class="p">,</span> <span class="n">work</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"pause</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">.mp3"</span><span class="p">)</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+            <span class="n">kinds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"sting"</span><span class="p">)</span>
+            <span class="n">placements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"sequential"</span><span class="p">)</span>
+            <span class="n">roles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"sting"</span> <span class="k">if</span> <span class="n">structure</span><span class="o">.</span><span class="n">plays_sting</span><span class="p">(</span><span class="n">orig</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"scene-break"</span><span class="p">)</span>
+            <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">orig</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+            <span class="n">spans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">spotlights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">continue</span>
         <span class="k">if</span> <span class="n">pb</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"narration"</span><span class="p">:</span>
             <span class="n">beat_voice</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">orig</span><span class="p">,</span> <span class="s2">"voice"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">voice_id</span>  <span class="c1"># per-beat override</span>
             <span class="n">beat_settings</span> <span class="o">=</span> <span class="p">(</span>
@@ -365,6 +398,8 @@
         <span class="n">placements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="s2">"under"</span> <span class="k">if</span> <span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"clip"</span> <span class="ow">and</span> <span class="n">seg_place</span> <span class="o">==</span> <span class="s2">"under"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"sequential"</span>
         <span class="p">)</span>
+        <span class="c1"># fade-to-spotlight: a clip's own flag, else the structure's default</span>
+        <span class="n">spotlights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"clip"</span> <span class="ow">and</span> <span class="n">structure</span><span class="o">.</span><span class="n">spotlight_for</span><span class="p">(</span><span class="n">orig</span><span class="p">))</span>
         <span class="c1"># per-beat timeline metadata (for the returned TimelineBreakdown)</span>
         <span class="k">if</span> <span class="n">pb</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"clip"</span><span class="p">:</span>
             <span class="n">roles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"clip"</span><span class="p">)</span>
@@ -390,9 +425,13 @@
     <span class="k">if</span> <span class="n">woven</span><span class="p">:</span>
         <span class="n">items</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">TimelineItem</span><span class="p">(</span>
-                <span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">placement</span><span class="o">=</span><span class="n">pl</span><span class="p">,</span> <span class="n">duck_db</span><span class="o">=</span><span class="p">(</span><span class="n">duck_db</span> <span class="k">if</span> <span class="n">pl</span> <span class="o">==</span> <span class="s2">"under"</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">k</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">),</span>
+                <span class="n">placement</span><span class="o">=</span><span class="n">pl</span><span class="p">,</span>
+                <span class="n">duck_db</span><span class="o">=</span><span class="p">(</span><span class="n">duck_db</span> <span class="k">if</span> <span class="n">pl</span> <span class="o">==</span> <span class="s2">"under"</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="n">spotlight</span><span class="o">=</span><span class="n">sp</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">pl</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">kinds</span><span class="p">,</span> <span class="n">parts</span><span class="p">,</span> <span class="n">placements</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">pl</span><span class="p">,</span> <span class="n">sp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">kinds</span><span class="p">,</span> <span class="n">parts</span><span class="p">,</span> <span class="n">placements</span><span class="p">,</span> <span class="n">spotlights</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="n">weave_timeline</span><span class="p">(</span>
             <span class="n">items</span><span class="p">,</span>

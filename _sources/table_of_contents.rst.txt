@@ -31,6 +31,7 @@
    module_docs/braidio/rights
    module_docs/braidio/script
    module_docs/braidio/sources
+   module_docs/braidio/structure
    module_docs/braidio/style
    module_docs/braidio/textprep
    module_docs/braidio/timeline

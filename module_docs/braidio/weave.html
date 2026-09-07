@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.weave &mdash; braidio 0.0.26 documentation</title>
+  <title>braidio.weave &mdash; braidio 0.0.27 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=6a9d8632"></script>
+      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -78,6 +78,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rights.html">braidio.rights</a></li>
 <li class="toctree-l1"><a class="reference internal" href="script.html">braidio.script</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">braidio.structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="style.html">braidio.style</a></li>
 <li class="toctree-l1"><a class="reference internal" href="textprep.html">braidio.textprep</a></li>
 <li class="toctree-l1"><a class="reference internal" href="timeline.html">braidio.timeline</a></li>
@@ -145,13 +146,16 @@ fade-shaped overlap; a dynamic sidechain duck (<code class="docutils literal not
 refinement (see #21 / the research).</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.weave.TimelineItem">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.weave.</span></span><span class="sig-name descname"><span class="pre">TimelineItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">placement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sequential'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duck_db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/weave.html#TimelineItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.weave.TimelineItem" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.weave.</span></span><span class="sig-name descname"><span class="pre">TimelineItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">placement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sequential'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duck_db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spotlight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/weave.html#TimelineItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.weave.TimelineItem" title="Link to this definition"></a></dt>
 <dd><p>One part on the weave timeline.</p>
 <p><code class="docutils literal notranslate"><span class="pre">placement</span></code> <code class="docutils literal notranslate"><span class="pre">&quot;sequential&quot;</span></code> (default — narration, and clean <code class="docutils literal notranslate"><span class="pre">before</span></code> /
 <code class="docutils literal notranslate"><span class="pre">after</span></code> clips) lays the part in its own slot. <code class="docutils literal notranslate"><span class="pre">&quot;under&quot;</span></code> overlays the part
 beneath the <em>following</em> sequential part (it does not consume its own slot),
 attenuated by <code class="docutils literal notranslate"><span class="pre">duck_db</span></code> — a ducked underlay (a clip talked over, or later a
 music bed).</p>
+<p><code class="docutils literal notranslate"><span class="pre">spotlight</span></code> marks the part the music bed drops out for (fade-to-spotlight):
+the bed is silent over this part’s span and resumes after it. Inert without
+a bed.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -199,8 +203,11 @@ Clamped ≥ 0.</p>
 parts butt-join with a small crossfade. Returns <code class="docutils literal notranslate"><span class="pre">out_path</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">bed</span></code> (a <a class="reference internal" href="music.html#braidio.music.MusicBed" title="braidio.music.MusicBed"><code class="xref py py-class docutils literal notranslate"><span class="pre">MusicBed</span></code></a>) lays an instrumental underscore
 under the whole production: it’s rendered to cover the timeline, attenuated,
-and mixed in posted by <code class="docutils literal notranslate"><span class="pre">bed.lead_in_s</span></code>. Falls back to a plain concat feel
-when <code class="docutils literal notranslate"><span class="pre">clip_edge_overlap_s</span> <span class="pre">==</span> <span class="pre">0</span></code> and there’s nothing to overlay.</p>
+and mixed in posted by <code class="docutils literal notranslate"><span class="pre">bed.lead_in_s</span></code>. Items marked <code class="docutils literal notranslate"><span class="pre">spotlight</span></code> open a
+gap in it (the bed is rendered as the regions around them — see
+<a class="reference internal" href="music.html#braidio.music.bed_regions" title="braidio.music.bed_regions"><code class="xref py py-func docutils literal notranslate"><span class="pre">braidio.music.bed_regions()</span></code></a>); with none marked the bed is the single
+whole-span file. Falls back to a plain concat feel when
+<code class="docutils literal notranslate"><span class="pre">clip_edge_overlap_s</span> <span class="pre">==</span> <span class="pre">0</span></code> and there’s nothing to overlay.</p>
 </dd></dl>
 
 </section>

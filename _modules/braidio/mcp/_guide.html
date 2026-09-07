@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.mcp._guide &mdash; braidio 0.0.26 documentation</title>
+  <title>braidio.mcp._guide &mdash; braidio 0.0.27 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=6a9d8632"></script>
+      <script src="../../../_static/documentation_options.js?v=cee5022b"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -75,6 +75,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/rights.html">braidio.rights</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/script.html">braidio.script</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/structure.html">braidio.structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/style.html">braidio.style</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/textprep.html">braidio.textprep</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/timeline.html">braidio.timeline</a></li>
@@ -242,6 +243,10 @@
                     <span class="s2">"rights"</span><span class="p">:</span> <span class="s2">"owned-local | public-domain | copyrighted"</span><span class="p">,</span>
                 <span class="p">},</span>
                 <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"dialogue"</span><span class="p">,</span> <span class="s2">"turns"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"A"</span><span class="p">,</span> <span class="s2">"line"</span><span class="p">],</span> <span class="p">[</span><span class="s2">"B"</span><span class="p">,</span> <span class="s2">"reply"</span><span class="p">]]},</span>
+                <span class="p">{</span>
+                    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"scene_break"</span><span class="p">,</span>
+                    <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"a new section starts here (a sting or a pause; free)"</span><span class="p">,</span>
+                <span class="p">},</span>
             <span class="p">],</span>
         <span class="p">},</span>
         <span class="s2">"notes"</span><span class="p">:</span> <span class="p">[</span>
@@ -251,8 +256,14 @@
             <span class="s2">"with upload_asset and pass its itemId as `source.asset_id`, or point "</span>
             <span class="s2">"`source.asset_path` at a server-local file. A narration-only script "</span>
             <span class="s2">"needs no source."</span><span class="p">,</span>
-            <span class="s2">"Dialogue beats aren't in the graph pipeline yet — use render_production "</span>
-            <span class="s2">"for dialogue."</span><span class="p">,</span>
+            <span class="s2">"A scene_break beat marks a section boundary (put one between a "</span>
+            <span class="s2">"debate's phases or a panel's rounds). Over this connector it renders "</span>
+            <span class="s2">"as a short pause: the render tools take no music assets yet, so no "</span>
+            <span class="s2">"sting plays and a segment beat's spotlight flag has no effect — both "</span>
+            <span class="s2">"need a bed/sting asset, which today only the Python API accepts."</span><span class="p">,</span>
+            <span class="s2">"Dialogue and scene_break beats aren't in the graph pipeline yet "</span>
+            <span class="s2">"(save_script / weave_project reject them) — use render_production or "</span>
+            <span class="s2">"render_format for those."</span><span class="p">,</span>
             <span class="s2">"Every call is metered to the authenticated user; the connector is "</span>
             <span class="s2">"restricted to its allowlisted users."</span><span class="p">,</span>
         <span class="p">],</span>

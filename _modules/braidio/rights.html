@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.rights &mdash; braidio 0.0.26 documentation</title>
+  <title>braidio.rights &mdash; braidio 0.0.27 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=6a9d8632"></script>
+      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -75,6 +75,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/rights.html">braidio.rights</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/script.html">braidio.script</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/structure.html">braidio.structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/style.html">braidio.style</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/textprep.html">braidio.textprep</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/timeline.html">braidio.timeline</a></li>
@@ -143,7 +144,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.script</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dialogue</span><span class="p">,</span> <span class="n">Narration</span><span class="p">,</span> <span class="n">Script</span><span class="p">,</span> <span class="n">SegmentBeat</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.script</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dialogue</span><span class="p">,</span> <span class="n">Narration</span><span class="p">,</span> <span class="n">SceneBreak</span><span class="p">,</span> <span class="n">Script</span><span class="p">,</span> <span class="n">SegmentBeat</span>
 
 <span class="c1"># Segment ``rights`` values safe to render in the published cut.</span>
 <span class="n">PUBLISHABLE_CLIP_RIGHTS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"public-domain"</span><span class="p">})</span>
@@ -189,12 +190,14 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">PlannedBeat</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""A beat resolved for a profile — what the renderer actually plays.</span>
 
-<span class="sd">    ``kind`` is ``"narration"`` (synthesize ``content``) or ``"clip"`` (resolve</span>
-<span class="sd">    ``content`` as a segment reference and cut audio). ``from_index`` points at</span>
-<span class="sd">    the source beat; ``note`` records any substitution/drop reasoning.</span>
+<span class="sd">    ``kind`` is ``"narration"`` (synthesize ``content``), ``"clip"`` (resolve</span>
+<span class="sd">    ``content`` as a segment reference and cut audio), ``"dialogue"`` (synthesize</span>
+<span class="sd">    ``turns``) or ``"scene_break"`` (a structural boundary — no content; the</span>
+<span class="sd">    renderer marks it with music). ``from_index`` points at the source beat;</span>
+<span class="sd">    ``note`` records any substitution/drop reasoning.</span>
 <span class="sd">    """</span>
 
-    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># "narration" | "clip" | "dialogue"</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># "narration" | "clip" | "dialogue" | "scene_break"</span>
     <span class="n">content</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># narration/dialogue text (for scanning); clip = the reference</span>
     <span class="n">from_index</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
@@ -265,6 +268,9 @@
                     <span class="n">turns</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">turns</span><span class="p">),</span>
                 <span class="p">)</span>
             <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">beat</span><span class="p">,</span> <span class="n">SceneBreak</span><span class="p">):</span>
+            <span class="c1"># structure, not content → rendered under every profile, never scanned</span>
+            <span class="n">plan</span><span class="o">.</span><span class="n">beats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PlannedBeat</span><span class="p">(</span><span class="s2">"scene_break"</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover - exhaustive</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown beat type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">beat</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">plan</span></div>

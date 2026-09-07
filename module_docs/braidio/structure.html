@@ -1,0 +1,246 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.structure &mdash; braidio 0.0.27 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="braidio.style" href="style.html" />
+    <link rel="prev" title="braidio.sources" href="sources.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cost.html">braidio.cost</a></li>
+<li class="toctree-l1"><a class="reference internal" href="delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downloads.html">braidio.downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genre.html">braidio.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">braidio.mcp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/_docs.html">braidio.mcp._docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/_guide.html">braidio.mcp._guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/_helpers.html">braidio.mcp._helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/_media.html">braidio.mcp._media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/metering.html">braidio.mcp.metering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/tools.html">braidio.mcp.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/workspace.html">braidio.mcp.workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sources.html">braidio.sources</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">braidio.structure</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.structure.MusicStructure"><code class="docutils literal notranslate"><span class="pre">MusicStructure</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#braidio.structure.MusicStructure.marker_for"><code class="docutils literal notranslate"><span class="pre">MusicStructure.marker_for()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#braidio.structure.MusicStructure.plays_sting"><code class="docutils literal notranslate"><span class="pre">MusicStructure.plays_sting()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#braidio.structure.MusicStructure.spotlight_for"><code class="docutils literal notranslate"><span class="pre">MusicStructure.spotlight_for()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.structure.Sting"><code class="docutils literal notranslate"><span class="pre">Sting</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.structure.prepare_pause"><code class="docutils literal notranslate"><span class="pre">prepare_pause()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.structure.prepare_sting"><code class="docutils literal notranslate"><span class="pre">prepare_sting()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="style.html">braidio.style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeline.html">braidio.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_voice.html">braidio.transforms._voice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">braidio.structure</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/braidio/structure.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-braidio.structure">
+<span id="braidio-structure"></span><h1>braidio.structure<a class="headerlink" href="#module-braidio.structure" title="Link to this heading"></a></h1>
+<p>Structural music — stings at scene breaks, fade-to-spotlight on exhibits.</p>
+<p>The music bed (<a class="reference internal" href="music.html#module-braidio.music" title="braidio.music"><code class="xref py py-mod docutils literal notranslate"><span class="pre">braidio.music</span></code></a>) is the <em>continuous</em> music layer. This module
+is the <em>structural</em> one: the cues that tell a listener where they are, because
+audio has no visual white space (<code class="docutils literal notranslate"><span class="pre">misc/docs/research/commentary-formats-and-</span>
+<span class="pre">styles.md</span></code>, “Music as structure”):</p>
+<ul class="simple">
+<li><p>a <strong>sting</strong> — a short musical marker — at a <a class="reference internal" href="script.html#braidio.script.SceneBreak" title="braidio.script.SceneBreak"><code class="xref py py-class docutils literal notranslate"><span class="pre">SceneBreak</span></code></a>
+(“new section”);</p></li>
+<li><p><strong>fade-to-spotlight</strong> — the bed drops <em>out</em> before a key exhibit so the clip
+lands in silence instead of competing with underscore, and resumes after it.</p></li>
+</ul>
+<p>Both are driven by a <a class="reference internal" href="#braidio.structure.MusicStructure" title="braidio.structure.MusicStructure"><code class="xref py py-class docutils literal notranslate"><span class="pre">MusicStructure</span></code></a>: the format’s defaults
+(<code class="docutils literal notranslate"><span class="pre">scene_marker</span></code>, <code class="docutils literal notranslate"><span class="pre">spotlight_clips</span></code>) plus the production’s <a class="reference internal" href="#braidio.structure.Sting" title="braidio.structure.Sting"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sting</span></code></a>
+asset. It is the single seam <a class="reference internal" href="render.html#braidio.render.render_production" title="braidio.render.render_production"><code class="xref py py-func docutils literal notranslate"><span class="pre">braidio.render.render_production()</span></code></a> takes
+(<code class="docutils literal notranslate"><span class="pre">structure=</span></code>); <code class="docutils literal notranslate"><span class="pre">None</span></code> means “no structure” and reproduces the plain weave
+exactly. A beat overrides the defaults with <code class="docutils literal notranslate"><span class="pre">SceneBreak.marker</span></code> /
+<code class="docutils literal notranslate"><span class="pre">SegmentBeat.spotlight</span></code>.</p>
+<p>braidio ships <strong>no music</strong>: like the bed, the sting is an app-supplied asset
+(<code class="docutils literal notranslate"><span class="pre">render_format(...,</span> <span class="pre">sting_asset=…)</span></code>). A scene break with no sting to play is
+still audible — as <code class="xref py py-attr docutils literal notranslate"><span class="pre">MusicStructure.pause_s</span></code> of silence — so the structure
+is never silently lost.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.structure.MusicStructure">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.structure.</span></span><span class="sig-name descname"><span class="pre">MusicStructure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sting</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#braidio.structure.Sting" title="braidio.structure.Sting"><span class="pre">Sting</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scene_marker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sting'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spotlight_clips</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pause_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/structure.html#MusicStructure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.structure.MusicStructure" title="Link to this definition"></a></dt>
+<dd><p>How a production marks its structure with music — the render seam.</p>
+<p><code class="docutils literal notranslate"><span class="pre">scene_marker</span></code> is the default for a <a class="reference internal" href="script.html#braidio.script.SceneBreak" title="braidio.script.SceneBreak"><code class="xref py py-class docutils literal notranslate"><span class="pre">SceneBreak</span></code></a>
+whose <code class="docutils literal notranslate"><span class="pre">marker</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;sting&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>). <code class="docutils literal notranslate"><span class="pre">spotlight_clips</span></code>
+is the default for a <a class="reference internal" href="script.html#braidio.script.SegmentBeat" title="braidio.script.SegmentBeat"><code class="xref py py-class docutils literal notranslate"><span class="pre">SegmentBeat</span></code></a> whose
+<code class="docutils literal notranslate"><span class="pre">spotlight</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> — <code class="docutils literal notranslate"><span class="pre">True</span></code> drops the bed under every exhibit.
+<code class="docutils literal notranslate"><span class="pre">sting</span></code> is the production’s sting asset; with none supplied a
+<code class="docutils literal notranslate"><span class="pre">&quot;sting&quot;</span></code>-marked break falls back to <code class="docutils literal notranslate"><span class="pre">pause_s</span></code> of silence.</p>
+<p>The all-defaults value is inert for a script with no scene breaks and no
+spotlight-marked clips: a format that declares no structure renders exactly
+as it did without this layer.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="braidio.structure.MusicStructure.marker_for">
+<span class="sig-name descname"><span class="pre">marker_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="script.html#braidio.script.SceneBreak" title="braidio.script.SceneBreak"><span class="pre">SceneBreak</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/braidio/structure.html#MusicStructure.marker_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.structure.MusicStructure.marker_for" title="Link to this definition"></a></dt>
+<dd><p>The marker a scene break renders with (its override, else the default).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="braidio.structure.MusicStructure.plays_sting">
+<span class="sig-name descname"><span class="pre">plays_sting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="script.html#braidio.script.SceneBreak" title="braidio.script.SceneBreak"><span class="pre">SceneBreak</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/braidio/structure.html#MusicStructure.plays_sting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.structure.MusicStructure.plays_sting" title="Link to this definition"></a></dt>
+<dd><p>Whether <code class="docutils literal notranslate"><span class="pre">beat</span></code> plays the sting (marked <code class="docutils literal notranslate"><span class="pre">&quot;sting&quot;</span></code> <em>and</em> one is supplied).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="braidio.structure.MusicStructure.spotlight_for">
+<span class="sig-name descname"><span class="pre">spotlight_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="script.html#braidio.script.SegmentBeat" title="braidio.script.SegmentBeat"><span class="pre">SegmentBeat</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/braidio/structure.html#MusicStructure.spotlight_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.structure.MusicStructure.spotlight_for" title="Link to this definition"></a></dt>
+<dd><p>Whether <code class="docutils literal notranslate"><span class="pre">beat</span></code> is spotlit (its override, else the format default).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.structure.Sting">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.structure.</span></span><span class="sig-name descname"><span class="pre">Sting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain_db</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-6.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fade_out_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_after_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/structure.html#Sting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.structure.Sting" title="Link to this definition"></a></dt>
+<dd><p>A short musical marker played at a scene break.</p>
+<p><code class="docutils literal notranslate"><span class="pre">asset_path</span></code> is an app-supplied sound (a hit, a riser, a few notes of the
+theme). It is trimmed to <code class="docutils literal notranslate"><span class="pre">max_len_s</span></code> with a <code class="docutils literal notranslate"><span class="pre">fade_out_s</span></code> tail, levelled
+to the production’s loudness target, sat <code class="docutils literal notranslate"><span class="pre">gain_db</span></code> under the voice, and
+followed by <code class="docutils literal notranslate"><span class="pre">gap_after_s</span></code> of breathing room before the talk resumes.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.structure.prepare_pause">
+<span class="sig-prename descclassname"><span class="pre">braidio.structure.</span></span><span class="sig-name descname"><span class="pre">prepare_pause</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seconds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">44100</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../_modules/braidio/structure.html#prepare_pause"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.structure.prepare_pause" title="Link to this definition"></a></dt>
+<dd><p>Render <code class="docutils literal notranslate"><span class="pre">seconds</span></code> of stereo silence — a scene break with no sting to play.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.structure.prepare_sting">
+<span class="sig-prename descclassname"><span class="pre">braidio.structure.</span></span><span class="sig-name descname"><span class="pre">prepare_sting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sting</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#braidio.structure.Sting" title="braidio.structure.Sting"><span class="pre">Sting</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_lufs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">44100</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../_modules/braidio/structure.html#prepare_sting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.structure.prepare_sting" title="Link to this definition"></a></dt>
+<dd><p>Render <code class="docutils literal notranslate"><span class="pre">sting</span></code> to a ready-to-place part: trimmed, faded, levelled, padded.</p>
+<p>The result is already at production level (<code class="docutils literal notranslate"><span class="pre">target_lufs</span></code> then
+<code class="docutils literal notranslate"><span class="pre">sting.gain_db</span></code>), so the caller places it as-is rather than normalizing
+it again. Returns <code class="docutils literal notranslate"><span class="pre">out_path</span></code>.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sources.html" class="btn btn-neutral float-left" title="braidio.sources" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="style.html" class="btn btn-neutral float-right" title="braidio.style" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

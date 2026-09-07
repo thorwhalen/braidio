@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.script &mdash; braidio 0.0.26 documentation</title>
+  <title>braidio.script &mdash; braidio 0.0.27 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=6a9d8632"></script>
+      <script src="../../_static/documentation_options.js?v=cee5022b"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -75,6 +75,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/rights.html">braidio.rights</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/script.html">braidio.script</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/structure.html">braidio.structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/style.html">braidio.style</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/textprep.html">braidio.textprep</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/timeline.html">braidio.timeline</a></li>
@@ -117,10 +118,12 @@
   <h1>Source code for braidio.script</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""Composition model — the ordered beats a render walks.</span>
 
-<span class="sd">A :class:`Script` is an ordered list of beats, each either a :class:`Narration`</span>
-<span class="sd">(spoken, synthesized) or a :class:`SegmentBeat` (a *reference* to a span of</span>
-<span class="sd">source media to resolve and weave in). This is the generic, media-agnostic</span>
-<span class="sd">projection a renderer consumes; how a reference maps to audio is a</span>
+<span class="sd">A :class:`Script` is an ordered list of beats: a :class:`Narration` (spoken,</span>
+<span class="sd">synthesized), a :class:`Dialogue` (a multi-voice exchange), a :class:`SegmentBeat`</span>
+<span class="sd">(a *reference* to a span of source media to resolve and weave in), or a</span>
+<span class="sd">:class:`SceneBreak` (a structural boundary — "new section" — that the renderer</span>
+<span class="sd">marks with music, see :mod:`braidio.structure`). This is the generic,</span>
+<span class="sd">media-agnostic projection a renderer consumes; how a reference maps to audio is a</span>
 <span class="sd">:class:`braidio.sources.SegmentSource` concern, and what the beats are backed by</span>
 <span class="sd">(lyrics, a graph, hand-authoring) is the consumer's concern.</span>
 <span class="sd">"""</span>
@@ -185,6 +188,13 @@
 <span class="sd">    **concurrently beneath the following talk beat**, ducked by ``duck_db`` —</span>
 <span class="sd">    the "host talks over the clip" technique (place the clip *immediately before*</span>
 <span class="sd">    the talk it should sit under).</span>
+
+<span class="sd">    ``spotlight`` is the fade-to-spotlight override: ``True`` drops the music</span>
+<span class="sd">    bed out before this clip so it lands in silence rather than competing with</span>
+<span class="sd">    underscore (the bed resumes after it); ``False`` keeps the bed under it.</span>
+<span class="sd">    ``None`` (default) defers to the format's</span>
+<span class="sd">    :attr:`braidio.structure.MusicStructure.spotlight_clips`. Without a music</span>
+<span class="sd">    bed the flag is inert.</span>
 <span class="sd">    """</span>
 
     <span class="n">reference</span><span class="p">:</span> <span class="nb">str</span>
@@ -192,6 +202,7 @@
     <span class="n">rights</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"owned-local"</span>
     <span class="n">published_substitute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">placement</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"before"</span>
+    <span class="n">spotlight</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">placement</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CLIP_PLACEMENTS</span><span class="p">:</span>
@@ -220,7 +231,44 @@
 
 
 
-<span class="n">Beat</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Narration</span><span class="p">,</span> <span class="n">SegmentBeat</span><span class="p">,</span> <span class="n">Dialogue</span><span class="p">]</span>
+<span class="c1"># How a SceneBreak is marked. "sting" plays the production's sting (a short</span>
+<span class="c1"># musical marker) when one is supplied; "none" leaves a beat of silence. A beat's</span>
+<span class="c1"># ``marker=None`` defers to the format default (MusicStructure.scene_marker).</span>
+<span class="n">SCENE_MARKERS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"sting"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SceneBreak">
+<a class="viewcode-back" href="../../module_docs/braidio/script.html#braidio.SceneBreak">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SceneBreak</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A structural boundary between sections — the "new scene" beat.</span>
+
+<span class="sd">    Audio has no visual white space, so a boundary has to be *heard*: the</span>
+<span class="sd">    renderer marks it with a sting (a short musical marker) when the production</span>
+<span class="sd">    supplies one and the resolved ``marker`` is ``"sting"``, and otherwise with</span>
+<span class="sd">    a beat of silence. This is the beat the format templates' structure — a</span>
+<span class="sd">    debate's open / rebuttal / close, a panel's rounds, a documentary's acts —</span>
+<span class="sd">    is expressed with; the talk on either side is unchanged.</span>
+
+<span class="sd">    ``marker`` overrides the format default per break (``None`` = defer to</span>
+<span class="sd">    :attr:`braidio.structure.MusicStructure.scene_marker`). ``label`` names the</span>
+<span class="sd">    section that starts here (e.g. ``"rebuttal"``) for the timeline breakdown.</span>
+<span class="sd">    A scene break synthesizes nothing, so it costs nothing.</span>
+<span class="sd">    """</span>
+
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SCENE_MARKERS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"SceneBreak.marker must be one of </span><span class="si">{</span><span class="n">SCENE_MARKERS</span><span class="si">}</span><span class="s2"> or None, "</span>
+                <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">marker</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span></div>
+
+
+
+<span class="n">Beat</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Narration</span><span class="p">,</span> <span class="n">SegmentBeat</span><span class="p">,</span> <span class="n">Dialogue</span><span class="p">,</span> <span class="n">SceneBreak</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="Script">
