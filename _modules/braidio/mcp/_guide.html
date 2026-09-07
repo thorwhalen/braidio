@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.mcp._guide &mdash; braidio 0.0.27 documentation</title>
+  <title>braidio.mcp._guide &mdash; braidio 0.0.28 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=cee5022b"></script>
+      <script src="../../../_static/documentation_options.js?v=26ffa1e9"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -257,10 +257,12 @@
             <span class="s2">"`source.asset_path` at a server-local file. A narration-only script "</span>
             <span class="s2">"needs no source."</span><span class="p">,</span>
             <span class="s2">"A scene_break beat marks a section boundary (put one between a "</span>
-            <span class="s2">"debate's phases or a panel's rounds). Over this connector it renders "</span>
-            <span class="s2">"as a short pause: the render tools take no music assets yet, so no "</span>
-            <span class="s2">"sting plays and a segment beat's spotlight flag has no effect — both "</span>
-            <span class="s2">"need a bed/sting asset, which today only the Python API accepts."</span><span class="p">,</span>
+            <span class="s2">"debate's phases or a panel's rounds). Upload a bed/sting instrumental "</span>
+            <span class="s2">"with upload_asset, then pass its itemId as render_production's or "</span>
+            <span class="s2">"render_format's `bed_asset_id` (continuous underscore) / "</span>
+            <span class="s2">"`sting_asset_id` (plays at each scene_break) — without a sting a "</span>
+            <span class="s2">"scene_break is just a pause, and a segment beat's spotlight flag "</span>
+            <span class="s2">"needs `bed_asset_id` specifically (there's no bed to drop out)."</span><span class="p">,</span>
             <span class="s2">"Dialogue and scene_break beats aren't in the graph pipeline yet "</span>
             <span class="s2">"(save_script / weave_project reject them) — use render_production or "</span>
             <span class="s2">"render_format for those."</span><span class="p">,</span>
