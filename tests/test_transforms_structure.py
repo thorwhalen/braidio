@@ -6,11 +6,26 @@ The reelee-shaped route — an ``nw`` project driven by ``braidio.weave_project`
 fade-to-spotlight. These tests drive that route with real ffmpeg over synthetic
 audio (``tests/_audio.py``) and assert on the *decoded* PCM.
 
-The first test is the characterization one: a production that declares no
-structure must decode byte-for-byte identically to what the transform rendered
-before this layer existed — literally one ``weave_timeline`` call over the
-member parts with the weave-config's knobs and no bed. Nothing here reaches a
-network or a paid API; ``narrate`` is a silence writer.
+The characterization tests pin that a production declaring no structure renders
+exactly what it rendered before this layer existed. **Know what they do and do
+not catch.** Both references are built in *this* tree:
+
+- :func:`test_no_structure_renders_exactly_the_pre_change_weave` compares the
+  graph render against a hand-written ``weave_timeline`` call with the
+  pre-change arguments. A regression *inside* ``weave_timeline`` moves both
+  sides equally and this test stays green.
+- :func:`test_no_structure_calls_weave_timeline_exactly_as_before` closes that
+  gap from the other side: it pins the transform's **call** — the items and
+  every keyword — which no change to the weave's internals can hide.
+
+A literal decoded-PCM hash captured from ``origin/main`` would catch both, but
+is not portable: CI renders on three ffmpeg builds (ubuntu apt on two Pythons,
+Windows choco) and mp3 output is not stable across them, which is why this
+suite (and ``tests/test_structure.py`` before it) compares renders made in the
+same run. Pre/post byte-identity against pristine ``origin/main`` was verified
+out of tree instead — see thorwhalen/braidio#45.
+
+Nothing here reaches a network or a paid API; ``narrate`` is a silence writer.
 """
 
 from __future__ import annotations
@@ -117,7 +132,12 @@ def test_no_structure_renders_exactly_the_pre_change_weave(
 ):
     """Characterization: without a declared structure the graph render is still
     one plain ``weave_timeline`` over the members — same decoded PCM, to the
-    byte."""
+    byte.
+
+    Same-tree reference (see the module docstring): this pins the transform, not
+    the weave. ``test_no_structure_calls_weave_timeline_exactly_as_before`` is
+    the half that would survive a regression inside ``weave_timeline``.
+    """
     script = _script(
         braidio.Narration(text="one"),
         braidio.SegmentBeat(reference="the hook", label="hook"),
@@ -140,6 +160,50 @@ def test_no_structure_renders_exactly_the_pre_change_weave(
         sample_rate=PRE_CHANGE_DEFAULTS["sample_rate"],
     )
     assert decode(rendered) == decode(reference)
+
+
+@needs_ffmpeg
+def test_no_structure_calls_weave_timeline_exactly_as_before(
+    project, source, silent_narration, monkeypatch, tmp_path
+):
+    """The other half of the characterization: pin the transform's *call*.
+
+    A hand-built reference render can only prove the two sides agree; if
+    ``weave_timeline`` itself regressed, both would move together. This asserts
+    the arguments the episode transform hands it for a structure-free
+    production — no ``bed``, no spotlit item, no extra part, the pre-change
+    keyword values — which nothing inside the weave can mask.
+    """
+    calls = []
+    real_weave = braidio.weave_timeline
+
+    def recording_weave(items, out, **kw):
+        calls.append((items, kw))
+        return real_weave(items, out, **kw)
+
+    monkeypatch.setattr(braidio, "weave_timeline", recording_weave)
+    braidio.weave_project(
+        project,
+        _script(
+            braidio.Narration(text="one"),
+            braidio.SegmentBeat(reference="the hook", label="hook"),
+            braidio.Narration(text="two"),
+        ),
+        source=source,
+    )
+
+    (items, kw) = calls[-1]
+    assert [it.kind for it in items] == ["narration", "clip", "narration"]
+    assert all(it.placement == "sequential" for it in items)
+    assert not any(it.spotlight for it in items)
+    assert kw == {
+        "clip_edge_overlap_s": PRE_CHANGE_DEFAULTS["clip_edge_overlap_s"],
+        "narration_crossfade_s": PRE_CHANGE_DEFAULTS["crossfade_s"],
+        "target_lufs": PRE_CHANGE_DEFAULTS["target_lufs"],
+        "true_peak": PRE_CHANGE_DEFAULTS["true_peak_dbtp"],
+        "sample_rate": PRE_CHANGE_DEFAULTS["sample_rate"],
+        "bed": None,
+    }
 
 
 @needs_ffmpeg
