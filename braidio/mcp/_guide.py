@@ -137,10 +137,12 @@ def capabilities() -> dict:
             "`source.asset_path` at a server-local file. A narration-only script "
             "needs no source.",
             "A scene_break beat marks a section boundary (put one between a "
-            "debate's phases or a panel's rounds). Over this connector it renders "
-            "as a short pause: the render tools take no music assets yet, so no "
-            "sting plays and a segment beat's spotlight flag has no effect — both "
-            "need a bed/sting asset, which today only the Python API accepts.",
+            "debate's phases or a panel's rounds). Upload a bed/sting instrumental "
+            "with upload_asset, then pass its itemId as render_production's or "
+            "render_format's `bed_asset_id` (continuous underscore) / "
+            "`sting_asset_id` (plays at each scene_break) — without a sting a "
+            "scene_break is just a pause, and a segment beat's spotlight flag "
+            "needs `bed_asset_id` specifically (there's no bed to drop out).",
             "Dialogue and scene_break beats aren't in the graph pipeline yet "
             "(save_script / weave_project reject them) — use render_production or "
             "render_format for those.",
