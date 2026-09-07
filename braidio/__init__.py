@@ -33,6 +33,7 @@ from braidio.script import (  # noqa: F401
 # --- rights profiles ---
 from braidio.rights import (  # noqa: F401
     Profile,
+    DEFAULT_PROFILE,
     RightsPolicy,
     RenderPlan,
     PlannedBeat,
@@ -228,6 +229,7 @@ __all__ = [
     "narration_segments",
     # rights
     "Profile",
+    "DEFAULT_PROFILE",
     "RightsPolicy",
     "RenderPlan",
     "PlannedBeat",

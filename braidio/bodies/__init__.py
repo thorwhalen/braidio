@@ -26,6 +26,7 @@ from braidio.bodies._domain import (  # noqa: F401  (import registers)
 from braidio.bodies._render_nodes import (  # noqa: F401  (import registers)
     WEAVE_CONFIG_V1,
     PRODUCTION_STRUCTURE_V1,
+    RENDER_PROFILE_V1,
     SOURCE_MEDIA_V1,
     VOICE_ASSIGNMENT_V1,
     NARRATION_RENDER_V1,
@@ -33,6 +34,7 @@ from braidio.bodies._render_nodes import (  # noqa: F401  (import registers)
     EPISODE_RENDER_V1,
     WeaveConfigBodyV1,
     ProductionStructureBodyV1,
+    RenderProfileBodyV1,
     SourceMediaBodyV1,
     VoiceAssignmentBodyV1,
     NarrationRenderBodyV1,

@@ -23,6 +23,7 @@ from mixing import concatenate_audio
 from braidio.conversation import DEFAULT_CAST, ConversationCast, render_dialogue
 from braidio.delivery import V2_TUNED, Delivery
 from braidio.rights import (
+    DEFAULT_PROFILE,
     PUBLISHABLE_CLIP_RIGHTS,
     Profile,
     RightsPolicy,
@@ -117,7 +118,7 @@ def render_production(
     source: SegmentSource,
     api_key: str | None = None,
     config: WeaveConfig | None = None,
-    profile: Profile = Profile.PERSONAL,
+    profile: Profile = DEFAULT_PROFILE,
     rights: RightsPolicy | None = None,
     delivery: Delivery = V2_TUNED,
     cast: ConversationCast = DEFAULT_CAST,

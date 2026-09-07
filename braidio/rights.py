@@ -47,6 +47,16 @@ class Profile(str, Enum):
     PUBLISHED = "published"
 
 
+#: The profile a render uses when the caller declares none — the permissive
+#: one, so a production that never mentions rights renders everything it was
+#: given. **Every** entry point resolves its default from here (the no-graph
+#: fast path :func:`braidio.render.render_production` /
+#: :func:`braidio.formats.render_format`, the graph path
+#: :func:`braidio.transforms.weave_project`, and the MCP tools), so the two
+#: render paths cannot drift into disagreeing about what "unspecified" means.
+DEFAULT_PROFILE: Profile = Profile.PERSONAL
+
+
 @dataclass(frozen=True)
 class RightsPolicy:
     """Injected rights configuration for the published profile.

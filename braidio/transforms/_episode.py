@@ -15,6 +15,15 @@ a ``production-structure/v1`` node the episode also derives from it, so
 swapping the sting asset or flipping fade-to-spotlight re-stales exactly the
 episode; when it does not, nothing about the plan or the render changes.
 
+The **rights profile** rides the same seam (thorwhalen/braidio#47). The
+episode's ``profile`` used to be the literal ``"personal"``, so a graph render
+claimed a personal cut whatever was actually asked for. It is now read from the
+``render-profile/v1`` node the ingest wrote — a declared input of this
+Transform, so a profile change re-stales the episode like any other input. The
+filtering itself already happened at ingest, through the same
+:func:`braidio.rights.plan_production` the no-graph path uses; this Transform
+records the decision, it does not make one.
+
 This is the genre's ``projection_entrypoint``: the step that turns the graph
 into the delivered artifact.
 """
@@ -30,9 +39,11 @@ from nw.transforms._provenance import derive_provenance
 
 from braidio.weave import TimelineItem
 from braidio.bodies._domain import SCENE_BREAK_V1
+from braidio.rights import DEFAULT_PROFILE
 from braidio.bodies._render_nodes import (
     WEAVE_CONFIG_V1,
     PRODUCTION_STRUCTURE_V1,
+    RENDER_PROFILE_V1,
     NARRATION_RENDER_V1,
     SEGMENT_EXTRACTION_V1,
     EPISODE_RENDER_V1,
@@ -42,6 +53,7 @@ from braidio.transforms._common import (
     TIER_AUDIO_CLIP,
     TIER_WEAVE_CONFIG,
     TIER_PRODUCTION_STRUCTURE,
+    TIER_RENDER_PROFILE,
     TIER_NARRATION_RENDER,
     TIER_SCENE_BREAK,
     TIER_EPISODE_RENDER,
@@ -90,10 +102,22 @@ def _structure_and_bed(node: Annotation | None):
     return MusicStructure(sting=sting, **(body.get("structure") or {})), bed
 
 
+def _profile_value(node: Annotation | None) -> str:
+    """The declared rights profile's value from a ``render-profile`` node.
+
+    ``None`` (the production declared none) resolves to
+    :data:`braidio.rights.DEFAULT_PROFILE` — the same default the no-graph fast
+    path applies — rather than to a literal, so the episode can never claim a
+    projection the ingest did not actually render (thorwhalen/braidio#47).
+    """
+    return DEFAULT_PROFILE.value if node is None else str(node.body["profile"])
+
+
 @register_transform(NAME)
 class WeaveToEpisode(BaseTransform):
     """All members — renders and scene breaks — (+ weave-config, + the
-    production-structure node when there is one) → one ``episode-render/v1``."""
+    production-structure and render-profile nodes when there are any) → one
+    ``episode-render/v1``."""
 
     name = NAME
     input_kinds = (
@@ -102,6 +126,7 @@ class WeaveToEpisode(BaseTransform):
         SCENE_BREAK_V1,
         WEAVE_CONFIG_V1,
         PRODUCTION_STRUCTURE_V1,
+        RENDER_PROFILE_V1,
     )
     output_kind = EPISODE_RENDER_V1
     is_batch = True
@@ -112,6 +137,7 @@ class WeaveToEpisode(BaseTransform):
         members = tuple(inputs.primary)
         cfg = singleton(project, TIER_WEAVE_CONFIG)
         structure = optional_singleton(project, TIER_PRODUCTION_STRUCTURE)
+        render_profile = optional_singleton(project, TIER_RENDER_PROFILE)
         ordered_member_ids = tuple(str(a.id) for a in members)
 
         context = {WEAVE_CONFIG_V1: (cfg,)}
@@ -119,13 +145,18 @@ class WeaveToEpisode(BaseTransform):
         # one that did not keeps exactly the provenance (and identity) it had.
         if structure is not None:
             context[PRODUCTION_STRUCTURE_V1] = (structure,)
+        # Same rule for the rights profile — and deriving from it is what makes
+        # a profile change re-stale the episode through ordinary freshness.
+        if render_profile is not None:
+            context[RENDER_PROFILE_V1] = (render_profile,)
         full = TransformInputs(primary=members, context=context)
         skeleton = Annotation(
             id=uuid.uuid4(),
             tier=TIER_EPISODE_RENDER,
             reference=node_ref(TIER_EPISODE_RENDER),
             body=EpisodeRenderBodyV1(
-                profile="personal", ordered_member_ids=ordered_member_ids
+                profile=_profile_value(render_profile),
+                ordered_member_ids=ordered_member_ids,
             ).model_dump(),
             body_schema_uri=EPISODE_RENDER_V1,
             provenance=derive_provenance(self, full, attributed_to="agent:braidio"),

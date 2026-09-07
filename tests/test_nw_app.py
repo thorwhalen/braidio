@@ -16,8 +16,10 @@ def test_domain_and_render_schemas_registered():
     from lacing.schema import is_registered
     from braidio.bodies import SCHEMA_URIS
 
-    # braidio#39 added scene-break/v1 (domain) + production-structure/v1 (render).
-    assert len(SCHEMA_URIS) == 13  # 6 domain + 7 render
+    # braidio#39 added scene-break/v1 (domain) + production-structure/v1 (render);
+    # braidio#47 added render-profile/v1 (render) — the rights decision the graph
+    # path used to leave unrecorded.
+    assert len(SCHEMA_URIS) == 14  # 6 domain + 8 render
     for uri in SCHEMA_URIS:
         assert is_registered(uri), uri
 

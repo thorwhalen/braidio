@@ -18,6 +18,7 @@ from lacing.schema import register_body_schema
 
 WEAVE_CONFIG_V1 = "annot://schema/weave-config/v1"
 PRODUCTION_STRUCTURE_V1 = "annot://schema/production-structure/v1"
+RENDER_PROFILE_V1 = "annot://schema/render-profile/v1"
 SOURCE_MEDIA_V1 = "annot://schema/source-media/v1"
 VOICE_ASSIGNMENT_V1 = "annot://schema/voice-assignment/v1"
 NARRATION_RENDER_V1 = "annot://schema/narration-render/v1"
@@ -73,6 +74,43 @@ class ProductionStructureBodyV1(BaseModel):
         None, description="lacing Artifact asset_id of the bed audio."
     )
     bed_url: Optional[str] = Field(None, description="file:// URL of the bed audio.")
+
+
+class RenderProfileBodyV1(BaseModel):
+    """The production's declared rights projection — and what it decided.
+
+    A singleton sibling of the weave-config: the weave-config holds the editing
+    knobs, this holds the **rights** decision
+    (:class:`braidio.rights.Profile` + the publishable clip-rights set the
+    caller injected via :class:`~braidio.rights.RightsPolicy`).
+
+    It also records the *outcome*, because a rights decision that leaves no
+    trace is a rights decision nobody can audit later: ``dropped`` names the
+    segment beats the profile refused outright (non-publishable audio, no
+    substitute) and ``substituted`` those it swapped for rights-safe narration.
+    Both come straight from :func:`braidio.rights.plan_production` — the graph
+    path runs the same filter as the no-graph one, it does not re-decide.
+
+    Written only when a production actually declares a profile, so one that
+    declares none keeps exactly the graph (and the episode's provenance) it had
+    before this layer existed. See thorwhalen/braidio#47.
+    """
+
+    model_config = {"frozen": True, "extra": "forbid"}
+
+    profile: str = Field(..., description="Rights profile: personal | published.")
+    publishable_clip_rights: tuple[str, ...] = Field(
+        default_factory=tuple,
+        description="Segment `rights` values allowed to play in the published cut.",
+    )
+    dropped: tuple[str, ...] = Field(
+        default_factory=tuple,
+        description="Segment beats the profile refused (no publishable audio, no substitute).",
+    )
+    substituted: tuple[str, ...] = Field(
+        default_factory=tuple,
+        description="Beats the profile swapped for rights-safe narration.",
+    )
 
 
 class SourceMediaBodyV1(BaseModel):
@@ -153,6 +191,7 @@ class EpisodeRenderBodyV1(BaseModel):
 RENDER_SCHEMAS: dict[str, type[BaseModel]] = {
     WEAVE_CONFIG_V1: WeaveConfigBodyV1,
     PRODUCTION_STRUCTURE_V1: ProductionStructureBodyV1,
+    RENDER_PROFILE_V1: RenderProfileBodyV1,
     SOURCE_MEDIA_V1: SourceMediaBodyV1,
     VOICE_ASSIGNMENT_V1: VoiceAssignmentBodyV1,
     NARRATION_RENDER_V1: NarrationRenderBodyV1,
