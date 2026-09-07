@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio &mdash; braidio 0.0.31 documentation</title>
+  <title>braidio &mdash; braidio 0.0.32 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=c5dbc6bb"></script>
+      <script src="../_static/documentation_options.js?v=f2234cd1"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -113,6 +113,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#braidio.compose_narration"><code class="docutils literal notranslate"><span class="pre">compose_narration()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.content_violations"><code class="docutils literal notranslate"><span class="pre">content_violations()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.cut_quote"><code class="docutils literal notranslate"><span class="pre">cut_quote()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.describe_asset_application"><code class="docutils literal notranslate"><span class="pre">describe_asset_application()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.estimate_cost"><code class="docutils literal notranslate"><span class="pre">estimate_cost()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.extract_padded"><code class="docutils literal notranslate"><span class="pre">extract_padded()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.find_segment"><code class="docutils literal notranslate"><span class="pre">find_segment()</span></code></a></li>
@@ -671,6 +672,23 @@ should prefer a <a class="reference internal" href="#braidio.SegmentSource" titl
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="braidio.describe_asset_application">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">describe_asset_application</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="braidio/formats.html#braidio.formats.Format" title="braidio.formats.Format"><span class="pre">Format</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">script</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">bed_asset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sting_asset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/braidio/formats.html#describe_asset_application"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.describe_asset_application" title="Link to this definition"></a></dt>
+<dd><p>Which of the supplied <code class="docutils literal notranslate"><span class="pre">bed_asset</span></code> / <code class="docutils literal notranslate"><span class="pre">sting_asset</span></code> this format will
+actually render, and why not otherwise (braidio#43).</p>
+<p>Pure and pre-render — safe to call before paying for anything. A key stays
+<code class="docutils literal notranslate"><span class="pre">None</span></code> when its asset wasn’t supplied. <code class="docutils literal notranslate"><span class="pre">bed_asset</span></code>’s fate is fixed by
+<code class="docutils literal notranslate"><span class="pre">fmt.music_bed</span></code> alone: <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> never renders a bed, and
+<a class="reference internal" href="#braidio.render_format" title="braidio.render_format"><code class="xref py py-func docutils literal notranslate"><span class="pre">render_format()</span></code></a> refuses <code class="docutils literal notranslate"><span class="pre">bed_asset</span></code> there rather than spend on one
+that would be dropped, so <code class="docutils literal notranslate"><span class="pre">bed_applied</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code> only via that refusal
+path, never in a result you got back from a successful render.
+<code class="docutils literal notranslate"><span class="pre">sting_asset</span></code>’s fate additionally depends on <code class="docutils literal notranslate"><span class="pre">script</span></code>: a scene break’s
+marker can override the format’s default, so a sting can still legitimately
+go unused in one script and play in another under the same format — that
+case is reported here, not refused.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="braidio.estimate_cost">
 <span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">estimate_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="braidio/script.html#braidio.script.Script" title="braidio.script.Script"><span class="pre">Script</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="braidio/cost.html#braidio.cost.CostRollup" title="braidio.cost.CostRollup"><span class="pre">CostRollup</span></a></span></span><a class="reference internal" href="../_modules/braidio/cost.html#estimate_cost"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.estimate_cost" title="Link to this definition"></a></dt>
 <dd><p>Estimate ElevenLabs spend for a <a class="reference internal" href="#braidio.Script" title="braidio.Script"><code class="xref py py-class docutils literal notranslate"><span class="pre">braidio.Script</span></code></a> or a raw string.</p>
@@ -789,11 +807,19 @@ beat may still override voice/settings per-beat (e.g. a graver book-narrator
 inside an otherwise lively presenter piece — pass <code class="docutils literal notranslate"><span class="pre">V2_NARRATOR.voice_settings</span></code>
 on that <code class="docutils literal notranslate"><span class="pre">Narration</span></code> beat).</p>
 <p><code class="docutils literal notranslate"><span class="pre">bed_asset</span></code> (a path to an app-supplied instrumental) adds a music bed at the
-gain implied by <code class="docutils literal notranslate"><span class="pre">fmt.music_bed</span></code> (skipped when the format’s intensity is
-<code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>); pass <code class="docutils literal notranslate"><span class="pre">music_bed=MusicBed(...)</span></code> in <code class="docutils literal notranslate"><span class="pre">overrides</span></code> for full control.
+gain implied by <code class="docutils literal notranslate"><span class="pre">fmt.music_bed</span></code>; pass <code class="docutils literal notranslate"><span class="pre">music_bed=MusicBed(...)</span></code> in
+<code class="docutils literal notranslate"><span class="pre">overrides</span></code> for full control. A format whose <code class="docutils literal notranslate"><span class="pre">music_bed</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>
+(e.g. <code class="docutils literal notranslate"><span class="pre">SONG_EXPLODER</span></code>) never renders a bed at all, so <code class="docutils literal notranslate"><span class="pre">bed_asset</span></code> there
+raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> <em>before</em> any rendering — the caller would otherwise pay
+for a bed the format silently drops (braidio#43) — unless <code class="docutils literal notranslate"><span class="pre">overrides</span></code>
+itself supplies <code class="docutils literal notranslate"><span class="pre">music_bed=</span></code>, which always wins and makes the refusal moot.
 <code class="docutils literal notranslate"><span class="pre">sting_asset</span></code> (a path to an app-supplied short marker) is what a
 <code class="docutils literal notranslate"><span class="pre">SceneBreak</span></code> plays under the format’s <code class="docutils literal notranslate"><span class="pre">structure</span></code>; pass
-<code class="docutils literal notranslate"><span class="pre">structure=MusicStructure(...)</span></code> in <code class="docutils literal notranslate"><span class="pre">overrides</span></code> for full control.</p>
+<code class="docutils literal notranslate"><span class="pre">structure=MusicStructure(...)</span></code> in <code class="docutils literal notranslate"><span class="pre">overrides</span></code> for full control. Unlike
+the bed, a format’s <code class="docutils literal notranslate"><span class="pre">scene_marker</span></code> is only the <em>default</em> — an individual
+<code class="docutils literal notranslate"><span class="pre">SceneBreak.marker</span></code> override can still play the sting even under a
+<code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> default — so a sting that ends up unused is not refused, only
+reported (see <a class="reference internal" href="#braidio.describe_asset_application" title="braidio.describe_asset_application"><code class="xref py py-func docutils literal notranslate"><span class="pre">describe_asset_application()</span></code></a>).</p>
 </dd></dl>
 
 <dl class="py function">

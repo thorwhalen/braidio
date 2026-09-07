@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.formats &mdash; braidio 0.0.31 documentation</title>
+  <title>braidio.formats &mdash; braidio 0.0.32 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=c5dbc6bb"></script>
+      <script src="../../_static/documentation_options.js?v=f2234cd1"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -209,6 +209,16 @@
     <span class="n">music_bed</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"light"</span>  <span class="c1"># bed intensity when a bed_asset is given: continuous | light | sparse | none</span>
     <span class="n">scripting</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>  <span class="c1"># how to author a Script for this format (authoring)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.music</span><span class="w"> </span><span class="kn">import</span> <span class="n">BED_GAIN_BY_INTENSITY</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">music_bed</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BED_GAIN_BY_INTENSITY</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Format.music_bed must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">BED_GAIN_BY_INTENSITY</span><span class="p">)</span><span class="si">}</span><span class="s2">, "</span>
+                <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">music_bed</span><span class="si">!r}</span><span class="s2"> (a typo here would otherwise look like a "</span>
+                <span class="s2">"deliberate 'no bed' format — braidio#43)"</span>
+            <span class="p">)</span>
+
 <div class="viewcode-block" id="Format.render">
 <a class="viewcode-back" href="../../module_docs/braidio/formats.html#braidio.Format.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span>
@@ -250,14 +260,28 @@
 <span class="sd">    on that ``Narration`` beat).</span>
 
 <span class="sd">    ``bed_asset`` (a path to an app-supplied instrumental) adds a music bed at the</span>
-<span class="sd">    gain implied by ``fmt.music_bed`` (skipped when the format's intensity is</span>
-<span class="sd">    ``"none"``); pass ``music_bed=MusicBed(...)`` in ``overrides`` for full control.</span>
+<span class="sd">    gain implied by ``fmt.music_bed``; pass ``music_bed=MusicBed(...)`` in</span>
+<span class="sd">    ``overrides`` for full control. A format whose ``music_bed`` is ``"none"``</span>
+<span class="sd">    (e.g. ``SONG_EXPLODER``) never renders a bed at all, so ``bed_asset`` there</span>
+<span class="sd">    raises ``ValueError`` *before* any rendering — the caller would otherwise pay</span>
+<span class="sd">    for a bed the format silently drops (braidio#43) — unless ``overrides``</span>
+<span class="sd">    itself supplies ``music_bed=``, which always wins and makes the refusal moot.</span>
 <span class="sd">    ``sting_asset`` (a path to an app-supplied short marker) is what a</span>
 <span class="sd">    ``SceneBreak`` plays under the format's ``structure``; pass</span>
-<span class="sd">    ``structure=MusicStructure(...)`` in ``overrides`` for full control.</span>
+<span class="sd">    ``structure=MusicStructure(...)`` in ``overrides`` for full control. Unlike</span>
+<span class="sd">    the bed, a format's ``scene_marker`` is only the *default* — an individual</span>
+<span class="sd">    ``SceneBreak.marker`` override can still play the sting even under a</span>
+<span class="sd">    ``"none"`` default — so a sting that ends up unused is not refused, only</span>
+<span class="sd">    reported (see :func:`describe_asset_application`).</span>
 <span class="sd">    """</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.music</span><span class="w"> </span><span class="kn">import</span> <span class="n">bed_for_intensity</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.render</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_production</span>
+
+    <span class="k">if</span> <span class="n">bed_asset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">"music_bed"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">overrides</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_bed_usable</span><span class="p">(</span><span class="n">fmt</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"format </span><span class="si">{</span><span class="n">fmt</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> declares music_bed=</span><span class="si">{</span><span class="n">fmt</span><span class="o">.</span><span class="n">music_bed</span><span class="si">!r}</span><span class="s2"> — it never "</span>
+            <span class="s2">"renders a bed, so bed_asset would be paid for and then dropped; omit "</span>
+            <span class="s2">"bed_asset, or render under a format whose music_bed isn't 'none'"</span>
+        <span class="p">)</span>
 
     <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
         <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
@@ -272,6 +296,8 @@
     <span class="k">if</span> <span class="n">fmt</span><span class="o">.</span><span class="n">narration_voice</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">"voice_id"</span><span class="p">]</span> <span class="o">=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">narration_voice</span>
     <span class="k">if</span> <span class="n">bed_asset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.music</span><span class="w"> </span><span class="kn">import</span> <span class="n">bed_for_intensity</span>
+
         <span class="n">bed</span> <span class="o">=</span> <span class="n">bed_for_intensity</span><span class="p">(</span><span class="n">bed_asset</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">music_bed</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">bed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">"music_bed"</span><span class="p">]</span> <span class="o">=</span> <span class="n">bed</span>
@@ -279,6 +305,75 @@
         <span class="n">kwargs</span><span class="p">[</span><span class="s2">"structure"</span><span class="p">]</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="n">sting</span><span class="o">=</span><span class="n">Sting</span><span class="p">(</span><span class="n">sting_asset</span><span class="p">))</span>
     <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">overrides</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">render_production</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_bed_usable</span><span class="p">(</span><span class="n">fmt</span><span class="p">:</span> <span class="n">Format</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether ``fmt``'s ``music_bed`` intensity ever renders a bed at all."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.music</span><span class="w"> </span><span class="kn">import</span> <span class="n">BED_GAIN_BY_INTENSITY</span>
+
+    <span class="k">return</span> <span class="n">BED_GAIN_BY_INTENSITY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">music_bed</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sting_would_play</span><span class="p">(</span><span class="n">fmt</span><span class="p">:</span> <span class="n">Format</span><span class="p">,</span> <span class="n">script</span><span class="p">,</span> <span class="n">sting_asset</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether some ``SceneBreak`` in ``script`` resolves to marker ``"sting"``</span>
+<span class="sd">    under ``fmt.structure`` once ``sting_asset`` is wired in as the sting."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.script</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneBreak</span>
+
+    <span class="n">structure</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="n">sting</span><span class="o">=</span><span class="n">Sting</span><span class="p">(</span><span class="n">sting_asset</span><span class="p">))</span>
+    <span class="n">beats</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="s2">"beats"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="n">structure</span><span class="o">.</span><span class="n">plays_sting_of</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">marker</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">beats</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">SceneBreak</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="describe_asset_application">
+<a class="viewcode-back" href="../../module_docs/braidio/formats.html#braidio.describe_asset_application">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">describe_asset_application</span><span class="p">(</span>
+    <span class="n">fmt</span><span class="p">:</span> <span class="n">Format</span><span class="p">,</span>
+    <span class="n">script</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">bed_asset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sting_asset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Which of the supplied ``bed_asset`` / ``sting_asset`` this format will</span>
+<span class="sd">    actually render, and why not otherwise (braidio#43).</span>
+
+<span class="sd">    Pure and pre-render — safe to call before paying for anything. A key stays</span>
+<span class="sd">    ``None`` when its asset wasn't supplied. ``bed_asset``'s fate is fixed by</span>
+<span class="sd">    ``fmt.music_bed`` alone: ``"none"`` never renders a bed, and</span>
+<span class="sd">    :func:`render_format` refuses ``bed_asset`` there rather than spend on one</span>
+<span class="sd">    that would be dropped, so ``bed_applied`` is ``False`` only via that refusal</span>
+<span class="sd">    path, never in a result you got back from a successful render.</span>
+<span class="sd">    ``sting_asset``'s fate additionally depends on ``script``: a scene break's</span>
+<span class="sd">    marker can override the format's default, so a sting can still legitimately</span>
+<span class="sd">    go unused in one script and play in another under the same format — that</span>
+<span class="sd">    case is reported here, not refused.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"bed_applied"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"bed_ignored_reason"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"sting_applied"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"sting_ignored_reason"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">bed_asset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_bed_usable</span><span class="p">(</span><span class="n">fmt</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"bed_applied"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"bed_applied"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"bed_ignored_reason"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"format </span><span class="si">{</span><span class="n">fmt</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> declares music_bed=</span><span class="si">{</span><span class="n">fmt</span><span class="o">.</span><span class="n">music_bed</span><span class="si">!r}</span><span class="s2"> (no bed)"</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="n">sting_asset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_sting_would_play</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">script</span><span class="p">,</span> <span class="n">sting_asset</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"sting_applied"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"sting_applied"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"sting_ignored_reason"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">"no scene break in this script resolves to marker='sting' under "</span>
+                <span class="sa">f</span><span class="s2">"format </span><span class="si">{</span><span class="n">fmt</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> (default scene_marker=</span><span class="si">{</span><span class="n">fmt</span><span class="o">.</span><span class="n">structure</span><span class="o">.</span><span class="n">scene_marker</span><span class="si">!r}</span><span class="s2">)"</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
 
 
 
