@@ -890,9 +890,9 @@ def render_format(
     )
     if application["bed_applied"] is False:
         raise ToolError(
-            f"render_format: format {format_id!r} declares music_bed='none' — "
-            "bed_asset_id would be paid for and dropped; omit it, or use a format "
-            "whose music_bed isn't 'none'"
+            f"render_format: format {format_id!r} declares music_bed="
+            f"{fmt.music_bed!r} — bed_asset_id would be paid for and dropped; "
+            "omit it, or use a format whose music_bed isn't 'none'"
         )
     out = ws.render_path(stem)
     braidio.render_format(

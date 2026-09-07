@@ -89,6 +89,16 @@ class Format:
     music_bed: str = "light"  # bed intensity when a bed_asset is given: continuous | light | sparse | none
     scripting: str = ""  # how to author a Script for this format (authoring)
 
+    def __post_init__(self) -> None:
+        from braidio.music import BED_GAIN_BY_INTENSITY
+
+        if self.music_bed not in BED_GAIN_BY_INTENSITY:
+            raise ValueError(
+                f"Format.music_bed must be one of {sorted(BED_GAIN_BY_INTENSITY)}, "
+                f"got {self.music_bed!r} (a typo here would otherwise look like a "
+                "deliberate 'no bed' format — braidio#43)"
+            )
+
     def render(
         self,
         script,
@@ -128,17 +138,19 @@ def render_format(
     ``overrides`` for full control. A format whose ``music_bed`` is ``"none"``
     (e.g. ``SONG_EXPLODER``) never renders a bed at all, so ``bed_asset`` there
     raises ``ValueError`` *before* any rendering — the caller would otherwise pay
-    for a bed the format silently drops (braidio#43). ``sting_asset`` (a path to
-    an app-supplied short marker) is what a ``SceneBreak`` plays under the
-    format's ``structure``; pass ``structure=MusicStructure(...)`` in
-    ``overrides`` for full control. Unlike the bed, a format's ``scene_marker``
-    is only the *default* — an individual ``SceneBreak.marker`` override can
-    still play the sting even under a ``"none"`` default — so a sting that ends
-    up unused is not refused, only reported (see :func:`describe_asset_application`).
+    for a bed the format silently drops (braidio#43) — unless ``overrides``
+    itself supplies ``music_bed=``, which always wins and makes the refusal moot.
+    ``sting_asset`` (a path to an app-supplied short marker) is what a
+    ``SceneBreak`` plays under the format's ``structure``; pass
+    ``structure=MusicStructure(...)`` in ``overrides`` for full control. Unlike
+    the bed, a format's ``scene_marker`` is only the *default* — an individual
+    ``SceneBreak.marker`` override can still play the sting even under a
+    ``"none"`` default — so a sting that ends up unused is not refused, only
+    reported (see :func:`describe_asset_application`).
     """
     from braidio.render import render_production
 
-    if bed_asset is not None and not _bed_usable(fmt):
+    if bed_asset is not None and "music_bed" not in overrides and not _bed_usable(fmt):
         raise ValueError(
             f"format {fmt.id!r} declares music_bed={fmt.music_bed!r} — it never "
             "renders a bed, so bed_asset would be paid for and then dropped; omit "

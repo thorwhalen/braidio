@@ -24,6 +24,13 @@ _VALID_PLACEMENTS = {"before", "under", "after"}
 _VALID_BEDS = {"continuous", "light", "sparse", "none"}
 
 
+def test_format_rejects_a_typo_d_music_bed():
+    # a typo'd music_bed must fail fast at construction, not look like a
+    # deliberate "no bed" format later (braidio#43 review).
+    with pytest.raises(ValueError, match="music_bed"):
+        Format(id="x", name="X", summary="s", music_bed="continous")
+
+
 def test_presets_well_formed():
     assert set(FORMATS) == {
         "solo_explainer", "deep_dive", "interview", "interview_host_removed",
@@ -84,13 +91,39 @@ def test_render_format_wires_defaults(monkeypatch):
     assert captured["voice_id"] == "OVERRIDE"
 
 
-def test_render_format_refuses_bed_asset_under_music_bed_none():
+def test_render_format_refuses_bed_asset_under_music_bed_none(monkeypatch):
     # braidio#43: a music_bed="none" format never renders a bed, so bed_asset
     # must be refused BEFORE any render (the caller would otherwise pay for a
-    # bed the format silently drops).
+    # bed the format silently drops) — never even reaching render_production.
     assert SONG_EXPLODER.music_bed == "none"
+    called = []
+    import braidio.render as render_mod
+
+    monkeypatch.setattr(
+        render_mod, "render_production", lambda script, **kw: called.append(1)
+    )
     with pytest.raises(ValueError, match="music_bed='none'|music_bed=.none."):
         render_format(SONG_EXPLODER, "S", source=None, bed_asset="bed.wav")
+    assert not called
+
+
+def test_render_format_bed_asset_with_explicit_music_bed_override_is_not_refused(
+    monkeypatch,
+):
+    # An explicit `music_bed=MusicBed(...)` override always wins over the
+    # format's own intensity, so it renders — the refusal must not fire here.
+    captured = {}
+    import braidio.render as render_mod
+    from braidio.music import MusicBed
+
+    monkeypatch.setattr(
+        render_mod,
+        "render_production",
+        lambda script, **kw: captured.update(kw) or "OUT",
+    )
+    mine = MusicBed(asset_path="override.wav")
+    render_format(SONG_EXPLODER, "S", source=None, bed_asset="bed.wav", music_bed=mine)
+    assert captured["music_bed"] is mine
 
 
 def test_render_format_bed_asset_still_works_for_a_bedded_format(monkeypatch):
