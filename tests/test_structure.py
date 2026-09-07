@@ -454,3 +454,48 @@ def test_spotlight_without_a_bed_is_inert(tmp_path, silent_narration):
         )
     )
     assert lit == plain
+
+
+@needs_ffmpeg
+def test_sting_gap_after_renders_as_trailing_silence(tmp_path):
+    """The breathing room after a sting must survive the trim (a `-t` output
+    option used to cut it off — PR #40 review)."""
+    from braidio.structure import prepare_sting
+
+    hit = _tone(tmp_path / "hit.wav", 880, 1.0)
+    for gap in (0.0, 0.3, 1.0):
+        sting = Sting(str(hit), gain_db=0.0, max_len_s=1.0, gap_after_s=gap)
+        pcm = _decode(prepare_sting(sting, tmp_path / f"s{gap}.mp3", target_lufs=-16.0))
+        assert _seconds(pcm) == pytest.approx(1.0 + gap, abs=0.08)
+        if gap:
+            assert _rms(pcm, 1.05, 1.0 + gap) < SILENT_RMS  # the gap is silence
+    assert _rms(pcm, 0.1, 0.7) > AUDIBLE_RMS  # and the sting itself is there
+
+
+@needs_ffmpeg
+def test_non_looping_bed_that_has_run_out_before_a_spotlight_does_not_crash(tmp_path):
+    """A 3 s bed that does not loop, a spotlit clip after 4 s: the region after
+    the clip would seek past the asset's end. It is dropped, and the mix still
+    renders (it used to hand ffmpeg an empty file — PR #40 review)."""
+    bed = MusicBed(
+        str(_tone(tmp_path / "bed.wav", 220, 3.0)),
+        gain_db=0.0,
+        loop=False,
+        lead_in_s=0.0,
+        fade_in_s=0.1,
+        fade_out_s=0.1,
+    )
+    items = [
+        TimelineItem("narration", str(_silence(tmp_path / "n0.mp3", 4.0))),
+        TimelineItem("clip", str(_silence(tmp_path / "c.mp3", 4.0)), spotlight=True),
+        TimelineItem("narration", str(_silence(tmp_path / "n1.mp3", 4.0))),
+    ]
+    out = weave_timeline(items, tmp_path / "w.mp3", clip_edge_overlap_s=0.0, bed=bed)
+    pcm = _decode(out)
+    assert _seconds(pcm) == pytest.approx(12.0, abs=0.3)
+    assert _rms(pcm, 0.3, 2.7) > AUDIBLE_RMS  # the bed, while it lasts
+    assert _rms(pcm, 4.5, 11.5) < SILENT_RMS  # nothing after: no crash, no bed
+    [(path, start_s)] = prepare_bed_regions(
+        bed, bed_regions(bed, 12.0, [(4.0, 8.0)]), tmp_path, stem="r"
+    )
+    assert start_s == 0.0  # only the region the asset can cover survives

@@ -38,7 +38,7 @@ def _require_nw(tool: str) -> None:
         raise ToolError(f"{tool} needs braidio's nw layer, which is not installed here")
 
 
-def _reject_dialogue(scr, tool: str) -> None:
+def _reject_graph_unsupported(scr, tool: str) -> None:
     """The nw graph pipeline can't ingest Dialogue or SceneBreak beats yet — fail
     BEFORE mutating."""
     from braidio import Dialogue, SceneBreak
@@ -316,7 +316,7 @@ def save_script(project_id: str, script: dict, source: dict | None = None) -> di
     """
     _require_nw("save_script")
     scr = script_from_json(script)
-    _reject_dialogue(scr, "save_script")
+    _reject_graph_unsupported(scr, "save_script")
     src = _resolve_source(source)
     _check_source(scr, src)
     proj = _workspace().open_project(project_id)
@@ -801,7 +801,7 @@ def weave_project(project_id: str, script: dict, source: dict | None = None) -> 
     """
     _require_nw("weave_project")
     scr = script_from_json(script)
-    _reject_dialogue(scr, "weave_project")
+    _reject_graph_unsupported(scr, "weave_project")
     src = _resolve_source(source)
     _check_source(scr, src)
     proj = _workspace().open_project(project_id)

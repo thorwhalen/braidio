@@ -26,6 +26,8 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+_LOUDNESS_RANGE = 11  # loudnorm LRA target for the mastered mix
+
 
 def _require_ffmpeg() -> None:
     if shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None:
@@ -279,7 +281,7 @@ def weave_timeline(
     mix = (
         "".join(labels) + f"amix=inputs={n_inputs}:normalize=0:dropout_transition=0[m]"
     )
-    norm = f"[m]loudnorm=I={target_lufs}:TP={true_peak}:LRA=11[out]"
+    norm = f"[m]loudnorm=I={target_lufs}:TP={true_peak}:LRA={_LOUDNESS_RANGE}[out]"
     filtergraph = ";".join(filters + [mix, norm])
 
     subprocess.run(

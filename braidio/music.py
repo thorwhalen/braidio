@@ -227,16 +227,21 @@ def prepare_bed_regions(
     Returns ``[(path, start_s), …]`` — the caller mixes each file in delayed by
     its ``start_s``. A region seeks into the asset to where the bed would have
     been had it played through (so the music resumes in place after a
-    spotlight), wrapping around the asset's length when the bed loops.
+    spotlight), wrapping around the asset's length when the bed loops. A
+    non-looping bed that has already run out by a region's start has nothing
+    to play there: that region is dropped (seeking past the end would yield an
+    empty file the mix can't open).
     """
     from braidio.weave import duration_s
 
-    asset_len = duration_s(bed.asset_path) if bed.loop else None
+    asset_len = duration_s(bed.asset_path)
     rendered: list[tuple[Path, float]] = []
     for k, region in enumerate(regions):
         seek = bed.start_s + (region.start_s - bed.lead_in_s)
-        if asset_len:
+        if bed.loop:
             seek %= asset_len
+        elif seek >= asset_len:
+            continue
         path = _render_bed_span(
             bed,
             Path(out_dir) / f"{stem}-{k}.mp3",

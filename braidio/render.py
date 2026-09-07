@@ -37,6 +37,7 @@ from braidio.weave_config import WeaveConfig
 
 _DEFAULT_LUFS = -16.0
 _TRUE_PEAK = -1.5
+_LOUDNESS_RANGE = 11  # loudnorm LRA target for a spoken part
 
 
 def _require_ffmpeg() -> None:
@@ -99,7 +100,7 @@ def _loudnorm(src: Path, dst: Path, *, target_lufs: float = _DEFAULT_LUFS) -> Pa
             "-i",
             str(src),
             "-af",
-            f"loudnorm=I={target_lufs}:TP={_TRUE_PEAK}:LRA=11",
+            f"loudnorm=I={target_lufs}:TP={_TRUE_PEAK}:LRA={_LOUDNESS_RANGE}",
             "-ar",
             "44100",
             str(dst),

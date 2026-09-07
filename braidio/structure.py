@@ -131,7 +131,10 @@ def prepare_sting(
     fo_start = max(0.0, length - sting.fade_out_s)
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
+    # The trim is a filter, not an output `-t`: an output duration would also
+    # cut the `apad` breathing room off the end (the gap would never render).
     af = (
+        f"atrim=end={length:.3f},"
         f"afade=t=out:st={fo_start:.3f}:d={sting.fade_out_s},"
         f"loudnorm=I={target_lufs}:TP={_STING_TRUE_PEAK}:LRA={_STING_LRA},"
         f"volume={sting.gain_db}dB,"
@@ -139,17 +142,7 @@ def prepare_sting(
         f"aformat=sample_rates={sample_rate}:channel_layouts=stereo"
     )
     subprocess.run(
-        [
-            "ffmpeg",
-            "-y",
-            "-i",
-            str(sting.asset_path),
-            "-t",
-            f"{length:.3f}",
-            "-af",
-            af,
-            str(out),
-        ],
+        ["ffmpeg", "-y", "-i", str(sting.asset_path), "-af", af, str(out)],
         check=True,
         capture_output=True,
     )
