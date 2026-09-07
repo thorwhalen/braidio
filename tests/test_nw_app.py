@@ -16,7 +16,8 @@ def test_domain_and_render_schemas_registered():
     from lacing.schema import is_registered
     from braidio.bodies import SCHEMA_URIS
 
-    assert len(SCHEMA_URIS) == 11  # 5 domain + 6 render
+    # braidio#39 added scene-break/v1 (domain) + production-structure/v1 (render).
+    assert len(SCHEMA_URIS) == 13  # 6 domain + 7 render
     for uri in SCHEMA_URIS:
         assert is_registered(uri), uri
 

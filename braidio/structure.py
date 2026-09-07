@@ -90,17 +90,34 @@ class MusicStructure:
                 f"got {self.scene_marker!r}"
             )
 
+    # The ``*_of`` methods take the per-beat override as plain data, because the
+    # graph path (braidio.transforms) holds it as a body field rather than a
+    # beat object; the ``*_for`` methods are the beat-taking front doors. One
+    # resolution rule, two callers.
+
+    def marker_of(self, marker: str | None) -> str:
+        """The marker a break with this per-beat override renders with."""
+        return marker if marker is not None else self.scene_marker
+
     def marker_for(self, beat: SceneBreak) -> str:
         """The marker a scene break renders with (its override, else the default)."""
-        return beat.marker if beat.marker is not None else self.scene_marker
+        return self.marker_of(beat.marker)
+
+    def plays_sting_of(self, marker: str | None) -> bool:
+        """Whether this per-beat marker plays the sting (and one is supplied)."""
+        return self.sting is not None and self.marker_of(marker) == "sting"
 
     def plays_sting(self, beat: SceneBreak) -> bool:
         """Whether ``beat`` plays the sting (marked ``"sting"`` *and* one is supplied)."""
-        return self.sting is not None and self.marker_for(beat) == "sting"
+        return self.plays_sting_of(beat.marker)
+
+    def spotlight_of(self, spotlight: bool | None) -> bool:
+        """Whether this per-beat override is spotlit (``None`` = the format default)."""
+        return spotlight if spotlight is not None else self.spotlight_clips
 
     def spotlight_for(self, beat: SegmentBeat) -> bool:
         """Whether ``beat`` is spotlit (its override, else the format default)."""
-        return beat.spotlight if beat.spotlight is not None else self.spotlight_clips
+        return self.spotlight_of(beat.spotlight)
 
 
 DEFAULT_STRUCTURE = MusicStructure()

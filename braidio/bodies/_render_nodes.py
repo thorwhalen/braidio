@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 from lacing.schema import register_body_schema
 
 WEAVE_CONFIG_V1 = "annot://schema/weave-config/v1"
+PRODUCTION_STRUCTURE_V1 = "annot://schema/production-structure/v1"
 SOURCE_MEDIA_V1 = "annot://schema/source-media/v1"
 VOICE_ASSIGNMENT_V1 = "annot://schema/voice-assignment/v1"
 NARRATION_RENDER_V1 = "annot://schema/narration-render/v1"
@@ -30,6 +31,48 @@ class WeaveConfigBodyV1(BaseModel):
     model_config = {"frozen": True, "extra": "forbid"}
 
     config: dict[str, Any] = Field(..., description="The full WeaveConfig snapshot.")
+
+
+class ProductionStructureBodyV1(BaseModel):
+    """The production's structural-music decision — stings, spotlight, bed.
+
+    A singleton sibling of the weave-config: the weave-config holds the editing
+    knobs, this holds the *musical structure* a format declares
+    (:class:`braidio.structure.MusicStructure`) plus the app-supplied assets
+    that make it audible. It is written only when a production actually asks for
+    structure, so a format that declares none leaves the graph — and the render
+    — exactly as it was.
+
+    Assets are recorded as **ids, not just locations**: ``*_asset_id`` is the
+    content-addressed :class:`lacing.Artifact` id of the supplied file, so
+    swapping the sting for different audio changes this body and re-stales the
+    episode. ``*_url`` is the ``file://`` locator the render reads (same
+    convention as every other render body here). ``sting`` / ``bed`` snapshot
+    the remaining :class:`~braidio.structure.Sting` /
+    :class:`~braidio.music.MusicBed` knobs.
+    """
+
+    model_config = {"frozen": True, "extra": "forbid"}
+
+    structure: dict[str, Any] = Field(
+        ..., description="MusicStructure knobs: scene_marker, spotlight_clips, pause_s."
+    )
+    sting: Optional[dict[str, Any]] = Field(
+        None, description="Sting knobs (gain_db, max_len_s, fade_out_s, gap_after_s)."
+    )
+    sting_asset_id: Optional[str] = Field(
+        None, description="lacing Artifact asset_id of the sting audio."
+    )
+    sting_url: Optional[str] = Field(
+        None, description="file:// URL of the sting audio."
+    )
+    bed: Optional[dict[str, Any]] = Field(
+        None, description="MusicBed knobs (gain_db, fades, lead_in_s, start_s, loop…)."
+    )
+    bed_asset_id: Optional[str] = Field(
+        None, description="lacing Artifact asset_id of the bed audio."
+    )
+    bed_url: Optional[str] = Field(None, description="file:// URL of the bed audio.")
 
 
 class SourceMediaBodyV1(BaseModel):
@@ -94,7 +137,11 @@ class EpisodeRenderBodyV1(BaseModel):
 
     profile: str = Field(..., description="Render profile: personal | published.")
     ordered_member_ids: tuple[str, ...] = Field(
-        default_factory=tuple, description="Ids of the member render nodes, in order."
+        default_factory=tuple,
+        description=(
+            "Ids of the episode's members, in play order: a render node "
+            "(narration-render / segment-extraction) or a scene-break node."
+        ),
     )
     artifact_id: Optional[str] = Field(None, description="lacing Artifact of the mix.")
     url: Optional[str] = Field(
@@ -105,6 +152,7 @@ class EpisodeRenderBodyV1(BaseModel):
 
 RENDER_SCHEMAS: dict[str, type[BaseModel]] = {
     WEAVE_CONFIG_V1: WeaveConfigBodyV1,
+    PRODUCTION_STRUCTURE_V1: ProductionStructureBodyV1,
     SOURCE_MEDIA_V1: SourceMediaBodyV1,
     VOICE_ASSIGNMENT_V1: VoiceAssignmentBodyV1,
     NARRATION_RENDER_V1: NarrationRenderBodyV1,

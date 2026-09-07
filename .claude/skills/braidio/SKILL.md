@@ -51,7 +51,10 @@ That is the whole happy path for a narration-only episode. Variants:
 
 - **Want provenance + partial re-render?** `save_script(project_id, script)`
   (free) then `weave_project(project_id, script)` (costed). Re-running
-  re-synthesizes only what changed. Narration + segment beats only.
+  re-synthesizes only what changed. Narration, segment and scene_break beats
+  (not dialogue yet). Both take the same optional `format_id`,
+  `bed_asset_id` and `sting_asset_id` as the one-shot renders, so a graph
+  episode gets its format's defaults, its music bed and its scene stings.
 - **Want no project at all?** Skip step 1–2 and call `render_production(script)`
   or `render_format(format_id, script)` directly.
 - **Just one voice reading one text?** `narrate(text)` — the smallest costed call.
@@ -176,6 +179,11 @@ use, and set each segment beat's `rights` honestly.
 - **Music bed** — an instrumental laid under the whole production, ducked.
   braidio ships no music: pass your own asset (`bed_asset=` to
   `braidio.render_format`, or a `MusicBed(...)`).
+- **Structural music** — a `scene_break` beat is marked with a short **sting**
+  (your asset, `sting_asset_id` / `sting_asset=`) or a beat of silence, and a
+  segment beat's `spotlight` drops the bed out so the exhibit lands in silence.
+  Both render paths carry it: the one-shot renders and the graph pipeline
+  (`save_script` / `weave_project`, which records the decision as provenance).
 - **Rights profile** — `"personal"` plays everything; `"published"` drops or
   substitutes non-publishable clips and beats carrying forbidden verbatim text.
   `plan_production(script, profile)` is a free dry run showing exactly what would

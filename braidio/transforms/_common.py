@@ -1,7 +1,8 @@
 """Shared helpers for braidio's ``nw.Transform`` pipeline.
 
 The transforms in this package turn braidio's authoring graph (narrative
-beats, audio clips, a weave-config snapshot) into render-provenance nodes
+beats, audio clips, scene breaks, a weave-config + production-structure
+snapshot) into render-provenance nodes
 (voice-assignment, narration-render, segment-extraction, episode-render),
 writing each **through** ``project.graph`` so ``nw.stale_after`` traverses
 them. This is the whole point of riding nw: one freshness engine over the
@@ -23,8 +24,10 @@ from lacing import Annotation, Artifact, NodeRef, TimeInterval
 
 # Tier names (must match braidio.bodies._tiers).
 TIER_WEAVE_CONFIG = "weave-configs"
+TIER_PRODUCTION_STRUCTURE = "production-structures"
 TIER_SOURCE_MEDIA = "source-media"
 TIER_NARRATIVE_BEAT = "narrative-beats"
+TIER_SCENE_BREAK = "scene-breaks"
 TIER_AUDIO_CLIP = "audio-clips"
 TIER_VOICE_ASSIGNMENT = "voice-assignments"
 TIER_NARRATION_RENDER = "narration-renders"
@@ -83,6 +86,43 @@ def singleton(project, tier: str) -> Annotation:
             f"found {len(anns)}"
         )
     return anns[0]
+
+
+def optional_singleton(project, tier: str) -> Annotation | None:
+    """The one annotation at ``tier``, or ``None`` when the tier is empty.
+
+    The counterpart of :func:`singleton` for a tier a production only writes
+    when it asks for something (today: ``production-structures``). More than
+    one is still a bug, not a choice.
+    """
+    import nw
+
+    anns = nw.annotations_at_tier(project.root, tier)
+    if not anns:
+        return None
+    if len(anns) > 1:
+        raise ValueError(
+            f"expected at most one {tier!r} node in the project graph, "
+            f"found {len(anns)}"
+        )
+    return anns[0]
+
+
+def asset_ref(path: str | Path) -> tuple[str, str]:
+    """``(asset_id, file_url)`` for an app-supplied asset (music bed, sting).
+
+    The id is the content-addressed :class:`lacing.Artifact` id of the file's
+    bytes, so the graph records *which audio* was used rather than only where it
+    sat: replace the file and the id changes, which re-stales what derived from
+    it. The URL is what the render actually opens.
+    """
+    artifact = Artifact.from_path(
+        Path(path),
+        kind="audio",
+        was_generated_by="braidio:ingest",
+        was_attributed_to="agent:braidio",
+    )
+    return artifact.asset_id, file_url(path)
 
 
 def child_at_tier(project, tier: str, parent_id) -> Annotation:

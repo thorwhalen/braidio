@@ -39,20 +39,55 @@ def _require_nw(tool: str) -> None:
 
 
 def _reject_graph_unsupported(scr, tool: str) -> None:
-    """The nw graph pipeline can't ingest Dialogue or SceneBreak beats yet — fail
-    BEFORE mutating."""
-    from braidio import Dialogue, SceneBreak
+    """The nw graph pipeline can't ingest Dialogue beats yet — fail BEFORE
+    mutating. (scene_break beats ARE ingested — thorwhalen/braidio#39.)"""
+    from braidio import Dialogue
 
     if any(isinstance(b, Dialogue) for b in scr.beats):
         raise ToolError(
             f"{tool}: Dialogue beats aren't supported by the graph pipeline yet — "
             "use render_production for dialogue"
         )
-    if any(isinstance(b, SceneBreak) for b in scr.beats):
-        raise ToolError(
-            f"{tool}: scene_break beats aren't supported by the graph pipeline yet — "
-            "use render_production / render_format for scene stings"
+
+
+def _graph_structure(ws, *, format_id: str | None, bed_asset_id, sting_asset_id):
+    """``(format, MusicStructure | None, MusicBed | None)`` for a graph ingest.
+
+    The format's declared structure is the base; the uploaded assets are what
+    make it audible. Asset ids are resolved through the caller's workspace —
+    a tool never takes a server path.
+    """
+    from dataclasses import replace
+
+    from braidio.music import MusicBed, bed_for_intensity
+    from braidio.structure import Sting
+
+    fmt = _format(format_id)
+    bed_path = _resolve_asset(ws, bed_asset_id)
+    sting_path = _resolve_asset(ws, sting_asset_id)
+    structure = fmt.structure if fmt is not None else None
+    if sting_path is not None:
+        base = structure if structure is not None else braidio.MusicStructure()
+        structure = replace(base, sting=Sting(sting_path))
+    bed = None
+    if bed_path is not None:
+        bed = (
+            bed_for_intensity(bed_path, fmt.music_bed)
+            if fmt is not None
+            else MusicBed(asset_path=bed_path)
         )
+    return fmt, structure, bed
+
+
+def _format(format_id: str | None):
+    """The :class:`~braidio.formats.Format` for ``format_id`` (``None`` = none)."""
+    if format_id is None:
+        return None
+    if format_id not in braidio.FORMATS:
+        raise ToolError(
+            f"unknown format {format_id!r}; use one of {sorted(braidio.FORMATS)}"
+        )
+    return braidio.FORMATS[format_id]
 
 
 # --- assistance -------------------------------------------------------------
@@ -306,21 +341,43 @@ def ingest_document(
     }
 
 
-def save_script(project_id: str, script: dict, source: dict | None = None) -> dict:
+def save_script(
+    project_id: str,
+    script: dict,
+    source: dict | None = None,
+    format_id: str | None = None,
+    bed_asset_id: str | None = None,
+    sting_asset_id: str | None = None,
+) -> dict:
     """Link a Script's beats into a project's graph (free authoring; render later).
 
-    Writes the narration + segment beats (with their source-media links) into the
-    project graph, so you can review (project_status) and render with weave_project
-    when ready. Narration + Segment beats only (Dialogue is not yet in the graph
-    pipeline). Free — no synthesis.
+    Writes the narration, segment and scene_break beats into the project graph,
+    so you can review (project_status) and render with weave_project when ready
+    (Dialogue is not in the graph pipeline yet). ``format_id`` +
+    ``bed_asset_id`` / ``sting_asset_id`` record the production's music.
+    Free — no synthesis.
     """
     _require_nw("save_script")
     scr = script_from_json(script)
     _reject_graph_unsupported(scr, "save_script")
     src = _resolve_source(source)
     _check_source(scr, src)
-    proj = _workspace().open_project(project_id)
-    ingested = braidio.transforms.ingest_script(proj, scr, source=src)
+    ws = _workspace()
+    fmt, structure, bed = _graph_structure(
+        ws,
+        format_id=format_id,
+        bed_asset_id=bed_asset_id,
+        sting_asset_id=sting_asset_id,
+    )
+    proj = ws.open_project(project_id)
+    ingested = braidio.transforms.ingest_script(
+        proj,
+        scr,
+        config=fmt.weave if fmt is not None else None,
+        source=src,
+        structure=structure,
+        bed=bed,
+    )
     return {
         "project_id": project_id,
         "beats": [{"kind": k, "id": str(a.id)} for k, a in ingested.ordered],
@@ -801,10 +858,7 @@ def render_format(
     """
     from braidio import Profile
 
-    if format_id not in braidio.FORMATS:
-        raise ToolError(
-            f"unknown format {format_id!r}; use one of {sorted(braidio.FORMATS)}"
-        )
+    fmt = _format(format_id)
     scr = script_from_json(script)
     src = _resolve_source(source)
     _check_source(scr, src)
@@ -812,7 +866,7 @@ def render_format(
     stem = name or scr.id_slug
     out = ws.render_path(stem)
     braidio.render_format(
-        braidio.FORMATS[format_id],
+        fmt,
         scr,
         source=src,
         profile=Profile(profile),
@@ -826,20 +880,38 @@ def render_format(
     return {**_retrieval(out), **_render_cost(scr, profile)}
 
 
-def weave_project(project_id: str, script: dict, source: dict | None = None) -> dict:
+def weave_project(
+    project_id: str,
+    script: dict,
+    source: dict | None = None,
+    format_id: str | None = None,
+    bed_asset_id: str | None = None,
+    sting_asset_id: str | None = None,
+) -> dict:
     """[COSTED] Ingest a script into your project and run the full commentary_weave pipeline.
 
     Uses the nw graph, so re-running re-synthesizes only what changed (partial
-    re-render) and records provenance. ``script`` must be Narration + Segment beats
-    (Dialogue is not yet supported in the graph pipeline).
+    re-render) and records provenance. Narration, Segment and scene_break beats
+    (not Dialogue yet). ``format_id`` applies a ready-made format;
+    ``bed_asset_id`` / ``sting_asset_id`` (from ``upload_asset``) add a music bed
+    and a scene-break sting — without a sting a scene_break is just a pause.
     """
     _require_nw("weave_project")
     scr = script_from_json(script)
     _reject_graph_unsupported(scr, "weave_project")
     src = _resolve_source(source)
     _check_source(scr, src)
-    proj = _workspace().open_project(project_id)
-    episode = braidio.weave_project(proj, scr, source=src)
+    ws = _workspace()
+    fmt, structure, bed = _graph_structure(
+        ws,
+        format_id=format_id,
+        bed_asset_id=bed_asset_id,
+        sting_asset_id=sting_asset_id,
+    )
+    proj = ws.open_project(project_id)
+    episode = braidio.weave_project(
+        proj, scr, source=src, fmt=fmt, structure=structure, bed=bed
+    )
     body = episode.body
     return {
         "episode": to_json(body),

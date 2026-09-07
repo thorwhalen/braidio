@@ -22,9 +22,10 @@ from __future__ import annotations
 from nw import Genre, Template, register_genre, register_genre_project_factory
 
 from braidio.formats import FORMATS
-from braidio.bodies._domain import NARRATIVE_BEAT_V1, AUDIO_CLIP_V1
+from braidio.bodies._domain import NARRATIVE_BEAT_V1, SCENE_BREAK_V1, AUDIO_CLIP_V1
 from braidio.bodies._render_nodes import (
     WEAVE_CONFIG_V1,
+    PRODUCTION_STRUCTURE_V1,
     SOURCE_MEDIA_V1,
     VOICE_ASSIGNMENT_V1,
     NARRATION_RENDER_V1,
@@ -51,8 +52,10 @@ COMMENTARY_WEAVE: Genre = register_genre(
         ),
         body_schema_uris=(
             NARRATIVE_BEAT_V1,
+            SCENE_BREAK_V1,
             AUDIO_CLIP_V1,
             WEAVE_CONFIG_V1,
+            PRODUCTION_STRUCTURE_V1,
             SOURCE_MEDIA_V1,
             VOICE_ASSIGNMENT_V1,
             NARRATION_RENDER_V1,

@@ -1,8 +1,8 @@
 """Generic authoring body schemas for a commentary-weave production.
 
 The media-agnostic domain vocabulary: curated commentary, cited sources,
-playable media clips, narrative beats, and the episode container. Registered
-with lacing on import. (Consumer-specific schemas — e.g. Hamilton's Genius
+playable media clips, narrative beats, scene breaks (the structural boundary),
+and the episode container. Registered with lacing on import. (Consumer-specific schemas — e.g. Hamilton's Genius
 ``song``/``lyric-line``/``referent``/``annotation`` — live in the consumer.)
 """
 
@@ -18,6 +18,7 @@ COMMENTARY_V1 = "annot://schema/commentary/v1"
 SOURCE_V1 = "annot://schema/source/v1"
 AUDIO_CLIP_V1 = "annot://schema/audio-clip/v1"
 NARRATIVE_BEAT_V1 = "annot://schema/narrative-beat/v1"
+SCENE_BREAK_V1 = "annot://schema/scene-break/v1"
 EPISODE_V1 = "annot://schema/episode/v1"
 
 CommentaryFacet = Literal["historical", "musical", "biographical", "production"]
@@ -75,6 +76,13 @@ class AudioClipBodyV1(BaseModel):
         None,
         description="Optional (fade_in_s, fade_out_s) applied when this clip plays.",
     )
+    spotlight: Optional[bool] = Field(
+        None,
+        description=(
+            "Fade-to-spotlight override (SegmentBeat.spotlight): the music bed "
+            "drops out over this clip. None defers to the production's structure."
+        ),
+    )
 
 
 class NarrativeBeatBodyV1(BaseModel):
@@ -96,6 +104,26 @@ class NarrativeBeatBodyV1(BaseModel):
     )
 
 
+class SceneBreakBodyV1(BaseModel):
+    """A structural boundary between sections — the graph's ``SceneBreak`` beat.
+
+    Ordered alongside the narrative beats and clips, so the episode transform
+    can place a sting (or a pause) exactly where the script asked for one. It
+    synthesizes nothing, so it has no render node of its own: the boundary is
+    the decision, and :mod:`braidio.structure` turns it into audio at weave
+    time (``marker`` overrides the production's ``scene_marker`` default).
+    """
+
+    model_config = {"frozen": True, "extra": "forbid"}
+
+    beat_id: str = Field(..., description="Zero-padded ordering key (e.g. '0007').")
+    label: str = Field("", description="Section starting here, e.g. 'rebuttal'.")
+    marker: Optional[str] = Field(
+        None,
+        description="'sting' | 'none'; None defers to the production's default.",
+    )
+
+
 class EpisodeBodyV1(BaseModel):
     """An ordered container of narrative beats (and the clips they reference)."""
 
@@ -113,6 +141,7 @@ DOMAIN_SCHEMAS: dict[str, type[BaseModel]] = {
     SOURCE_V1: SourceBodyV1,
     AUDIO_CLIP_V1: AudioClipBodyV1,
     NARRATIVE_BEAT_V1: NarrativeBeatBodyV1,
+    SCENE_BREAK_V1: SceneBreakBodyV1,
     EPISODE_V1: EpisodeBodyV1,
 }
 
