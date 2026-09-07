@@ -138,14 +138,15 @@ def capabilities() -> dict:
             "needs no source.",
             "A scene_break beat marks a section boundary (put one between a "
             "debate's phases or a panel's rounds). Upload a bed/sting instrumental "
-            "with upload_asset, then pass its itemId as render_production's or "
-            "render_format's `bed_asset_id` (continuous underscore) / "
-            "`sting_asset_id` (plays at each scene_break) — without a sting a "
-            "scene_break is just a pause, and a segment beat's spotlight flag "
-            "needs `bed_asset_id` specifically (there's no bed to drop out).",
-            "Dialogue and scene_break beats aren't in the graph pipeline yet "
-            "(save_script / weave_project reject them) — use render_production or "
-            "render_format for those.",
+            "with upload_asset, then pass its itemId as `bed_asset_id` (continuous "
+            "underscore) / `sting_asset_id` (plays at each scene_break) to "
+            "render_production, render_format, save_script or weave_project — "
+            "without a sting a scene_break is just a pause, and a segment beat's "
+            "spotlight flag needs `bed_asset_id` specifically (there's no bed to "
+            "drop out).",
+            "Dialogue beats aren't in the graph pipeline yet (save_script / "
+            "weave_project reject them) — use render_production or render_format "
+            "for those.",
             "Every call is metered to the authenticated user; the connector is "
             "restricted to its allowlisted users.",
         ],

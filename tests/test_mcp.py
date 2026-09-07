@@ -616,9 +616,7 @@ def test_weave_project_records_cost(monkeypatch):
             },
         },
     )()
-    monkeypatch.setattr(
-        braidio, "weave_project", lambda proj, scr, source=None: episode
-    )
+    monkeypatch.setattr(braidio, "weave_project", lambda proj, scr, **kw: episode)
     ledger = {}
     server2 = _local_server(ledger=ledger)
     r = _call(
@@ -888,23 +886,71 @@ def test_save_script_rejects_dialogue_before_mutating():
     assert "Dialogue" in str(ei.value)
 
 
-def test_save_script_rejects_scene_break_before_mutating():
+def test_save_script_ingests_scene_break_beats():
+    # braidio#39: the graph pipeline used to refuse a scene_break outright.
+    # It now links it as an ordered structural boundary, so weave_project can
+    # mark it with a sting (or a pause).
     server = _local_server(ledger={})
     _call(server, "create_project", {"project_id": "ps", "title": "PS"})
-    with pytest.raises(Exception) as ei:
-        _call(
-            server,
-            "save_script",
-            {
-                "project_id": "ps",
-                "script": {
-                    "title": "t",
-                    "id_slug": "01",
-                    "beats": [{"type": "scene_break"}],
-                },
+    out = _call(
+        server,
+        "save_script",
+        {
+            "project_id": "ps",
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [
+                    {"type": "narration", "text": "one"},
+                    {"type": "scene_break", "label": "act 2"},
+                    {"type": "narration", "text": "two"},
+                ],
             },
-        )
-    assert "scene_break" in str(ei.value)
+        },
+    ).structured_content
+    assert [b["kind"] for b in out["beats"]] == ["narration", "scene_break", "narration"]
+
+
+def test_save_script_records_the_format_and_sting_asset_in_the_graph():
+    # braidio#39: the tool takes an asset ID (never a server path) and the graph
+    # records the production's structural-music decision, so weave_project can
+    # play a sting at each scene_break.
+    import base64
+
+    import nw
+
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "pf", "title": "PF"})
+    asset = _call(
+        server,
+        "upload_asset",
+        {"data_b64": base64.b64encode(b"STING-BYTES").decode(), "name": "hit.mp3"},
+    ).structured_content
+    _call(
+        server,
+        "save_script",
+        {
+            "project_id": "pf",
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [
+                    {"type": "narration", "text": "one"},
+                    {"type": "scene_break"},
+                ],
+            },
+            "format_id": "debate",
+            "sting_asset_id": asset["itemId"],
+        },
+    )
+    proj = bmcp.workspace.Workspace.for_email(OWNER).open_project("pf")
+    (structure,) = nw.annotations_at_tier(proj.root, "production-structures")
+    assert structure.body["sting_asset_id"]
+    assert structure.body["sting_url"].startswith("file://")
+    assert (
+        structure.body["structure"]["scene_marker"]
+        == braidio.FORMATS["debate"].structure.scene_marker
+    )
 
 
 # --- download_audio (yt-dlp via yb) + identity fallback (reelee#232) ---------

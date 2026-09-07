@@ -91,6 +91,17 @@ Renders take one path or the other: the **no-graph fast path**
 path** (`save_script` → `weave_project`, provenance + partial re-render). The
 transforms delegate to the same core primitives; do not fork the DSP.
 
+Both paths render **structural music** (braidio#25 for the fast path, #39 for the
+graph one). In the graph, a `SceneBreak` is a `scene-break/v1` node ordered with
+the beats — it has no render node of its own, and `weave_to_episode` turns it
+into a sting or a pause via `braidio.structure`. The production's declared
+structure + bed/sting assets are one singleton `production-structure/v1` node,
+written **only** when a production declares them — that absence is what keeps a
+structure-free format's render byte-identical, and
+`tests/test_transforms_structure.py` pins it on decoded PCM. Assets reach the
+graph as content-addressed ids resolved through the caller's `Workspace`, never
+as paths a tool caller supplied.
+
 ## `mixing` owns the audio DSP — do not wrap it in a blindfold
 
 Everything braidio does to actual samples goes through `mixing` (or a direct

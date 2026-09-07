@@ -69,6 +69,15 @@ def patched_synthesis(monkeypatch):
     monkeypatch.setattr(
         braidio, "weave_timeline", lambda items, out, **kw: _write(out, b"EPISODE")
     )
+    # scene breaks: stub the two ffmpeg-backed structure primitives too, so this
+    # module stays ffmpeg-free (the real-audio graph path is covered in
+    # tests/test_transforms_structure.py).
+    monkeypatch.setattr(
+        braidio.structure, "prepare_sting", lambda st, out, **kw: _write(out, b"STING")
+    )
+    monkeypatch.setattr(
+        braidio.structure, "prepare_pause", lambda s, out, **kw: _write(out, b"PAUSE")
+    )
     monkeypatch.setattr(braidio, "duration_s", lambda path: 2.0)
 
 
@@ -396,16 +405,145 @@ def test_commentary_weave_genre_ready():
     assert genre.defaults["format_id"] in FORMATS
 
 
-def test_ingest_rejects_scene_break_with_a_clear_message(project, script_and_source):
-    """No structural tier in the graph yet — the ingest says so up front rather
-    than silently dropping the boundary."""
+# --- structural music in the graph path (braidio#39) ------------------------
+
+
+def _script_with_break(script):
+    """``script`` with a scene break between its first two beats."""
     from braidio import SceneBreak
 
-    script, source = script_and_source
-    with_break = braidio.Script(
+    beats = list(script.beats)
+    return braidio.Script(
         title=script.title,
         id_slug=script.id_slug,
-        beats=[*script.beats, SceneBreak(label="act 2")],
+        beats=[beats[0], SceneBreak(label="act 2"), *beats[1:]],
     )
-    with pytest.raises(NotImplementedError, match="SceneBreak"):
-        braidio.transforms.ingest_script(project, with_break, source=source)
+
+
+def test_ingest_writes_scene_breaks_in_order(project, script_and_source):
+    """The boundary is a node the episode can order between the beats — it used
+    to be refused outright (NotImplementedError, no structural tier)."""
+    script, source = script_and_source
+    ingested = braidio.transforms.ingest_script(
+        project, _script_with_break(script), source=source
+    )
+    assert [k for k, _ in ingested.ordered] == [
+        "narration",
+        "scene_break",
+        "segment",
+        "narration",
+    ]
+    (brk,) = ingested.scene_breaks
+    assert brk.tier == "scene-breaks"
+    assert brk.body["label"] == "act 2" and brk.body["marker"] is None
+    # No structure was declared, so no production-structure node was written.
+    assert ingested.structure is None
+    assert _tier_ids(project, "production-structures") == set()
+
+
+def test_ingest_records_the_structure_decision_with_asset_ids(
+    project, script_and_source, tmp_path
+):
+    sting_asset = tmp_path / "hit.mp3"
+    sting_asset.write_bytes(b"STING-ASSET")
+    bed_asset = tmp_path / "bed.mp3"
+    bed_asset.write_bytes(b"BED-ASSET")
+
+    ingested = braidio.transforms.ingest_script(
+        project,
+        _script_with_break(script_and_source[0]),
+        source=script_and_source[1],
+        structure=braidio.MusicStructure(
+            sting=braidio.Sting(str(sting_asset)), spotlight_clips=True
+        ),
+        bed=braidio.MusicBed(str(bed_asset)),
+    )
+    body = ingested.structure.body
+    assert ingested.structure.tier == "production-structures"
+    assert body["structure"]["spotlight_clips"] is True
+    # The assets are recorded as content-addressed ids, not only as locations.
+    assert body["sting_asset_id"] and body["bed_asset_id"]
+    assert body["sting_asset_id"] != body["bed_asset_id"]
+    assert body["sting_url"].endswith("hit.mp3")
+    assert body["sting"]["gain_db"] == braidio.Sting(str(sting_asset)).gain_db
+    assert "asset_path" not in body["sting"] and "asset_path" not in body["bed"]
+
+
+def test_weave_project_places_the_break_between_the_renders(
+    project, script_and_source, patched_synthesis, tmp_path
+):
+    import nw
+
+    sting_asset = tmp_path / "hit.mp3"
+    sting_asset.write_bytes(b"STING-ASSET")
+    script, source = script_and_source
+    episode = braidio.weave_project(
+        project,
+        _script_with_break(script),
+        source=source,
+        structure=braidio.MusicStructure(sting=braidio.Sting(str(sting_asset))),
+    )
+    members = [
+        m
+        for m in nw.iter_all_annotations(project.root)
+        if str(m.id) in episode.body["ordered_member_ids"]
+    ]
+    by_id = {str(m.id): m.tier for m in members}
+    assert [by_id[i] for i in episode.body["ordered_member_ids"]] == [
+        "narration-renders",
+        "scene-breaks",
+        "segment-extractions",
+        "narration-renders",
+    ]
+    # The break's audio was prepared into the project (not skipped).
+    (brk,) = nw.annotations_at_tier(project.root, "scene-breaks")
+    assert (project.root / "data" / "breaks" / f"{brk.id}.mp3").exists()
+
+
+def test_structure_change_restales_only_the_episode(
+    project, script_and_source, patched_synthesis, tmp_path
+):
+    """Swap the sting and only the episode is stale — the narration renders and
+    the extraction keep their audio."""
+    import nw
+
+    sting_asset = tmp_path / "hit.mp3"
+    sting_asset.write_bytes(b"STING-ASSET")
+    script, source = script_and_source
+    braidio.weave_project(
+        project,
+        _script_with_break(script),
+        source=source,
+        structure=braidio.MusicStructure(sting=braidio.Sting(str(sting_asset))),
+    )
+    (structure,) = nw.annotations_at_tier(project.root, "production-structures")
+    (episode_id,) = _tier_ids(project, "episode-renders")
+    _rewrite_in_place(
+        project,
+        structure,
+        body={**structure.body, "sting_asset_id": "a" * 64},
+    )
+    stale = {a.id for a in nw.stale_after(project.root, structure.id)}
+    assert stale == {episode_id}
+
+
+def test_weave_project_applies_a_format_and_its_declared_structure(
+    project, script_and_source, patched_synthesis
+):
+    """The reelee-shaped path: hand the genre's Format to the graph driver and
+    its declared structure lands in the graph (braidio#39)."""
+    import nw
+
+    script, source = script_and_source
+    braidio.weave_project(
+        project, _script_with_break(script), source=source, fmt=braidio.SOLO_EXPLAINER
+    )
+    (structure,) = nw.annotations_at_tier(project.root, "production-structures")
+    assert structure.body["structure"] == {
+        "scene_marker": braidio.SOLO_EXPLAINER.structure.scene_marker,
+        "spotlight_clips": braidio.SOLO_EXPLAINER.structure.spotlight_clips,
+        "pause_s": braidio.SOLO_EXPLAINER.structure.pause_s,
+    }
+    assert structure.body["sting_asset_id"] is None  # no asset supplied
+    (cfg,) = nw.annotations_at_tier(project.root, "weave-configs")
+    assert cfg.body["config"] == braidio.SOLO_EXPLAINER.weave.to_dict()

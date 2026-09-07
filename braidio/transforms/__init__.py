@@ -16,7 +16,8 @@ The chain (``sources → segments → weave``):
   ``narration-render/v1`` (ElevenLabs TTS; cached by an explicit ``cache_key``).
 - ``segment_extraction.ffmpeg`` — audio clip (+ source-media + config) →
   ``segment-extraction/v1`` (ffmpeg cut+pad; cached).
-- ``weave_to_episode.default`` — all member renders (+ config) → one
+- ``weave_to_episode.default`` — all member renders, plus any scene-break
+  nodes (+ config, + the production-structure node when there is one) → one
   ``episode-render/v1`` (the ``projection_entrypoint`` — the delivered mix).
 
 :func:`weave_project` is the synchronous convenience driver; the Transforms
@@ -48,20 +49,35 @@ __all__ = [
 ]
 
 
-def weave_project(project, script, *, config=None, source=None):
+def weave_project(
+    project, script, *, config=None, source=None, fmt=None, structure=None, bed=None
+):
     """Ingest ``script`` and run the whole commentary-weave chain, in order.
 
     Returns the completed ``episode-render/v1`` annotation (its body carries
     the assembled audio's ``url`` + ``artifact_id``). A thin synchronous
     projection over the registered Transforms' ``plan``/``execute`` contract —
     each ``plan`` resolves its own context (config / voice-assignment /
-    source-media) from the graph, so the driver only supplies the primary
-    input. A cost-gated / async runner (``nw.jobs``, reelee's planner) can
-    drive the same Transforms via the genre.
+    source-media / production-structure) from the graph, so the driver only
+    supplies the primary input. A cost-gated / async runner (``nw.jobs``,
+    reelee's planner) can drive the same Transforms via the genre.
+
+    ``fmt`` (a :class:`~braidio.formats.Format`) supplies the format's declared
+    defaults — its ``weave`` config and its ``structure`` — for whichever of
+    ``config`` / ``structure`` the caller left out; an explicit argument always
+    wins. ``bed`` is the app-supplied music bed (:class:`~braidio.music.MusicBed`).
+    With no format, no structure and no bed, this is the plain weave it always
+    was (thorwhalen/braidio#39).
     """
     import nw
 
-    ing = ingest_script(project, script, config=config, source=source)
+    if fmt is not None:
+        config = config if config is not None else fmt.weave
+        structure = structure if structure is not None else fmt.structure
+
+    ing = ingest_script(
+        project, script, config=config, source=source, structure=structure, bed=bed
+    )
     voice = nw.get_transform(VOICE_ASSIGNMENT_TRANSFORM)
     narration = nw.get_transform(NARRATION_RENDER_TRANSFORM)
     segment = nw.get_transform(SEGMENT_EXTRACTION_TRANSFORM)
@@ -74,7 +90,12 @@ def weave_project(project, script, *, config=None, source=None):
     for clip in ing.audio_clips:
         render_by_authoring_id[clip.id] = _run(segment, project, clip)
 
-    members = tuple(render_by_authoring_id[auth.id] for _kind, auth in ing.ordered)
+    # A scene break renders no node of its own — the authoring annotation IS
+    # the member, and the episode transform turns it into a sting or a pause.
+    members = tuple(
+        auth if kind == "scene_break" else render_by_authoring_id[auth.id]
+        for kind, auth in ing.ordered
+    )
     return _run(episode, project, *members)
 
 

@@ -81,8 +81,13 @@ silence when you don't), and `SegmentBeat(spotlight=True)` for
 **fade-to-spotlight**: the bed drops out before that exhibit and resumes after
 it. Each format's `structure` (`MusicStructure`) sets the defaults — whether a
 break stings, whether every clip is spotlit — and a beat overrides them. As with
-the bed, braidio ships no music: the sting is your asset. Design history in
-[braidio#25](https://github.com/thorwhalen/braidio/issues/25).
+the bed, braidio ships no music: the sting is your asset. Both render paths carry
+this: the graph path takes the same `structure=` / `bed=` (or a `fmt=`, whose
+declared structure it uses) on `weave_project`, records the decision as a
+`production-structure/v1` node, and re-renders only the episode when you swap the
+sting. Design history in
+[braidio#25](https://github.com/thorwhalen/braidio/issues/25) and
+[braidio#39](https://github.com/thorwhalen/braidio/issues/39).
 
 ## Parametrize anything
 
