@@ -911,6 +911,131 @@ def test_save_script_ingests_scene_break_beats():
     assert [b["kind"] for b in out["beats"]] == ["narration", "scene_break", "narration"]
 
 
+@_NW
+def test_save_script_applies_the_rights_profile(tmp_path, monkeypatch):
+    """braidio#47: the graph tools had no `profile` at all, so a caller could
+    link (and then render) a personal-only clip into a published episode.
+
+    `published` now refuses the clip at ingest — it never becomes a node — and
+    the tool reports what the profile decided.
+    """
+    import base64
+
+    monkeypatch.setenv("BRAIDIO_DATA_HOME", str(tmp_path))
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "pr", "title": "PR"})
+    item_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"SONG").decode()}
+    ).structured_content["itemId"]
+    args = {
+        "project_id": "pr",
+        "script": {
+            "title": "t",
+            "id_slug": "01",
+            "beats": [
+                {"type": "narration", "text": "one"},
+                {
+                    "type": "segment",
+                    "reference": "the famous hook",
+                    "label": "hook",
+                    "rights": "owned-local",
+                },
+            ],
+        },
+        "source": {
+            "lines": [
+                {"index": 0, "start_s": 0, "end_s": 1, "text": "the famous hook"}
+            ],
+            "asset_id": item_id,
+        },
+    }
+
+    published = _call(
+        server, "save_script", {**args, "profile": "published"}
+    ).structured_content
+    assert [b["kind"] for b in published["beats"]] == ["narration"]
+    assert published["dropped"] == ["hook"] and published["profile"] == "published"
+
+    # …and the default cut is unchanged: personal still plays it.
+    _call(server, "create_project", {"project_id": "pr2", "title": "PR2"})
+    personal = _call(
+        server, "save_script", {**args, "project_id": "pr2"}
+    ).structured_content
+    assert [b["kind"] for b in personal["beats"]] == ["narration", "segment"]
+    assert personal["profile"] == "personal" and personal["dropped"] == []
+
+
+@pytest.mark.parametrize(
+    "tool,args",
+    [
+        ("plan_production", {}),
+        ("render_production", {}),
+        ("render_format", {"format_id": "solo_explainer"}),
+    ],
+)
+def test_an_unknown_profile_is_a_tool_error_naming_the_choices(tool, args):
+    """A bad `profile` must arrive as a ToolError listing the valid values, not
+    as whatever raw ValueError `Profile()` happens to raise (braidio#47 review).
+    """
+    server = _local_server(ledger={})
+    with pytest.raises(Exception) as ei:
+        _call(
+            server,
+            tool,
+            {
+                **args,
+                "script": {"title": "t", "id_slug": "01", "beats": []},
+                "profile": "commercial",
+            },
+        )
+    message = str(ei.value)
+    assert "commercial" in message and "personal" in message and "published" in message
+
+
+@_NW
+def test_weave_project_costs_the_profile_it_was_given(monkeypatch):
+    """The tool reported ``_render_cost(scr, "personal")`` whatever profile was
+    asked for. Under ``published`` a dropped clip's beats must not be costed as
+    if they rendered (braidio#47)."""
+    captured = {}
+
+    episode = type(
+        "Ann",
+        (),
+        {"id": "9a23da78-0a3e-4acf-a557-48bd6e519038", "body": {"url": "file:///x.mp3"}},
+    )()
+
+    def _weave(proj, scr, **kw):
+        captured.update(kw)
+        return episode
+
+    monkeypatch.setattr(braidio, "weave_project", _weave)
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "wp", "title": "WP"})
+    r = _call(
+        server,
+        "weave_project",
+        {
+            "project_id": "wp",
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [
+                    {
+                        "type": "narration",
+                        "text": "n" * 1000,
+                        "published_text": "short",
+                    }
+                ],
+            },
+            "profile": "published",
+        },
+    )
+    assert captured["profile"] is braidio.Profile.PUBLISHED
+    # the published rewrite is what gets synthesized, so it is what gets costed
+    assert r.structured_content["characters"] == len("short")
+
+
 def test_save_script_records_the_format_and_sting_asset_in_the_graph():
     # braidio#39: the tool takes an asset ID (never a server path) and the graph
     # records the production's structural-music decision, so weave_project can

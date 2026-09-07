@@ -18,6 +18,7 @@ _SCENE_BREAKS = Tier("scene-breaks")
 # Render-provenance layers.
 _WEAVE_CONFIGS = Tier("weave-configs")
 _PRODUCTION_STRUCTURES = Tier("production-structures")
+_RENDER_PROFILES = Tier("render-profiles")
 _SOURCE_MEDIA = Tier("source-media")
 _VOICE_ASSIGNMENTS = Tier("voice-assignments")
 _NARRATION_RENDERS = Tier("narration-renders")
@@ -32,6 +33,7 @@ TIERS: tuple[Tier, ...] = (
     _SCENE_BREAKS,
     _WEAVE_CONFIGS,
     _PRODUCTION_STRUCTURES,
+    _RENDER_PROFILES,
     _SOURCE_MEDIA,
     _VOICE_ASSIGNMENTS,
     _NARRATION_RENDERS,

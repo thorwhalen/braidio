@@ -39,7 +39,7 @@ from typing import Mapping
 
 from braidio.conversation import CHRIS, JESSICA, LAURA, WILL, ConversationCast
 from braidio.delivery import Delivery, V2_NARRATOR, V2_PRESENTER
-from braidio.rights import Profile
+from braidio.rights import DEFAULT_PROFILE, Profile
 from braidio.structure import MusicStructure, Sting
 from braidio.tts import DEFAULT_VOICE_ID
 from braidio.weave_config import WeaveConfig
@@ -95,7 +95,7 @@ class Format:
         *,
         source,
         out_path: str | Path | None = None,
-        profile: Profile = Profile.PERSONAL,
+        profile: Profile = DEFAULT_PROFILE,
         **overrides,
     ) -> Path:
         """Render ``script`` with this format's defaults (see :func:`render_format`)."""
@@ -110,7 +110,7 @@ def render_format(
     *,
     source,
     out_path: str | Path | None = None,
-    profile: Profile = Profile.PERSONAL,
+    profile: Profile = DEFAULT_PROFILE,
     bed_asset: str | None = None,
     sting_asset: str | None = None,
     **overrides,

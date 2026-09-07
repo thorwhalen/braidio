@@ -25,6 +25,7 @@ from lacing import Annotation, Artifact, NodeRef, TimeInterval
 # Tier names (must match braidio.bodies._tiers).
 TIER_WEAVE_CONFIG = "weave-configs"
 TIER_PRODUCTION_STRUCTURE = "production-structures"
+TIER_RENDER_PROFILE = "render-profiles"
 TIER_SOURCE_MEDIA = "source-media"
 TIER_NARRATIVE_BEAT = "narrative-beats"
 TIER_SCENE_BREAK = "scene-breaks"
@@ -92,8 +93,8 @@ def optional_singleton(project, tier: str) -> Annotation | None:
     """The one annotation at ``tier``, or ``None`` when the tier is empty.
 
     The counterpart of :func:`singleton` for a tier a production only writes
-    when it asks for something (today: ``production-structures``). More than
-    one is still a bug, not a choice.
+    when it asks for something (``production-structures``,
+    ``render-profiles``). More than one is still a bug, not a choice.
     """
     import nw
 

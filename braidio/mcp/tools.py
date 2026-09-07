@@ -23,6 +23,7 @@ import braidio  # attr access (braidio.narrate, ...) so tests can monkeypatch
 from fastmcp.exceptions import ToolError
 
 from braidio.mcp._helpers import script_from_json, source_from_json, to_json
+from braidio.rights import DEFAULT_PROFILE
 from braidio.mcp.metering import current_email
 from braidio.mcp.workspace import Workspace
 from braidio.tts import DEFAULT_MODEL_ID, DIALOGUE_MODEL_ID
@@ -90,6 +91,25 @@ def _format(format_id: str | None):
     return braidio.FORMATS[format_id]
 
 
+def _profile(profile: str):
+    """The :class:`~braidio.rights.Profile` for ``profile``.
+
+    Every tool that takes a rights profile resolves it here, so an unknown value
+    is one ToolError naming the choices rather than whichever raw ``ValueError``
+    ``Profile()`` happens to produce — the same courtesy :func:`_format` does
+    for ``format_id``.
+    """
+    from braidio import Profile
+
+    try:
+        return Profile(profile)
+    except ValueError:
+        raise ToolError(
+            f"unknown profile {profile!r}; use one of "
+            f"{sorted(p.value for p in Profile)}"
+        ) from None
+
+
 # --- assistance -------------------------------------------------------------
 
 
@@ -154,16 +174,14 @@ def estimate_cost(script: dict) -> dict:
     return out
 
 
-def plan_production(script: dict, profile: str = "personal") -> dict:
+def plan_production(script: dict, profile: str = DEFAULT_PROFILE.value) -> dict:
     """Filter a script into the beats renderable under a rights ``profile``.
 
     ``profile`` is ``"personal"`` (play everything) or ``"published"`` (drop /
     substitute non-publishable clips). Returns the planned beats + what was
     dropped/substituted — a dry run, nothing is rendered.
     """
-    from braidio import Profile
-
-    plan = braidio.plan_production(script_from_json(script), Profile(profile))
+    plan = braidio.plan_production(script_from_json(script), _profile(profile))
     return to_json(plan)
 
 
@@ -178,9 +196,7 @@ def content_violations(
     script: dict, forbidden: list[str], profile: str = "published", min_words: int = 5
 ) -> dict:
     """Scan a production's render plan for non-publishable clips + forbidden quotes."""
-    from braidio import Profile
-
-    plan = braidio.plan_production(script_from_json(script), Profile(profile))
+    plan = braidio.plan_production(script_from_json(script), _profile(profile))
     return {
         "violations": braidio.content_violations(plan, forbidden, min_words=min_words)
     }
@@ -348,6 +364,7 @@ def save_script(
     format_id: str | None = None,
     bed_asset_id: str | None = None,
     sting_asset_id: str | None = None,
+    profile: str = DEFAULT_PROFILE.value,
 ) -> dict:
     """Link a Script's beats into a project's graph (free authoring; render later).
 
@@ -355,6 +372,7 @@ def save_script(
     so you can review (project_status) and render with weave_project when ready
     (Dialogue is not in the graph pipeline yet). ``format_id`` +
     ``bed_asset_id`` / ``sting_asset_id`` record the production's music.
+    ``profile`` is the rights cut: ``"published"`` links only clips it may use.
     Free — no synthesis.
     """
     _require_nw("save_script")
@@ -377,10 +395,14 @@ def save_script(
         source=src,
         structure=structure,
         bed=bed,
+        profile=_profile(profile),
     )
     return {
         "project_id": project_id,
+        "profile": profile,
         "beats": [{"kind": k, "id": str(a.id)} for k, a in ingested.ordered],
+        "dropped": list(ingested.plan.dropped),
+        "substituted": list(ingested.plan.substituted),
     }
 
 
@@ -627,9 +649,7 @@ def _render_cost(scr, profile: str) -> dict:
     substitutes are billed — unlike costing the raw script. The figure is a rate
     estimate (``cost_basis="estimate"``; see :mod:`braidio.cost` + braidio#8).
     """
-    from braidio import Profile
-
-    plan = braidio.plan_production(scr, Profile(profile))
+    plan = braidio.plan_production(scr, _profile(profile))
     chars = 0
     priced: list[float] = []
     unpriced = False
@@ -799,7 +819,7 @@ def compose_narration(
 def render_production(
     script: dict,
     source: dict | None = None,
-    profile: str = "personal",
+    profile: str = DEFAULT_PROFILE.value,
     delivery: str = "narration",
     name: str | None = None,
     bed_asset_id: str | None = None,
@@ -814,7 +834,6 @@ def render_production(
     ``upload_asset``) add a music bed and a scene-break sting; without them a
     scene_break is a pause and spotlight is inert.
     """
-    from braidio import Profile
     from braidio.music import MusicBed
     from braidio.structure import MusicStructure, Sting
 
@@ -829,7 +848,7 @@ def render_production(
     braidio.render_production(
         scr,
         source=src,
-        profile=Profile(profile),
+        profile=_profile(profile),
         delivery=_delivery(delivery),
         out_path=out,
         tts_dir=_work_dir(ws, stem) + "/tts",
@@ -845,7 +864,7 @@ def render_format(
     format_id: str,
     script: dict,
     source: dict | None = None,
-    profile: str = "personal",
+    profile: str = DEFAULT_PROFILE.value,
     name: str | None = None,
     bed_asset_id: str | None = None,
     sting_asset_id: str | None = None,
@@ -856,8 +875,6 @@ def render_format(
     a music bed (at the format's intensity) and a scene-break sting; without them a
     scene_break is a pause and spotlight is inert.
     """
-    from braidio import Profile
-
     fmt = _format(format_id)
     scr = script_from_json(script)
     src = _resolve_source(source)
@@ -869,7 +886,7 @@ def render_format(
         fmt,
         scr,
         source=src,
-        profile=Profile(profile),
+        profile=_profile(profile),
         out_path=out,
         tts_dir=_work_dir(ws, stem) + "/tts",
         clips_dir=_work_dir(ws, stem) + "/clips",
@@ -887,14 +904,16 @@ def weave_project(
     format_id: str | None = None,
     bed_asset_id: str | None = None,
     sting_asset_id: str | None = None,
+    profile: str = DEFAULT_PROFILE.value,
 ) -> dict:
     """[COSTED] Ingest a script into your project and run the full commentary_weave pipeline.
 
     Uses the nw graph, so re-running re-synthesizes only what changed (partial
     re-render) and records provenance. Narration, Segment and scene_break beats
     (not Dialogue yet). ``format_id`` applies a ready-made format;
-    ``bed_asset_id`` / ``sting_asset_id`` (from ``upload_asset``) add a music bed
-    and a scene-break sting — without a sting a scene_break is just a pause.
+    ``bed_asset_id`` / ``sting_asset_id`` add a music bed and a scene-break
+    sting. ``profile`` is the rights cut: ``"published"`` renders only the clips
+    it is allowed to use.
     """
     _require_nw("weave_project")
     scr = script_from_json(script)
@@ -910,12 +929,18 @@ def weave_project(
     )
     proj = ws.open_project(project_id)
     episode = braidio.weave_project(
-        proj, scr, source=src, fmt=fmt, structure=structure, bed=bed
+        proj,
+        scr,
+        source=src,
+        fmt=fmt,
+        structure=structure,
+        bed=bed,
+        profile=_profile(profile),
     )
     body = episode.body
     return {
         "episode": to_json(body),
         "url": body.get("url"),
         **_episode_retrieval(project_id, str(episode.id)),
-        **_render_cost(scr, "personal"),
+        **_render_cost(scr, profile),
     }

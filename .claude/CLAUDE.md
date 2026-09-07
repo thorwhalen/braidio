@@ -102,6 +102,17 @@ structure-free format's render byte-identical, and
 graph as content-addressed ids resolved through the caller's `Workspace`, never
 as paths a tool caller supplied.
 
+Both paths also apply the rights **`Profile`** (braidio#47). The graph path runs
+`plan_production` **once, at ingest**, so a beat the profile refuses never
+becomes a node — never extracted, never synthesized, never billed — and a
+substituted one is ingested as its substitute. No transform re-decides rights.
+`rights.DEFAULT_PROFILE` is the single definition of what an undeclared profile
+means; a declared one is recorded as a singleton `render-profile/v1` node (with
+what it dropped/substituted) that `weave_to_episode` derives from, so changing
+the profile re-stales the episode through ordinary freshness. Same absence rule
+as the structure node: undeclared writes nothing, which is what keeps a legacy
+project byte-identical.
+
 ## `mixing` owns the audio DSP — do not wrap it in a blindfold
 
 Everything braidio does to actual samples goes through `mixing` (or a direct
@@ -199,7 +210,10 @@ middleware — keep it that way.
 - Time is **seconds** (`float`) everywhere.
 - Rights are **data, not judgement**: `SegmentBeat.rights` + `Profile` +
   `plan_production` decide what renders; the consumer injects *what* is
-  forbidden via `RightsPolicy`. Never hardcode a rights decision in a renderer.
+  forbidden via `RightsPolicy`. Never hardcode a rights decision in a renderer —
+  braidio#47 is what that costs: a literal `profile="personal"` in the episode
+  transform meant the graph path skipped the filter entirely. Every render entry
+  point takes a `profile` and threads it to the one `plan_production` call.
 - MCP tools are flat, JSON-in/JSON-out. Return values go through
   `_helpers.to_json`; `bytes` deliberately raise — write audio into the caller's
   workspace and return its path/url.

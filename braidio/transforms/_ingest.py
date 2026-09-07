@@ -1,7 +1,16 @@
 """Ingest a braidio :class:`~braidio.script.Script` into an nw project graph.
 
+The script is first filtered through :func:`braidio.rights.plan_production` —
+the *same* rights filter the no-graph fast path
+(:func:`braidio.render.render_production`) runs, not a second copy of it — so a
+beat the profile refuses is never ingested, never extracted, and never paid
+for, and a beat it substitutes is ingested as the substitute
+(thorwhalen/braidio#47).
+
 This writes the **authoring** layer the render Transforms consume:
 
+- one ``render-profile/v1`` snapshot when the production declares a profile —
+  the rights decision plus what it dropped/substituted;
 - one ``weave-config/v1`` snapshot (the singleton render-choices node);
 - one ``production-structure/v1`` snapshot when the production declares
   structural music (stings / fade-to-spotlight / a music bed) — written only
@@ -27,7 +36,15 @@ from dataclasses import dataclass
 
 from lacing import Annotation, MediaRef, TimeInterval
 
-from braidio.script import Script, Narration, SceneBreak, SegmentBeat, Dialogue
+from braidio.rights import (
+    DEFAULT_PROFILE,
+    PUBLISHABLE_CLIP_RIGHTS,
+    Profile,
+    RenderPlan,
+    RightsPolicy,
+    plan_production,
+)
+from braidio.script import Script, SegmentBeat
 from braidio.weave_config import WeaveConfig
 from braidio.bodies._domain import (
     NARRATIVE_BEAT_V1,
@@ -42,12 +59,15 @@ from braidio.bodies._render_nodes import (
     WeaveConfigBodyV1,
     PRODUCTION_STRUCTURE_V1,
     ProductionStructureBodyV1,
+    RENDER_PROFILE_V1,
+    RenderProfileBodyV1,
     SOURCE_MEDIA_V1,
     SourceMediaBodyV1,
 )
 from braidio.transforms._common import (
     TIER_WEAVE_CONFIG,
     TIER_PRODUCTION_STRUCTURE,
+    TIER_RENDER_PROFILE,
     TIER_NARRATIVE_BEAT,
     TIER_SCENE_BREAK,
     TIER_SOURCE_MEDIA,
@@ -73,6 +93,12 @@ class IngestedScript:
     #: ``"narration"``, ``"segment"`` or ``"scene_break"``. The episode is
     #: assembled in this order.
     ordered: tuple[tuple[str, Annotation], ...] = ()
+    #: The singleton ``render-profile/v1`` node, when the production declared a
+    #: rights profile; ``None`` when it declared none.
+    render_profile: Annotation | None = None
+    #: The rights plan the ingest actually followed — its ``dropped`` /
+    #: ``substituted`` are what the profile refused and swapped.
+    plan: RenderPlan | None = None
 
 
 def ingest_script(
@@ -83,6 +109,8 @@ def ingest_script(
     source=None,
     structure=None,
     bed=None,
+    profile: Profile | None = None,
+    rights: RightsPolicy | None = None,
 ) -> IngestedScript:
     """Write ``script``'s authoring nodes into ``project``'s graph.
 
@@ -98,8 +126,25 @@ def ingest_script(
     transform can play a sting at each scene break and drop the bed under a
     spotlit exhibit. Given neither, nothing is written and the render is
     byte-for-byte what it was before this layer existed.
+
+    ``profile`` (a :class:`~braidio.rights.Profile`) is the production's rights
+    projection and ``rights`` (a :class:`~braidio.rights.RightsPolicy`) the
+    caller-injected set of publishable segment rights. The script is filtered
+    through :func:`~braidio.rights.plan_production` exactly as
+    :func:`braidio.render.render_production` filters it, so a beat the profile
+    refuses never reaches the graph — and is therefore never extracted, never
+    synthesized and never paid for. ``profile=None`` means *undeclared*: the
+    filter still runs, under :data:`~braidio.rights.DEFAULT_PROFILE` (the same
+    default the fast path uses), which passes every beat through unchanged, and
+    no ``render-profile/v1`` node is written.
     """
     config = config or WeaveConfig()
+    publishable = rights.publishable_clip_rights if rights else PUBLISHABLE_CLIP_RIGHTS
+    plan = plan_production(
+        script,
+        profile if profile is not None else DEFAULT_PROFILE,
+        publishable_clip_rights=publishable,
+    )
 
     cfg = Annotation(
         id=uuid.uuid4(),
@@ -111,22 +156,33 @@ def ingest_script(
     )
     project.graph.add_annotation(cfg)
     structure_node = _ingest_structure(project, structure=structure, bed=bed)
+    profile_node = _ingest_render_profile(
+        project, profile=profile, publishable=publishable, plan=plan
+    )
 
     narration_beats: list[Annotation] = []
     audio_clips: list[Annotation] = []
     scene_breaks: list[Annotation] = []
     ordered: list[tuple[str, Annotation]] = []
 
-    for i, beat in enumerate(script.beats):
-        if isinstance(beat, Narration):
+    # The rights plan, not the raw script: a beat the profile dropped is simply
+    # absent here, and a substituted one arrives already rewritten. ``orig`` is
+    # the beat it came from — the authored one still carries the knobs (label,
+    # style, marker, spotlight) that the plan does not repeat.
+    for planned in plan.beats:
+        orig = script.beats[planned.from_index]
+        beat_id = f"{planned.from_index:04d}"
+        if planned.kind == "narration":
             ann = Annotation(
                 id=uuid.uuid4(),
                 tier=TIER_NARRATIVE_BEAT,
                 reference=node_ref(TIER_NARRATIVE_BEAT),
                 body=NarrativeBeatBodyV1(
-                    beat_id=f"{i:04d}",
-                    text=beat.text,
-                    style=beat.style,
+                    beat_id=beat_id,
+                    # the profile's resolved text: the authored narration, a
+                    # ``published_text`` rewrite, or a segment's substitute.
+                    text=planned.content,
+                    style=getattr(orig, "style", None),
                 ).model_dump(),
                 body_schema_uri=NARRATIVE_BEAT_V1,
                 provenance=_authored_provenance(),
@@ -134,22 +190,22 @@ def ingest_script(
             project.graph.add_annotation(ann)
             narration_beats.append(ann)
             ordered.append(("narration", ann))
-        elif isinstance(beat, SegmentBeat):
-            clip = _ingest_segment(project, beat, source=source)
+        elif planned.kind == "clip":
+            clip = _ingest_segment(project, orig, source=source)
             audio_clips.append(clip)
             ordered.append(("segment", clip))
-        elif isinstance(beat, Dialogue):
+        elif planned.kind == "dialogue":
             raise NotImplementedError(
                 "Dialogue beats are not yet ingested into the graph pipeline "
                 "(follow-up: render_dialogue wiring). Use Narration for v1."
             )
-        elif isinstance(beat, SceneBreak):
+        elif planned.kind == "scene_break":
             ann = Annotation(
                 id=uuid.uuid4(),
                 tier=TIER_SCENE_BREAK,
                 reference=node_ref(TIER_SCENE_BREAK),
                 body=SceneBreakBodyV1(
-                    beat_id=f"{i:04d}", label=beat.label, marker=beat.marker
+                    beat_id=beat_id, label=orig.label, marker=orig.marker
                 ).model_dump(),
                 body_schema_uri=SCENE_BREAK_V1,
                 provenance=_authored_provenance(),
@@ -157,8 +213,8 @@ def ingest_script(
             project.graph.add_annotation(ann)
             scene_breaks.append(ann)
             ordered.append(("scene_break", ann))
-        else:  # pragma: no cover — Beat is a closed union
-            raise TypeError(f"unknown beat type {type(beat).__name__}")
+        else:  # pragma: no cover — PlannedBeat.kind is a closed set
+            raise TypeError(f"unknown planned-beat kind {planned.kind!r}")
 
     return IngestedScript(
         config=cfg,
@@ -167,7 +223,39 @@ def ingest_script(
         scene_breaks=tuple(scene_breaks),
         structure=structure_node,
         ordered=tuple(ordered),
+        render_profile=profile_node,
+        plan=plan,
     )
+
+
+def _ingest_render_profile(
+    project, *, profile: Profile | None, publishable: frozenset[str], plan: RenderPlan
+) -> Annotation | None:
+    """Write the singleton ``render-profile/v1`` node, or ``None``.
+
+    Absent a declared ``profile`` the production made no rights choice, so
+    nothing is written — the same convention the production-structure node
+    follows, and what keeps a profile-less legacy project's graph, provenance
+    and render exactly as they were.
+    """
+    if profile is None:
+        return None
+
+    ann = Annotation(
+        id=uuid.uuid4(),
+        tier=TIER_RENDER_PROFILE,
+        reference=node_ref(TIER_RENDER_PROFILE),
+        body=RenderProfileBodyV1(
+            profile=profile.value,
+            publishable_clip_rights=tuple(sorted(publishable)),
+            dropped=tuple(plan.dropped),
+            substituted=tuple(plan.substituted),
+        ).model_dump(),
+        body_schema_uri=RENDER_PROFILE_V1,
+        provenance=_authored_provenance(),
+    )
+    project.graph.add_annotation(ann)
+    return ann
 
 
 def _ingest_structure(project, *, structure, bed) -> Annotation | None:

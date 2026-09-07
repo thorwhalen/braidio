@@ -17,8 +17,13 @@ The chain (``sources → segments → weave``):
 - ``segment_extraction.ffmpeg`` — audio clip (+ source-media + config) →
   ``segment-extraction/v1`` (ffmpeg cut+pad; cached).
 - ``weave_to_episode.default`` — all member renders, plus any scene-break
-  nodes (+ config, + the production-structure node when there is one) → one
-  ``episode-render/v1`` (the ``projection_entrypoint`` — the delivered mix).
+  nodes (+ config, + the production-structure and render-profile nodes when
+  there are any) → one ``episode-render/v1`` (the ``projection_entrypoint`` —
+  the delivered mix).
+
+The rights :class:`~braidio.rights.Profile` is applied once, at ingest, by the
+same :func:`braidio.rights.plan_production` the no-graph path runs — so a beat
+the profile refuses never becomes a node, and no Transform re-decides rights.
 
 :func:`weave_project` is the synchronous convenience driver; the Transforms
 are independently registered so nw / reelee can drive them via the
@@ -50,7 +55,16 @@ __all__ = [
 
 
 def weave_project(
-    project, script, *, config=None, source=None, fmt=None, structure=None, bed=None
+    project,
+    script,
+    *,
+    config=None,
+    source=None,
+    fmt=None,
+    structure=None,
+    bed=None,
+    profile=None,
+    rights=None,
 ):
     """Ingest ``script`` and run the whole commentary-weave chain, in order.
 
@@ -68,6 +82,15 @@ def weave_project(
     wins. ``bed`` is the app-supplied music bed (:class:`~braidio.music.MusicBed`).
     With no format, no structure and no bed, this is the plain weave it always
     was (thorwhalen/braidio#39).
+
+    ``profile`` (a :class:`~braidio.rights.Profile`) and ``rights`` (a
+    :class:`~braidio.rights.RightsPolicy`) are the rights seam, and they mean
+    exactly what they mean on :func:`braidio.render.render_production`: the
+    script is filtered through :func:`~braidio.rights.plan_production` at
+    ingest, so a segment the profile refuses is never extracted and never
+    reaches the mix. ``None`` leaves the profile undeclared, which resolves to
+    :data:`~braidio.rights.DEFAULT_PROFILE` — the fast path's default, and the
+    behaviour every project had before (thorwhalen/braidio#47).
     """
     import nw
 
@@ -76,7 +99,14 @@ def weave_project(
         structure = structure if structure is not None else fmt.structure
 
     ing = ingest_script(
-        project, script, config=config, source=source, structure=structure, bed=bed
+        project,
+        script,
+        config=config,
+        source=source,
+        structure=structure,
+        bed=bed,
+        profile=profile,
+        rights=rights,
     )
     voice = nw.get_transform(VOICE_ASSIGNMENT_TRANSFORM)
     narration = nw.get_transform(NARRATION_RENDER_TRANSFORM)
