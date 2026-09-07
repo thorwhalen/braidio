@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.structure &mdash; braidio 0.0.28 documentation</title>
+  <title>braidio.structure &mdash; braidio 0.0.29 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=26ffa1e9"></script>
+      <script src="../../_static/documentation_options.js?v=828725f0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -213,25 +213,51 @@
                 <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">scene_marker</span><span class="si">!r}</span><span class="s2">"</span>
             <span class="p">)</span>
 
+    <span class="c1"># The ``*_of`` methods take the per-beat override as plain data, because the</span>
+    <span class="c1"># graph path (braidio.transforms) holds it as a body field rather than a</span>
+    <span class="c1"># beat object; the ``*_for`` methods are the beat-taking front doors. One</span>
+    <span class="c1"># resolution rule, two callers.</span>
+
+<div class="viewcode-block" id="MusicStructure.marker_of">
+<a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.MusicStructure.marker_of">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">marker_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The marker a break with this per-beat override renders with."""</span>
+        <span class="k">return</span> <span class="n">marker</span> <span class="k">if</span> <span class="n">marker</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene_marker</span></div>
+
+
 <div class="viewcode-block" id="MusicStructure.marker_for">
 <a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.MusicStructure.marker_for">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">marker_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beat</span><span class="p">:</span> <span class="n">SceneBreak</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""The marker a scene break renders with (its override, else the default)."""</span>
-        <span class="k">return</span> <span class="n">beat</span><span class="o">.</span><span class="n">marker</span> <span class="k">if</span> <span class="n">beat</span><span class="o">.</span><span class="n">marker</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">scene_marker</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker_of</span><span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">marker</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MusicStructure.plays_sting_of">
+<a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.MusicStructure.plays_sting_of">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plays_sting_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether this per-beat marker plays the sting (and one is supplied)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sting</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker_of</span><span class="p">(</span><span class="n">marker</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"sting"</span></div>
 
 
 <div class="viewcode-block" id="MusicStructure.plays_sting">
 <a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.MusicStructure.plays_sting">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plays_sting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beat</span><span class="p">:</span> <span class="n">SceneBreak</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Whether ``beat`` plays the sting (marked ``"sting"`` *and* one is supplied)."""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sting</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker_for</span><span class="p">(</span><span class="n">beat</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"sting"</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plays_sting_of</span><span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">marker</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MusicStructure.spotlight_of">
+<a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.MusicStructure.spotlight_of">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">spotlight_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spotlight</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether this per-beat override is spotlit (``None`` = the format default)."""</span>
+        <span class="k">return</span> <span class="n">spotlight</span> <span class="k">if</span> <span class="n">spotlight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">spotlight_clips</span></div>
 
 
 <div class="viewcode-block" id="MusicStructure.spotlight_for">
 <a class="viewcode-back" href="../../module_docs/braidio/structure.html#braidio.MusicStructure.spotlight_for">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">spotlight_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beat</span><span class="p">:</span> <span class="n">SegmentBeat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Whether ``beat`` is spotlit (its override, else the format default)."""</span>
-        <span class="k">return</span> <span class="n">beat</span><span class="o">.</span><span class="n">spotlight</span> <span class="k">if</span> <span class="n">beat</span><span class="o">.</span><span class="n">spotlight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">spotlight_clips</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spotlight_of</span><span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">spotlight</span><span class="p">)</span></div>
 </div>
 
 

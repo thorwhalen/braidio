@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio &mdash; braidio 0.0.28 documentation</title>
+  <title>braidio &mdash; braidio 0.0.29 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=26ffa1e9"></script>
+      <script src="../_static/documentation_options.js?v=828725f0"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -66,8 +66,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#braidio.MusicBed"><code class="docutils literal notranslate"><span class="pre">MusicBed</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.MusicStructure"><code class="docutils literal notranslate"><span class="pre">MusicStructure</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#braidio.MusicStructure.marker_for"><code class="docutils literal notranslate"><span class="pre">MusicStructure.marker_for()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#braidio.MusicStructure.marker_of"><code class="docutils literal notranslate"><span class="pre">MusicStructure.marker_of()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#braidio.MusicStructure.plays_sting"><code class="docutils literal notranslate"><span class="pre">MusicStructure.plays_sting()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#braidio.MusicStructure.plays_sting_of"><code class="docutils literal notranslate"><span class="pre">MusicStructure.plays_sting_of()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#braidio.MusicStructure.spotlight_for"><code class="docutils literal notranslate"><span class="pre">MusicStructure.spotlight_for()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#braidio.MusicStructure.spotlight_of"><code class="docutils literal notranslate"><span class="pre">MusicStructure.spotlight_of()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.Narration"><code class="docutils literal notranslate"><span class="pre">Narration</span></code></a></li>
@@ -315,15 +318,33 @@ as it did without this layer.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="braidio.MusicStructure.marker_of">
+<span class="sig-name descname"><span class="pre">marker_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">marker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/braidio/structure.html#MusicStructure.marker_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.MusicStructure.marker_of" title="Link to this definition"></a></dt>
+<dd><p>The marker a break with this per-beat override renders with.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="braidio.MusicStructure.plays_sting">
 <span class="sig-name descname"><span class="pre">plays_sting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="braidio/script.html#braidio.script.SceneBreak" title="braidio.script.SceneBreak"><span class="pre">SceneBreak</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/braidio/structure.html#MusicStructure.plays_sting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.MusicStructure.plays_sting" title="Link to this definition"></a></dt>
 <dd><p>Whether <code class="docutils literal notranslate"><span class="pre">beat</span></code> plays the sting (marked <code class="docutils literal notranslate"><span class="pre">&quot;sting&quot;</span></code> <em>and</em> one is supplied).</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="braidio.MusicStructure.plays_sting_of">
+<span class="sig-name descname"><span class="pre">plays_sting_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">marker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/braidio/structure.html#MusicStructure.plays_sting_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.MusicStructure.plays_sting_of" title="Link to this definition"></a></dt>
+<dd><p>Whether this per-beat marker plays the sting (and one is supplied).</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="braidio.MusicStructure.spotlight_for">
 <span class="sig-name descname"><span class="pre">spotlight_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="braidio/script.html#braidio.script.SegmentBeat" title="braidio.script.SegmentBeat"><span class="pre">SegmentBeat</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/braidio/structure.html#MusicStructure.spotlight_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.MusicStructure.spotlight_for" title="Link to this definition"></a></dt>
 <dd><p>Whether <code class="docutils literal notranslate"><span class="pre">beat</span></code> is spotlit (its override, else the format default).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="braidio.MusicStructure.spotlight_of">
+<span class="sig-name descname"><span class="pre">spotlight_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spotlight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/braidio/structure.html#MusicStructure.spotlight_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.MusicStructure.spotlight_of" title="Link to this definition"></a></dt>
+<dd><p>Whether this per-beat override is spotlit (<code class="docutils literal notranslate"><span class="pre">None</span></code> = the format default).</p>
 </dd></dl>
 
 </dd></dl>
