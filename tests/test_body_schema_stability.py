@@ -364,6 +364,17 @@ PINNED: dict[str, dict] = {
 }
 
 
+def test_every_owned_body_is_pinned():
+    """The completeness guard the two shape tests below need: they parametrise
+    over ``PINNED``, so a body that is registered but *not* pinned would never
+    be examined and would ship unguarded (#57 review). ``OWNED`` alone does not
+    catch it — a URI can be owned and its shape unpinned."""
+    assert set(PINNED) == set(_actual_shapes()), (
+        "every owned body must have a PINNED entry (and every PINNED entry a "
+        "body); add or drop the pin in the same commit as the model." + MIGRATION_RULE
+    )
+
+
 @pytest.mark.parametrize("model_name", sorted(PINNED))
 def test_pinned_fields_are_unchanged(model_name):
     """Every pinned field still exists, with the same serialized shape."""

@@ -164,12 +164,14 @@ class DialogueRenderTTS(BaseTransform):
                     existing = adopt_output(skel, hit)
                     project.graph.add_annotation(existing)
             if existing is not None:
-                # No synthesis: $0 spent, and the estimate is what caching saved.
+                # No synthesis: $0 spent, and the estimate is what caching saved
+                # — or, unpriced, an unknown amount: say so rather than $0.
                 return TransformResult(
                     annotations=(existing,),
                     artifacts=(),
                     cost_usd_actual=0.0,
                     cache_hit_savings_usd=cost if cost is not None else 0.0,
+                    has_unknown_costs=cost is None,
                 )
 
         out_path = project.root / "data" / "dialogue" / f"{skel.id}.mp3"
@@ -179,7 +181,10 @@ class DialogueRenderTTS(BaseTransform):
         _, was_cached = braidio.render_dialogue(
             turns,
             cast,
-            api_key=None,  # resolved from env; key injection is a follow-up
+            # Resolved from the process env: the graph path has no seam for a
+            # per-caller BYO key yet (thorwhalen/braidio#58; same gap as
+            # narration_render.tts — fix both together).
+            api_key=None,
             out_path=out_path,
             return_cache_status=True,
         )
@@ -202,10 +207,14 @@ class DialogueRenderTTS(BaseTransform):
             }
         )
         project.graph.add_annotation(completed)
+        # Unpriced is honest, not free: nw's cost fields are plain floats, so the
+        # unknown rides on ``has_unknown_costs`` — the flag every cost gate in
+        # the federation reads to tell $0 from "we do not know".
         estimate = cost if cost is not None else 0.0
         return TransformResult(
             annotations=(completed,),
             artifacts=(artifact,),
             cost_usd_actual=0.0 if was_cached else estimate,
             cache_hit_savings_usd=estimate if was_cached else 0.0,
+            has_unknown_costs=cost is None,
         )

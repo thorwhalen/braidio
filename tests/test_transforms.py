@@ -298,6 +298,7 @@ def test_narration_render_reports_real_cost(
     assert expected > 0  # the beat carries real narration text
     assert result.cost_usd_actual == pytest.approx(expected)
     assert result.artifacts[0].cost_usd == pytest.approx(expected)
+    assert result.has_unknown_costs is False  # priced: the number is the truth
 
 
 def test_narration_render_cache_hit_reports_savings(
@@ -370,7 +371,9 @@ def test_narration_render_unpriced_cost(
     project, script_and_source, patched_synthesis, monkeypatch
 ):
     # Rate disabled: spend is honestly unpriced — Artifact.cost_usd is None (never a
-    # fake 0.0), and cost_usd_actual falls back to 0.0 (nw's field is a plain float).
+    # fake 0.0). nw's cost_usd_actual is a plain float, so the unknown rides on
+    # has_unknown_costs: a 0.0 with the flag clear would be the fake zero the
+    # cost model forbids (#57 review).
     import nw
     from nw import TransformInputs
     from braidio.cost import RATE_ENV_VAR
@@ -388,6 +391,13 @@ def test_narration_render_unpriced_cost(
 
     assert result.artifacts[0].cost_usd is None
     assert result.cost_usd_actual == 0.0
+    assert result.has_unknown_costs is True
+    # ...and the unknown survives a cache hit: the saving is unknown too
+    hit = narration.execute(
+        project, *narration.plan(project, TransformInputs(primary=(beat,)))
+    )
+    assert hit.cost_usd_actual == 0.0 and hit.cache_hit_savings_usd == 0.0
+    assert hit.has_unknown_costs is True
 
 
 def test_commentary_weave_genre_ready():

@@ -310,6 +310,7 @@ def test_dialogue_render_cache_skip_reports_savings(
     assert expected > 0
     assert first.cost_usd_actual == pytest.approx(expected)
     assert first.artifacts[0].cost_usd == pytest.approx(expected)
+    assert first.has_unknown_costs is False  # priced: the number is the truth
 
     hit = dialogue.execute(
         project, *dialogue.plan(project, TransformInputs(primary=(beat,)))
@@ -347,7 +348,11 @@ def test_dialogue_disk_cache_hit_reports_zero_actual(
 
 
 def test_dialogue_render_unpriced_cost(project, script, source, synthesis, monkeypatch):
-    """Unpriced is honest, not free: ``None`` on the artifact, ``0.0`` actual."""
+    """Unpriced is honest, not free: ``None`` on the artifact, and because nw's
+    ``cost_usd_actual`` is a plain float the unknown rides on
+    ``has_unknown_costs`` — a bare ``0.0`` would be the fake zero the cost model
+    forbids (#57 review). The unknown survives a cache hit, whose saving is
+    unknown too."""
     import nw
     from nw import TransformInputs
     from braidio.cost import RATE_ENV_VAR
@@ -363,6 +368,46 @@ def test_dialogue_render_unpriced_cost(project, script, source, synthesis, monke
     assert result.artifacts[0].cost_usd is None
     assert result.cost_usd_actual == 0.0
     assert result.cache_hit_savings_usd == 0.0
+    assert result.has_unknown_costs is True
+
+    hit = dialogue.execute(
+        project, *dialogue.plan(project, TransformInputs(primary=(beat,)))
+    )
+    assert hit.artifacts == ()
+    assert hit.cost_usd_actual == 0.0 and hit.cache_hit_savings_usd == 0.0
+    assert hit.has_unknown_costs is True
+
+
+def test_dialogue_render_stamps_its_identity_on_provenance_and_key(
+    project, script, source, synthesis, monkeypatch
+):
+    """The transform's identity reaches both places it must (nw#27, nw#54):
+    provenance names ``transform:<name>@<impl_version>`` and is attributed to
+    braidio, and an ``impl_version`` bump salts the cache key — so "same
+    interface, changed behaviour" cannot serve a stale take forever."""
+    import nw
+    from nw import TransformInputs
+
+    braidio.transforms.ingest_script(project, script, source=source)
+    (beat,) = _tier(project, "dialogue-beats")
+    dialogue = nw.get_transform(braidio.transforms.DIALOGUE_RENDER_TRANSFORM)
+
+    _, (skel,) = dialogue.plan(project, TransformInputs(primary=(beat,)))
+    assert (
+        skel.provenance.was_generated_by
+        == f"transform:{dialogue.name}@{dialogue.impl_version}"
+    )
+    assert skel.provenance.was_attributed_to == "agent:braidio"
+    assert skel.provenance.activity == "derive"
+
+    key_v1 = skel.body["cache_key"]
+    monkeypatch.setattr(dialogue, "impl_version", "2")
+    _, (skel_v2,) = dialogue.plan(project, TransformInputs(primary=(beat,)))
+    assert skel_v2.body["cache_key"] != key_v1
+    assert skel_v2.provenance.was_generated_by == f"transform:{dialogue.name}@2"
+    monkeypatch.undo()
+    _, (skel_again,) = dialogue.plan(project, TransformInputs(primary=(beat,)))
+    assert skel_again.body["cache_key"] == key_v1  # stable at the same version
 
 
 # --- the cast is a singleton under the #51 rule --------------------------------

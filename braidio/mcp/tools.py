@@ -26,7 +26,7 @@ from braidio.mcp._helpers import script_from_json, source_from_json, to_json
 from braidio.rights import DEFAULT_PROFILE
 from braidio.mcp.metering import current_email
 from braidio.mcp.workspace import Workspace
-from braidio.tts import DEFAULT_MODEL_ID, DIALOGUE_MODEL_ID
+from braidio.tts import DEFAULT_MODEL_ID
 
 
 def _workspace() -> Workspace:
@@ -674,14 +674,23 @@ def _check_source(scr, source) -> None:
         )
 
 
-def _render_cost(scr, profile: str) -> dict:
+def _render_cost(scr, profile: str, *, cast=None) -> dict:
     """Estimate the spend of the beats that WILL render under ``profile``.
 
     Costs :func:`braidio.plan_production`'s output (the SSOT for the rights
     projection), so under ``"published"`` dropped clips cost nothing and synthesized
     substitutes are billed — unlike costing the raw script. The figure is a rate
     estimate (``cost_basis="estimate"``; see :mod:`braidio.cost` + braidio#8).
+
+    ``cast`` is the :class:`~braidio.conversation.ConversationCast` the dialogue
+    beats render under (``None`` = the default cast, as on every render entry
+    point): a dialogue beat is priced at *its* model, the same one the render —
+    fast path and ``dialogue_render.tts`` alike — actually submits, so the
+    estimate cannot drift from the spend when a format casts another model.
     """
+    from braidio.conversation import DEFAULT_CAST
+
+    dialogue_model = (cast if cast is not None else DEFAULT_CAST).model_id
     plan = braidio.plan_production(scr, _profile(profile))
     chars = 0
     priced: list[float] = []
@@ -690,7 +699,7 @@ def _render_cost(scr, profile: str) -> dict:
         if b.kind == "narration":
             text, model = b.content, DEFAULT_MODEL_ID
         elif b.kind == "dialogue":
-            text, model = "".join(t for _r, t in (b.turns or ())), DIALOGUE_MODEL_ID
+            text, model = "".join(t for _r, t in (b.turns or ())), dialogue_model
         else:
             continue  # clip = free (local ffmpeg)
         chars += braidio.billable_chars(text)
@@ -942,7 +951,7 @@ def render_format(
     )
     return {
         **_retrieval(out),
-        **_render_cost(scr, profile),
+        **_render_cost(scr, profile, cast=fmt.cast),
         "sting_applied": application["sting_applied"],
         "sting_ignored_reason": application["sting_ignored_reason"],
     }
@@ -994,7 +1003,7 @@ def weave_project(
         "episode": to_json(body),
         "url": body.get("url"),
         **_episode_retrieval(project_id, str(episode.id)),
-        **_render_cost(scr, profile),
+        **_render_cost(scr, profile, cast=fmt.cast if fmt is not None else None),
         "sting_applied": sting_applied,
         "sting_ignored_reason": sting_ignored_reason,
     }
