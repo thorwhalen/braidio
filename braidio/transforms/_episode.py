@@ -75,6 +75,7 @@ from braidio.transforms._common import (
     TIER_EPISODE_RENDER,
     singleton,
     optional_singleton,
+    fresh_equivalent,
     graph_index,
     resolve_parents,
     require_tier,
@@ -145,10 +146,10 @@ def _verify_members_against_profile(members, index, node: Annotation | None) -> 
     graph must be rebuilt from the script, so it raises rather than quietly
     producing a mislabelled cut (thorwhalen/braidio#47).
 
-    The refusal is the right answer even though re-ingest into an existing
-    project is itself blocked today by the once-per-project singleton
-    (thorwhalen/braidio#51): refusing points at a real fix, whereas rendering
-    would ship a cut whose label is a lie.
+    The real fix is a re-run of ``weave_project`` on the same project: ingest
+    reconciles the graph by identity (thorwhalen/braidio#51), so the refused
+    clip is removed and the profile node rewritten in place, and this
+    transform then sees members the new profile actually chose.
     """
     if node is None:  # undeclared → DEFAULT_PROFILE, which refuses nothing
         return
@@ -166,8 +167,8 @@ def _verify_members_against_profile(members, index, node: Annotation | None) -> 
             f"profile {profile.value!r} forbids source audio still in this "
             f"episode's members: {', '.join(refused)}. The rights filter runs at "
             "ingest, so a profile change must go through re-ingest (re-run "
-            "weave_project on a fresh project) — re-running the weave alone "
-            "would mislabel the old cut."
+            "weave_project on this project with the new profile) — re-running "
+            "the weave alone would mislabel the old cut."
         )
 
 
@@ -245,6 +246,17 @@ class WeaveToEpisode(BaseTransform):
         import braidio  # runtime attr access so tests can monkeypatch weave_timeline
 
         skel = skeleton[0]
+        if use_cache and not force:
+            # Idempotent re-run: the same members under the same, still-fresh
+            # config/structure/profile is the episode already there (braidio#51).
+            existing = fresh_equivalent(project, skel)
+            if existing is not None:
+                return TransformResult(
+                    annotations=(existing,),
+                    artifacts=(),
+                    cost_usd_actual=0.0,
+                    cache_hit_savings_usd=0.0,
+                )
         index = graph_index(project)
         member_ids = [uuid.UUID(s) for s in skel.body.get("ordered_member_ids", ())]
         members = [index[mid] for mid in member_ids if mid in index]

@@ -71,6 +71,87 @@ AUTHORING_TIERS = (
 #: Identity-bearing body field on the non-singleton authoring tiers: the
 #: zero-padded script index every beat-derived node carries.
 BEAT_ID_FIELD = "beat_id"
+#: Zero-padding width of a ``beat_id`` (``"0007"``): fixed so ids sort as text
+#: in script order. Part of the wire (the voice transform parses it back).
+BEAT_ID_WIDTH = 4
+
+#: Body fields a render node gains on completion — its *output*, not part of
+#: the value its plan decided. Two render nodes with the same planned value
+#: and the same parents are the same decision; whether one already carries
+#: an artifact is the completion question, asked separately.
+RENDER_OUTPUT_KEYS = frozenset({"artifact_id", "url", "duration_s"})
+
+
+def beat_id(index: int) -> str:
+    """The zero-padded script index — a beat-derived node's identity.
+
+    >>> beat_id(7)
+    '0007'
+    """
+    return f"{index:0{BEAT_ID_WIDTH}d}"
+
+
+def planned_value(ann: Annotation) -> dict:
+    """``ann.body`` minus its :data:`RENDER_OUTPUT_KEYS` — what its plan decided.
+
+    JSON-normalised, because a skeleton's body is a python-mode dump (tuples)
+    and a stored node's is what came back from the store (lists); the wire
+    value is the same and must compare equal.
+    """
+    import json
+
+    planned = {k: v for k, v in ann.body.items() if k not in RENDER_OUTPUT_KEYS}
+    return json.loads(json.dumps(planned, sort_keys=True, default=str))
+
+
+def fresh_equivalent(project, skeleton: Annotation) -> Annotation | None:
+    """An existing node this ``skeleton`` would only duplicate, or ``None``.
+
+    Equivalent means: same tier, the same ``was_derived_from`` set, the same
+    :func:`planned_value` — and **verified fresh** by nw's freshness walk, so
+    its recorded upstream digests still match its parents' current values.
+    That last clause is what makes this safe after a re-ingest: a parent
+    rewritten in place keeps its id, so an old render still has "the same
+    parents" while being exactly the node that must not be reused
+    (thorwhalen/braidio#51). Reuse is by *value*, never by id alone.
+
+    This is what makes re-running the weave idempotent — a no-op re-run adds
+    no voice-assignment, no render, no episode. It is a full freshness walk
+    per call, honest about scale like nw's ``cached_output``: fine at project
+    size, and an index behind this signature is the fix if that changes.
+    """
+    import nw
+
+    parents = set(skeleton.provenance.was_derived_from)
+    value = planned_value(skeleton)
+    candidates = [
+        a
+        for a in nw.annotations_at_tier(project.root, skeleton.tier)
+        if a.id != skeleton.id
+        and set(a.provenance.was_derived_from) == parents
+        and planned_value(a) == value
+    ]
+    if not candidates:
+        return None
+    fresh = {
+        v.annotation.id for v in nw.stale_verdicts_all(project.root) if not v.is_stale
+    }
+    return next((a for a in reversed(candidates) if a.id in fresh), None)
+
+
+def adopt_output(skeleton: Annotation, hit: Annotation) -> Annotation:
+    """``skeleton`` completed with ``hit``'s output — same audio, this provenance.
+
+    A ``cache_key`` hit proves the *audio* is already made; it says nothing
+    about whether the node that made it still describes the current graph.
+    After a re-ingest the hit may derive from parents that were replaced or
+    removed, so returning it would hand the episode a member whose provenance
+    dangles (the crash the #56 review reproduced) or reads stale forever. So
+    the skeleton — derived from the current parents — is completed with the
+    hit's artifact instead: no synthesis, no spend, correct provenance.
+    """
+    outputs = {k: hit.body[k] for k in RENDER_OUTPUT_KEYS if k in hit.body}
+    return skeleton.model_copy(update={"body": {**skeleton.body, **outputs}})
 
 
 def node_identity(ann: Annotation) -> str | None:

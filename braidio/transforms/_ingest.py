@@ -93,6 +93,7 @@ from braidio.transforms._common import (
     TIER_SOURCE_MEDIA,
     TIER_AUDIO_CLIP,
     asset_ref,
+    beat_id,
     node_identity,
     node_ref,
     _RATE,
@@ -228,7 +229,7 @@ def ingest_script(
     ordered = tuple(
         (
             _ORDERED_KIND[planned.kind],
-            committed[(_TIER_OF_KIND[planned.kind], _beat_id(planned.from_index))],
+            committed[(_TIER_OF_KIND[planned.kind], beat_id(planned.from_index))],
         )
         for planned in plan.beats
     )
@@ -242,11 +243,6 @@ def ingest_script(
         render_profile=committed.get((TIER_RENDER_PROFILE, TIER_RENDER_PROFILE)),
         plan=plan,
     )
-
-
-def _beat_id(index: int) -> str:
-    """The zero-padded script index — a beat-derived node's identity."""
-    return f"{index:04d}"
 
 
 # --- phase 1: plan -----------------------------------------------------------
@@ -283,15 +279,15 @@ def _plan_nodes(
     # style, marker, spotlight) that the plan does not repeat.
     for planned in plan.beats:
         orig = script.beats[planned.from_index]
-        beat_id = _beat_id(planned.from_index)
+        ident = beat_id(planned.from_index)
         if planned.kind == "narration":
             nodes.append(
                 _AuthoringNode(
                     tier=TIER_NARRATIVE_BEAT,
-                    identity=beat_id,
+                    identity=ident,
                     body=_json(
                         NarrativeBeatBodyV1(
-                            beat_id=beat_id,
+                            beat_id=ident,
                             # the profile's resolved text: the authored narration,
                             # a ``published_text`` rewrite, or a segment's
                             # substitute.
@@ -303,7 +299,7 @@ def _plan_nodes(
                 )
             )
         elif planned.kind == "clip":
-            nodes.extend(_segment_nodes(orig, beat_id=beat_id, source=source))
+            nodes.extend(_segment_nodes(orig, beat_id=ident, source=source))
         elif planned.kind == "dialogue":
             raise NotImplementedError(
                 "Dialogue beats are not yet ingested into the graph pipeline "
@@ -313,10 +309,10 @@ def _plan_nodes(
             nodes.append(
                 _AuthoringNode(
                     tier=TIER_SCENE_BREAK,
-                    identity=beat_id,
+                    identity=ident,
                     body=_json(
                         SceneBreakBodyV1(
-                            beat_id=beat_id, label=orig.label, marker=orig.marker
+                            beat_id=ident, label=orig.label, marker=orig.marker
                         )
                     ),
                     body_schema_uri=SCENE_BREAK_V1,

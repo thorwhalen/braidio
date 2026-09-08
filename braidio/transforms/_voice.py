@@ -31,6 +31,7 @@ from braidio.bodies._render_nodes import (
 from braidio.tts import DEFAULT_VOICE_ID
 from braidio.transforms._common import (
     TIER_VOICE_ASSIGNMENT,
+    fresh_equivalent,
     singleton,
 )
 
@@ -92,6 +93,16 @@ class BeatToVoiceAssignment(BaseTransform):
         # because the BaseTransform default maps fal artifacts onto skeletons
         # (there are none here).
         ann = skeleton[0]
+        # Idempotent re-run: the same decision over the same, still-fresh
+        # inputs is the node already there, not a second one (braidio#51).
+        existing = fresh_equivalent(project, ann) if use_cache and not force else None
+        if existing is not None:
+            return TransformResult(
+                annotations=(existing,),
+                artifacts=(),
+                cost_usd_actual=0.0,
+                cache_hit_savings_usd=0.0,
+            )
         project.graph.add_annotation(ann)
         return TransformResult(
             annotations=(ann,),

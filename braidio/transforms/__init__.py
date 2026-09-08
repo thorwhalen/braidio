@@ -98,7 +98,10 @@ def weave_project(
     and its render is a cache hit, a changed config / profile / structure is
     rewritten under its existing id so every render that derived from it reads
     stale through provenance, and a beat the new profile refuses is removed.
-    The previous episode stays in the graph as history, stale; the returned
+    The weave is idempotent too: a render whose inputs are unchanged and still
+    fresh is reused rather than duplicated, and a re-run with nothing changed
+    returns the episode already there and writes nothing. After a real change
+    the previous episode stays in the graph as history, stale; the returned
     one is current (thorwhalen/braidio#51).
     """
     import nw
