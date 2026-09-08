@@ -1170,6 +1170,209 @@ def test_save_script_records_the_format_and_sting_asset_in_the_graph():
     )
 
 
+@_NW
+def test_save_script_refuses_bed_asset_under_music_bed_none_format(monkeypatch):
+    # braidio#53: the graph path has the same bed_for_intensity swallow bug #43
+    # fixed on the fast path — save_script must refuse bed_asset_id BEFORE
+    # ingest (no beats/structure written), never silently drop it.
+    import base64
+
+    import braidio.transforms as transforms
+
+    called = []
+    monkeypatch.setattr(
+        transforms, "ingest_script", lambda *a, **kw: called.append(1)
+    )
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "pf2", "title": "PF2"})
+    bed_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"BED").decode()}
+    ).structured_content["itemId"]
+    with pytest.raises(Exception) as ei:
+        _call(
+            server,
+            "save_script",
+            {
+                "project_id": "pf2",
+                "script": {
+                    "title": "t",
+                    "id_slug": "01",
+                    "beats": [{"type": "narration", "text": "hi"}],
+                },
+                "format_id": "interview_host_removed",
+                "bed_asset_id": bed_id,
+            },
+        )
+    assert "music_bed" in str(ei.value)
+    assert bed_id in str(ei.value)
+    assert not called
+    import nw
+
+    proj = bmcp.workspace.Workspace.for_email(OWNER).open_project("pf2")
+    assert nw.annotations_at_tier(proj.root, "narrative-beats") == []
+
+
+@_NW
+def test_weave_project_refuses_bed_asset_under_music_bed_none_format(monkeypatch):
+    # Same refusal, on the render entry point: braidio.weave_project (the
+    # transforms-level pipeline) must never even be called.
+    import base64
+
+    called = []
+    monkeypatch.setattr(
+        braidio, "weave_project", lambda *a, **kw: called.append(1)
+    )
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "wp2", "title": "WP2"})
+    bed_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"BED").decode()}
+    ).structured_content["itemId"]
+    with pytest.raises(Exception) as ei:
+        _call(
+            server,
+            "weave_project",
+            {
+                "project_id": "wp2",
+                "script": {
+                    "title": "t",
+                    "id_slug": "01",
+                    "beats": [{"type": "narration", "text": "hi"}],
+                },
+                "format_id": "interview_host_removed",
+                "bed_asset_id": bed_id,
+            },
+        )
+    assert "music_bed" in str(ei.value)
+    assert bed_id in str(ei.value)
+    assert not called
+
+
+@_NW
+def test_save_script_without_a_format_never_refuses_bed_asset():
+    # No format declared means no music_bed to refuse against — the guard only
+    # fires when format_id resolves to a Format (mirrors render_production,
+    # which has no format param at all and never refuses).
+    import base64
+
+    import nw
+
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "wp3", "title": "WP3"})
+    bed_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"BED").decode()}
+    ).structured_content["itemId"]
+    result = _call(
+        server,
+        "save_script",
+        {
+            "project_id": "wp3",
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [{"type": "narration", "text": "hi"}],
+            },
+            "bed_asset_id": bed_id,
+        },
+    ).structured_content
+    assert result["sting_applied"] is None
+    proj = bmcp.workspace.Workspace.for_email(OWNER).open_project("wp3")
+    (structure,) = nw.annotations_at_tier(proj.root, "production-structures")
+    assert structure.body["bed_asset_id"] == bed_id
+
+
+@_NW
+def test_save_script_reports_sting_applied_in_result():
+    import base64
+
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "st1", "title": "ST1"})
+    result = _call(
+        server,
+        "save_script",
+        {
+            "project_id": "st1",
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [{"type": "scene_break"}],
+            },
+            "format_id": "deep_dive",
+        },
+    ).structured_content
+    assert result["sting_applied"] is None  # no sting_asset_id supplied
+
+    sting_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"STING").decode()}
+    ).structured_content["itemId"]
+    applied = _call(
+        server,
+        "save_script",
+        {
+            "project_id": "st1",
+            "script": {
+                "title": "t",
+                "id_slug": "02",
+                "beats": [{"type": "scene_break"}],
+            },
+            "format_id": "deep_dive",
+            "sting_asset_id": sting_id,
+        },
+    ).structured_content
+    assert applied["sting_applied"] is True
+    assert applied["sting_ignored_reason"] is None
+
+    ignored = _call(
+        server,
+        "save_script",
+        {
+            "project_id": "st1",
+            "script": {
+                "title": "t",
+                "id_slug": "03",
+                "beats": [{"type": "scene_break"}],
+            },
+            "format_id": "interview_host_removed",  # scene_marker default "none"
+            "sting_asset_id": sting_id,
+        },
+    ).structured_content
+    assert ignored["sting_applied"] is False
+    assert ignored["sting_ignored_reason"]
+
+
+@_NW
+def test_weave_project_reports_sting_applied_in_result(monkeypatch):
+    episode = type(
+        "Ann",
+        (),
+        {"id": "9a23da78-0a3e-4acf-a557-48bd6e519038", "body": {"url": "file:///x.mp3"}},
+    )()
+    monkeypatch.setattr(braidio, "weave_project", lambda proj, scr, **kw: episode)
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "st2", "title": "ST2"})
+
+    import base64
+
+    sting_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"STING").decode()}
+    ).structured_content["itemId"]
+    ignored = _call(
+        server,
+        "weave_project",
+        {
+            "project_id": "st2",
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [{"type": "scene_break"}],
+            },
+            "format_id": "interview_host_removed",  # scene_marker default "none"
+            "sting_asset_id": sting_id,
+        },
+    ).structured_content
+    assert ignored["sting_applied"] is False
+    assert ignored["sting_ignored_reason"]
+
+
 # --- download_audio (yt-dlp via yb) + identity fallback (reelee#232) ---------
 
 
