@@ -214,6 +214,7 @@ PINNED: dict[str, dict] = {
     "AudioClipBodyV1": {
         "required": frozenset({"label", "rights", "source_node_id"}),
         "fields": {
+            "beat_id": "string|null = null",
             "fade": "tuple<number,number>|null = null",
             "gain_db": "number|null = null",
             "label": "string",
@@ -277,6 +278,7 @@ PINNED: dict[str, dict] = {
     "SourceMediaBodyV1": {
         "required": frozenset({"asset_id", "label"}),
         "fields": {
+            "beat_id": "string|null = null",
             "asset_id": "string",
             "label": "string",
             "rights": 'string = "owned-local"',

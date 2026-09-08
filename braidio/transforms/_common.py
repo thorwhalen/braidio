@@ -38,6 +38,72 @@ TIER_EPISODE_RENDER = "episode-renders"
 #: Rate for the (incidental) NodeRef intervals on non-media nodes.
 _RATE = 1000
 
+#: **The singleton rule, stated once.** At these tiers the *tier itself* is the
+#: node's identity: an ingest writes at most one node there, and a re-ingest
+#: replaces it **under the same annotation id** rather than adding a second one
+#: beside it. Same-id replacement is what lets the change reach the render
+#: nodes through provenance — ``nw.stale_after`` compares each parent's current
+#: value digest against the one its dependents recorded, so a config or profile
+#: rewritten in place reads ``upstream-changed`` downstream, while a second node
+#: added beside the first would leave the old renders looking fresh (the
+#: failure thorwhalen/braidio#51 exists to prevent). This is nw's own
+#: convention for its entity upserts (``identity_key=None``: the tier is the
+#: identity). :func:`singleton` / :func:`optional_singleton` read under it and
+#: :func:`node_identity` is how the ingest applies it.
+SINGLETON_TIERS = frozenset(
+    {TIER_WEAVE_CONFIG, TIER_PRODUCTION_STRUCTURE, TIER_RENDER_PROFILE}
+)
+
+#: The tiers an ingest owns, in the order it writes them. A re-ingest reconciles
+#: exactly these — a node here whose identity the new plan no longer names is
+#: removed (its dependents then read ``upstream-missing``); the render tiers
+#: are never touched by ingest.
+AUTHORING_TIERS = (
+    TIER_WEAVE_CONFIG,
+    TIER_PRODUCTION_STRUCTURE,
+    TIER_RENDER_PROFILE,
+    TIER_NARRATIVE_BEAT,
+    TIER_SCENE_BREAK,
+    TIER_SOURCE_MEDIA,
+    TIER_AUDIO_CLIP,
+)
+
+#: Identity-bearing body field on the non-singleton authoring tiers: the
+#: zero-padded script index every beat-derived node carries.
+BEAT_ID_FIELD = "beat_id"
+
+
+def node_identity(ann: Annotation) -> str | None:
+    """``ann``'s ingest identity — what a re-ingest matches it by.
+
+    At a :data:`SINGLETON_TIERS` tier the tier is the identity; elsewhere it
+    is the node's ``beat_id``. ``None`` means the node has no identity (an
+    ``audio-clip`` / ``source-media`` written before ``beat_id`` existed on
+    them): a re-ingest cannot claim it, so it is removed and rewritten.
+
+    >>> from lacing import Annotation, Provenance, RationalTime
+    >>> def _node(tier, body):
+    ...     return Annotation(
+    ...         id=uuid.uuid4(), tier=tier, reference=node_ref(tier), body=body,
+    ...         body_schema_uri="annot://schema/x/v1",
+    ...         provenance=Provenance(
+    ...             was_generated_by="t", was_attributed_to="t",
+    ...             was_derived_from=[], generated_at_time=RationalTime.now(),
+    ...             activity="t"),
+    ...     )
+    >>> node_identity(_node(TIER_WEAVE_CONFIG, {"config": {}}))
+    'weave-configs'
+    >>> node_identity(_node(TIER_NARRATIVE_BEAT, {"beat_id": "0003", "text": "x"}))
+    '0003'
+    >>> node_identity(_node(TIER_AUDIO_CLIP, {"label": "legacy clip"})) is None
+    True
+    """
+    if ann.tier in SINGLETON_TIERS:
+        return ann.tier
+    body = ann.body if isinstance(ann.body, dict) else {}
+    value = body.get(BEAT_ID_FIELD)
+    return None if value is None else str(value)
+
 
 def node_ref(tier: str) -> NodeRef:
     """A fresh zero-length :class:`NodeRef` for a node in ``tier``.
@@ -76,15 +142,27 @@ def graph_index(project) -> dict:
     return {a.id: a for a in nw.iter_all_annotations(project.root)}
 
 
+_DOUBLED_TIER_ADVICE = (
+    " — a singleton tier holds one node per project (see SINGLETON_TIERS); "
+    "re-running ingest_script / weave_project on this project reconciles it "
+    "back to one"
+)
+
+
 def singleton(project, tier: str) -> Annotation:
-    """The one annotation at ``tier`` (raises if there isn't exactly one)."""
+    """The one annotation at ``tier`` (raises if there isn't exactly one).
+
+    Reads under :data:`SINGLETON_TIERS`: the tier is the identity, so more
+    than one node here is a half-written ingest (thorwhalen/braidio#49), and
+    the error says how to repair it rather than only that it is wrong.
+    """
     import nw
 
     anns = nw.annotations_at_tier(project.root, tier)
     if len(anns) != 1:
         raise ValueError(
             f"expected exactly one {tier!r} node in the project graph, "
-            f"found {len(anns)}"
+            f"found {len(anns)}" + (_DOUBLED_TIER_ADVICE if anns else "")
         )
     return anns[0]
 
@@ -94,7 +172,8 @@ def optional_singleton(project, tier: str) -> Annotation | None:
 
     The counterpart of :func:`singleton` for a tier a production only writes
     when it asks for something (``production-structures``,
-    ``render-profiles``). More than one is still a bug, not a choice.
+    ``render-profiles``). More than one is still a bug, not a choice — the
+    same :data:`SINGLETON_TIERS` rule, with the same repair.
     """
     import nw
 
@@ -104,7 +183,7 @@ def optional_singleton(project, tier: str) -> Annotation | None:
     if len(anns) > 1:
         raise ValueError(
             f"expected at most one {tier!r} node in the project graph, "
-            f"found {len(anns)}"
+            f"found {len(anns)}" + _DOUBLED_TIER_ADVICE
         )
     return anns[0]
 

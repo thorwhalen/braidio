@@ -12,16 +12,37 @@ import braidio
 pytestmark = pytest.mark.skipif(not braidio.HAS_GRAPH, reason="lacing not available")
 
 
+#: The 14 URIs braidio puts on the wire — 6 domain + 8 render. Pinned as a
+#: set, not a count (braidio#48, braidio#51): a count is green when one schema
+#: is swapped for another, which is the change that actually breaks a stored
+#: graph. The serialized *shape* of each body is pinned in
+#: test_body_schema_stability.py; this is the registration smoke check.
+EXPECTED_SCHEMA_URIS = frozenset(
+    {
+        "annot://schema/commentary/v1",
+        "annot://schema/source/v1",
+        "annot://schema/audio-clip/v1",
+        "annot://schema/narrative-beat/v1",
+        "annot://schema/scene-break/v1",
+        "annot://schema/episode/v1",
+        "annot://schema/weave-config/v1",
+        "annot://schema/production-structure/v1",
+        "annot://schema/render-profile/v1",
+        "annot://schema/source-media/v1",
+        "annot://schema/voice-assignment/v1",
+        "annot://schema/narration-render/v1",
+        "annot://schema/segment-extraction/v1",
+        "annot://schema/episode-render/v1",
+    }
+)
+
+
 def test_domain_and_render_schemas_registered():
     from lacing.schema import is_registered
     from braidio.bodies import SCHEMA_URIS
 
-    # braidio#39 added scene-break/v1 (domain) + production-structure/v1 (render);
-    # braidio#47 added render-profile/v1 (render) — the rights decision the graph
-    # path used to leave unrecorded. This count is a coarse smoke check only —
-    # test_body_schema_stability.py pins the actual URIs and their serialized
-    # shapes (braidio#48).
-    assert len(SCHEMA_URIS) == 14  # 6 domain + 8 render
+    assert set(SCHEMA_URIS) == EXPECTED_SCHEMA_URIS
+    assert len(SCHEMA_URIS) == len(EXPECTED_SCHEMA_URIS)  # no duplicates
     for uri in SCHEMA_URIS:
         assert is_registered(uri), uri
 
@@ -30,8 +51,18 @@ def test_domain_bodies_validate():
     from lacing.schema import validate
     from braidio.bodies import COMMENTARY_V1, AUDIO_CLIP_V1, EPISODE_RENDER_V1
 
-    validate({"text": "hi", "facet": "historical", "source_ids": (), "generated_by": "human:t"}, COMMENTARY_V1)
-    validate({"source_node_id": "x", "label": "l", "rights": "owned-local"}, AUDIO_CLIP_V1)
+    validate(
+        {
+            "text": "hi",
+            "facet": "historical",
+            "source_ids": (),
+            "generated_by": "human:t",
+        },
+        COMMENTARY_V1,
+    )
+    validate(
+        {"source_node_id": "x", "label": "l", "rights": "owned-local"}, AUDIO_CLIP_V1
+    )
     validate({"profile": "personal", "ordered_member_ids": ("a",)}, EPISODE_RENDER_V1)
 
 
@@ -44,8 +75,19 @@ def test_record_render_writes_provenance_graph():
         store,
         weave_config={"voices": ["x"], "min_turn": 2},
         beats=[
-            {"kind": "narration", "source_id": b1, "cache_key": "k1", "duration_s": 3.0},
-            {"kind": "segment", "source_id": b2, "cache_key": "k2", "start_s": 1.0, "end_s": 4.0},
+            {
+                "kind": "narration",
+                "source_id": b1,
+                "cache_key": "k1",
+                "duration_s": 3.0,
+            },
+            {
+                "kind": "segment",
+                "source_id": b2,
+                "cache_key": "k2",
+                "start_s": 1.0,
+                "end_s": 4.0,
+            },
         ],
         profile="personal",
     )

@@ -83,6 +83,14 @@ class AudioClipBodyV1(BaseModel):
             "drops out over this clip. None defers to the production's structure."
         ),
     )
+    beat_id: Optional[str] = Field(
+        None,
+        description=(
+            "Zero-padded ordering key of the script beat this clip came from "
+            "(e.g. '0007') — the clip's ingest identity, so a re-ingest replaces "
+            "it in place. None on clips written before re-ingest existed."
+        ),
+    )
 
 
 class NarrativeBeatBodyV1(BaseModel):

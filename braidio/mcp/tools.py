@@ -411,10 +411,10 @@ def save_script(
 
     Writes the narration, segment and scene_break beats into the project graph
     (Dialogue isn't supported yet), so you can review (project_status) and
-    render with weave_project when ready. ``format_id`` + ``bed_asset_id`` /
-    ``sting_asset_id`` record the production's music (see ``help`` for the
-    music_bed="none" refusal and ``sting_applied``). ``profile`` is the rights
-    cut. Free — no synthesis.
+    render with weave_project when ready. Saving again replaces the previous
+    script beat by beat (a changed ``profile`` or format included).
+    ``format_id`` + ``bed_asset_id`` / ``sting_asset_id`` record the music
+    (see ``help``). Free — no synthesis.
     """
     _require_nw("save_script")
     scr = script_from_json(script)
@@ -971,12 +971,12 @@ def weave_project(
 ) -> dict:
     """[COSTED] Ingest a script into your project and run the full commentary_weave pipeline.
 
-    Uses the nw graph, so re-running re-synthesizes only what changed and
-    records provenance (Narration, Segment, scene_break beats; not Dialogue).
-    ``format_id`` applies a ready-made format; ``bed_asset_id`` /
-    ``sting_asset_id`` add a music bed and scene-break sting (see ``help`` for
-    the music_bed="none" refusal and ``sting_applied`` reporting). ``profile``
-    is the rights cut.
+    Re-running on the same project re-ingests: beats are matched by position,
+    unchanged ones reuse their renders, and only what changed — a beat, the
+    format, the rights ``profile`` — is re-synthesized, with provenance
+    (Narration, Segment, scene_break beats; not Dialogue). ``format_id``
+    applies a format; ``bed_asset_id`` / ``sting_asset_id`` add a music bed
+    and scene sting (see ``help``).
     """
     _require_nw("weave_project")
     scr = script_from_json(script)

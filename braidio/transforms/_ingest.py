@@ -27,11 +27,30 @@ whole pipeline (authoring → render) lives in one graph that
 ``nw.stale_after`` can traverse. :class:`~braidio.script.Dialogue` beats are
 not yet ingested (a documented follow-up — they need ``render_dialogue``
 wiring and a turns-carrying beat body).
+
+Two phases, and the order is the point (thorwhalen/braidio#49, #51)
+----------------------------------------------------------------------
+
+**Plan** is pure: the rights plan, every ``SegmentSource.resolve``, every
+asset content-hash and the Dialogue refusal all happen before anything is
+written, so a failure leaves the graph exactly as it was. **Commit** writes
+*by identity* under the rule stated once in
+:data:`braidio.transforms._common.SINGLETON_TIERS`: a node whose identity
+already exists is replaced under its **existing annotation id** (and not
+written at all when its value is unchanged), a node whose identity the new
+plan no longer names is removed, and a tier that was doubled by an earlier
+half-written ingest is reconciled back to one. Same-id replacement is what
+carries the change to the render nodes — their verifying traces record each
+parent's value digest, so a rewritten config or profile reads
+``upstream-changed`` and a removed beat ``upstream-missing`` — and it is what
+makes the whole write idempotent: a retry after a failure converges instead
+of doubling, and re-ingesting the same script twice writes nothing.
 """
 
 from __future__ import annotations
 
 import uuid
+from collections import defaultdict
 from dataclasses import dataclass
 
 from lacing import Annotation, MediaRef, TimeInterval
@@ -65,6 +84,7 @@ from braidio.bodies._render_nodes import (
     SourceMediaBodyV1,
 )
 from braidio.transforms._common import (
+    AUTHORING_TIERS,
     TIER_WEAVE_CONFIG,
     TIER_PRODUCTION_STRUCTURE,
     TIER_RENDER_PROFILE,
@@ -73,9 +93,23 @@ from braidio.transforms._common import (
     TIER_SOURCE_MEDIA,
     TIER_AUDIO_CLIP,
     asset_ref,
+    node_identity,
     node_ref,
     _RATE,
 )
+
+#: ``PlannedBeat.kind`` → the tier its authoring node lives at.
+_TIER_OF_KIND = {
+    "narration": TIER_NARRATIVE_BEAT,
+    "clip": TIER_AUDIO_CLIP,
+    "scene_break": TIER_SCENE_BREAK,
+}
+#: ``PlannedBeat.kind`` → the kind label :attr:`IngestedScript.ordered` uses.
+_ORDERED_KIND = {
+    "narration": "narration",
+    "clip": "segment",
+    "scene_break": "scene_break",
+}
 
 
 @dataclass(frozen=True)
@@ -99,6 +133,28 @@ class IngestedScript:
     #: The rights plan the ingest actually followed — its ``dropped`` /
     #: ``substituted`` are what the profile refused and swapped.
     plan: RenderPlan | None = None
+
+
+@dataclass(frozen=True)
+class _AuthoringNode:
+    """One authoring node the ingest intends to write — planned, not yet in the graph.
+
+    ``identity`` is what a re-ingest matches it by (see
+    :func:`~braidio.transforms._common.node_identity`). ``reference`` is
+    ``None`` for nodes whose reference is incidental (a fresh
+    :func:`~braidio.transforms._common.node_ref`, or the existing node's when
+    there is one) and a :class:`lacing.MediaRef` when it carries the playable
+    window. ``link`` names a body field to fill with the committed id of
+    another planned node — the clip's ``source_node_id`` — so the plan can be
+    built without knowing which ids the commit will keep.
+    """
+
+    tier: str
+    identity: str
+    body: dict
+    body_schema_uri: str
+    reference: MediaRef | None = None
+    link: tuple[str, str, str] | None = None  # (body field, tier, identity)
 
 
 def ingest_script(
@@ -137,6 +193,15 @@ def ingest_script(
     filter still runs, under :data:`~braidio.rights.DEFAULT_PROFILE` (the same
     default the fast path uses), which passes every beat through unchanged, and
     no ``render-profile/v1`` node is written.
+
+    **Re-ingest.** Calling this again on the same project is how a script,
+    format or profile change reaches the graph. Nodes are matched by identity
+    (the singleton tiers by tier, beats by their zero-padded script index):
+    an unchanged node is left alone, a changed one is rewritten under its
+    existing id so its renders read stale through provenance, and one the new
+    plan no longer names is removed. Nothing is written until the whole plan
+    has validated, so a failing source or asset leaves the graph untouched
+    and a retry after any failure converges (see the module docstring).
     """
     config = config or WeaveConfig()
     publishable = rights.publishable_clip_rights if rights else PUBLISHABLE_CLIP_RIGHTS
@@ -146,24 +211,71 @@ def ingest_script(
         publishable_clip_rights=publishable,
     )
 
-    cfg = Annotation(
-        id=uuid.uuid4(),
-        tier=TIER_WEAVE_CONFIG,
-        reference=node_ref(TIER_WEAVE_CONFIG),
-        body=WeaveConfigBodyV1(config=config.to_dict()).model_dump(),
-        body_schema_uri=WEAVE_CONFIG_V1,
-        provenance=_authored_provenance(),
+    # Phase 1 — plan. Pure: resolves, hashes and refuses, writes nothing.
+    nodes = _plan_nodes(
+        script,
+        plan,
+        config=config,
+        source=source,
+        structure=structure,
+        bed=bed,
+        profile=profile,
+        publishable=publishable,
     )
-    project.graph.add_annotation(cfg)
-    structure_node = _ingest_structure(project, structure=structure, bed=bed)
-    profile_node = _ingest_render_profile(
-        project, profile=profile, publishable=publishable, plan=plan
+    # Phase 2 — commit, by identity.
+    committed = _commit_nodes(project, nodes)
+
+    ordered = tuple(
+        (
+            _ORDERED_KIND[planned.kind],
+            committed[(_TIER_OF_KIND[planned.kind], _beat_id(planned.from_index))],
+        )
+        for planned in plan.beats
+    )
+    return IngestedScript(
+        config=committed[(TIER_WEAVE_CONFIG, TIER_WEAVE_CONFIG)],
+        narration_beats=tuple(a for k, a in ordered if k == "narration"),
+        audio_clips=tuple(a for k, a in ordered if k == "segment"),
+        scene_breaks=tuple(a for k, a in ordered if k == "scene_break"),
+        structure=committed.get((TIER_PRODUCTION_STRUCTURE, TIER_PRODUCTION_STRUCTURE)),
+        ordered=ordered,
+        render_profile=committed.get((TIER_RENDER_PROFILE, TIER_RENDER_PROFILE)),
+        plan=plan,
     )
 
-    narration_beats: list[Annotation] = []
-    audio_clips: list[Annotation] = []
-    scene_breaks: list[Annotation] = []
-    ordered: list[tuple[str, Annotation]] = []
+
+def _beat_id(index: int) -> str:
+    """The zero-padded script index — a beat-derived node's identity."""
+    return f"{index:04d}"
+
+
+# --- phase 1: plan -----------------------------------------------------------
+
+
+def _plan_nodes(
+    script: Script,
+    plan: RenderPlan,
+    *,
+    config: WeaveConfig,
+    source,
+    structure,
+    bed,
+    profile: Profile | None,
+    publishable: frozenset[str],
+) -> list[_AuthoringNode]:
+    """Every authoring node this ingest will write, validated, in write order.
+
+    Raises on anything the commit could not carry out — an unresolvable
+    segment, a missing sting/bed asset, a Dialogue beat — *before* the caller
+    has written a single node (thorwhalen/braidio#49).
+    """
+    nodes = [_config_node(config)]
+    structure_node = _structure_node(structure=structure, bed=bed)
+    if structure_node is not None:
+        nodes.append(structure_node)
+    profile_node = _profile_node(profile=profile, publishable=publishable, plan=plan)
+    if profile_node is not None:
+        nodes.append(profile_node)
 
     # The rights plan, not the raw script: a beat the profile dropped is simply
     # absent here, and a substituted one arrives already rewritten. ``orig`` is
@@ -171,67 +283,64 @@ def ingest_script(
     # style, marker, spotlight) that the plan does not repeat.
     for planned in plan.beats:
         orig = script.beats[planned.from_index]
-        beat_id = f"{planned.from_index:04d}"
+        beat_id = _beat_id(planned.from_index)
         if planned.kind == "narration":
-            ann = Annotation(
-                id=uuid.uuid4(),
-                tier=TIER_NARRATIVE_BEAT,
-                reference=node_ref(TIER_NARRATIVE_BEAT),
-                body=NarrativeBeatBodyV1(
-                    beat_id=beat_id,
-                    # the profile's resolved text: the authored narration, a
-                    # ``published_text`` rewrite, or a segment's substitute.
-                    text=planned.content,
-                    style=getattr(orig, "style", None),
-                ).model_dump(),
-                body_schema_uri=NARRATIVE_BEAT_V1,
-                provenance=_authored_provenance(),
+            nodes.append(
+                _AuthoringNode(
+                    tier=TIER_NARRATIVE_BEAT,
+                    identity=beat_id,
+                    body=_json(
+                        NarrativeBeatBodyV1(
+                            beat_id=beat_id,
+                            # the profile's resolved text: the authored narration,
+                            # a ``published_text`` rewrite, or a segment's
+                            # substitute.
+                            text=planned.content,
+                            style=getattr(orig, "style", None),
+                        )
+                    ),
+                    body_schema_uri=NARRATIVE_BEAT_V1,
+                )
             )
-            project.graph.add_annotation(ann)
-            narration_beats.append(ann)
-            ordered.append(("narration", ann))
         elif planned.kind == "clip":
-            clip = _ingest_segment(project, orig, source=source)
-            audio_clips.append(clip)
-            ordered.append(("segment", clip))
+            nodes.extend(_segment_nodes(orig, beat_id=beat_id, source=source))
         elif planned.kind == "dialogue":
             raise NotImplementedError(
                 "Dialogue beats are not yet ingested into the graph pipeline "
                 "(follow-up: render_dialogue wiring). Use Narration for v1."
             )
         elif planned.kind == "scene_break":
-            ann = Annotation(
-                id=uuid.uuid4(),
-                tier=TIER_SCENE_BREAK,
-                reference=node_ref(TIER_SCENE_BREAK),
-                body=SceneBreakBodyV1(
-                    beat_id=beat_id, label=orig.label, marker=orig.marker
-                ).model_dump(),
-                body_schema_uri=SCENE_BREAK_V1,
-                provenance=_authored_provenance(),
+            nodes.append(
+                _AuthoringNode(
+                    tier=TIER_SCENE_BREAK,
+                    identity=beat_id,
+                    body=_json(
+                        SceneBreakBodyV1(
+                            beat_id=beat_id, label=orig.label, marker=orig.marker
+                        )
+                    ),
+                    body_schema_uri=SCENE_BREAK_V1,
+                )
             )
-            project.graph.add_annotation(ann)
-            scene_breaks.append(ann)
-            ordered.append(("scene_break", ann))
         else:  # pragma: no cover — PlannedBeat.kind is a closed set
             raise TypeError(f"unknown planned-beat kind {planned.kind!r}")
+    return nodes
 
-    return IngestedScript(
-        config=cfg,
-        narration_beats=tuple(narration_beats),
-        audio_clips=tuple(audio_clips),
-        scene_breaks=tuple(scene_breaks),
-        structure=structure_node,
-        ordered=tuple(ordered),
-        render_profile=profile_node,
-        plan=plan,
+
+def _config_node(config: WeaveConfig) -> _AuthoringNode:
+    """The singleton ``weave-config/v1`` node."""
+    return _AuthoringNode(
+        tier=TIER_WEAVE_CONFIG,
+        identity=TIER_WEAVE_CONFIG,
+        body=_json(WeaveConfigBodyV1(config=config.to_dict())),
+        body_schema_uri=WEAVE_CONFIG_V1,
     )
 
 
-def _ingest_render_profile(
-    project, *, profile: Profile | None, publishable: frozenset[str], plan: RenderPlan
-) -> Annotation | None:
-    """Write the singleton ``render-profile/v1`` node, or ``None``.
+def _profile_node(
+    *, profile: Profile | None, publishable: frozenset[str], plan: RenderPlan
+) -> _AuthoringNode | None:
+    """The singleton ``render-profile/v1`` node, or ``None``.
 
     Absent a declared ``profile`` the production made no rights choice, so
     nothing is written — the same convention the production-structure node
@@ -240,30 +349,29 @@ def _ingest_render_profile(
     """
     if profile is None:
         return None
-
-    ann = Annotation(
-        id=uuid.uuid4(),
+    return _AuthoringNode(
         tier=TIER_RENDER_PROFILE,
-        reference=node_ref(TIER_RENDER_PROFILE),
-        body=RenderProfileBodyV1(
-            profile=profile.value,
-            publishable_clip_rights=tuple(sorted(publishable)),
-            dropped=tuple(plan.dropped),
-            substituted=tuple(plan.substituted),
-        ).model_dump(),
+        identity=TIER_RENDER_PROFILE,
+        body=_json(
+            RenderProfileBodyV1(
+                profile=profile.value,
+                publishable_clip_rights=tuple(sorted(publishable)),
+                dropped=tuple(plan.dropped),
+                substituted=tuple(plan.substituted),
+            )
+        ),
         body_schema_uri=RENDER_PROFILE_V1,
-        provenance=_authored_provenance(),
     )
-    project.graph.add_annotation(ann)
-    return ann
 
 
-def _ingest_structure(project, *, structure, bed) -> Annotation | None:
-    """Write the singleton ``production-structure/v1`` node, or ``None``.
+def _structure_node(*, structure, bed) -> _AuthoringNode | None:
+    """The singleton ``production-structure/v1`` node, or ``None``.
 
     Absent both a structure and a bed the production declared no structural
     music, so the node is not written at all — that is what keeps a format
     without structure identical to the pre-structure graph (and render).
+    Hashing the assets here, in the plan, is what makes a missing sting fail
+    before the first write.
     """
     if structure is None and bed is None:
         return None
@@ -275,26 +383,26 @@ def _ingest_structure(project, *, structure, bed) -> Annotation | None:
         asset_ref(structure.sting.asset_path) if structure.sting else (None, None)
     )
     bed_id, bed_url = asset_ref(bed.asset_path) if bed else (None, None)
-    ann = Annotation(
-        id=uuid.uuid4(),
+    return _AuthoringNode(
         tier=TIER_PRODUCTION_STRUCTURE,
-        reference=node_ref(TIER_PRODUCTION_STRUCTURE),
-        body=ProductionStructureBodyV1(
-            structure=_knobs(structure, drop="sting"),
-            sting=(
-                _knobs(structure.sting, drop="asset_path") if structure.sting else None
-            ),
-            sting_asset_id=sting_id,
-            sting_url=sting_url,
-            bed=_knobs(bed, drop="asset_path") if bed else None,
-            bed_asset_id=bed_id,
-            bed_url=bed_url,
-        ).model_dump(),
+        identity=TIER_PRODUCTION_STRUCTURE,
+        body=_json(
+            ProductionStructureBodyV1(
+                structure=_knobs(structure, drop="sting"),
+                sting=(
+                    _knobs(structure.sting, drop="asset_path")
+                    if structure.sting
+                    else None
+                ),
+                sting_asset_id=sting_id,
+                sting_url=sting_url,
+                bed=_knobs(bed, drop="asset_path") if bed else None,
+                bed_asset_id=bed_id,
+                bed_url=bed_url,
+            )
+        ),
         body_schema_uri=PRODUCTION_STRUCTURE_V1,
-        provenance=_authored_provenance(),
     )
-    project.graph.add_annotation(ann)
-    return ann
 
 
 def _knobs(obj, *, drop: str) -> dict:
@@ -308,8 +416,14 @@ def _knobs(obj, *, drop: str) -> dict:
     return {k: v for k, v in asdict(obj).items() if k != drop}
 
 
-def _ingest_segment(project, beat: SegmentBeat, *, source) -> Annotation:
-    """Write the source-media + audio-clip pair for one segment beat."""
+def _segment_nodes(
+    beat: SegmentBeat, *, beat_id: str, source
+) -> tuple[_AuthoringNode, _AuthoringNode]:
+    """The source-media + audio-clip pair for one segment beat.
+
+    Resolving the reference is the validation: it happens here, in the plan,
+    so an unresolvable segment fails before anything is written.
+    """
     if source is None:
         raise ValueError(
             "ingest_script: a SegmentSource is required to resolve SegmentBeats "
@@ -322,23 +436,22 @@ def _ingest_segment(project, beat: SegmentBeat, *, source) -> Annotation:
         )
 
     label = beat.label or beat.reference
-    src = Annotation(
-        id=uuid.uuid4(),
+    src = _AuthoringNode(
         tier=TIER_SOURCE_MEDIA,
-        reference=node_ref(TIER_SOURCE_MEDIA),
-        body=SourceMediaBodyV1(
-            label=label,
-            asset_id=str(resolved.asset_path),
-            rights=beat.rights,
-        ).model_dump(),
+        identity=beat_id,
+        body=_json(
+            SourceMediaBodyV1(
+                label=label,
+                asset_id=str(resolved.asset_path),
+                rights=beat.rights,
+                beat_id=beat_id,
+            )
+        ),
         body_schema_uri=SOURCE_MEDIA_V1,
-        provenance=_authored_provenance(),
     )
-    project.graph.add_annotation(src)
-
-    clip = Annotation(
-        id=uuid.uuid4(),
+    clip = _AuthoringNode(
         tier=TIER_AUDIO_CLIP,
+        identity=beat_id,
         # The playable window lives on the clip's MediaRef interval — the
         # segment-extraction Transform reads start/end from here.
         reference=MediaRef(
@@ -347,17 +460,120 @@ def _ingest_segment(project, beat: SegmentBeat, *, source) -> Annotation:
                 resolved.start_s, resolved.end_s, rate=_RATE
             ),
         ),
-        body=AudioClipBodyV1(
-            source_node_id=str(src.id),
-            label=label,
-            rights=beat.rights,
-            spotlight=beat.spotlight,
-        ).model_dump(),
+        body=_json(
+            AudioClipBodyV1(
+                # filled at commit with the source-media node's committed id
+                source_node_id="",
+                label=label,
+                rights=beat.rights,
+                spotlight=beat.spotlight,
+                beat_id=beat_id,
+            )
+        ),
         body_schema_uri=AUDIO_CLIP_V1,
-        provenance=_authored_provenance(),
+        link=("source_node_id", TIER_SOURCE_MEDIA, beat_id),
     )
-    project.graph.add_annotation(clip)
-    return clip
+    return src, clip
+
+
+def _json(body) -> dict:
+    """A body model as the dict that round-trips through the store.
+
+    ``mode="json"`` is what comes back from the graph — a tuple field dumps to
+    a tuple in python mode but reads back as a list — so comparing a planned
+    body against a stored one in python mode would report every unchanged
+    node as changed and rewrite it (the same reason nw's entity upsert dumps
+    in json mode).
+    """
+    return body.model_dump(mode="json")
+
+
+# --- phase 2: commit ---------------------------------------------------------
+
+
+def _commit_nodes(
+    project, nodes: list[_AuthoringNode]
+) -> dict[tuple[str, str], Annotation]:
+    """Write ``nodes`` into the graph by identity; return ``{(tier, identity): node}``.
+
+    For each planned node the existing node of the same identity (if any) is
+    the one it replaces — under the same id, or not at all when its value is
+    already what the plan says. A tier doubled by an earlier half-written
+    ingest keeps its earliest node's id and drops the rest. Once every
+    planned node is in, whatever the plan did not name at an authoring tier
+    is removed, traces and all. Every step is a no-op when re-run, so the
+    sequence is idempotent even though nw's graph API is per annotation.
+    """
+    existing = _existing_by_identity(project)
+    committed: dict[tuple[str, str], Annotation] = {}
+    for node in nodes:
+        key = (node.tier, node.identity)
+        current, *duplicates = existing.pop(key, None) or [None]
+        for dup in duplicates:
+            project.graph.remove_annotation(dup.id)
+
+        body = dict(node.body)
+        if node.link is not None:
+            field, tier, identity = node.link
+            body[field] = str(committed[(tier, identity)].id)
+        reference = node.reference or (
+            current.reference if current is not None else node_ref(node.tier)
+        )
+        if current is not None and _same_value(
+            current,
+            body=body,
+            reference=reference,
+            body_schema_uri=node.body_schema_uri,
+        ):
+            committed[key] = current  # unchanged: not rewritten, not re-dated
+            continue
+
+        ann = Annotation(
+            id=current.id if current is not None else uuid.uuid4(),
+            tier=node.tier,
+            reference=reference,
+            body=body,
+            body_schema_uri=node.body_schema_uri,
+            provenance=_authored_provenance(),
+        )
+        if current is not None:
+            project.graph.remove_annotation(current.id)
+        project.graph.add_annotation(ann)
+        committed[key] = ann
+
+    for leftovers in existing.values():
+        for ann in leftovers:
+            project.graph.remove_annotation(ann.id)
+    return committed
+
+
+def _existing_by_identity(project) -> dict[tuple[str, str | None], list[Annotation]]:
+    """Every node at an authoring tier, grouped by identity, oldest first.
+
+    Oldest first is what makes a doubled tier reconcile to the node the
+    renders already derive from (the first ingest's), so their provenance
+    edges survive the repair.
+    """
+    import nw
+
+    groups: dict[tuple[str, str | None], list[Annotation]] = defaultdict(list)
+    for tier in AUTHORING_TIERS:
+        for ann in nw.annotations_at_tier(project.root, tier):
+            groups[(tier, node_identity(ann))].append(ann)
+    for anns in groups.values():
+        anns.sort(
+            key=lambda a: (a.provenance.generated_at_time.to_seconds(), str(a.id))
+        )
+    return groups
+
+
+def _same_value(current: Annotation, *, body: dict, reference, body_schema_uri) -> bool:
+    """Whether ``current`` already carries exactly this value (so no write)."""
+    return (
+        current.body == body
+        and current.body_schema_uri == body_schema_uri
+        and current.reference == reference
+    )
 
 
 def _authored_provenance():
