@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.mcp._guide &mdash; braidio 0.0.34 documentation</title>
+  <title>braidio.mcp._guide &mdash; braidio 0.0.35 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9dd25805"></script>
+      <script src="../../../_static/documentation_options.js?v=39aadc1c"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -81,6 +81,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/timeline.html">braidio.timeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms.html">braidio.transforms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms/_dialogue.html">braidio.transforms._dialogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms/_episode.html">braidio.transforms._episode</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms/_ingest.html">braidio.transforms._ingest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/transforms/_narration.html">braidio.transforms._narration</a></li>
@@ -274,9 +275,11 @@
             <span class="s2">"result of all three carries `sting_applied` / "</span>
             <span class="s2">"`sting_ignored_reason` so you know either way "</span>
             <span class="s2">"(render_production takes no format, so this doesn't apply there)."</span><span class="p">,</span>
-            <span class="s2">"Dialogue beats aren't in the graph pipeline yet (save_script / "</span>
-            <span class="s2">"weave_project reject them) — use render_production or render_format "</span>
-            <span class="s2">"for those."</span><span class="p">,</span>
+            <span class="s2">"A dialogue beat's turn roles must be the cast's role names: the "</span>
+            <span class="s2">"format's (deep_dive is host_a/host_b, interview is host/guest — see "</span>
+            <span class="s2">"list_formats) when you pass `format_id`, else the default cast's A/B. "</span>
+            <span class="s2">"save_script and weave_project check this before writing anything; "</span>
+            <span class="s2">"recasting (a different format_id) re-renders only the dialogue beats."</span><span class="p">,</span>
             <span class="s2">"`profile` is the rights cut, and it now applies on BOTH render "</span>
             <span class="s2">"paths: 'personal' plays every clip, 'published' plays only clips "</span>
             <span class="s2">"whose rights allow it (dropping the rest, or swapping in a beat's "</span>

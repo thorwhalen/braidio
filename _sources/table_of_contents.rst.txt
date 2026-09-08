@@ -37,6 +37,7 @@
    module_docs/braidio/timeline
    module_docs/braidio/transforms
    module_docs/braidio/transforms/_common
+   module_docs/braidio/transforms/_dialogue
    module_docs/braidio/transforms/_episode
    module_docs/braidio/transforms/_ingest
    module_docs/braidio/transforms/_narration
