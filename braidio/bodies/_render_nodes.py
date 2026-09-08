@@ -125,6 +125,14 @@ class SourceMediaBodyV1(BaseModel):
         ..., description="lacing Artifact asset_id of the source media."
     )
     rights: str = Field("owned-local", description="Rights posture of the source.")
+    beat_id: Optional[str] = Field(
+        None,
+        description=(
+            "Zero-padded ordering key of the script beat this source was "
+            "resolved for (e.g. '0007') — its ingest identity, so a re-ingest "
+            "replaces it in place. None on nodes written before re-ingest existed."
+        ),
+    )
 
 
 class VoiceAssignmentBodyV1(BaseModel):

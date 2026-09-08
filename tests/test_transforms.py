@@ -538,8 +538,8 @@ def test_profile_change_restales_only_the_episode(
     the stale signal says *this episode no longer matches its inputs*, NOT
     "re-run the weave". Because the filter ran at ingest, only re-ingest can
     honour a changed profile, and re-weaving alone is refused rather than
-    allowed to mislabel the old cut. (That re-ingest is itself blocked today by
-    the once-per-project singleton — braidio#51.)
+    allowed to mislabel the old cut. Re-ingest is what ``weave_project`` does
+    on a second run — see the re-ingest tests below (braidio#51).
     """
     import nw
 
@@ -577,9 +577,7 @@ def test_episode_refuses_members_its_profile_forbids(
     (profile_node,) = nw.annotations_at_tier(project.root, "render-profiles")
     episode = nw.annotations_at_tier(project.root, "episode-renders")[-1]
     index = {a.id: a for a in nw.iter_all_annotations(project.root)}
-    members = tuple(
-        index[UUID(m)] for m in episode.body["ordered_member_ids"]
-    )
+    members = tuple(index[UUID(m)] for m in episode.body["ordered_member_ids"])
     _rewrite_in_place(
         project, profile_node, body={**profile_node.body, "profile": "published"}
     )
@@ -627,3 +625,475 @@ def test_weave_project_applies_a_format_and_its_declared_structure(
     assert structure.body["sting_asset_id"] is None  # no asset supplied
     (cfg,) = nw.annotations_at_tier(project.root, "weave-configs")
     assert cfg.body["config"] == braidio.SOLO_EXPLAINER.weave.to_dict()
+
+
+# --- re-ingest: identity, freshness, retry (braidio#49, braidio#51) ------------
+
+
+def _authoring_identities(project):
+    """``{(tier, identity): id}`` over every authoring node — the graph's shape.
+
+    Fails on a doubled identity, which is the #49 corruption itself.
+    """
+    import nw
+    from braidio.transforms._common import AUTHORING_TIERS, node_identity
+
+    out = {}
+    for tier in AUTHORING_TIERS:
+        for a in nw.annotations_at_tier(project.root, tier):
+            key = (tier, node_identity(a))
+            assert key not in out, f"doubled {key} node"
+            out[key] = a.id
+    return out
+
+
+#: The identities the 3-beat fixture script ingests to, under any profile that
+#: keeps the segment (config + narration, segment (source + clip), narration).
+_FIXTURE_IDENTITIES = {
+    ("weave-configs", "weave-configs"),
+    ("narrative-beats", "0000"),
+    ("source-media", "0001"),
+    ("audio-clips", "0001"),
+    ("narrative-beats", "0002"),
+}
+
+
+def test_first_ingest_stamps_every_node_with_its_identity(project, script_and_source):
+    """The identity a re-ingest will match by is on the node from day one:
+    the singleton tiers by tier, every beat-derived node by ``beat_id`` —
+    including the clip and its source-media, which carry it as of #51."""
+    script, source = script_and_source
+    ing = braidio.transforms.ingest_script(project, script, source=source)
+
+    ids = _authoring_identities(project)
+    assert set(ids) == _FIXTURE_IDENTITIES
+    assert ids[("weave-configs", "weave-configs")] == ing.config.id
+    assert ids[("narrative-beats", "0000")] == ing.narration_beats[0].id
+    assert ids[("narrative-beats", "0002")] == ing.narration_beats[1].id
+    (clip,) = ing.audio_clips
+    assert ids[("audio-clips", "0001")] == clip.id
+    assert clip.body["beat_id"] == "0001"
+    assert ids[("source-media", "0001")] == UUID(clip.body["source_node_id"])
+
+
+def test_reingest_of_the_same_script_writes_nothing(project, script_and_source):
+    """Idempotence, observed: same ids, same bodies, same timestamps, still one
+    of each singleton. A no-op re-ingest must not re-date a node, or
+    ``generated_at_time`` stops meaning "a real change" (the property nw's
+    entity upsert protects)."""
+    import nw
+
+    script, source = script_and_source
+    first = braidio.transforms.ingest_script(project, script, source=source)
+    before = {a.id: a for a in nw.iter_all_annotations(project.root)}
+
+    second = braidio.transforms.ingest_script(project, script, source=source)
+
+    after = {a.id: a for a in nw.iter_all_annotations(project.root)}
+    assert second.config.id == first.config.id
+    assert [a.id for _, a in second.ordered] == [a.id for _, a in first.ordered]
+    assert set(after) == set(before)
+    for aid, ann in before.items():
+        assert after[aid].body == ann.body
+        assert (
+            after[aid].provenance.generated_at_time == ann.provenance.generated_at_time
+        )
+    assert len(nw.annotations_at_tier(project.root, "weave-configs")) == 1
+
+
+def test_reingest_with_changed_profile_restales_through_provenance(
+    project, script_and_source, patched_synthesis
+):
+    """The #51 scenario end to end: a second ``weave_project`` on the same
+    project with a different profile is *possible*, and correct.
+
+    The render-profile node is replaced under its own id, so the personal
+    episode reads stale through its provenance edge; the clip the published
+    profile refuses is removed, so its extraction reads stale too
+    (``upstream-missing``); and the new episode carries the new profile with
+    no extraction among its members — the label is true (braidio#47).
+    """
+    import nw
+
+    script, source = script_and_source
+    personal = braidio.weave_project(
+        project, script, source=source, profile=braidio.Profile.PERSONAL
+    )
+    (profile_before,) = nw.annotations_at_tier(project.root, "render-profiles")
+    (clip_before,) = nw.annotations_at_tier(project.root, "audio-clips")
+    (extraction_before,) = nw.annotations_at_tier(project.root, "segment-extractions")
+
+    published = braidio.weave_project(
+        project, script, source=source, profile=braidio.Profile.PUBLISHED
+    )
+
+    # one profile node, same identity, new value — the change is on the edge
+    (profile_after,) = nw.annotations_at_tier(project.root, "render-profiles")
+    assert profile_after.id == profile_before.id
+    assert profile_after.body["profile"] == "published"
+    assert profile_after.body["dropped"] == ["hook"]
+    stale = {a.id for a in nw.stale_after(project.root, profile_after.id)}
+    assert personal.id in stale
+    assert published.id not in stale
+
+    # the refused clip is gone, and what derived from it knows
+    assert nw.annotations_at_tier(project.root, "audio-clips") == []
+    assert nw.annotations_at_tier(project.root, "source-media") == []
+    verdicts = {v.annotation.id: v for v in nw.stale_verdicts_all(project.root)}
+    assert verdicts[extraction_before.id].is_stale
+    assert verdicts[extraction_before.id].reason == nw.freshness.REASON_UPSTREAM_MISSING
+    assert verdicts[personal.id].is_stale
+    assert not verdicts[published.id].is_stale
+
+    # the new episode is honestly labelled: published, and no extraction in it
+    assert published.body["profile"] == "published"
+    index = {a.id: a for a in nw.iter_all_annotations(project.root)}
+    member_tiers = {index[UUID(m)].tier for m in published.body["ordered_member_ids"]}
+    assert member_tiers == {"narration-renders"}
+    assert clip_before.id not in index
+
+
+def test_reingest_with_changed_config_restales_every_render(
+    project, script_and_source, patched_synthesis
+):
+    """The weave-config is replaced in place too, so every render that derived
+    from it — voice, narration, extraction, episode — reads stale, while the
+    unchanged beats keep their ids (and so their renders' provenance)."""
+    import nw
+
+    script, source = script_and_source
+    first = braidio.weave_project(project, script, source=source)
+    render_tiers = (
+        "voice-assignments",
+        "narration-renders",
+        "segment-extractions",
+        "episode-renders",
+    )
+    renders_before = {tier: _tier_ids(project, tier) for tier in render_tiers}
+    beats_before = _tier_ids(project, "narrative-beats") | _tier_ids(
+        project, "audio-clips"
+    )
+
+    second = braidio.weave_project(
+        project, script, source=source, config=braidio.WeaveConfig(crossfade_s=0.5)
+    )
+
+    (cfg,) = nw.annotations_at_tier(project.root, "weave-configs")
+    assert cfg.body["config"]["crossfade_s"] == 0.5
+    stale = {a.id for a in nw.stale_after(project.root, cfg.id)}
+    for tier, ids in renders_before.items():
+        assert ids <= stale, tier
+    assert first.id in stale
+    # the beats did not change → same nodes, nothing rewritten
+    beats_after = _tier_ids(project, "narrative-beats") | _tier_ids(
+        project, "audio-clips"
+    )
+    assert beats_after == beats_before
+    # ...and the RETURNED episode is current: its members were completed
+    # against the new config (cache-keyed audio, fresh provenance), so
+    # nothing the caller was just handed reads stale (#56 review, nit 2).
+    stale_now = {a.id for a in nw.all_stale(project.root)}
+    assert second.id not in stale_now
+    assert second.id != first.id
+    assert not any(UUID(m) in stale_now for m in second.body["ordered_member_ids"])
+
+
+def test_failed_plan_leaves_the_graph_untouched(project, script_and_source):
+    """Validate before mutating (braidio#49): an unresolvable segment fails
+    before the first write, so nothing is left behind — not even the config
+    node that used to make the project un-ingestable."""
+    import nw
+
+    script, _ = script_and_source
+
+    class _Unresolvable:
+        def resolve(self, reference):
+            return None
+
+    with pytest.raises(ValueError, match="could not resolve"):
+        braidio.transforms.ingest_script(project, script, source=_Unresolvable())
+    assert list(nw.iter_all_annotations(project.root)) == []
+
+
+def test_missing_sting_asset_fails_before_the_first_write(project, script_and_source):
+    """The door #45 opened (a sting path that does not exist) now fails in the
+    plan, while hashing the asset, with the graph still empty."""
+    import nw
+    from braidio.structure import MusicStructure, Sting
+
+    script, source = script_and_source
+    with pytest.raises(FileNotFoundError):
+        braidio.transforms.ingest_script(
+            project,
+            script,
+            source=source,
+            structure=MusicStructure(sting=Sting(str(project.root / "nope.mp3"))),
+        )
+    assert list(nw.iter_all_annotations(project.root)) == []
+
+
+def test_retry_after_an_injected_mid_commit_failure_converges(
+    project, script_and_source, monkeypatch
+):
+    """A crash *during* the commit — after the config node, before the beats —
+    is the #49 shape. The write sequence is idempotent, so the retry does not
+    double the config: it keeps the node already there and finishes the rest,
+    ending in exactly the graph a clean first ingest would have produced."""
+    import nw
+    from braidio.transforms._common import singleton
+
+    script, source = script_and_source
+    real_add = project.graph.add_annotation
+    calls = {"n": 0}
+
+    def _flaky(ann):
+        calls["n"] += 1
+        if calls["n"] == 3:  # config + first beat written; then the crash
+            raise RuntimeError("injected: disk full")
+        real_add(ann)
+
+    monkeypatch.setattr(project.graph, "add_annotation", _flaky)
+    with pytest.raises(RuntimeError, match="injected"):
+        braidio.transforms.ingest_script(project, script, source=source)
+    half_written = _authoring_identities(project)
+    assert ("weave-configs", "weave-configs") in half_written
+    assert set(half_written) < _FIXTURE_IDENTITIES
+    monkeypatch.setattr(project.graph, "add_annotation", real_add)
+
+    ing = braidio.transforms.ingest_script(project, script, source=source)
+
+    assert len(nw.annotations_at_tier(project.root, "weave-configs")) == 1
+    whole = _authoring_identities(project)
+    assert set(whole) == _FIXTURE_IDENTITIES
+    # what survived the crash kept its id — the retry reconciled, not re-minted
+    for key, aid in half_written.items():
+        assert whole[key] == aid
+    assert singleton(project, "weave-configs").id == ing.config.id
+
+
+def test_a_doubled_singleton_tier_is_repaired_by_reingest(project, script_and_source):
+    """A project already stuck in the pre-#49 state — two weave-config nodes —
+    is reconciled by the next ingest: the earliest node (the one existing
+    renders derive from) keeps its id, the stray is removed, and the
+    ``singleton`` reads that used to raise ``found 2`` work again."""
+    import nw
+    from lacing.time import RationalTime
+    from braidio.transforms._common import singleton
+
+    script, source = script_and_source
+    first = braidio.transforms.ingest_script(project, script, source=source)
+    stray = first.config.model_copy(
+        update={
+            "id": UUID(int=1),
+            "provenance": first.config.provenance.model_copy(
+                update={"generated_at_time": RationalTime.now()}
+            ),
+        }
+    )
+    project.graph.add_annotation(stray)
+    with pytest.raises(ValueError, match="found 2.*re-running"):
+        singleton(project, "weave-configs")
+
+    again = braidio.transforms.ingest_script(project, script, source=source)
+
+    assert again.config.id == first.config.id
+    assert singleton(project, "weave-configs").id == first.config.id
+    assert len(nw.annotations_at_tier(project.root, "weave-configs")) == 1
+
+
+def test_legacy_clip_without_identity_is_rewritten_once(
+    project, script_and_source, patched_synthesis
+):
+    """A clip written before ``beat_id`` existed has no identity: a re-ingest
+    cannot claim it, so it is removed and rewritten — the one-time cost of
+    upgrading a pre-#51 project, and never a doubled tier. The weave after it
+    must then succeed: the extraction's cache-keyed audio is adopted onto a
+    node derived from the NEW clip, never the old node whose parents are gone
+    (the crash the #56 review reproduced)."""
+    import nw
+
+    script, source = script_and_source
+    ing = braidio.transforms.ingest_script(project, script, source=source)
+    (clip,) = ing.audio_clips
+    legacy_body = {k: v for k, v in clip.body.items() if k != "beat_id"}
+    _rewrite_in_place(project, clip, body=legacy_body)
+
+    again = braidio.transforms.ingest_script(project, script, source=source)
+
+    (new_clip,) = nw.annotations_at_tier(project.root, "audio-clips")
+    assert new_clip.id != clip.id
+    assert new_clip.body["beat_id"] == "0001"
+    assert again.audio_clips[0].id == new_clip.id
+
+    episode = braidio.weave_project(project, script, source=source)
+    _assert_episode_current(project, episode, expect_clip=new_clip.id)
+
+
+def _assert_episode_current(project, episode, *, expect_clip):
+    """``episode`` is fresh, and its one extraction member derives from
+    ``expect_clip`` — the clip the CURRENT ingest wrote."""
+    import nw
+
+    index = {a.id: a for a in nw.iter_all_annotations(project.root)}
+    stale = {a.id for a in nw.all_stale(project.root)}
+    assert episode.id not in stale
+    members = [index[UUID(m)] for m in episode.body["ordered_member_ids"]]
+    assert not any(m.id in stale for m in members)
+    (extraction,) = [m for m in members if m.tier == "segment-extractions"]
+    assert expect_clip in extraction.provenance.was_derived_from
+
+
+def _ingest_as_written_by_0_0_34(project, script, source):
+    """Write the authoring layer the way braidio 0.0.34 (commit 06affa5) did.
+
+    The shape that build persisted, reproduced literally rather than by
+    calling that code: config node first, one fresh uuid per node, and
+    ``source-media`` / ``audio-clip`` bodies WITHOUT ``beat_id`` (the field
+    arrived in #56). Every guest project on the hosted connector written
+    before #56 has exactly this shape, so this is the fixture the upgrade
+    path is tested against. Returns the nodes in the order the old
+    ``weave_project`` drove them.
+    """
+    import uuid
+
+    from lacing import Annotation, MediaRef, TimeInterval
+    from braidio.bodies import (
+        AUDIO_CLIP_V1,
+        NARRATIVE_BEAT_V1,
+        SOURCE_MEDIA_V1,
+        WEAVE_CONFIG_V1,
+    )
+    from braidio.transforms._common import node_ref
+    from braidio.transforms._ingest import _authored_provenance
+
+    def _write(tier, body, uri, reference=None):
+        ann = Annotation(
+            id=uuid.uuid4(),
+            tier=tier,
+            reference=reference if reference is not None else node_ref(tier),
+            body=body,
+            body_schema_uri=uri,
+            provenance=_authored_provenance(),
+        )
+        project.graph.add_annotation(ann)
+        return ann
+
+    _write(
+        "weave-configs", {"config": braidio.WeaveConfig().to_dict()}, WEAVE_CONFIG_V1
+    )
+    ordered = []
+    for i, beat in enumerate(script.beats):
+        if isinstance(beat, braidio.Narration):
+            ann = _write(
+                "narrative-beats",
+                {
+                    "beat_id": f"{i:04d}",
+                    "text": beat.text,
+                    "style": beat.style,
+                    "draws_on": [],
+                    "plays_clip": None,
+                },
+                NARRATIVE_BEAT_V1,
+            )
+            ordered.append(("narration", ann))
+        else:
+            resolved = source.resolve(beat.reference)
+            label = beat.label or beat.reference
+            src = _write(
+                "source-media",
+                {
+                    "label": label,
+                    "asset_id": str(resolved.asset_path),
+                    "rights": beat.rights,
+                },
+                SOURCE_MEDIA_V1,
+            )
+            clip = _write(
+                "audio-clips",
+                {
+                    "source_node_id": str(src.id),
+                    "label": label,
+                    "rights": beat.rights,
+                    "gain_db": None,
+                    "fade": None,
+                    "spotlight": beat.spotlight,
+                },
+                AUDIO_CLIP_V1,
+                reference=MediaRef(
+                    asset_id=str(resolved.asset_path),
+                    interval=TimeInterval.from_seconds(
+                        resolved.start_s, resolved.end_s, rate=1000
+                    ),
+                ),
+            )
+            ordered.append(("segment", clip))
+    return ordered
+
+
+def test_reweave_of_a_project_written_by_the_previous_build(
+    project, script_and_source, patched_synthesis
+):
+    """The connector's real upgrade path: a project written and woven by
+    0.0.34 is re-woven by this build. Ingest rewrites the identity-less clip,
+    and the weave must complete — the old extraction's audio is adopted onto
+    a node derived from the new clip instead of the old node (whose parents
+    no longer exist) being handed to the episode."""
+    import nw
+    from braidio.transforms import _run
+
+    script, source = script_and_source
+    legacy = _ingest_as_written_by_0_0_34(project, script, source)
+    # the 0.0.34 weave: the same transforms, driven the way that build did
+    voice = nw.get_transform(braidio.transforms.VOICE_ASSIGNMENT_TRANSFORM)
+    narration = nw.get_transform(braidio.transforms.NARRATION_RENDER_TRANSFORM)
+    segment = nw.get_transform(braidio.transforms.SEGMENT_EXTRACTION_TRANSFORM)
+    episode_t = nw.get_transform(braidio.transforms.EPISODE_TRANSFORM)
+    members = []
+    for kind, auth in legacy:
+        if kind == "narration":
+            _run(voice, project, auth)
+            members.append(_run(narration, project, auth))
+        else:
+            members.append(_run(segment, project, auth))
+    old_episode = _run(episode_t, project, *members)
+    (old_clip,) = nw.annotations_at_tier(project.root, "audio-clips")
+    assert "beat_id" not in old_clip.body  # the pre-#56 shape, as intended
+
+    episode = braidio.weave_project(project, script, source=source)
+
+    (new_clip,) = nw.annotations_at_tier(project.root, "audio-clips")
+    assert new_clip.id != old_clip.id
+    assert episode.id != old_episode.id
+    _assert_episode_current(project, episode, expect_clip=new_clip.id)
+    # the audio was not re-cut: the extraction member carries the old artifact
+    index = {a.id: a for a in nw.iter_all_annotations(project.root)}
+    (old_extraction,) = [
+        m
+        for m in (index[UUID(x)] for x in old_episode.body["ordered_member_ids"])
+        if m.tier == "segment-extractions"
+    ]
+    (new_extraction,) = [
+        m
+        for m in (index[UUID(x)] for x in episode.body["ordered_member_ids"])
+        if m.tier == "segment-extractions"
+    ]
+    assert new_extraction.body["artifact_id"] == old_extraction.body["artifact_id"]
+
+
+def test_a_noop_reweave_adds_no_nodes_and_returns_the_same_episode(
+    project, script_and_source, patched_synthesis
+):
+    """Ingest is idempotent, and so is the weave: a second ``weave_project``
+    with nothing changed reuses every voice-assignment, render and the
+    episode itself (same parents, same planned value, verified fresh) rather
+    than appending a new set each run (#56 review, nit 3)."""
+    import nw
+
+    script, source = script_and_source
+    first = braidio.weave_project(project, script, source=source)
+    before = {a.id for a in nw.iter_all_annotations(project.root)}
+
+    second = braidio.weave_project(project, script, source=source)
+
+    assert second.id == first.id
+    assert {a.id for a in nw.iter_all_annotations(project.root)} == before

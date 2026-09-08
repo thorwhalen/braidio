@@ -91,6 +91,18 @@ def weave_project(
     reaches the mix. ``None`` leaves the profile undeclared, which resolves to
     :data:`~braidio.rights.DEFAULT_PROFILE` — the fast path's default, and the
     behaviour every project had before (thorwhalen/braidio#47).
+
+    **Re-running on the same project is the way to change any of this.**
+    :func:`ingest_script` reconciles the graph by identity (the singleton
+    tiers by tier, beats by script position): an unchanged beat keeps its node
+    and its render is a cache hit, a changed config / profile / structure is
+    rewritten under its existing id so every render that derived from it reads
+    stale through provenance, and a beat the new profile refuses is removed.
+    The weave is idempotent too: a render whose inputs are unchanged and still
+    fresh is reused rather than duplicated, and a re-run with nothing changed
+    returns the episode already there and writes nothing. After a real change
+    the previous episode stays in the graph as history, stale; the returned
+    one is current (thorwhalen/braidio#51).
     """
     import nw
 

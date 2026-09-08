@@ -85,9 +85,14 @@ the bed, braidio ships no music: the sting is your asset. Both render paths carr
 this: the graph path takes the same `structure=` / `bed=` (or a `fmt=`, whose
 declared structure it uses) on `weave_project`, records the decision as a
 `production-structure/v1` node, and re-renders only the episode when you swap the
-sting. Design history in
-[braidio#25](https://github.com/thorwhalen/braidio/issues/25) and
-[braidio#39](https://github.com/thorwhalen/braidio/issues/39).
+sting. Calling `weave_project` again on the same project **re-ingests**: beats are
+matched by position, unchanged ones reuse their renders, and a changed config,
+structure or rights profile is rewritten under its existing node so everything
+derived from it reads stale through provenance — the only correct way to change a
+profile after the first weave. Design history in
+[braidio#25](https://github.com/thorwhalen/braidio/issues/25),
+[braidio#39](https://github.com/thorwhalen/braidio/issues/39) and
+[braidio#51](https://github.com/thorwhalen/braidio/issues/51).
 
 ## Parametrize anything
 

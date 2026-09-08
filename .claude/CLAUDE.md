@@ -113,6 +113,22 @@ the profile re-stales the episode through ordinary freshness. Same absence rule
 as the structure node: undeclared writes nothing, which is what keeps a legacy
 project byte-identical.
 
+**Ingest is a reconcile, not an append** (braidio#49, #51). `ingest_script`
+*plans* first — the rights plan, every `SegmentSource.resolve`, every asset
+hash, the Dialogue refusal — and only then *commits*, so a failure never
+leaves a half-written graph. The commit writes **by identity**: the rule is
+stated once, in `transforms/_common.py` (`SINGLETON_TIERS`, `node_identity`).
+Singleton tiers (`weave-configs`, `production-structures`, `render-profiles`)
+are identified by the tier; beat-derived nodes by `beat_id` (script
+position). Same identity + same value → no write; same identity + changed
+value → rewritten **under the same annotation id**, which is what makes the
+change reach the renders (nw's freshness compares each parent's value digest
+against what its dependents recorded); identity gone from the plan → removed.
+Never mint a fresh id for an existing identity, and never add a second node
+at a singleton tier: both leave the old renders looking fresh, which is worse
+than a refusal. `weave_project`'s wire description promises exactly this
+behaviour on a re-run.
+
 ## Body schemas are a federation contract
 
 `braidio/bodies/` registers 14 lacing body-schema URIs (6 domain, 8 render —

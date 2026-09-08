@@ -34,7 +34,9 @@ from braidio.transforms._common import (
     graph_index,
     resolve_parents,
     require_tier,
+    adopt_output,
     cached_output,
+    fresh_equivalent,
     audio_artifact,
     file_url,
 )
@@ -122,10 +124,19 @@ class SegmentExtractionFFmpeg(BaseTransform):
         skel = skeleton[0]
         cache_key = skel.body["cache_key"]
         if use_cache and not force:
-            hit = cached_output(project, TIER_SEGMENT_EXTRACTION, cache_key)
-            if hit is not None:
+            # Same two-step as narration_render: reuse the fresh equivalent
+            # node if there is one, else complete this skeleton with the
+            # cache-keyed artifact — never return a node whose parents a
+            # re-ingest replaced or removed (braidio#51).
+            existing = fresh_equivalent(project, skel)
+            if existing is None:
+                hit = cached_output(project, TIER_SEGMENT_EXTRACTION, cache_key)
+                if hit is not None:
+                    existing = adopt_output(skel, hit)
+                    project.graph.add_annotation(existing)
+            if existing is not None:
                 return TransformResult(
-                    annotations=(hit,), artifacts=(), cost_usd_actual=0.0
+                    annotations=(existing,), artifacts=(), cost_usd_actual=0.0
                 )
 
         parents = resolve_parents(skel, graph_index(project))

@@ -50,9 +50,11 @@ spending if any of it is unclear.
 That is the whole happy path for a narration-only episode. Variants:
 
 - **Want provenance + partial re-render?** `save_script(project_id, script)`
-  (free) then `weave_project(project_id, script)` (costed). Re-running
-  re-synthesizes only what changed. Narration, segment and scene_break beats
-  (not dialogue yet). Both take the same optional `format_id`,
+  (free) then `weave_project(project_id, script)` (costed). Re-running on the
+  same project re-ingests: beats are matched by position, unchanged ones reuse
+  their renders, and a changed beat, format or `profile` is what gets
+  re-synthesized — so changing the rights profile is a re-run, not a new
+  project. Narration, segment and scene_break beats (not dialogue yet). Both take the same optional `format_id`,
   `bed_asset_id` and `sting_asset_id` as the one-shot renders, so a graph
   episode gets its format's defaults, its music bed and its scene stings.
 - **Want no project at all?** Skip step 1–2 and call `render_production(script)`

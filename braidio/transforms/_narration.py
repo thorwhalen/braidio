@@ -42,7 +42,9 @@ from braidio.transforms._common import (
     graph_index,
     resolve_parents,
     require_tier,
+    adopt_output,
     cached_output,
+    fresh_equivalent,
     audio_artifact,
     safe_duration,
     file_url,
@@ -138,11 +140,22 @@ class NarrationRenderTTS(BaseTransform):
         cost = tts_cost_usd(text, model_id=model_id)
 
         if use_cache and not force:
-            hit = cached_output(project, TIER_NARRATION_RENDER, cache_key)
-            if hit is not None:
+            # Idempotent re-run: the same render over the same, still-fresh
+            # inputs is the node already there.
+            existing = fresh_equivalent(project, skel)
+            if existing is None:
+                # The audio is already made under this key, but the node that
+                # made it may describe parents since replaced or removed
+                # (re-ingest, braidio#51): complete THIS skeleton with its
+                # artifact rather than hand the episode a dangling member.
+                hit = cached_output(project, TIER_NARRATION_RENDER, cache_key)
+                if hit is not None:
+                    existing = adopt_output(skel, hit)
+                    project.graph.add_annotation(existing)
+            if existing is not None:
                 # No synthesis: $0 spent, and the estimate is what caching saved.
                 return TransformResult(
-                    annotations=(hit,),
+                    annotations=(existing,),
                     artifacts=(),
                     cost_usd_actual=0.0,
                     cache_hit_savings_usd=cost if cost is not None else 0.0,
