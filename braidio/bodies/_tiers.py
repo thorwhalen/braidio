@@ -14,14 +14,17 @@ _COMMENTARY = Tier("commentary")
 _SOURCES = Tier("sources")
 _AUDIO_CLIPS = Tier("audio-clips")
 _NARRATIVE_BEATS = Tier("narrative-beats")
+_DIALOGUE_BEATS = Tier("dialogue-beats")
 _SCENE_BREAKS = Tier("scene-breaks")
 # Render-provenance layers.
 _WEAVE_CONFIGS = Tier("weave-configs")
 _PRODUCTION_STRUCTURES = Tier("production-structures")
 _RENDER_PROFILES = Tier("render-profiles")
+_DIALOGUE_CASTS = Tier("dialogue-casts")
 _SOURCE_MEDIA = Tier("source-media")
 _VOICE_ASSIGNMENTS = Tier("voice-assignments")
 _NARRATION_RENDERS = Tier("narration-renders")
+_DIALOGUE_RENDERS = Tier("dialogue-renders")
 _SEGMENT_EXTRACTIONS = Tier("segment-extractions")
 _EPISODE_RENDERS = Tier("episode-renders")
 
@@ -30,13 +33,16 @@ TIERS: tuple[Tier, ...] = (
     _SOURCES,
     _AUDIO_CLIPS,
     _NARRATIVE_BEATS,
+    _DIALOGUE_BEATS,
     _SCENE_BREAKS,
     _WEAVE_CONFIGS,
     _PRODUCTION_STRUCTURES,
     _RENDER_PROFILES,
+    _DIALOGUE_CASTS,
     _SOURCE_MEDIA,
     _VOICE_ASSIGNMENTS,
     _NARRATION_RENDERS,
+    _DIALOGUE_RENDERS,
     _SEGMENT_EXTRACTIONS,
     _EPISODE_RENDERS,
 )

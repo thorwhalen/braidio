@@ -54,9 +54,12 @@ That is the whole happy path for a narration-only episode. Variants:
   same project re-ingests: beats are matched by position, unchanged ones reuse
   their renders, and a changed beat, format or `profile` is what gets
   re-synthesized — so changing the rights profile is a re-run, not a new
-  project. Narration, segment and scene_break beats (not dialogue yet). Both take the same optional `format_id`,
+  project. Every beat type, dialogue included: a dialogue beat renders in one
+  pass under the format's cast, and changing the format recasts (and
+  re-renders) only the dialogue beats. Both take the same optional `format_id`,
   `bed_asset_id` and `sting_asset_id` as the one-shot renders, so a graph
-  episode gets its format's defaults, its music bed and its scene stings.
+  episode gets its format's defaults, its cast, its music bed and its scene
+  stings.
 - **Want no project at all?** Skip step 1–2 and call `render_production(script)`
   or `render_format(format_id, script)` directly.
 - **Just one voice reading one text?** `narrate(text)` — the smallest costed call.
@@ -95,7 +98,8 @@ source=…, cast=…, config=…, delivery=…, out_path=…)`.
 
 ## The Script — an ordered list of beats
 
-Three beat types. Order is the timeline.
+Four beat types (the `scene_break` is under *Structural music* below). Order
+is the timeline.
 
 | Beat | Python | JSON (MCP) |
 |---|---|---|
@@ -202,9 +206,12 @@ use, and set each segment beat's `rights` honestly.
 - **Dollars are a rate estimate, characters are exact.** If the connector reports
   an unpriced cost (`null` dollars), that means the rate is unconfigured — not
   that it is free. Quote the character count in that case.
-- **Dialogue beats are not in the graph pipeline yet.** `save_script` and
-  `weave_project` reject them with a clear error. Use `render_production` /
-  `render_format` for anything with a Dialogue beat.
+- **Dialogue turn roles must be the cast's role names.** With a `format_id`
+  that is the format's cast (`deep_dive`: `host_a` / `host_b`; `interview`:
+  `host` / `guest`; see `list_formats`); without one it is the default cast's
+  `A` / `B`. `save_script` and `weave_project` check this before writing
+  anything and name the roles the cast has; `render_production` /
+  `render_format` would fail inside the paid call instead.
 - **A segment beat with no source is an error, not a silent skip.** Narration-only
   scripts need no source at all.
 - **Text-to-Dialogue is one request**: keep a single `Dialogue` beat's turns under

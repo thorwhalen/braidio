@@ -3,8 +3,8 @@
 The ``Transform`` *abstraction* lives in ``nw`` (per the federation prime
 directive); this package holds braidio's concrete audio-render instances and
 registers them with ``nw.transforms`` as a side effect of import. It turns the
-authoring graph (narrative beats, audio clips, a weave-config) into
-render-provenance nodes, all written **through** ``project.graph`` so
+authoring graph (narrative beats, dialogue beats, audio clips, a weave-config)
+into render-provenance nodes, all written **through** ``project.graph`` so
 ``nw.stale_after`` drives partial re-render — one freshness engine, not
 braidio's parallel standalone ``record_render`` store.
 
@@ -14,6 +14,9 @@ The chain (``sources → segments → weave``):
   ``voice-assignment/v1`` (deterministic; no synthesis).
 - ``narration_render.tts`` — narrative beat (+ voice-assignment + config) →
   ``narration-render/v1`` (ElevenLabs TTS; cached by an explicit ``cache_key``).
+- ``dialogue_render.tts`` — dialogue beat (+ the singleton dialogue-cast) →
+  ``dialogue-render/v1`` (ElevenLabs Text-to-Dialogue, one pass per exchange;
+  cached by an explicit ``cache_key``; thorwhalen/braidio#46).
 - ``segment_extraction.ffmpeg`` — audio clip (+ source-media + config) →
   ``segment-extraction/v1`` (ffmpeg cut+pad; cached).
 - ``weave_to_episode.default`` — all member renders, plus any scene-break
@@ -35,11 +38,18 @@ from __future__ import annotations
 from nw import TransformInputs
 
 from braidio.transforms._ingest import ingest_script, IngestedScript
-from braidio.transforms import _voice, _narration, _segment, _episode  # noqa: F401
+from braidio.transforms import (  # noqa: F401
+    _voice,
+    _narration,
+    _dialogue,
+    _segment,
+    _episode,
+)
 
 # Registered transform names (the genre references these).
 VOICE_ASSIGNMENT_TRANSFORM = _voice.NAME
 NARRATION_RENDER_TRANSFORM = _narration.NAME
+DIALOGUE_RENDER_TRANSFORM = _dialogue.NAME
 SEGMENT_EXTRACTION_TRANSFORM = _segment.NAME
 EPISODE_TRANSFORM = _episode.NAME
 
@@ -49,6 +59,7 @@ __all__ = [
     "weave_project",
     "VOICE_ASSIGNMENT_TRANSFORM",
     "NARRATION_RENDER_TRANSFORM",
+    "DIALOGUE_RENDER_TRANSFORM",
     "SEGMENT_EXTRACTION_TRANSFORM",
     "EPISODE_TRANSFORM",
 ]
@@ -65,6 +76,7 @@ def weave_project(
     bed=None,
     profile=None,
     rights=None,
+    cast=None,
 ):
     """Ingest ``script`` and run the whole commentary-weave chain, in order.
 
@@ -72,16 +84,26 @@ def weave_project(
     the assembled audio's ``url`` + ``artifact_id``). A thin synchronous
     projection over the registered Transforms' ``plan``/``execute`` contract —
     each ``plan`` resolves its own context (config / voice-assignment /
-    source-media / production-structure) from the graph, so the driver only
-    supplies the primary input. A cost-gated / async runner (``nw.jobs``,
-    reelee's planner) can drive the same Transforms via the genre.
+    source-media / production-structure / dialogue-cast) from the graph, so
+    the driver only supplies the primary input. A cost-gated / async runner
+    (``nw.jobs``, reelee's planner) can drive the same Transforms via the
+    genre.
 
     ``fmt`` (a :class:`~braidio.formats.Format`) supplies the format's declared
-    defaults — its ``weave`` config and its ``structure`` — for whichever of
-    ``config`` / ``structure`` the caller left out; an explicit argument always
-    wins. ``bed`` is the app-supplied music bed (:class:`~braidio.music.MusicBed`).
-    With no format, no structure and no bed, this is the plain weave it always
-    was (thorwhalen/braidio#39).
+    defaults — its ``weave`` config, its ``structure`` and its dialogue
+    ``cast`` — for whichever of ``config`` / ``structure`` / ``cast`` the
+    caller left out; an explicit argument always wins. ``bed`` is the
+    app-supplied music bed (:class:`~braidio.music.MusicBed`). With no format,
+    no structure and no bed, this is the plain weave it always was
+    (thorwhalen/braidio#39).
+
+    ``cast`` (a :class:`~braidio.conversation.ConversationCast`) is what the
+    script's :class:`~braidio.script.Dialogue` beats are voiced with, resolved
+    exactly as :func:`braidio.render.render_production` / ``render_format``
+    resolve it: explicit, else the format's, else
+    :data:`~braidio.conversation.DEFAULT_CAST`. It is recorded as the singleton
+    ``dialogue-cast/v1`` node only when the script has a dialogue beat, and
+    each ``dialogue-render/v1`` derives from it (thorwhalen/braidio#46).
 
     ``profile`` (a :class:`~braidio.rights.Profile`) and ``rights`` (a
     :class:`~braidio.rights.RightsPolicy`) are the rights seam, and they mean
@@ -109,6 +131,7 @@ def weave_project(
     if fmt is not None:
         config = config if config is not None else fmt.weave
         structure = structure if structure is not None else fmt.structure
+        cast = cast if cast is not None else fmt.cast
 
     ing = ingest_script(
         project,
@@ -119,9 +142,11 @@ def weave_project(
         bed=bed,
         profile=profile,
         rights=rights,
+        cast=cast,
     )
     voice = nw.get_transform(VOICE_ASSIGNMENT_TRANSFORM)
     narration = nw.get_transform(NARRATION_RENDER_TRANSFORM)
+    dialogue = nw.get_transform(DIALOGUE_RENDER_TRANSFORM)
     segment = nw.get_transform(SEGMENT_EXTRACTION_TRANSFORM)
     episode = nw.get_transform(EPISODE_TRANSFORM)
 
@@ -129,6 +154,8 @@ def weave_project(
     for beat in ing.narration_beats:
         _run(voice, project, beat)
         render_by_authoring_id[beat.id] = _run(narration, project, beat)
+    for beat in ing.dialogue_beats:
+        render_by_authoring_id[beat.id] = _run(dialogue, project, beat)
     for clip in ing.audio_clips:
         render_by_authoring_id[clip.id] = _run(segment, project, clip)
 

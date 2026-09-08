@@ -72,7 +72,7 @@ Each layer only knows the ones beneath it. Keep it that way.
 | **1. Functional core** | `script` (Narration/SegmentBeat/Dialogue/Script), `rights` (Profile + plan_production), `sources` (SegmentSource, TimedLine), `tts`, `cost`, `delivery`, `multivoice`, `weave_config`, `music`, `compose`, `weave`, `render`, `timeline`, `textprep`, `style`, `kinds` | `mixing`, `elevenlabs`, `ffmpeg` on PATH — nothing else |
 | **2. Format templates** | `formats` (`Format`, `render_format`, `FORMATS`) | layer 1 only. Templates are *good defaults over the primitives*, never new mechanism |
 | **3. Graph vocabulary** | `bodies/` — lacing body schemas + tiers, registered as an import side effect | `lacing` (extra `graph`) |
-| **4. nw pipeline** | `transforms/` (voice-assignment → narration-render → segment-extraction → episode), `provenance`, `project`, `genre` | layers 1–3 + `nw` (extra `nw-app`) |
+| **4. nw pipeline** | `transforms/` (voice-assignment → narration-render / dialogue-render → segment-extraction → episode), `provenance`, `project`, `genre` | layers 1–3 + `nw` (extra `nw-app`) |
 | **5. MCP tool surface** | `mcp/` — `tools.py` (the tools), `_guide.py` (the front door), `metering.py`, `workspace.py`, `_docs.py`, `_helpers.py` | everything above + `fastmcp`/`py2mcp` (extra `mcp`) |
 
 Two invariants worth stating explicitly:
@@ -113,13 +113,30 @@ the profile re-stales the episode through ordinary freshness. Same absence rule
 as the structure node: undeclared writes nothing, which is what keeps a legacy
 project byte-identical.
 
+**Dialogue beats** ride the graph too (braidio#46). A `Dialogue` ingests as a
+`dialogue-beat/v1` (its turns, identified by `beat_id` like any beat) and
+renders through `dialogue_render.tts`, which wraps `braidio.render_dialogue`
+(one Text-to-Dialogue pass per exchange — never `render_multivoice`) with the
+same `cache_key` compare-and-skip and cost attribution as narration. The
+**cast** — which voice each role speaks with — is a production decision, so it
+is one singleton `dialogue-cast/v1` node, resolved exactly as the fast path
+resolves it (explicit `cast=` > the format's `cast` > `DEFAULT_CAST`), and
+every dialogue render derives from `[beat, cast]` and nothing else: a recast
+re-stales the dialogue renders and only them. Same absence rule again, keyed on
+the *script* rather than the declaration: the cast node is written **iff the
+plan has a dialogue beat**, so a script without dialogue writes nothing at the
+tier whatever the format declares, and a 0.0.35-written project re-weaves as a
+no-op (`tests/test_transforms_dialogue.py` pins that). A turn whose role the
+cast does not name fails in the plan, naming the roles the cast has.
+
 **Ingest is a reconcile, not an append** (braidio#49, #51). `ingest_script`
 *plans* first — the rights plan, every `SegmentSource.resolve`, every asset
-hash, the Dialogue refusal — and only then *commits*, so a failure never
-leaves a half-written graph. The commit writes **by identity**: the rule is
-stated once, in `transforms/_common.py` (`SINGLETON_TIERS`, `node_identity`).
-Singleton tiers (`weave-configs`, `production-structures`, `render-profiles`)
-are identified by the tier; beat-derived nodes by `beat_id` (script
+hash, every dialogue role's lookup in the cast — and only then *commits*, so a
+failure never leaves a half-written graph. The commit writes **by identity**:
+the rule is stated once, in `transforms/_common.py` (`SINGLETON_TIERS`,
+`node_identity`). Singleton tiers (`weave-configs`, `production-structures`,
+`render-profiles`, `dialogue-casts`) are identified by the tier; beat-derived
+nodes by `beat_id` (script
 position). Same identity + same value → no write; same identity + changed
 value → rewritten **under the same annotation id**, which is what makes the
 change reach the renders (nw's freshness compares each parent's value digest
@@ -131,7 +148,7 @@ behaviour on a re-run.
 
 ## Body schemas are a federation contract
 
-`braidio/bodies/` registers 14 lacing body-schema URIs (6 domain, 8 render —
+`braidio/bodies/` registers 17 lacing body-schema URIs (7 domain, 10 render —
 see `braidio.bodies.SCHEMA_URIS`). These are **on the wire**: the nw pipeline
 persists them in project graphs, and both deployed MCP connectors read and
 write them live. Renaming a URI, or renaming, removing, retyping, or
@@ -143,7 +160,7 @@ landed together with the nw/connector updates that depend on it. Adding an
 is how `AudioClipBodyV1.spotlight` and the `scene-break/v1` /
 `production-structure/v1` / `render-profile/v1` bodies themselves arrived.
 
-`tests/test_body_schema_stability.py` pins all 14 URIs and every field's
+`tests/test_body_schema_stability.py` pins all 17 URIs and every field's
 serialized shape (name, JSON type, required/optional, default), and fails
 additive vs. breaking changes in separate tests with different advice. It is
 not derived from the models it protects — the pinned table is literal,

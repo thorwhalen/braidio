@@ -64,7 +64,8 @@ def render_dialogue(
     cache=True,
     refresh: bool = False,
     tighten_gaps_s: float = 0.6,
-) -> Path:
+    return_cache_status: bool = False,
+) -> Path | tuple[Path, bool]:
     """One-pass render of ``turns`` (``[(role, text), …]``) via Text-to-Dialogue.
 
     Cached by default (see :func:`braidio.tts.text_to_dialogue`): an unchanged
@@ -77,9 +78,14 @@ def render_dialogue(
     ``tighten_gaps_s`` (>0) applies the "R-tight" pass: ffmpeg trims only the
     over-long dead gaps (silences ≥ this many seconds) that make v3 dialogue
     feel draggy, while leaving natural short pauses. Set 0 to keep the raw take.
+
+    ``return_cache_status``: when ``True``, return ``(path, was_cached)`` where
+    ``was_cached`` is ``True`` iff the take came from the on-disk cache (no
+    ElevenLabs call = $0 real spend) — what lets the graph path attribute real
+    cost (braidio#8). Default ``False`` keeps the ``Path`` return.
     """
     vturns = [(cast.roles[role], text) for role, text in turns]
-    audio = text_to_dialogue(
+    audio, was_cached = text_to_dialogue(
         vturns,
         model_id=cast.model_id,
         settings=cast.settings,
@@ -88,6 +94,7 @@ def render_dialogue(
         api_key=api_key,
         cache=cache,
         refresh=refresh,
+        return_cache_status=True,
     )
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -109,7 +116,7 @@ def render_dialogue(
             capture_output=True,
         )
         os.replace(tmp, out)
-    return out
+    return (out, was_cached) if return_cache_status else out
 
 
 def _concat_with_gaps(

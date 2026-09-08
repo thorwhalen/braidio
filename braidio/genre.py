@@ -22,19 +22,27 @@ from __future__ import annotations
 from nw import Genre, Template, register_genre, register_genre_project_factory
 
 from braidio.formats import FORMATS
-from braidio.bodies._domain import NARRATIVE_BEAT_V1, SCENE_BREAK_V1, AUDIO_CLIP_V1
+from braidio.bodies._domain import (
+    NARRATIVE_BEAT_V1,
+    DIALOGUE_BEAT_V1,
+    SCENE_BREAK_V1,
+    AUDIO_CLIP_V1,
+)
 from braidio.bodies._render_nodes import (
     WEAVE_CONFIG_V1,
     PRODUCTION_STRUCTURE_V1,
+    DIALOGUE_CAST_V1,
     SOURCE_MEDIA_V1,
     VOICE_ASSIGNMENT_V1,
     NARRATION_RENDER_V1,
+    DIALOGUE_RENDER_V1,
     SEGMENT_EXTRACTION_V1,
     EPISODE_RENDER_V1,
 )
 from braidio.transforms import (
     VOICE_ASSIGNMENT_TRANSFORM,
     NARRATION_RENDER_TRANSFORM,
+    DIALOGUE_RENDER_TRANSFORM,
     SEGMENT_EXTRACTION_TRANSFORM,
     EPISODE_TRANSFORM,
 )
@@ -52,25 +60,29 @@ COMMENTARY_WEAVE: Genre = register_genre(
         ),
         body_schema_uris=(
             NARRATIVE_BEAT_V1,
+            DIALOGUE_BEAT_V1,
             SCENE_BREAK_V1,
             AUDIO_CLIP_V1,
             WEAVE_CONFIG_V1,
             PRODUCTION_STRUCTURE_V1,
+            DIALOGUE_CAST_V1,
             SOURCE_MEDIA_V1,
             VOICE_ASSIGNMENT_V1,
             NARRATION_RENDER_V1,
+            DIALOGUE_RENDER_V1,
             SEGMENT_EXTRACTION_V1,
             EPISODE_RENDER_V1,
         ),
         transform_names=(
             VOICE_ASSIGNMENT_TRANSFORM,
             NARRATION_RENDER_TRANSFORM,
+            DIALOGUE_RENDER_TRANSFORM,
             SEGMENT_EXTRACTION_TRANSFORM,
             EPISODE_TRANSFORM,
         ),
         projection_entrypoint=EPISODE_TRANSFORM,
-        # Early / API-unstable (braidio 0.0.x). Audio-only v1; audiovisual and
-        # Dialogue beats are follow-ups. See thorwhalen/reelee#227, braidio#6.
+        # Early / API-unstable (braidio 0.0.x). Audio-only v1; audiovisual is a
+        # follow-up. See thorwhalen/reelee#227, braidio#6.
         status="experimental",
         # Intake answers this audio genre covers, and the cost-gate discriminator
         # (braidio's only spend is per-character ElevenLabs TTS — see braidio.cost).

@@ -19,9 +19,11 @@ from lacing.schema import register_body_schema
 WEAVE_CONFIG_V1 = "annot://schema/weave-config/v1"
 PRODUCTION_STRUCTURE_V1 = "annot://schema/production-structure/v1"
 RENDER_PROFILE_V1 = "annot://schema/render-profile/v1"
+DIALOGUE_CAST_V1 = "annot://schema/dialogue-cast/v1"
 SOURCE_MEDIA_V1 = "annot://schema/source-media/v1"
 VOICE_ASSIGNMENT_V1 = "annot://schema/voice-assignment/v1"
 NARRATION_RENDER_V1 = "annot://schema/narration-render/v1"
+DIALOGUE_RENDER_V1 = "annot://schema/dialogue-render/v1"
 SEGMENT_EXTRACTION_V1 = "annot://schema/segment-extraction/v1"
 EPISODE_RENDER_V1 = "annot://schema/episode-render/v1"
 
@@ -113,6 +115,38 @@ class RenderProfileBodyV1(BaseModel):
     )
 
 
+class DialogueCastBodyV1(BaseModel):
+    """The production's dialogue cast — which voice each role speaks with.
+
+    A singleton sibling of the weave-config, holding exactly what a
+    :class:`braidio.conversation.ConversationCast` holds: the role → voice map
+    plus the Text-to-Dialogue model and its settings. Every
+    ``dialogue-render/v1`` derives from this node, and from nothing else that
+    a cast change would touch, so recasting re-stales the dialogue renders and
+    only them — the narration, extractions and their voice assignments do not
+    derive from it and stay fresh.
+
+    Written only when the ingested script has a dialogue beat (the cast is the
+    decision of *what those turns sound like*; without turns there is nothing
+    to decide), so a project without dialogue keeps exactly the graph it had
+    before this node existed. A dialogue script that declared no cast records
+    the default cast rather than omitting the node: the render must derive
+    from the voices it actually used (thorwhalen/braidio#46).
+    """
+
+    model_config = {"frozen": True, "extra": "forbid"}
+
+    roles: dict[str, str] = Field(
+        ..., description="Role label → ElevenLabs voice id (ConversationCast.roles)."
+    )
+    model_id: str = Field(
+        ..., description="Text-to-Dialogue model id (e.g. 'eleven_v3')."
+    )
+    settings: Optional[dict[str, Any]] = Field(
+        None, description="Model settings passed to Text-to-Dialogue (stability…)."
+    )
+
+
 class SourceMediaBodyV1(BaseModel):
     """A pointer to an imported source asset (its content-addressed artifact)."""
 
@@ -160,6 +194,27 @@ class NarrationRenderBodyV1(BaseModel):
     duration_s: float = Field(0.0, description="Rendered duration, seconds.")
 
 
+class DialogueRenderBodyV1(BaseModel):
+    """The audio Artifact for one synthesized dialogue exchange + its cache key.
+
+    The dialogue counterpart of :class:`NarrationRenderBodyV1`: one node per
+    ``dialogue-beat/v1``, rendered in one Text-to-Dialogue pass under the
+    production's ``dialogue-cast/v1``. ``cache_key`` hashes the turns, the
+    cast's roles, model and settings — everything that reaches the audio.
+    """
+
+    model_config = {"frozen": True, "extra": "forbid"}
+
+    cache_key: str = Field(..., description="hash(turns, roles, model, settings).")
+    artifact_id: Optional[str] = Field(
+        None, description="lacing Artifact asset_id (once rendered)."
+    )
+    url: Optional[str] = Field(
+        None, description="file:// (or hosted) URL of the rendered audio."
+    )
+    duration_s: float = Field(0.0, description="Rendered duration, seconds.")
+
+
 class SegmentExtractionBodyV1(BaseModel):
     """The cut+padded audio Artifact for one segment + its cache key."""
 
@@ -186,7 +241,8 @@ class EpisodeRenderBodyV1(BaseModel):
         default_factory=tuple,
         description=(
             "Ids of the episode's members, in play order: a render node "
-            "(narration-render / segment-extraction) or a scene-break node."
+            "(narration-render / dialogue-render / segment-extraction) or a "
+            "scene-break node."
         ),
     )
     artifact_id: Optional[str] = Field(None, description="lacing Artifact of the mix.")
@@ -200,9 +256,11 @@ RENDER_SCHEMAS: dict[str, type[BaseModel]] = {
     WEAVE_CONFIG_V1: WeaveConfigBodyV1,
     PRODUCTION_STRUCTURE_V1: ProductionStructureBodyV1,
     RENDER_PROFILE_V1: RenderProfileBodyV1,
+    DIALOGUE_CAST_V1: DialogueCastBodyV1,
     SOURCE_MEDIA_V1: SourceMediaBodyV1,
     VOICE_ASSIGNMENT_V1: VoiceAssignmentBodyV1,
     NARRATION_RENDER_V1: NarrationRenderBodyV1,
+    DIALOGUE_RENDER_V1: DialogueRenderBodyV1,
     SEGMENT_EXTRACTION_V1: SegmentExtractionBodyV1,
     EPISODE_RENDER_V1: EpisodeRenderBodyV1,
 }

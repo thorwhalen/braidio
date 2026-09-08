@@ -1,9 +1,10 @@
 """Shared helpers for braidio's ``nw.Transform`` pipeline.
 
 The transforms in this package turn braidio's authoring graph (narrative
-beats, audio clips, scene breaks, a weave-config + production-structure
-snapshot) into render-provenance nodes
-(voice-assignment, narration-render, segment-extraction, episode-render),
+beats, dialogue beats, audio clips, scene breaks, a weave-config +
+production-structure + dialogue-cast snapshot) into render-provenance nodes
+(voice-assignment, narration-render, dialogue-render, segment-extraction,
+episode-render),
 writing each **through** ``project.graph`` so ``nw.stale_after`` traverses
 them. This is the whole point of riding nw: one freshness engine over the
 project graph — *not* braidio's parallel standalone ``record_render`` store
@@ -26,12 +27,15 @@ from lacing import Annotation, Artifact, NodeRef, TimeInterval
 TIER_WEAVE_CONFIG = "weave-configs"
 TIER_PRODUCTION_STRUCTURE = "production-structures"
 TIER_RENDER_PROFILE = "render-profiles"
+TIER_DIALOGUE_CAST = "dialogue-casts"
 TIER_SOURCE_MEDIA = "source-media"
 TIER_NARRATIVE_BEAT = "narrative-beats"
+TIER_DIALOGUE_BEAT = "dialogue-beats"
 TIER_SCENE_BREAK = "scene-breaks"
 TIER_AUDIO_CLIP = "audio-clips"
 TIER_VOICE_ASSIGNMENT = "voice-assignments"
 TIER_NARRATION_RENDER = "narration-renders"
+TIER_DIALOGUE_RENDER = "dialogue-renders"
 TIER_SEGMENT_EXTRACTION = "segment-extractions"
 TIER_EPISODE_RENDER = "episode-renders"
 
@@ -51,7 +55,12 @@ _RATE = 1000
 #: identity). :func:`singleton` / :func:`optional_singleton` read under it and
 #: :func:`node_identity` is how the ingest applies it.
 SINGLETON_TIERS = frozenset(
-    {TIER_WEAVE_CONFIG, TIER_PRODUCTION_STRUCTURE, TIER_RENDER_PROFILE}
+    {
+        TIER_WEAVE_CONFIG,
+        TIER_PRODUCTION_STRUCTURE,
+        TIER_RENDER_PROFILE,
+        TIER_DIALOGUE_CAST,
+    }
 )
 
 #: The tiers an ingest owns, in the order it writes them. A re-ingest reconciles
@@ -62,7 +71,9 @@ AUTHORING_TIERS = (
     TIER_WEAVE_CONFIG,
     TIER_PRODUCTION_STRUCTURE,
     TIER_RENDER_PROFILE,
+    TIER_DIALOGUE_CAST,
     TIER_NARRATIVE_BEAT,
+    TIER_DIALOGUE_BEAT,
     TIER_SCENE_BREAK,
     TIER_SOURCE_MEDIA,
     TIER_AUDIO_CLIP,

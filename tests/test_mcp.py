@@ -959,15 +959,48 @@ def test_docs_redirect_to_private_is_rejected(monkeypatch):
 
 
 @_NW
-def test_save_script_rejects_dialogue_before_mutating():
+def test_save_script_ingests_dialogue_beats_under_the_formats_cast():
+    """braidio#46: the graph pipeline used to refuse a dialogue beat outright.
+    It now links it, cast by the format (deep_dive's host_a / host_b), so
+    weave_project can render it in one Text-to-Dialogue pass."""
     server = _local_server(ledger={})
     _call(server, "create_project", {"project_id": "pd", "title": "PD"})
+    out = _call(
+        server,
+        "save_script",
+        {
+            "project_id": "pd",
+            "format_id": "deep_dive",
+            "script": {
+                "title": "t",
+                "id_slug": "01",
+                "beats": [
+                    {"type": "narration", "text": "one"},
+                    {
+                        "type": "dialogue",
+                        "turns": [["host_a", "hi"], ["host_b", "hey"]],
+                    },
+                ],
+            },
+        },
+    ).structured_content
+    assert [b["kind"] for b in out["beats"]] == ["narration", "dialogue"]
+
+
+@_NW
+def test_save_script_refuses_a_dialogue_role_the_cast_lacks_before_writing():
+    """A turn role the cast does not name fails in the plan, naming the roles
+    the cast has — never a KeyError inside a paid render, never a half-written
+    graph (braidio#46, #49)."""
+    server = _local_server(ledger={})
+    _call(server, "create_project", {"project_id": "pr", "title": "PR"})
     with pytest.raises(Exception) as ei:
         _call(
             server,
             "save_script",
             {
-                "project_id": "pd",
+                "project_id": "pr",
+                "format_id": "deep_dive",
                 "script": {
                     "title": "t",
                     "id_slug": "01",
@@ -975,7 +1008,7 @@ def test_save_script_rejects_dialogue_before_mutating():
                 },
             },
         )
-    assert "Dialogue" in str(ei.value)
+    assert "host_a" in str(ei.value) and "['A']" in str(ei.value)
 
 
 def test_save_script_ingests_scene_break_beats():

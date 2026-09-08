@@ -26,7 +26,7 @@ from braidio.mcp._helpers import script_from_json, source_from_json, to_json
 from braidio.rights import DEFAULT_PROFILE
 from braidio.mcp.metering import current_email
 from braidio.mcp.workspace import Workspace
-from braidio.tts import DEFAULT_MODEL_ID, DIALOGUE_MODEL_ID
+from braidio.tts import DEFAULT_MODEL_ID
 
 
 def _workspace() -> Workspace:
@@ -37,18 +37,6 @@ def _workspace() -> Workspace:
 def _require_nw(tool: str) -> None:
     if not braidio.HAS_NW:
         raise ToolError(f"{tool} needs braidio's nw layer, which is not installed here")
-
-
-def _reject_graph_unsupported(scr, tool: str) -> None:
-    """The nw graph pipeline can't ingest Dialogue beats yet — fail BEFORE
-    mutating. (scene_break beats ARE ingested — thorwhalen/braidio#39.)"""
-    from braidio import Dialogue
-
-    if any(isinstance(b, Dialogue) for b in scr.beats):
-        raise ToolError(
-            f"{tool}: Dialogue beats aren't supported by the graph pipeline yet — "
-            "use render_production for dialogue"
-        )
 
 
 def _graph_structure(
@@ -409,16 +397,15 @@ def save_script(
 ) -> dict:
     """Link a Script's beats into a project's graph (free authoring; render later).
 
-    Writes the narration, segment and scene_break beats into the project graph
-    (Dialogue isn't supported yet), so you can review (project_status) and
-    render with weave_project when ready. Saving again replaces the previous
-    script beat by beat (a changed ``profile`` or format included).
-    ``format_id`` + ``bed_asset_id`` / ``sting_asset_id`` record the music
+    Writes every beat — narration, dialogue, segment, scene_break — into the
+    project graph, so you can review (project_status) and render with
+    weave_project when ready. Saving again replaces the previous script beat
+    by beat (a changed ``profile`` or format included). ``format_id`` sets the
+    dialogue cast; ``bed_asset_id`` / ``sting_asset_id`` record the music
     (see ``help``). Free — no synthesis.
     """
     _require_nw("save_script")
     scr = script_from_json(script)
-    _reject_graph_unsupported(scr, "save_script")
     src = _resolve_source(source)
     _check_source(scr, src)
     ws = _workspace()
@@ -439,6 +426,7 @@ def save_script(
         structure=structure,
         bed=bed,
         profile=_profile(profile),
+        cast=fmt.cast if fmt is not None else None,
     )
     return {
         "project_id": project_id,
@@ -686,14 +674,23 @@ def _check_source(scr, source) -> None:
         )
 
 
-def _render_cost(scr, profile: str) -> dict:
+def _render_cost(scr, profile: str, *, cast=None) -> dict:
     """Estimate the spend of the beats that WILL render under ``profile``.
 
     Costs :func:`braidio.plan_production`'s output (the SSOT for the rights
     projection), so under ``"published"`` dropped clips cost nothing and synthesized
     substitutes are billed — unlike costing the raw script. The figure is a rate
     estimate (``cost_basis="estimate"``; see :mod:`braidio.cost` + braidio#8).
+
+    ``cast`` is the :class:`~braidio.conversation.ConversationCast` the dialogue
+    beats render under (``None`` = the default cast, as on every render entry
+    point): a dialogue beat is priced at *its* model, the same one the render —
+    fast path and ``dialogue_render.tts`` alike — actually submits, so the
+    estimate cannot drift from the spend when a format casts another model.
     """
+    from braidio.conversation import DEFAULT_CAST
+
+    dialogue_model = (cast if cast is not None else DEFAULT_CAST).model_id
     plan = braidio.plan_production(scr, _profile(profile))
     chars = 0
     priced: list[float] = []
@@ -702,7 +699,7 @@ def _render_cost(scr, profile: str) -> dict:
         if b.kind == "narration":
             text, model = b.content, DEFAULT_MODEL_ID
         elif b.kind == "dialogue":
-            text, model = "".join(t for _r, t in (b.turns or ())), DIALOGUE_MODEL_ID
+            text, model = "".join(t for _r, t in (b.turns or ())), dialogue_model
         else:
             continue  # clip = free (local ffmpeg)
         chars += braidio.billable_chars(text)
@@ -954,7 +951,7 @@ def render_format(
     )
     return {
         **_retrieval(out),
-        **_render_cost(scr, profile),
+        **_render_cost(scr, profile, cast=fmt.cast),
         "sting_applied": application["sting_applied"],
         "sting_ignored_reason": application["sting_ignored_reason"],
     }
@@ -971,16 +968,15 @@ def weave_project(
 ) -> dict:
     """[COSTED] Ingest a script into your project and run the full commentary_weave pipeline.
 
-    Re-running on the same project re-ingests: beats are matched by position,
+    Renders every beat type: narration, dialogue (the format's cast), segment,
+    scene_break. Re-running re-ingests: beats are matched by position,
     unchanged ones reuse their renders, and only what changed — a beat, the
-    format, the rights ``profile`` — is re-synthesized, with provenance
-    (Narration, Segment, scene_break beats; not Dialogue). ``format_id``
-    applies a format; ``bed_asset_id`` / ``sting_asset_id`` add a music bed
-    and scene sting (see ``help``).
+    format/cast, the rights ``profile`` — is re-synthesized, with provenance.
+    ``format_id`` applies a format; ``bed_asset_id`` / ``sting_asset_id`` add
+    music (see ``help``).
     """
     _require_nw("weave_project")
     scr = script_from_json(script)
-    _reject_graph_unsupported(scr, "weave_project")
     src = _resolve_source(source)
     _check_source(scr, src)
     ws = _workspace()
@@ -1007,7 +1003,7 @@ def weave_project(
         "episode": to_json(body),
         "url": body.get("url"),
         **_episode_retrieval(project_id, str(episode.id)),
-        **_render_cost(scr, profile),
+        **_render_cost(scr, profile, cast=fmt.cast if fmt is not None else None),
         "sting_applied": sting_applied,
         "sting_ignored_reason": sting_ignored_reason,
     }

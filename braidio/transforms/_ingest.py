@@ -16,6 +16,9 @@ This writes the **authoring** layer the render Transforms consume:
   structural music (stings / fade-to-spotlight / a music bed) — written only
   then, so a format that declares none leaves the graph untouched;
 - one ``narrative-beat/v1`` per :class:`~braidio.script.Narration`;
+- one ``dialogue-beat/v1`` per :class:`~braidio.script.Dialogue`, plus — only
+  when there is at least one — the singleton ``dialogue-cast/v1`` recording
+  which voice each role speaks with (thorwhalen/braidio#46);
 - one ``scene-break/v1`` per :class:`~braidio.script.SceneBreak` — the
   structural boundary, ordered with the rest of the spine (thorwhalen/braidio#39);
 - a ``source-media/v1`` + ``audio-clip/v1`` pair per
@@ -24,16 +27,15 @@ This writes the **authoring** layer the render Transforms consume:
 
 Everything is written **through** ``project.graph.add_annotation`` so the
 whole pipeline (authoring → render) lives in one graph that
-``nw.stale_after`` can traverse. :class:`~braidio.script.Dialogue` beats are
-not yet ingested (a documented follow-up — they need ``render_dialogue``
-wiring and a turns-carrying beat body).
+``nw.stale_after`` can traverse.
 
 Two phases, and the order is the point (thorwhalen/braidio#49, #51)
 ----------------------------------------------------------------------
 
 **Plan** is pure: the rights plan, every ``SegmentSource.resolve``, every
-asset content-hash and the Dialogue refusal all happen before anything is
-written, so a failure leaves the graph exactly as it was. **Commit** writes
+asset content-hash and every dialogue role's lookup in the cast all happen
+before anything is written, so a failure leaves the graph exactly as it was.
+**Commit** writes
 *by identity* under the rule stated once in
 :data:`braidio.transforms._common.SINGLETON_TIERS`: a node whose identity
 already exists is replaced under its **existing annotation id** (and not
@@ -55,6 +57,7 @@ from dataclasses import dataclass
 
 from lacing import Annotation, MediaRef, TimeInterval
 
+from braidio.conversation import DEFAULT_CAST, ConversationCast
 from braidio.rights import (
     DEFAULT_PROFILE,
     PUBLISHABLE_CLIP_RIGHTS,
@@ -68,6 +71,8 @@ from braidio.weave_config import WeaveConfig
 from braidio.bodies._domain import (
     NARRATIVE_BEAT_V1,
     NarrativeBeatBodyV1,
+    DIALOGUE_BEAT_V1,
+    DialogueBeatBodyV1,
     SCENE_BREAK_V1,
     SceneBreakBodyV1,
     AUDIO_CLIP_V1,
@@ -80,6 +85,8 @@ from braidio.bodies._render_nodes import (
     ProductionStructureBodyV1,
     RENDER_PROFILE_V1,
     RenderProfileBodyV1,
+    DIALOGUE_CAST_V1,
+    DialogueCastBodyV1,
     SOURCE_MEDIA_V1,
     SourceMediaBodyV1,
 )
@@ -88,7 +95,9 @@ from braidio.transforms._common import (
     TIER_WEAVE_CONFIG,
     TIER_PRODUCTION_STRUCTURE,
     TIER_RENDER_PROFILE,
+    TIER_DIALOGUE_CAST,
     TIER_NARRATIVE_BEAT,
+    TIER_DIALOGUE_BEAT,
     TIER_SCENE_BREAK,
     TIER_SOURCE_MEDIA,
     TIER_AUDIO_CLIP,
@@ -102,12 +111,14 @@ from braidio.transforms._common import (
 #: ``PlannedBeat.kind`` → the tier its authoring node lives at.
 _TIER_OF_KIND = {
     "narration": TIER_NARRATIVE_BEAT,
+    "dialogue": TIER_DIALOGUE_BEAT,
     "clip": TIER_AUDIO_CLIP,
     "scene_break": TIER_SCENE_BREAK,
 }
 #: ``PlannedBeat.kind`` → the kind label :attr:`IngestedScript.ordered` uses.
 _ORDERED_KIND = {
     "narration": "narration",
+    "dialogue": "dialogue",
     "clip": "segment",
     "scene_break": "scene_break",
 }
@@ -125,8 +136,8 @@ class IngestedScript:
     #: declared structural music; ``None`` when it declared none.
     structure: Annotation | None = None
     #: ``(kind, authoring_annotation)`` in script order — ``kind`` is
-    #: ``"narration"``, ``"segment"`` or ``"scene_break"``. The episode is
-    #: assembled in this order.
+    #: ``"narration"``, ``"dialogue"``, ``"segment"`` or ``"scene_break"``.
+    #: The episode is assembled in this order.
     ordered: tuple[tuple[str, Annotation], ...] = ()
     #: The singleton ``render-profile/v1`` node, when the production declared a
     #: rights profile; ``None`` when it declared none.
@@ -134,6 +145,11 @@ class IngestedScript:
     #: The rights plan the ingest actually followed — its ``dropped`` /
     #: ``substituted`` are what the profile refused and swapped.
     plan: RenderPlan | None = None
+    #: The ``dialogue-beat/v1`` nodes, in script order.
+    dialogue_beats: tuple[Annotation, ...] = ()
+    #: The singleton ``dialogue-cast/v1`` node, when the script has a dialogue
+    #: beat to cast; ``None`` when it has none (thorwhalen/braidio#46).
+    cast: Annotation | None = None
 
 
 @dataclass(frozen=True)
@@ -168,12 +184,24 @@ def ingest_script(
     bed=None,
     profile: Profile | None = None,
     rights: RightsPolicy | None = None,
+    cast: ConversationCast | None = None,
 ) -> IngestedScript:
     """Write ``script``'s authoring nodes into ``project``'s graph.
 
     ``config`` defaults to a plain :class:`WeaveConfig`. ``source`` (a
     :class:`~braidio.sources.SegmentSource`) is required iff the script has
     :class:`SegmentBeat`\\ s — it resolves each reference to a playable window.
+
+    ``cast`` (a :class:`~braidio.conversation.ConversationCast`) is the
+    production's dialogue cast — which voice each :class:`~braidio.script.Dialogue`
+    role speaks with — and defaults to :data:`~braidio.conversation.DEFAULT_CAST`,
+    exactly as on :func:`braidio.render.render_production`. It is recorded as
+    one ``dialogue-cast/v1`` node **only when the script has a dialogue beat**
+    (there is nothing to cast otherwise), so a script without dialogue leaves
+    the tier empty whatever cast was passed; every dialogue render derives
+    from that node, so a recast re-stales the dialogue renders and nothing
+    else. A turn whose role the cast does not name fails here, in the plan,
+    before anything is written (thorwhalen/braidio#46).
 
     ``structure`` (a :class:`~braidio.structure.MusicStructure`, typically a
     format's declared one) and ``bed`` (a :class:`~braidio.music.MusicBed`) are
@@ -222,6 +250,7 @@ def ingest_script(
         bed=bed,
         profile=profile,
         publishable=publishable,
+        cast=cast if cast is not None else DEFAULT_CAST,
     )
     # Phase 2 — commit, by identity.
     committed = _commit_nodes(project, nodes)
@@ -242,6 +271,8 @@ def ingest_script(
         ordered=ordered,
         render_profile=committed.get((TIER_RENDER_PROFILE, TIER_RENDER_PROFILE)),
         plan=plan,
+        dialogue_beats=tuple(a for k, a in ordered if k == "dialogue"),
+        cast=committed.get((TIER_DIALOGUE_CAST, TIER_DIALOGUE_CAST)),
     )
 
 
@@ -258,12 +289,14 @@ def _plan_nodes(
     bed,
     profile: Profile | None,
     publishable: frozenset[str],
+    cast: ConversationCast,
 ) -> list[_AuthoringNode]:
     """Every authoring node this ingest will write, validated, in write order.
 
     Raises on anything the commit could not carry out — an unresolvable
-    segment, a missing sting/bed asset, a Dialogue beat — *before* the caller
-    has written a single node (thorwhalen/braidio#49).
+    segment, a missing sting/bed asset, a dialogue role the cast does not
+    name — *before* the caller has written a single node
+    (thorwhalen/braidio#49).
     """
     nodes = [_config_node(config)]
     structure_node = _structure_node(structure=structure, bed=bed)
@@ -272,6 +305,9 @@ def _plan_nodes(
     profile_node = _profile_node(profile=profile, publishable=publishable, plan=plan)
     if profile_node is not None:
         nodes.append(profile_node)
+    cast_node = _cast_node(cast=cast, plan=plan)
+    if cast_node is not None:
+        nodes.append(cast_node)
 
     # The rights plan, not the raw script: a beat the profile dropped is simply
     # absent here, and a substituted one arrives already rewritten. ``orig`` is
@@ -301,9 +337,19 @@ def _plan_nodes(
         elif planned.kind == "clip":
             nodes.extend(_segment_nodes(orig, beat_id=ident, source=source))
         elif planned.kind == "dialogue":
-            raise NotImplementedError(
-                "Dialogue beats are not yet ingested into the graph pipeline "
-                "(follow-up: render_dialogue wiring). Use Narration for v1."
+            nodes.append(
+                _AuthoringNode(
+                    tier=TIER_DIALOGUE_BEAT,
+                    identity=ident,
+                    body=_json(
+                        DialogueBeatBodyV1(
+                            beat_id=ident,
+                            turns=_cast_turns(planned.turns, cast=cast, beat=ident),
+                            label=getattr(orig, "label", ""),
+                        )
+                    ),
+                    body_schema_uri=DIALOGUE_BEAT_V1,
+                )
             )
         elif planned.kind == "scene_break":
             nodes.append(
@@ -358,6 +404,52 @@ def _profile_node(
         ),
         body_schema_uri=RENDER_PROFILE_V1,
     )
+
+
+def _cast_node(*, cast: ConversationCast, plan: RenderPlan) -> _AuthoringNode | None:
+    """The singleton ``dialogue-cast/v1`` node, or ``None``.
+
+    Written iff the plan has a dialogue beat: the cast is the decision of what
+    those turns sound like, and without turns there is nothing to decide — so
+    a script without dialogue keeps the graph it had before this node existed,
+    whatever cast the caller or format supplied. With dialogue it is always
+    written, default cast included, because the dialogue renders must derive
+    from the voices they actually used (thorwhalen/braidio#46).
+    """
+    if not any(b.kind == "dialogue" for b in plan.beats):
+        return None
+    return _AuthoringNode(
+        tier=TIER_DIALOGUE_CAST,
+        identity=TIER_DIALOGUE_CAST,
+        body=_json(
+            DialogueCastBodyV1(
+                roles=dict(cast.roles),
+                model_id=cast.model_id,
+                settings=dict(cast.settings) if cast.settings is not None else None,
+            )
+        ),
+        body_schema_uri=DIALOGUE_CAST_V1,
+    )
+
+
+def _cast_turns(
+    turns, *, cast: ConversationCast, beat: str
+) -> tuple[tuple[str, str], ...]:
+    """``turns`` as ``(role, text)`` pairs, every role checked against ``cast``.
+
+    The lookup ``render_dialogue`` would do at synthesis time, done here in the
+    plan instead — so an unknown role fails before the first write, naming the
+    roles the cast does have, rather than as a ``KeyError`` inside a paid call.
+    """
+    pairs = tuple((str(role), str(text)) for role, text in turns or ())
+    unknown = sorted({role for role, _ in pairs} - set(cast.roles))
+    if unknown:
+        raise ValueError(
+            f"ingest_script: dialogue beat {beat} uses role(s) {unknown} that the "
+            f"cast does not name (cast roles: {sorted(cast.roles)}); use the "
+            "format's cast roles as the turn roles, or pass a cast that names them"
+        )
+    return pairs
 
 
 def _structure_node(*, structure, bed) -> _AuthoringNode | None:

@@ -1,7 +1,8 @@
 """``weave_to_episode.default`` — weave member renders into one episode.
 
 A **batch** local-render Transform (N inputs → 1 output): it consumes all the
-narration-render + segment-extraction nodes (in order), weaves them with
+narration-render + dialogue-render + segment-extraction nodes (in order) —
+the two spoken kinds weave alike — and mixes them with
 ``braidio.weave_timeline`` (duck/crossfade/loudness from the weave-config),
 and emits one ``episode-render/v1`` referencing the assembled audio. It
 derives from ``[*members, weave-config]``, so any member re-render (or a
@@ -60,6 +61,7 @@ from braidio.bodies._render_nodes import (
     PRODUCTION_STRUCTURE_V1,
     RENDER_PROFILE_V1,
     NARRATION_RENDER_V1,
+    DIALOGUE_RENDER_V1,
     SEGMENT_EXTRACTION_V1,
     EPISODE_RENDER_V1,
     EpisodeRenderBodyV1,
@@ -69,7 +71,6 @@ from braidio.transforms._common import (
     TIER_WEAVE_CONFIG,
     TIER_PRODUCTION_STRUCTURE,
     TIER_RENDER_PROFILE,
-    TIER_NARRATION_RENDER,
     TIER_SEGMENT_EXTRACTION,
     TIER_SCENE_BREAK,
     TIER_EPISODE_RENDER,
@@ -190,6 +191,7 @@ class WeaveToEpisode(BaseTransform):
     name = NAME
     input_kinds = (
         NARRATION_RENDER_V1,
+        DIALOGUE_RENDER_V1,
         SEGMENT_EXTRACTION_V1,
         SCENE_BREAK_V1,
         WEAVE_CONFIG_V1,
@@ -338,7 +340,10 @@ class WeaveToEpisode(BaseTransform):
         A scene break has no render node: its audio is prepared here, by the
         same :mod:`braidio.structure` primitives the no-graph path uses.
         Fade-to-spotlight is resolved only when there is a bed to drop out, so a
-        production without one does no extra graph work.
+        production without one does no extra graph work. A narration render
+        and a dialogue render are both *talk* on the timeline (the fast path
+        labels a dialogue beat ``"narration"`` too); only an extraction is a
+        clip.
         """
         from braidio.structure import prepare_pause, prepare_sting
 
@@ -351,7 +356,7 @@ class WeaveToEpisode(BaseTransform):
             )
             return TimelineItem(kind="sting", path=str(part), placement="sequential")
 
-        is_clip = member.tier != TIER_NARRATION_RENDER
+        is_clip = member.tier == TIER_SEGMENT_EXTRACTION
         return TimelineItem(
             kind="clip" if is_clip else "narration",
             path=str(url_to_path(member.body["url"])),

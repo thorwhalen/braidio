@@ -99,7 +99,8 @@ def text_to_dialogue(
     api_key: str | None = None,
     cache=True,
     refresh: bool = False,
-) -> bytes:
+    return_cache_status: bool = False,
+) -> bytes | tuple[bytes, bool]:
     """Synthesize a multi-speaker exchange in ONE pass (ElevenLabs Text-to-Dialogue).
 
     Unlike per-line :func:`narrate`, this renders the whole conversation together
@@ -121,6 +122,11 @@ def text_to_dialogue(
         turns: ordered ``(voice_id, text)`` pairs (or ``{"voice_id", "text"}``).
             Keep each request under ~2000 chars total (API limit).
         settings: optional model settings dict (e.g. ``{"stability": 0.45}``).
+        return_cache_status: when ``True``, return ``(audio, was_cached)`` where
+            ``was_cached`` is ``True`` iff the bytes came from the on-disk cache
+            (no ElevenLabs call = $0 real spend) — the same attribution
+            :func:`narrate` offers (braidio#8). Default ``False`` keeps the
+            ``bytes`` return.
 
     Returns: raw audio bytes in ``output_format``.
     """
@@ -149,7 +155,7 @@ def text_to_dialogue(
         if not refresh:
             cached = _cache.read_cache(cache_dir, key, suffix=".audio")
             if cached is not None:
-                return cached
+                return (cached, True) if return_cache_status else cached
 
     from elevenlabs.client import ElevenLabs
 
@@ -167,4 +173,4 @@ def text_to_dialogue(
 
     if cache_dir is not None and key is not None:
         _cache.write_cache(cache_dir, key, audio, suffix=".audio")
-    return audio
+    return (audio, False) if return_cache_status else audio
