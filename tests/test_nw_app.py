@@ -12,7 +12,7 @@ import braidio
 pytestmark = pytest.mark.skipif(not braidio.HAS_GRAPH, reason="lacing not available")
 
 
-#: The 14 URIs braidio puts on the wire — 6 domain + 8 render. Pinned as a
+#: The 17 URIs braidio puts on the wire — 7 domain + 10 render. Pinned as a
 #: set, not a count (braidio#48, braidio#51): a count is green when one schema
 #: is swapped for another, which is the change that actually breaks a stored
 #: graph. The serialized *shape* of each body is pinned in
@@ -23,14 +23,17 @@ EXPECTED_SCHEMA_URIS = frozenset(
         "annot://schema/source/v1",
         "annot://schema/audio-clip/v1",
         "annot://schema/narrative-beat/v1",
+        "annot://schema/dialogue-beat/v1",
         "annot://schema/scene-break/v1",
         "annot://schema/episode/v1",
         "annot://schema/weave-config/v1",
         "annot://schema/production-structure/v1",
         "annot://schema/render-profile/v1",
+        "annot://schema/dialogue-cast/v1",
         "annot://schema/source-media/v1",
         "annot://schema/voice-assignment/v1",
         "annot://schema/narration-render/v1",
+        "annot://schema/dialogue-render/v1",
         "annot://schema/segment-extraction/v1",
         "annot://schema/episode-render/v1",
     }

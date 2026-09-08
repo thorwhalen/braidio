@@ -1,9 +1,11 @@
 """Generic authoring body schemas for a commentary-weave production.
 
 The media-agnostic domain vocabulary: curated commentary, cited sources,
-playable media clips, narrative beats, scene breaks (the structural boundary),
-and the episode container. Registered with lacing on import. (Consumer-specific schemas — e.g. Hamilton's Genius
-``song``/``lyric-line``/``referent``/``annotation`` — live in the consumer.)
+playable media clips, narrative beats, dialogue beats (a multi-speaker
+exchange), scene breaks (the structural boundary), and the episode container.
+Registered with lacing on import. (Consumer-specific schemas — e.g. Hamilton's
+Genius ``song``/``lyric-line``/``referent``/``annotation`` — live in the
+consumer.)
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ COMMENTARY_V1 = "annot://schema/commentary/v1"
 SOURCE_V1 = "annot://schema/source/v1"
 AUDIO_CLIP_V1 = "annot://schema/audio-clip/v1"
 NARRATIVE_BEAT_V1 = "annot://schema/narrative-beat/v1"
+DIALOGUE_BEAT_V1 = "annot://schema/dialogue-beat/v1"
 SCENE_BREAK_V1 = "annot://schema/scene-break/v1"
 EPISODE_V1 = "annot://schema/episode/v1"
 
@@ -112,6 +115,27 @@ class NarrativeBeatBodyV1(BaseModel):
     )
 
 
+class DialogueBeatBodyV1(BaseModel):
+    """One multi-speaker exchange of the script — the graph's ``Dialogue`` beat.
+
+    ``turns`` is the authored content, as ``(role, text)`` pairs in speaking
+    order; the roles are labels (``"A"`` / ``"host_b"``), not voices. Which
+    voice each role gets is a production-level decision recorded once, on the
+    singleton ``dialogue-cast/v1`` node, and the ``dialogue-render/v1`` derives
+    from both — so a recast re-stales every exchange while an edited exchange
+    re-stales only itself (thorwhalen/braidio#46). Rendered in ONE pass
+    (Text-to-Dialogue) so the turns sound like people talking to each other.
+    """
+
+    model_config = {"frozen": True, "extra": "forbid"}
+
+    beat_id: str = Field(..., description="Zero-padded ordering key (e.g. '0007').")
+    turns: tuple[tuple[str, str], ...] = Field(
+        ..., description="Ordered (role, text) pairs; roles resolve via the cast."
+    )
+    label: str = Field("", description="Human label for the exchange, if any.")
+
+
 class SceneBreakBodyV1(BaseModel):
     """A structural boundary between sections — the graph's ``SceneBreak`` beat.
 
@@ -149,6 +173,7 @@ DOMAIN_SCHEMAS: dict[str, type[BaseModel]] = {
     SOURCE_V1: SourceBodyV1,
     AUDIO_CLIP_V1: AudioClipBodyV1,
     NARRATIVE_BEAT_V1: NarrativeBeatBodyV1,
+    DIALOGUE_BEAT_V1: DialogueBeatBodyV1,
     SCENE_BREAK_V1: SceneBreakBodyV1,
     EPISODE_V1: EpisodeBodyV1,
 }

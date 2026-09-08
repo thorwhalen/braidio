@@ -39,18 +39,6 @@ def _require_nw(tool: str) -> None:
         raise ToolError(f"{tool} needs braidio's nw layer, which is not installed here")
 
 
-def _reject_graph_unsupported(scr, tool: str) -> None:
-    """The nw graph pipeline can't ingest Dialogue beats yet — fail BEFORE
-    mutating. (scene_break beats ARE ingested — thorwhalen/braidio#39.)"""
-    from braidio import Dialogue
-
-    if any(isinstance(b, Dialogue) for b in scr.beats):
-        raise ToolError(
-            f"{tool}: Dialogue beats aren't supported by the graph pipeline yet — "
-            "use render_production for dialogue"
-        )
-
-
 def _graph_structure(
     ws, *, format_id: str | None, bed_asset_id, sting_asset_id, script, tool: str
 ):
@@ -409,16 +397,15 @@ def save_script(
 ) -> dict:
     """Link a Script's beats into a project's graph (free authoring; render later).
 
-    Writes the narration, segment and scene_break beats into the project graph
-    (Dialogue isn't supported yet), so you can review (project_status) and
-    render with weave_project when ready. Saving again replaces the previous
-    script beat by beat (a changed ``profile`` or format included).
-    ``format_id`` + ``bed_asset_id`` / ``sting_asset_id`` record the music
+    Writes every beat — narration, dialogue, segment, scene_break — into the
+    project graph, so you can review (project_status) and render with
+    weave_project when ready. Saving again replaces the previous script beat
+    by beat (a changed ``profile`` or format included). ``format_id`` sets the
+    dialogue cast; ``bed_asset_id`` / ``sting_asset_id`` record the music
     (see ``help``). Free — no synthesis.
     """
     _require_nw("save_script")
     scr = script_from_json(script)
-    _reject_graph_unsupported(scr, "save_script")
     src = _resolve_source(source)
     _check_source(scr, src)
     ws = _workspace()
@@ -439,6 +426,7 @@ def save_script(
         structure=structure,
         bed=bed,
         profile=_profile(profile),
+        cast=fmt.cast if fmt is not None else None,
     )
     return {
         "project_id": project_id,
@@ -971,16 +959,15 @@ def weave_project(
 ) -> dict:
     """[COSTED] Ingest a script into your project and run the full commentary_weave pipeline.
 
-    Re-running on the same project re-ingests: beats are matched by position,
+    Renders every beat type: narration, dialogue (the format's cast), segment,
+    scene_break. Re-running re-ingests: beats are matched by position,
     unchanged ones reuse their renders, and only what changed — a beat, the
-    format, the rights ``profile`` — is re-synthesized, with provenance
-    (Narration, Segment, scene_break beats; not Dialogue). ``format_id``
-    applies a format; ``bed_asset_id`` / ``sting_asset_id`` add a music bed
-    and scene sting (see ``help``).
+    format/cast, the rights ``profile`` — is re-synthesized, with provenance.
+    ``format_id`` applies a format; ``bed_asset_id`` / ``sting_asset_id`` add
+    music (see ``help``).
     """
     _require_nw("weave_project")
     scr = script_from_json(script)
-    _reject_graph_unsupported(scr, "weave_project")
     src = _resolve_source(source)
     _check_source(scr, src)
     ws = _workspace()

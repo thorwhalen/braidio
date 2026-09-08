@@ -154,9 +154,11 @@ def capabilities() -> dict:
             "result of all three carries `sting_applied` / "
             "`sting_ignored_reason` so you know either way "
             "(render_production takes no format, so this doesn't apply there).",
-            "Dialogue beats aren't in the graph pipeline yet (save_script / "
-            "weave_project reject them) — use render_production or render_format "
-            "for those.",
+            "A dialogue beat's turn roles must be the cast's role names: the "
+            "format's (deep_dive is host_a/host_b, interview is host/guest — see "
+            "list_formats) when you pass `format_id`, else the default cast's A/B. "
+            "save_script and weave_project check this before writing anything; "
+            "recasting (a different format_id) re-renders only the dialogue beats.",
             "`profile` is the rights cut, and it now applies on BOTH render "
             "paths: 'personal' plays every clip, 'published' plays only clips "
             "whose rights allow it (dropping the rest, or swapping in a beat's "

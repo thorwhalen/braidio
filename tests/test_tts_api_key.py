@@ -44,9 +44,9 @@ def test_render_dialogue_threads_api_key(tmp_path, monkeypatch):
 
     captured: dict = {}
 
-    def fake_text_to_dialogue(turns, *, api_key=None, **kw):
+    def fake_text_to_dialogue(turns, *, api_key=None, return_cache_status=False, **kw):
         captured["api_key"] = api_key
-        return b"DIALOGUE"
+        return (b"DIALOGUE", False) if return_cache_status else b"DIALOGUE"
 
     monkeypatch.setattr(conv, "text_to_dialogue", fake_text_to_dialogue)
 

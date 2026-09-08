@@ -1,4 +1,4 @@
-"""Stability guard for the 14 body schemas braidio registers with lacing.
+"""Stability guard for the 17 body schemas braidio registers with lacing.
 
 These URIs are *on the wire*. The graph path (nw pipeline + the two deployed
 MCP connectors) reads and writes annotations carrying them, and real projects
@@ -30,7 +30,7 @@ Breaking and additive changes fail in different tests, with different advice:
   exists but isn't pinned, and tells you whether it is additive (optional,
   with a default) or breaking (required).
 
-None of braidio's 14 bodies nest another registered model inside them (no
+None of braidio's 17 bodies nest another registered model inside them (no
 ``$ref`` to a sibling schema, unlike e.g. artful's ``PanelBody``/``PanelImage``
 pair) — every field is a scalar, an enum, a homogeneous ``array``/``tuple``,
 or an open ``object`` — so there is exactly one pinned entry per body, no
@@ -48,6 +48,9 @@ from lacing.schema import get_body_schema, registered_uris
 from braidio.bodies import (
     AUDIO_CLIP_V1,
     COMMENTARY_V1,
+    DIALOGUE_BEAT_V1,
+    DIALOGUE_CAST_V1,
+    DIALOGUE_RENDER_V1,
     EPISODE_RENDER_V1,
     EPISODE_V1,
     NARRATION_RENDER_V1,
@@ -62,6 +65,9 @@ from braidio.bodies import (
     WEAVE_CONFIG_V1,
     AudioClipBodyV1,
     CommentaryBodyV1,
+    DialogueBeatBodyV1,
+    DialogueCastBodyV1,
+    DialogueRenderBodyV1,
     EpisodeBodyV1,
     EpisodeRenderBodyV1,
     NarrationRenderBodyV1,
@@ -105,14 +111,17 @@ def test_body_schema_uris_are_pinned():
         "SOURCE_V1": SOURCE_V1,
         "AUDIO_CLIP_V1": AUDIO_CLIP_V1,
         "NARRATIVE_BEAT_V1": NARRATIVE_BEAT_V1,
+        "DIALOGUE_BEAT_V1": DIALOGUE_BEAT_V1,
         "SCENE_BREAK_V1": SCENE_BREAK_V1,
         "EPISODE_V1": EPISODE_V1,
         "WEAVE_CONFIG_V1": WEAVE_CONFIG_V1,
         "PRODUCTION_STRUCTURE_V1": PRODUCTION_STRUCTURE_V1,
         "RENDER_PROFILE_V1": RENDER_PROFILE_V1,
+        "DIALOGUE_CAST_V1": DIALOGUE_CAST_V1,
         "SOURCE_MEDIA_V1": SOURCE_MEDIA_V1,
         "VOICE_ASSIGNMENT_V1": VOICE_ASSIGNMENT_V1,
         "NARRATION_RENDER_V1": NARRATION_RENDER_V1,
+        "DIALOGUE_RENDER_V1": DIALOGUE_RENDER_V1,
         "SEGMENT_EXTRACTION_V1": SEGMENT_EXTRACTION_V1,
         "EPISODE_RENDER_V1": EPISODE_RENDER_V1,
     }
@@ -121,14 +130,17 @@ def test_body_schema_uris_are_pinned():
         "SOURCE_V1": "annot://schema/source/v1",
         "AUDIO_CLIP_V1": "annot://schema/audio-clip/v1",
         "NARRATIVE_BEAT_V1": "annot://schema/narrative-beat/v1",
+        "DIALOGUE_BEAT_V1": "annot://schema/dialogue-beat/v1",
         "SCENE_BREAK_V1": "annot://schema/scene-break/v1",
         "EPISODE_V1": "annot://schema/episode/v1",
         "WEAVE_CONFIG_V1": "annot://schema/weave-config/v1",
         "PRODUCTION_STRUCTURE_V1": "annot://schema/production-structure/v1",
         "RENDER_PROFILE_V1": "annot://schema/render-profile/v1",
+        "DIALOGUE_CAST_V1": "annot://schema/dialogue-cast/v1",
         "SOURCE_MEDIA_V1": "annot://schema/source-media/v1",
         "VOICE_ASSIGNMENT_V1": "annot://schema/voice-assignment/v1",
         "NARRATION_RENDER_V1": "annot://schema/narration-render/v1",
+        "DIALOGUE_RENDER_V1": "annot://schema/dialogue-render/v1",
         "SEGMENT_EXTRACTION_V1": "annot://schema/segment-extraction/v1",
         "EPISODE_RENDER_V1": "annot://schema/episode-render/v1",
     }, MIGRATION_RULE
@@ -140,14 +152,17 @@ OWNED: dict[str, type] = {
     SOURCE_V1: SourceBodyV1,
     AUDIO_CLIP_V1: AudioClipBodyV1,
     NARRATIVE_BEAT_V1: NarrativeBeatBodyV1,
+    DIALOGUE_BEAT_V1: DialogueBeatBodyV1,
     SCENE_BREAK_V1: SceneBreakBodyV1,
     EPISODE_V1: EpisodeBodyV1,
     WEAVE_CONFIG_V1: WeaveConfigBodyV1,
     PRODUCTION_STRUCTURE_V1: ProductionStructureBodyV1,
     RENDER_PROFILE_V1: RenderProfileBodyV1,
+    DIALOGUE_CAST_V1: DialogueCastBodyV1,
     SOURCE_MEDIA_V1: SourceMediaBodyV1,
     VOICE_ASSIGNMENT_V1: VoiceAssignmentBodyV1,
     NARRATION_RENDER_V1: NarrationRenderBodyV1,
+    DIALOGUE_RENDER_V1: DialogueRenderBodyV1,
     SEGMENT_EXTRACTION_V1: SegmentExtractionBodyV1,
     EPISODE_RENDER_V1: EpisodeRenderBodyV1,
 }
@@ -158,8 +173,8 @@ def test_uri_resolves_to_its_pinned_model(uri):
     assert get_body_schema(uri) is OWNED[uri], MIGRATION_RULE
 
 
-def test_braidio_owns_exactly_these_fourteen_body_schemas():
-    """A fifteenth braidio-owned schema must be pinned here too, or it ships
+def test_braidio_owns_exactly_these_seventeen_body_schemas():
+    """An eighteenth braidio-owned schema must be pinned here too, or it ships
     unguarded. (Filtered to braidio's own models: the lacing registry is
     global and other packages register into it as well.)"""
     owned = {
@@ -183,7 +198,7 @@ def test_bodies_forbid_extra_fields(uri):
 # --- the serialized shapes ---------------------------------------------------
 
 #: Model name → its pinned ``required`` field names and per-field shapes.
-#: Generated once from the current models (none of the 14 bodies nests
+#: Generated once from the current models (none of the 17 bodies nests
 #: another registered model, so there is exactly one entry per body — no
 #: nested-model table like artful's ``PanelImage``/``ShotEntry``).
 #: ``required`` is a *set*: JSON object key order is not part of the
@@ -233,6 +248,14 @@ PINNED: dict[str, dict] = {
             "text": "string",
         },
     },
+    "DialogueBeatBodyV1": {
+        "required": frozenset({"beat_id", "turns"}),
+        "fields": {
+            "beat_id": "string",
+            "label": 'string = ""',
+            "turns": "array<tuple<string,string>>",
+        },
+    },
     "SceneBreakBodyV1": {
         "required": frozenset({"beat_id"}),
         "fields": {
@@ -275,6 +298,14 @@ PINNED: dict[str, dict] = {
             "substituted": "array<string>",
         },
     },
+    "DialogueCastBodyV1": {
+        "required": frozenset({"model_id", "roles"}),
+        "fields": {
+            "model_id": "string",
+            "roles": "object<string,string>",
+            "settings": "object<string,any>|null = null",
+        },
+    },
     "SourceMediaBodyV1": {
         "required": frozenset({"asset_id", "label"}),
         "fields": {
@@ -293,6 +324,15 @@ PINNED: dict[str, dict] = {
         },
     },
     "NarrationRenderBodyV1": {
+        "required": frozenset({"cache_key"}),
+        "fields": {
+            "artifact_id": "string|null = null",
+            "cache_key": "string",
+            "duration_s": "number = 0.0",
+            "url": "string|null = null",
+        },
+    },
+    "DialogueRenderBodyV1": {
         "required": frozenset({"cache_key"}),
         "fields": {
             "artifact_id": "string|null = null",
@@ -395,7 +435,7 @@ PROSE_KEYS = frozenset({"title", "description"})
 
 def _actual_shapes() -> dict[str, dict]:
     """``{model name: {"required": frozenset(...), "fields": {name: shape}}}``
-    for the 14 owned bodies. None of them nests another registered model, so
+    for the 17 owned bodies. None of them nests another registered model, so
     there are no ``$defs`` to walk (unlike artful's nested carriers)."""
     return {
         js["title"]: _entry(js)
