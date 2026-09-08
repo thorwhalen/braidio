@@ -67,10 +67,14 @@ def _graph_structure(
     dropped (braidio#53). A supplied ``sting_asset_id`` is never refused (a
     per-beat ``SceneBreak`` marker can still play it even under a ``"none"``
     default), only reported via the returned ``sting_applied`` /
-    ``sting_ignored_reason``.
+    ``sting_ignored_reason`` — evaluated against the default
+    :class:`~braidio.structure.MusicStructure` when no format is declared,
+    since that default (``scene_marker="sting"``) is still what a scene break
+    resolves against.
     """
     from dataclasses import replace
 
+    from braidio.formats import sting_would_play
     from braidio.music import MusicBed, bed_for_intensity
     from braidio.structure import Sting
 
@@ -92,6 +96,17 @@ def _graph_structure(
             )
         sting_applied = application["sting_applied"]
         sting_ignored_reason = application["sting_ignored_reason"]
+    elif sting_path is not None:
+        default_structure = braidio.MusicStructure()
+        if sting_would_play(default_structure, script, sting_path):
+            sting_applied = True
+        else:
+            sting_applied = False
+            sting_ignored_reason = (
+                "no scene break in this script resolves to marker='sting' "
+                f"(default scene_marker={default_structure.scene_marker!r}, "
+                "no format declared)"
+            )
     structure = fmt.structure if fmt is not None else None
     if sting_path is not None:
         base = structure if structure is not None else braidio.MusicStructure()

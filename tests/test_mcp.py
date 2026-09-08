@@ -1251,7 +1251,11 @@ def test_weave_project_refuses_bed_asset_under_music_bed_none_format(monkeypatch
 def test_save_script_without_a_format_never_refuses_bed_asset():
     # No format declared means no music_bed to refuse against — the guard only
     # fires when format_id resolves to a Format (mirrors render_production,
-    # which has no format param at all and never refuses).
+    # which has no format param at all and never refuses). A supplied sting
+    # still gets reported: with no format, the fallback base structure is the
+    # MusicStructure default (scene_marker="sting"), so a bare scene_break
+    # DOES wire it in — sting_applied must be True, not None (braidio#53
+    # review nit: the guard being skipped must not also skip reporting).
     import base64
 
     import nw
@@ -1261,6 +1265,9 @@ def test_save_script_without_a_format_never_refuses_bed_asset():
     bed_id = _call(
         server, "upload_asset", {"data_b64": base64.b64encode(b"BED").decode()}
     ).structured_content["itemId"]
+    sting_id = _call(
+        server, "upload_asset", {"data_b64": base64.b64encode(b"STING").decode()}
+    ).structured_content["itemId"]
     result = _call(
         server,
         "save_script",
@@ -1269,12 +1276,17 @@ def test_save_script_without_a_format_never_refuses_bed_asset():
             "script": {
                 "title": "t",
                 "id_slug": "01",
-                "beats": [{"type": "narration", "text": "hi"}],
+                "beats": [
+                    {"type": "narration", "text": "hi"},
+                    {"type": "scene_break"},
+                ],
             },
             "bed_asset_id": bed_id,
+            "sting_asset_id": sting_id,
         },
     ).structured_content
-    assert result["sting_applied"] is None
+    assert result["sting_applied"] is True
+    assert result["sting_ignored_reason"] is None
     proj = bmcp.workspace.Workspace.for_email(OWNER).open_project("wp3")
     (structure,) = nw.annotations_at_tier(proj.root, "production-structures")
     assert structure.body["bed_asset_id"] == bed_id

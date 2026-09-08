@@ -188,12 +188,18 @@ def _bed_usable(fmt: Format) -> bool:
     return BED_GAIN_BY_INTENSITY.get(fmt.music_bed) is not None
 
 
-def _sting_would_play(fmt: Format, script, sting_asset: str) -> bool:
+def sting_would_play(structure: MusicStructure, script, sting_asset: str) -> bool:
     """Whether some ``SceneBreak`` in ``script`` resolves to marker ``"sting"``
-    under ``fmt.structure`` once ``sting_asset`` is wired in as the sting."""
+    under ``structure`` once ``sting_asset`` is wired in as the sting.
+
+    Takes a bare :class:`MusicStructure` (not a :class:`Format`) so callers with
+    no format at all — e.g. the graph path's ``_graph_structure`` with no
+    ``format_id`` — can still ask against the ad hoc default structure they
+    build in that case (braidio#53).
+    """
     from braidio.script import SceneBreak
 
-    structure = replace(fmt.structure, sting=Sting(sting_asset))
+    structure = replace(structure, sting=Sting(sting_asset))
     beats = getattr(script, "beats", None) or ()
     return any(
         structure.plays_sting_of(b.marker) for b in beats if isinstance(b, SceneBreak)
@@ -236,7 +242,7 @@ def describe_asset_application(
                 f"format {fmt.id!r} declares music_bed={fmt.music_bed!r} (no bed)"
             )
     if sting_asset is not None:
-        if _sting_would_play(fmt, script, sting_asset):
+        if sting_would_play(fmt.structure, script, sting_asset):
             result["sting_applied"] = True
         else:
             result["sting_applied"] = False
