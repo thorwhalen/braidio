@@ -30,7 +30,7 @@ Two ways in — same model underneath:
 | You have | Use |
 |---|---|
 | the **braidio MCP connector** (tools named `help`, `render_format`, … or namespaced `braidio_*`) | the tool path below |
-| the **Python package** (`pip install braidio`, ffmpeg on PATH, `ELEVENLABS_API_KEY` set) | the Python path below |
+| the **Python package** (`pip install braidio`, ffmpeg on PATH, `ELEVENLABS_API_KEY` set — or pass `api_key=` to any render, `weave_project` included) | the Python path below |
 
 **Synthesis costs real money** (ElevenLabs, billed per character). Always
 `estimate_cost` first, and ask the user about voice / format / length before

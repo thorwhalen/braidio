@@ -42,6 +42,27 @@ TIER_EPISODE_RENDER = "episode-renders"
 #: Rate for the (incidental) NodeRef intervals on non-media nodes.
 _RATE = 1000
 
+#: The provider name braidio's two paid Transforms read from
+#: ``execute(secrets=)`` (nw's per-caller credential seam, thorwhalen/braidio#58).
+#: braidio owns this name the way nw owns ``nw.FAL_SECRET``.
+ELEVENLABS_SECRET = "elevenlabs"
+
+
+def elevenlabs_key(secrets) -> str | None:
+    """The caller's ElevenLabs key from an ``execute(secrets=)`` mapping, or ``None``.
+
+    ``None`` is what :func:`braidio.tts.narrate` / :func:`braidio.render_dialogue`
+    read as "resolve from the process environment" — the behaviour every graph
+    render had before the seam existed. The key is read here, handed to the
+    synthesis boundary as ``api_key``, and reaches nothing that persists: it is
+    not an audio-affecting input, so it is deliberately absent from every
+    ``cache_key`` (the same text under two keys is the same render).
+    """
+    if not secrets:
+        return None
+    return secrets.get(ELEVENLABS_SECRET) or None
+
+
 #: **The singleton rule, stated once.** At these tiers the *tier itself* is the
 #: node's identity: an ingest writes at most one node there, and a re-ingest
 #: replaces it **under the same annotation id** rather than adding a second one

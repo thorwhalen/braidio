@@ -37,6 +37,7 @@ from __future__ import annotations
 
 from nw import TransformInputs
 
+from braidio.transforms._common import ELEVENLABS_SECRET
 from braidio.transforms._ingest import ingest_script, IngestedScript
 from braidio.transforms import (  # noqa: F401
     _voice,
@@ -77,6 +78,7 @@ def weave_project(
     profile=None,
     rights=None,
     cast=None,
+    api_key=None,
 ):
     """Ingest ``script`` and run the whole commentary-weave chain, in order.
 
@@ -125,6 +127,14 @@ def weave_project(
     returns the episode already there and writes nothing. After a real change
     the previous episode stays in the graph as history, stale; the returned
     one is current (thorwhalen/braidio#51).
+
+    ``api_key`` is the caller's ElevenLabs key, and means exactly what it
+    means on :func:`braidio.render.render_production`: ``None`` (default)
+    resolves from the process environment. It reaches the two synthesis
+    Transforms through nw's ``execute(secrets=)`` seam — as
+    ``{"elevenlabs": api_key}``, to those two and no other — and nothing in
+    the graph: not a node, not provenance, not a ``cache_key``
+    (thorwhalen/braidio#58).
     """
     import nw
 
@@ -150,12 +160,18 @@ def weave_project(
     segment = nw.get_transform(SEGMENT_EXTRACTION_TRANSFORM)
     episode = nw.get_transform(EPISODE_TRANSFORM)
 
+    # The one place the key becomes a Secrets, handed only to the Transforms
+    # that spend it; the free ones (voice, segment, episode) never see it.
+    secrets = nw.as_secrets({ELEVENLABS_SECRET: api_key})
+
     render_by_authoring_id = {}
     for beat in ing.narration_beats:
         _run(voice, project, beat)
-        render_by_authoring_id[beat.id] = _run(narration, project, beat)
+        render_by_authoring_id[beat.id] = _run(
+            narration, project, beat, secrets=secrets
+        )
     for beat in ing.dialogue_beats:
-        render_by_authoring_id[beat.id] = _run(dialogue, project, beat)
+        render_by_authoring_id[beat.id] = _run(dialogue, project, beat, secrets=secrets)
     for clip in ing.audio_clips:
         render_by_authoring_id[clip.id] = _run(segment, project, clip)
 
@@ -168,9 +184,14 @@ def weave_project(
     return _run(episode, project, *members)
 
 
-def _run(transform, project, *primary):
-    """``plan`` then ``execute`` one transform over ``primary``; return its output."""
+def _run(transform, project, *primary, secrets=None):
+    """``plan`` then ``execute`` one transform over ``primary``; return its output.
+
+    ``secrets`` is offered only when there is one — the Transform's ``execute``
+    then declares the keyword or it is a caller bug worth a ``TypeError``.
+    """
     inputs = TransformInputs(primary=tuple(primary))
     plan, skeleton = transform.plan(project, inputs)
-    result = transform.execute(project, plan, skeleton)
+    kwargs = {} if secrets is None else {"secrets": secrets}
+    result = transform.execute(project, plan, skeleton, **kwargs)
     return result.annotations[0]

@@ -77,7 +77,10 @@ graph = ["lacing"]
 # feature, so nw#27's git log reads one release earlier than it ships. Verified by
 # reading the published artifacts, not the changelog — 0.0.28 still has the old
 # signature; 0.0.29 is the first release with the new one.
-nw-app = ["lacing", "nw>=0.0.34", "falaw"]
+# nw>=0.0.51: `execute(..., secrets=)` — the per-caller credential seam the two
+# paid transforms declare and `weave_project(api_key=)` threads (braidio#58, nw#78).
+# Same wads caveat as above: the feature commit is one release before the bump.
+nw-app = ["lacing", "nw>=0.0.51", "falaw"]
 # The MCP server (`braidio.mcp`): a Claude.ai connector's tool surface + usage
 # metering. `fastmcp` + `py2mcp` build and serve it; the nw-app powers the project
 # and weave tools. The usage-ledger store is dependency-injected by the connector
@@ -86,8 +89,8 @@ nw-app = ["lacing", "nw>=0.0.34", "falaw"]
 # dol>=0.3.57: the asset tools use dol.content (ContentRef + content-addressed
 #   store), added in that release — pin the floor so installs don't resolve an
 #   older dol without it.
-# nw>=0.0.29: see the nw-app note above (derive_provenance's signature, nw#27).
-mcp = ["fastmcp", "py2mcp>=0.1.9", "pypdf", "dol>=0.3.57", "lacing", "nw>=0.0.29", "falaw", "yb[download]>=0.1.7"]
+# nw>=0.0.51: see the nw-app note above (the `secrets=` seam, braidio#58).
+mcp = ["fastmcp", "py2mcp>=0.1.9", "pypdf", "dol>=0.3.57", "lacing", "nw>=0.0.51", "falaw", "yb[download]>=0.1.7"]
 
 [tool.ruff]
 line-length = 88

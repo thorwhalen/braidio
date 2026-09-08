@@ -167,5 +167,10 @@ def capabilities() -> dict:
             "a profile would drop, free.",
             "Every call is metered to the authenticated user; the connector is "
             "restricted to its allowlisted users.",
+            "Bring your own ElevenLabs key by sending it as the `X-Elevenlabs-Key` "
+            "request header: every costed tool (the one-shot renders and "
+            "weave_project alike) then bills that key instead of the connector's. "
+            "The key is used for the call and never stored — not in your project, "
+            "its renders, or the usage ledger.",
         ],
     }

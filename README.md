@@ -139,6 +139,9 @@ ElevenLabs TTS is braidio's only spend (everything else is local ffmpeg). `braid
 |---|---|
 | `BRAIDIO_TTS_USD_PER_1K_CHARS` | USD per 1000 characters. Unset → a conservative default; `none` → mark spend *unpriced* (character counts still reported, dollars `None`). |
 | `BRAIDIO_TTS_VOICE` | Default ElevenLabs voice id for narration. |
+| `ELEVENLABS_API_KEY` | The key synthesis bills when a render is given no `api_key=`. |
+
+Every render entry point — `narrate`, `render_dialogue`, `render_production`, `render_format` and the graph driver `weave_project` — takes an explicit `api_key=` for a caller's own ElevenLabs key; `None` (the default) resolves from the environment. On the graph path the key reaches the two synthesis transforms through nw's `execute(secrets=)` seam and is never persisted: not in a node, provenance, a cache key or a usage ledger (thorwhalen/braidio#58). The MCP server reads it from the `X-Elevenlabs-Key` request header, never from a tool argument.
 
 ## What it deliberately does *not* do
 
