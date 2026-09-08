@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.mcp._guide &mdash; braidio 0.0.32 documentation</title>
+  <title>braidio.mcp._guide &mdash; braidio 0.0.33 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../../../_static/documentation_options.js?v=565bc8c8"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -264,14 +264,16 @@
             <span class="s2">"without a sting a scene_break is just a pause, and a segment beat's "</span>
             <span class="s2">"spotlight flag needs `bed_asset_id` specifically (there's no bed to "</span>
             <span class="s2">"drop out)."</span><span class="p">,</span>
-            <span class="s2">"render_format formats vary in what they use a bed/sting for: a "</span>
-            <span class="s2">"format with music_bed='none' (e.g. song_exploder) never renders a "</span>
-            <span class="s2">"bed at all, so render_format refuses `bed_asset_id` there up front "</span>
-            <span class="s2">"rather than charge you and drop it. A sting can still legitimately "</span>
-            <span class="s2">"go unused (e.g. the format's default scene_marker is 'none' and the "</span>
-            <span class="s2">"script never overrides it per scene_break) — render_format's result "</span>
-            <span class="s2">"carries `sting_applied` / `sting_ignored_reason` so you know either "</span>
-            <span class="s2">"way."</span><span class="p">,</span>
+            <span class="s2">"Formats vary in what they use a bed/sting for: a format with "</span>
+            <span class="s2">"music_bed='none' (e.g. song_exploder) never renders a bed at all, "</span>
+            <span class="s2">"so render_format, save_script and weave_project all refuse "</span>
+            <span class="s2">"`bed_asset_id` there up front rather than charge you (or, for "</span>
+            <span class="s2">"save_script, ingest it) and drop it. A sting can still "</span>
+            <span class="s2">"legitimately go unused (e.g. the format's default scene_marker is "</span>
+            <span class="s2">"'none' and the script never overrides it per scene_break) — the "</span>
+            <span class="s2">"result of all three carries `sting_applied` / "</span>
+            <span class="s2">"`sting_ignored_reason` so you know either way "</span>
+            <span class="s2">"(render_production takes no format, so this doesn't apply there)."</span><span class="p">,</span>
             <span class="s2">"Dialogue beats aren't in the graph pipeline yet (save_script / "</span>
             <span class="s2">"weave_project reject them) — use render_production or render_format "</span>
             <span class="s2">"for those."</span><span class="p">,</span>

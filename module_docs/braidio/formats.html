@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.formats &mdash; braidio 0.0.32 documentation</title>
+  <title>braidio.formats &mdash; braidio 0.0.33 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../../_static/documentation_options.js?v=565bc8c8"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -66,6 +66,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.formats.describe_asset_application"><code class="docutils literal notranslate"><span class="pre">describe_asset_application()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.formats.render_format"><code class="docutils literal notranslate"><span class="pre">render_format()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.formats.sting_would_play"><code class="docutils literal notranslate"><span class="pre">sting_would_play()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="genre.html">braidio.genre</a></li>
@@ -212,6 +213,17 @@ the bed, a format’s <code class="docutils literal notranslate"><span class="pr
 <code class="docutils literal notranslate"><span class="pre">SceneBreak.marker</span></code> override can still play the sting even under a
 <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> default — so a sting that ends up unused is not refused, only
 reported (see <a class="reference internal" href="#braidio.formats.describe_asset_application" title="braidio.formats.describe_asset_application"><code class="xref py py-func docutils literal notranslate"><span class="pre">describe_asset_application()</span></code></a>).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.formats.sting_would_play">
+<span class="sig-prename descclassname"><span class="pre">braidio.formats.</span></span><span class="sig-name descname"><span class="pre">sting_would_play</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="structure.html#braidio.structure.MusicStructure" title="braidio.structure.MusicStructure"><span class="pre">MusicStructure</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">script</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sting_asset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/braidio/formats.html#sting_would_play"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.formats.sting_would_play" title="Link to this definition"></a></dt>
+<dd><p>Whether some <code class="docutils literal notranslate"><span class="pre">SceneBreak</span></code> in <code class="docutils literal notranslate"><span class="pre">script</span></code> resolves to marker <code class="docutils literal notranslate"><span class="pre">&quot;sting&quot;</span></code>
+under <code class="docutils literal notranslate"><span class="pre">structure</span></code> once <code class="docutils literal notranslate"><span class="pre">sting_asset</span></code> is wired in as the sting.</p>
+<p>Takes a bare <code class="xref py py-class docutils literal notranslate"><span class="pre">MusicStructure</span></code> (not a <a class="reference internal" href="#braidio.formats.Format" title="braidio.formats.Format"><code class="xref py py-class docutils literal notranslate"><span class="pre">Format</span></code></a>) so callers with
+no format at all — e.g. the graph path’s <code class="docutils literal notranslate"><span class="pre">_graph_structure</span></code> with no
+<code class="docutils literal notranslate"><span class="pre">format_id</span></code> — can still ask against the ad hoc default structure they
+build in that case (braidio#53).</p>
 </dd></dl>
 
 </section>

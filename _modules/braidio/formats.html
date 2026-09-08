@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.formats &mdash; braidio 0.0.32 documentation</title>
+  <title>braidio.formats &mdash; braidio 0.0.33 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=f2234cd1"></script>
+      <script src="../../_static/documentation_options.js?v=565bc8c8"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -315,16 +315,25 @@
     <span class="k">return</span> <span class="n">BED_GAIN_BY_INTENSITY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">music_bed</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_sting_would_play</span><span class="p">(</span><span class="n">fmt</span><span class="p">:</span> <span class="n">Format</span><span class="p">,</span> <span class="n">script</span><span class="p">,</span> <span class="n">sting_asset</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="sting_would_play">
+<a class="viewcode-back" href="../../module_docs/braidio/formats.html#braidio.sting_would_play">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sting_would_play</span><span class="p">(</span><span class="n">structure</span><span class="p">:</span> <span class="n">MusicStructure</span><span class="p">,</span> <span class="n">script</span><span class="p">,</span> <span class="n">sting_asset</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Whether some ``SceneBreak`` in ``script`` resolves to marker ``"sting"``</span>
-<span class="sd">    under ``fmt.structure`` once ``sting_asset`` is wired in as the sting."""</span>
+<span class="sd">    under ``structure`` once ``sting_asset`` is wired in as the sting.</span>
+
+<span class="sd">    Takes a bare :class:`MusicStructure` (not a :class:`Format`) so callers with</span>
+<span class="sd">    no format at all — e.g. the graph path's ``_graph_structure`` with no</span>
+<span class="sd">    ``format_id`` — can still ask against the ad hoc default structure they</span>
+<span class="sd">    build in that case (braidio#53).</span>
+<span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.script</span><span class="w"> </span><span class="kn">import</span> <span class="n">SceneBreak</span>
 
-    <span class="n">structure</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="n">sting</span><span class="o">=</span><span class="n">Sting</span><span class="p">(</span><span class="n">sting_asset</span><span class="p">))</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">structure</span><span class="p">,</span> <span class="n">sting</span><span class="o">=</span><span class="n">Sting</span><span class="p">(</span><span class="n">sting_asset</span><span class="p">))</span>
     <span class="n">beats</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="s2">"beats"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()</span>
     <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
         <span class="n">structure</span><span class="o">.</span><span class="n">plays_sting_of</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">marker</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">beats</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">SceneBreak</span><span class="p">)</span>
-    <span class="p">)</span>
+    <span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="describe_asset_application">
@@ -365,7 +374,7 @@
                 <span class="sa">f</span><span class="s2">"format </span><span class="si">{</span><span class="n">fmt</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> declares music_bed=</span><span class="si">{</span><span class="n">fmt</span><span class="o">.</span><span class="n">music_bed</span><span class="si">!r}</span><span class="s2"> (no bed)"</span>
             <span class="p">)</span>
     <span class="k">if</span> <span class="n">sting_asset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">_sting_would_play</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">script</span><span class="p">,</span> <span class="n">sting_asset</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sting_would_play</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">structure</span><span class="p">,</span> <span class="n">script</span><span class="p">,</span> <span class="n">sting_asset</span><span class="p">):</span>
             <span class="n">result</span><span class="p">[</span><span class="s2">"sting_applied"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">result</span><span class="p">[</span><span class="s2">"sting_applied"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
