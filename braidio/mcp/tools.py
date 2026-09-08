@@ -51,21 +51,62 @@ def _reject_graph_unsupported(scr, tool: str) -> None:
         )
 
 
-def _graph_structure(ws, *, format_id: str | None, bed_asset_id, sting_asset_id):
-    """``(format, MusicStructure | None, MusicBed | None)`` for a graph ingest.
+def _graph_structure(
+    ws, *, format_id: str | None, bed_asset_id, sting_asset_id, script, tool: str
+):
+    """``(format, MusicStructure | None, MusicBed | None, sting_applied, sting_ignored_reason)``
+    for a graph ingest.
 
     The format's declared structure is the base; the uploaded assets are what
     make it audible. Asset ids are resolved through the caller's workspace —
-    a tool never takes a server path.
+    a tool never takes a server path. Shares
+    :func:`braidio.describe_asset_application` with the fast path
+    (:func:`braidio.render_format`, braidio#43): under a format whose
+    ``music_bed`` is ``"none"``, a supplied ``bed_asset_id`` is refused here —
+    before ``open_project``/ingest, so before any spend — rather than silently
+    dropped (braidio#53). A supplied ``sting_asset_id`` is never refused (a
+    per-beat ``SceneBreak`` marker can still play it even under a ``"none"``
+    default), only reported via the returned ``sting_applied`` /
+    ``sting_ignored_reason`` — evaluated against the default
+    :class:`~braidio.structure.MusicStructure` when no format is declared,
+    since that default (``scene_marker="sting"``) is still what a scene break
+    resolves against.
     """
     from dataclasses import replace
 
+    from braidio.formats import sting_would_play
     from braidio.music import MusicBed, bed_for_intensity
     from braidio.structure import Sting
 
     fmt = _format(format_id)
     bed_path = _resolve_asset(ws, bed_asset_id)
     sting_path = _resolve_asset(ws, sting_asset_id)
+    sting_applied = None
+    sting_ignored_reason = None
+    if fmt is not None:
+        application = braidio.describe_asset_application(
+            fmt, script, bed_asset=bed_path, sting_asset=sting_path
+        )
+        if application["bed_applied"] is False:
+            raise ToolError(
+                f"{tool}: format {format_id!r} declares music_bed="
+                f"{fmt.music_bed!r} — bed_asset_id {bed_asset_id!r} would be "
+                "paid for and dropped; omit it, or use a format whose "
+                "music_bed isn't 'none'"
+            )
+        sting_applied = application["sting_applied"]
+        sting_ignored_reason = application["sting_ignored_reason"]
+    elif sting_path is not None:
+        default_structure = braidio.MusicStructure()
+        if sting_would_play(default_structure, script, sting_path):
+            sting_applied = True
+        else:
+            sting_applied = False
+            sting_ignored_reason = (
+                "no scene break in this script resolves to marker='sting' "
+                f"(default scene_marker={default_structure.scene_marker!r}, "
+                "no format declared)"
+            )
     structure = fmt.structure if fmt is not None else None
     if sting_path is not None:
         base = structure if structure is not None else braidio.MusicStructure()
@@ -77,7 +118,7 @@ def _graph_structure(ws, *, format_id: str | None, bed_asset_id, sting_asset_id)
             if fmt is not None
             else MusicBed(asset_path=bed_path)
         )
-    return fmt, structure, bed
+    return fmt, structure, bed, sting_applied, sting_ignored_reason
 
 
 def _format(format_id: str | None):
@@ -368,12 +409,12 @@ def save_script(
 ) -> dict:
     """Link a Script's beats into a project's graph (free authoring; render later).
 
-    Writes the narration, segment and scene_break beats into the project graph,
-    so you can review (project_status) and render with weave_project when ready
-    (Dialogue is not in the graph pipeline yet). ``format_id`` +
-    ``bed_asset_id`` / ``sting_asset_id`` record the production's music.
-    ``profile`` is the rights cut: ``"published"`` links only clips it may use.
-    Free — no synthesis.
+    Writes the narration, segment and scene_break beats into the project graph
+    (Dialogue isn't supported yet), so you can review (project_status) and
+    render with weave_project when ready. ``format_id`` + ``bed_asset_id`` /
+    ``sting_asset_id`` record the production's music (see ``help`` for the
+    music_bed="none" refusal and ``sting_applied``). ``profile`` is the rights
+    cut. Free — no synthesis.
     """
     _require_nw("save_script")
     scr = script_from_json(script)
@@ -381,11 +422,13 @@ def save_script(
     src = _resolve_source(source)
     _check_source(scr, src)
     ws = _workspace()
-    fmt, structure, bed = _graph_structure(
+    fmt, structure, bed, sting_applied, sting_ignored_reason = _graph_structure(
         ws,
         format_id=format_id,
         bed_asset_id=bed_asset_id,
         sting_asset_id=sting_asset_id,
+        script=scr,
+        tool="save_script",
     )
     proj = ws.open_project(project_id)
     ingested = braidio.transforms.ingest_script(
@@ -403,6 +446,8 @@ def save_script(
         "beats": [{"kind": k, "id": str(a.id)} for k, a in ingested.ordered],
         "dropped": list(ingested.plan.dropped),
         "substituted": list(ingested.plan.substituted),
+        "sting_applied": sting_applied,
+        "sting_ignored_reason": sting_ignored_reason,
     }
 
 
@@ -926,12 +971,12 @@ def weave_project(
 ) -> dict:
     """[COSTED] Ingest a script into your project and run the full commentary_weave pipeline.
 
-    Uses the nw graph, so re-running re-synthesizes only what changed (partial
-    re-render) and records provenance. Narration, Segment and scene_break beats
-    (not Dialogue yet). ``format_id`` applies a ready-made format;
-    ``bed_asset_id`` / ``sting_asset_id`` add a music bed and a scene-break
-    sting. ``profile`` is the rights cut: ``"published"`` renders only the clips
-    it is allowed to use.
+    Uses the nw graph, so re-running re-synthesizes only what changed and
+    records provenance (Narration, Segment, scene_break beats; not Dialogue).
+    ``format_id`` applies a ready-made format; ``bed_asset_id`` /
+    ``sting_asset_id`` add a music bed and scene-break sting (see ``help`` for
+    the music_bed="none" refusal and ``sting_applied`` reporting). ``profile``
+    is the rights cut.
     """
     _require_nw("weave_project")
     scr = script_from_json(script)
@@ -939,11 +984,13 @@ def weave_project(
     src = _resolve_source(source)
     _check_source(scr, src)
     ws = _workspace()
-    fmt, structure, bed = _graph_structure(
+    fmt, structure, bed, sting_applied, sting_ignored_reason = _graph_structure(
         ws,
         format_id=format_id,
         bed_asset_id=bed_asset_id,
         sting_asset_id=sting_asset_id,
+        script=scr,
+        tool="weave_project",
     )
     proj = ws.open_project(project_id)
     episode = braidio.weave_project(
@@ -961,4 +1008,6 @@ def weave_project(
         "url": body.get("url"),
         **_episode_retrieval(project_id, str(episode.id)),
         **_render_cost(scr, profile),
+        "sting_applied": sting_applied,
+        "sting_ignored_reason": sting_ignored_reason,
     }
