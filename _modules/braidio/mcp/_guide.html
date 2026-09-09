@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.mcp._guide &mdash; braidio 0.0.35 documentation</title>
+  <title>braidio.mcp._guide &mdash; braidio 0.0.36 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=39aadc1c"></script>
+      <script src="../../../_static/documentation_options.js?v=0e525676"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -64,6 +64,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/_guide.html">braidio.mcp._guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/_helpers.html">braidio.mcp._helpers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/_media.html">braidio.mcp._media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/credentials.html">braidio.mcp.credentials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/metering.html">braidio.mcp.metering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/tools.html">braidio.mcp.tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
@@ -288,6 +289,11 @@
             <span class="s2">"a profile would drop, free."</span><span class="p">,</span>
             <span class="s2">"Every call is metered to the authenticated user; the connector is "</span>
             <span class="s2">"restricted to its allowlisted users."</span><span class="p">,</span>
+            <span class="s2">"Bring your own ElevenLabs key by sending it as the `X-Elevenlabs-Key` "</span>
+            <span class="s2">"request header: every costed tool (the one-shot renders and "</span>
+            <span class="s2">"weave_project alike) then bills that key instead of the connector's. "</span>
+            <span class="s2">"The key is used for the call and never stored — not in your project, "</span>
+            <span class="s2">"its renders, or the usage ledger."</span><span class="p">,</span>
         <span class="p">],</span>
     <span class="p">}</span></div>
 
