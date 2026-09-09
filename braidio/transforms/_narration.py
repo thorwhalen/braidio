@@ -10,6 +10,12 @@ The skeleton's ``provenance.was_derived_from`` records exactly those inputs;
 ``execute`` re-resolves them from the graph (it receives no ``inputs``) and
 writes the completed node through ``project.graph`` so ``nw.stale_after``
 sees it.
+
+A caller's ElevenLabs key reaches the synthesis through ``execute(secrets=)``
+— nw's per-caller credential seam — as ``secrets["elevenlabs"]``, and nowhere
+else: not the node, not provenance, not the ``cache_key`` (a key is not an
+audio-affecting input). ``None`` falls back to the process environment
+(thorwhalen/braidio#58).
 """
 
 from __future__ import annotations
@@ -48,6 +54,7 @@ from braidio.transforms._common import (
     audio_artifact,
     safe_duration,
     file_url,
+    elevenlabs_key,
 )
 
 NAME = "narration_render.tts"
@@ -122,6 +129,7 @@ class NarrationRenderTTS(BaseTransform):
         *,
         use_cache: bool = True,
         force: bool = False,
+        secrets=None,
     ) -> TransformResult:
         import braidio  # runtime attr access so tests can monkeypatch narrate
 
@@ -170,10 +178,10 @@ class NarrationRenderTTS(BaseTransform):
         _, was_cached = braidio.narrate(
             text,
             out_path,
-            # Resolved from the process env: the graph path has no seam for a
-            # per-caller BYO key yet (thorwhalen/braidio#58; same gap as
-            # dialogue_render.tts — fix both together).
-            api_key=None,
+            # The caller's key, if the driver handed one in (nw's `secrets=`
+            # seam; thorwhalen/braidio#58) — else None, the process env. Never
+            # persisted: not in the node, not in the cache_key.
+            api_key=elevenlabs_key(secrets),
             voice_id=va.body.get("voice_id") or DEFAULT_VOICE_ID,
             model_id=model_id,
             voice_settings=config.get("voice_settings", {}),

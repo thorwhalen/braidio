@@ -24,6 +24,7 @@ from fastmcp.exceptions import ToolError
 
 from braidio.mcp._helpers import script_from_json, source_from_json, to_json
 from braidio.rights import DEFAULT_PROFILE
+from braidio.mcp.credentials import caller_elevenlabs_key
 from braidio.mcp.metering import current_email
 from braidio.mcp.workspace import Workspace
 from braidio.tts import DEFAULT_MODEL_ID
@@ -781,7 +782,7 @@ def narrate(
 
     ``delivery`` picks the speaking register / voice preset: ``"narration"`` (default —
     reading a script) or ``"conversational"`` (sounds like talking, not reading), among
-    others from ``list_deliveries``. It sets the model + voice settings.
+    others from ``list_deliveries``. It sets the model + voice settings. Uses your own ElevenLabs key when the request sends `X-Elevenlabs-Key`.
     """
     d = _delivery(delivery)
     ws = _workspace()
@@ -789,6 +790,7 @@ def narrate(
     braidio.narrate(
         text,
         out,
+        api_key=caller_elevenlabs_key(),
         voice_id=voice_id,
         model_id=d.model_id,
         voice_settings=d.voice_settings,
@@ -802,11 +804,11 @@ def narrate(
 
 
 def render_dialogue(turns: list[list[str]], name: str = "dialogue") -> dict:
-    """[COSTED] Render a multi-speaker exchange (``[[role, text], ...]``) → one mp3 (eleven_v3)."""
+    """[COSTED] Render a multi-speaker exchange (``[[role, text], ...]``) → one mp3 (eleven_v3). Uses your own ElevenLabs key when the request sends `X-Elevenlabs-Key`."""
     pairs = [(r, t) for r, t in turns]
     ws = _workspace()
     out = ws.render_path(name)
-    braidio.render_dialogue(pairs, out_path=out)
+    braidio.render_dialogue(pairs, api_key=caller_elevenlabs_key(), out_path=out)
     text = "".join(t for _r, t in pairs)
     return {
         **_retrieval(out),
@@ -819,13 +821,17 @@ def render_dialogue(turns: list[list[str]], name: str = "dialogue") -> dict:
 def render_multivoice(
     segments: list[str], pool: str = "four", name: str = "multivoice"
 ) -> dict:
-    """[COSTED] Render text segments cycling a pool of voices → one mp3."""
+    """[COSTED] Render text segments cycling a pool of voices → one mp3. Uses your own ElevenLabs key when the request sends `X-Elevenlabs-Key`."""
     if pool not in braidio.POOLS:
         raise ToolError(f"unknown pool {pool!r}; use one of {sorted(braidio.POOLS)}")
     ws = _workspace()
     out = ws.render_path(name)
     braidio.render_multivoice(
-        segments, braidio.POOLS[pool], out_path=out, work_dir=_work_dir(ws, name)
+        segments,
+        braidio.POOLS[pool],
+        api_key=caller_elevenlabs_key(),
+        out_path=out,
+        work_dir=_work_dir(ws, name),
     )
     text = "".join(segments)
     return {
@@ -847,7 +853,11 @@ def compose_narration(
     ws = _workspace()
     out = ws.render_path(name)
     braidio.compose_narration(
-        segments, braidio.PRESETS[preset], out_path=out, work_dir=_work_dir(ws, name)
+        segments,
+        braidio.PRESETS[preset],
+        api_key=caller_elevenlabs_key(),
+        out_path=out,
+        work_dir=_work_dir(ws, name),
     )
     text = "".join(segments)
     return {
@@ -892,6 +902,7 @@ def render_production(
         source=src,
         profile=_profile(profile),
         delivery=_delivery(delivery),
+        api_key=caller_elevenlabs_key(),
         out_path=out,
         tts_dir=_work_dir(ws, stem) + "/tts",
         clips_dir=_work_dir(ws, stem) + "/clips",
@@ -942,6 +953,7 @@ def render_format(
         scr,
         source=src,
         profile=_profile(profile),
+        api_key=caller_elevenlabs_key(),
         out_path=out,
         tts_dir=_work_dir(ws, stem) + "/tts",
         clips_dir=_work_dir(ws, stem) + "/clips",
@@ -969,11 +981,11 @@ def weave_project(
     """[COSTED] Ingest a script into your project and run the full commentary_weave pipeline.
 
     Renders every beat type: narration, dialogue (the format's cast), segment,
-    scene_break. Re-running re-ingests: beats are matched by position,
-    unchanged ones reuse their renders, and only what changed — a beat, the
-    format/cast, the rights ``profile`` — is re-synthesized, with provenance.
-    ``format_id`` applies a format; ``bed_asset_id`` / ``sting_asset_id`` add
-    music (see ``help``).
+    scene_break. Re-running re-ingests: unchanged beats reuse their renders;
+    only what changed (a beat, the format/cast, the rights ``profile``) is
+    re-synthesized. ``format_id`` applies a format; ``bed_asset_id`` /
+    ``sting_asset_id`` add music. Bills your own ElevenLabs key if the
+    request sends `X-Elevenlabs-Key`.
     """
     _require_nw("weave_project")
     scr = script_from_json(script)
@@ -997,6 +1009,7 @@ def weave_project(
         structure=structure,
         bed=bed,
         profile=_profile(profile),
+        api_key=caller_elevenlabs_key(),
     )
     body = episode.body
     return {

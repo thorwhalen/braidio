@@ -40,7 +40,9 @@ Practical consequences:
   `FREE_TOOLS` — the deployed connector passes `metered_tools=set(COSTED_TOOLS)`
   to its metering middleware, so a costed tool in the wrong list is spend that
   no cap applies to. Count the surface with `len(braidio.mcp.TOOL_NAMES)` rather
-  than quoting a number.
+  than quoting a number. Every costed tool also threads the caller's key
+  (`api_key=caller_elevenlabs_key()`, see "The caller's key" below) — a costed
+  tool that does not bills the server's key for a BYO caller.
 
 ### How a change actually reaches production (the deploy coupling)
 
@@ -224,6 +226,31 @@ behind a named function.
 | `BRAIDIO_DATA_HOME` (`mcp.workspace.DATA_HOME_ENV_VAR`) | data root for per-user projects/renders/assets (default `~/.local/share/braidio`) |
 | `BRAIDIO_AUDIO_MAX_BYTES`, `BRAIDIO_AUDIO_MAX_DURATION_S` | bounds on `download_audio` server-side fetches |
 | `ELEVENLABS_API_KEY` / `ELEVEN_API_KEY` | resolved by `mixing` / the elevenlabs client when no `api_key=` is threaded |
+
+### The caller's key (bring-your-own ElevenLabs, braidio#58)
+
+Every render entry point takes an explicit `api_key` — `narrate`,
+`render_dialogue`, `render_production`, `render_format`, and the graph
+driver `weave_project(api_key=)` — and `None` means "resolve from the
+environment" (the table above). On the graph path the key travels through
+nw's `execute(..., secrets=)` seam as `{"elevenlabs": key}`, handed by
+`weave_project` to the two paid transforms (`narration_render.tts`,
+`dialogue_render.tts`) and to no other; they read it with
+`_common.elevenlabs_key` and pass it straight to synthesis. **A key is never
+persisted**: not in a node body, provenance, a `cache_key` (it is not an
+audio-affecting input — the same text under two keys is one render and one
+cache hit), or the usage ledger. `tests/test_transforms_secrets.py` greps the
+project tree for a sentinel; the decision record is on braidio#58.
+
+At the MCP boundary the key comes **from the request, never from a tool
+argument** (tool arguments are model-visible and land in the ledger):
+`braidio.mcp.credentials.caller_elevenlabs_key()` reads the
+`X-Elevenlabs-Key` header — reelee's BYO header — and every costed tool
+threads it, so the one-shot renders and `weave_project` bill the same key.
+Absent header → `None` → the server's key, exactly as before. Adding a
+costed tool means threading `api_key=caller_elevenlabs_key()` too;
+`tests/test_mcp_caller_key.py` pins each one. The deployed connectors do not
+yet forward a per-user key (that is platform work, tracked on braidio#58).
 
 Cache-vs-live: `narrate(..., return_cache_status=True)` reports whether `mixing`
 served the audio from disk, and the `narration_render` transform uses it to

@@ -23,6 +23,10 @@ is :func:`braidio.cost.tts_cost_usd` over the joined turn text under the
 cast's model: a rate estimate on a live call, ``0.0`` actual on a graph or
 disk cache hit (with the estimate reported as the saving), and ``None`` when
 the rate is unpriced — never a fake zero.
+
+A caller's ElevenLabs key reaches the synthesis exactly as it does in
+:mod:`braidio.transforms._narration`: through ``execute(secrets=)`` as
+``secrets["elevenlabs"]``, never through the graph (thorwhalen/braidio#58).
 """
 
 from __future__ import annotations
@@ -57,6 +61,7 @@ from braidio.transforms._common import (
     audio_artifact,
     safe_duration,
     file_url,
+    elevenlabs_key,
 )
 
 NAME = "dialogue_render.tts"
@@ -139,6 +144,7 @@ class DialogueRenderTTS(BaseTransform):
         *,
         use_cache: bool = True,
         force: bool = False,
+        secrets=None,
     ) -> TransformResult:
         import braidio  # runtime attr access so tests can monkeypatch render_dialogue
 
@@ -181,10 +187,10 @@ class DialogueRenderTTS(BaseTransform):
         _, was_cached = braidio.render_dialogue(
             turns,
             cast,
-            # Resolved from the process env: the graph path has no seam for a
-            # per-caller BYO key yet (thorwhalen/braidio#58; same gap as
-            # narration_render.tts — fix both together).
-            api_key=None,
+            # The caller's key, if the driver handed one in (nw's `secrets=`
+            # seam; thorwhalen/braidio#58) — else None, the process env. Never
+            # persisted: not in the node, not in the cache_key.
+            api_key=elevenlabs_key(secrets),
             out_path=out_path,
             return_cache_status=True,
         )

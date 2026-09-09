@@ -36,6 +36,7 @@ from typing import Optional
 from fastmcp.exceptions import ToolError
 from fastmcp.server.middleware import Middleware
 
+from braidio.mcp.credentials import redact_caller_key, scrub_caller_key
 from braidio.mcp.workspace import _safe_component
 
 #: Set by :class:`MeteringMiddleware` for the duration of a tool call; read by tools.
@@ -174,6 +175,7 @@ class MeteringMiddleware(Middleware):
             raise ToolError(
                 "usage ledger unavailable; refusing to run to avoid untracked spend"
             ) from exc
+        scrubbed: BaseException | None = None
         try:
             result = await call_next(context)
             out = getattr(result, "structured_content", None)
@@ -191,12 +193,20 @@ class MeteringMiddleware(Middleware):
             return result
         except Exception as exc:  # noqa: BLE001 — record the failure, then re-raise
             entry["status"] = "error"
-            entry["error"] = repr(exc)
+            # A provider echoes the key back on a 401, and this row is
+            # persistent per user — redact while the request (and so the
+            # caller's key) is still in flight (braidio#58 review).
+            entry["error"] = redact_caller_key(repr(exc))
             entry["elapsed_s"] = (time.time_ns() - t0) / 1e9
-            raise
+            scrubbed = scrub_caller_key(exc)
+            if scrubbed is exc:
+                raise
         finally:
             # Best-effort final update; the write-ahead 'started' row is the trace.
             try:
                 self.ledger.record(entry)
             except Exception:  # noqa: BLE001
                 pass
+        # Raised outside the handler so the dirty original is not its context;
+        # fastmcp renders this text into the tool error the model sees.
+        raise scrubbed
