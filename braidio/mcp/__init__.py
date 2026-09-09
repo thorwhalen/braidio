@@ -24,7 +24,11 @@ from braidio.mcp.metering import (
     current_email,
     token_email,
 )
-from braidio.mcp.credentials import ELEVENLABS_KEY_HEADER, caller_elevenlabs_key
+from braidio.mcp.credentials import (
+    ELEVENLABS_KEY_HEADER,
+    caller_elevenlabs_key,
+    redact_caller_key,
+)
 from braidio.mcp.workspace import Workspace, data_root
 
 #: Free, stateless tools (no ElevenLabs spend): assistance + catalog + planning/read
@@ -147,6 +151,7 @@ __all__ = [
     "UsageLedger",
     "current_email",
     "caller_elevenlabs_key",
+    "redact_caller_key",
     "ELEVENLABS_KEY_HEADER",
     "token_email",
     "MediaSourceError",

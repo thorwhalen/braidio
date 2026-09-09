@@ -41,4 +41,61 @@ def caller_elevenlabs_key() -> str | None:
     return None
 
 
-__all__ = ["ELEVENLABS_KEY_HEADER", "caller_elevenlabs_key"]
+#: The provider name the key is redacted under (``<redacted:elevenlabs>``) —
+#: the same name braidio's transforms read it by from nw's ``secrets=`` seam.
+_PROVIDER = "elevenlabs"
+
+
+def redact_caller_key(text: str) -> str:
+    """``text`` with the in-flight caller key, if any, replaced by a marker.
+
+    For free text the server persists or returns that it did not author — a
+    provider's error message. ElevenLabs quotes the key back on a 401, and the
+    usage ledger records the failure of every costed call, so without this the
+    key lands on disk exactly when the provider rejects it. Delegates to
+    :func:`nw.secrets.redact` when nw is installed (the ``mcp`` extra has it)
+    and does the same exact-substring replacement itself when it is not, so
+    the metering layer never needs the nw layer.
+    """
+    key = caller_elevenlabs_key()
+    if not key or not text:
+        return text
+    try:
+        from nw.secrets import redact
+    except ImportError:  # the mcp surface without the nw layer
+        return text.replace(key, f"<redacted:{_PROVIDER}>")
+    return redact(text, {_PROVIDER: key})
+
+
+def scrub_caller_key(error: BaseException) -> BaseException:
+    """The exception to re-raise so its rendering never carries the caller key.
+
+    The client-facing counterpart of :func:`redact_caller_key`: fastmcp turns
+    the raised exception's text into the tool error the model sees, and that
+    lands in the host transcript. Same object back when it was already clean;
+    otherwise the same type rebuilt from the clean text, or a ``RuntimeError``
+    naming the original type when the type will not construct that way.
+    """
+    key = caller_elevenlabs_key()
+    if not key:
+        return error
+    try:
+        from nw.secrets import redact_exception
+    except ImportError:
+        rendered = str(error)
+        clean = redact_caller_key(rendered)
+        if clean == rendered:
+            return error
+        try:
+            return type(error)(clean)
+        except Exception:  # noqa: BLE001 — any construction failure takes the fallback
+            return RuntimeError(f"{type(error).__name__}: {clean}")
+    return redact_exception(error, {_PROVIDER: key})
+
+
+__all__ = [
+    "ELEVENLABS_KEY_HEADER",
+    "caller_elevenlabs_key",
+    "redact_caller_key",
+    "scrub_caller_key",
+]

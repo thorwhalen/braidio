@@ -190,3 +190,36 @@ def test_the_key_is_not_a_tool_argument():
         fn = import_object(f"braidio.mcp.tools:{name}")
         params = inspect.signature(fn).parameters
         assert not any("key" in p.lower() for p in params), (name, list(params))
+
+
+def test_a_failing_costed_call_leaves_the_ledger_and_the_error_clean(
+    monkeypatch, header
+):
+    """ElevenLabs quotes the key back on a 401; the ledger row that records
+    the failure, and the tool error the model sees, must not carry it."""
+
+    def _rejects(*a, **kw):
+        raise RuntimeError(f"ElevenLabs 401: invalid api key {kw.get('api_key')}")
+
+    monkeypatch.setattr(braidio, "narrate", _rejects)
+    ledger = {}
+    server = _local_server(ledger=ledger)
+    header["value"] = SENTINEL
+    from fastmcp.exceptions import ToolError
+
+    with pytest.raises(ToolError) as info:
+        _call(server, "narrate", {"text": "hi"})
+    assert SENTINEL not in str(info.value)
+    assert "<redacted:elevenlabs>" in str(info.value)
+    dumped = json.dumps(ledger, default=str)
+    assert SENTINEL not in dumped
+    assert "<redacted:elevenlabs>" in dumped
+    (row,) = [e for e in ledger.values() if e.get("status") == "error"]
+    assert row["tool"] == "narrate"
+
+
+def test_redaction_helpers_without_a_key_in_flight_are_identity():
+    text = f"no key: {SENTINEL}"
+    assert credentials.redact_caller_key(text) == text  # no header → nothing to redact
+    err = RuntimeError(text)
+    assert credentials.scrub_caller_key(err) is err
