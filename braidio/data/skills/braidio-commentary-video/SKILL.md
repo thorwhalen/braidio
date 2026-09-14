@@ -28,7 +28,10 @@ Everything below is `braidio.video` (panels, canvases, render) and
 caller's job, exactly as `SegmentSource` leaves audio acquisition to the caller.
 **Use `illustration` to do that job** (see *Images* below); it is the fleet's
 image-retrieval package and already carries licence, attribution and
-same-subject deduplication.
+same-subject deduplication. **Any text drawn on the picture — captions naming
+what is on screen, a source line, context cards, the title card, the credits
+roll — is `tituli`'s job** (see *On-screen text* below); do not hand-roll
+`ImageDraw` overlays.
 
 ## The pipeline
 
@@ -188,6 +191,32 @@ panels = with_credits(panels, card, duration_s=11.0)
 # pad the audio to match, or the film outruns it:
 #   ffmpeg -y -i ep.mp3 -af apad=pad_dur=11 -c:a aac ep_padded.m4a
 ```
+
+## On-screen text — use `tituli`, never hand-rolled `ImageDraw`
+
+A found-image film needs labels the narration never gives: who or what is on
+screen (a museum label with a small source line), context a cold viewer lacks,
+and a designed credits roll. `pip install tituli` (`tituli[saliency]` adds
+`burns.salient_box` as its subject-avoidance seam) and read its skill.
+
+```python
+from tituli import Frame, Span, Label, UNLABELLED, schedule_labels, TimedOverlay, note, resolve
+from tituli.video import overlay
+f = Frame.blank((1920, 1080)).with_delivery("youtube")   # keeps the subtitle band clear
+cards = [TimedOverlay(note(["What Hamilton is", "…"], headline="Before we go on", frame=f), 12.0, 18.0, weight=2)]
+spans = [Span(p.start, p.end, key=p.still) for p in panels]
+labels = schedule_labels(spans, lambda s: Label(title, attribution) if known(s) else UNLABELLED, suppressed_by=cards)
+overlay("ep.mp4", resolve([*cards, *labels]), "ep_captioned.mp4")   # one ffmpeg pass onto the FINISHED film
+```
+
+Rules it already enforces: composite onto the finished motion video (text
+burned into a still would pan and zoom with the picture); one label per still
+on first appearance and again only after 150 s; a label suppressed by a heavier
+card is not counted as shown; `None` from `label_for` raises — say
+`UNLABELLED` for a deliberately unlabelled still, because an unlabelled still
+beside a labelled one is an implicit claim. For the end card,
+`tituli.Credits.from_lines(lines)` takes the same `lines` as `credits_card`
+and `credits_cards` / `credits_crawl` never truncate an attribution.
 
 ## Publishing (`yb`)
 
