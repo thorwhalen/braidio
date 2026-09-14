@@ -93,8 +93,9 @@ pip install illustration
 ```
 ```python
 import illustration
+
 hits = illustration.search("a woman alone with a letter by candlelight", n=20)
-keep = illustration.dedupe(hits)                       # one image per SUBJECT
+keep = illustration.dedupe(hits)  # one image per SUBJECT
 illustration.search("Category:Trinity Church (Manhattan)", source="wikimedia")
 ```
 
