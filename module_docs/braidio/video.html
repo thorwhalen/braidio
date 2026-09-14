@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.video &mdash; braidio 0.0.37 documentation</title>
+  <title>braidio.video &mdash; braidio 0.0.38 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=aa2ad26f"></script>
+      <script src="../../_static/documentation_options.js?v=423071ad"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -190,11 +190,19 @@ are interchangeable texture.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="braidio.video.credits_card">
 <span class="sig-prename descclassname"><span class="pre">braidio.video.</span></span><span class="sig-name descname"><span class="pre">credits_card</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">heading</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Credits'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">footer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(1920,</span> <span class="pre">1080)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../../_modules/braidio/video.html#credits_card"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.video.credits_card" title="Link to this definition"></a></dt>
-<dd><p>Render an end card listing <code class="docutils literal notranslate"><span class="pre">lines</span></code>.</p>
+<dd><p>Render an end card listing <code class="docutils literal notranslate"><span class="pre">lines</span></code>, <strong>fitted</strong> so none is lost.</p>
 <p>Reusing a photograph under CC BY / CC BY-SA is conditional on crediting it, so
 for a film built from found images this card is part of the licence
 compliance, not decoration. Generate <code class="docutils literal notranslate"><span class="pre">lines</span></code> from whatever manifest recorded
 the fetches, so the card cannot drift from what was actually used.</p>
+<p>Because it is compliance, it must not <em>silently</em> drop an attribution — and a
+fixed 31px leading did exactly that past roughly thirty lines: the tail ran
+off the bottom of the frame and the footer drew over whatever was left. A
+forty-three-image film credited twenty-eight of them and looked fine.</p>
+<p>So the type is fitted to the content instead. Leading shrinks first, then the
+list goes to two columns, and only if it still will not fit does this raise —
+which is the right failure, because a caller who cannot see the problem cannot
+fix it. Pass a bigger <code class="docutils literal notranslate"><span class="pre">size</span></code> or split across two cards.</p>
 </dd></dl>
 
 <dl class="py function">
