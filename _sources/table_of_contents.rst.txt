@@ -7,6 +7,7 @@
    module_docs/braidio/bodies/_domain
    module_docs/braidio/bodies/_render_nodes
    module_docs/braidio/bodies/_tiers
+   module_docs/braidio/captions
    module_docs/braidio/compose
    module_docs/braidio/conversation
    module_docs/braidio/cost
@@ -45,5 +46,6 @@
    module_docs/braidio/transforms/_segment
    module_docs/braidio/transforms/_voice
    module_docs/braidio/tts
+   module_docs/braidio/video
    module_docs/braidio/weave
    module_docs/braidio/weave_config

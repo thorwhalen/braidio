@@ -1,0 +1,525 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio &mdash; braidio 0.0.37 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=aa2ad26f"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/captions.html">braidio.captions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/cost.html">braidio.cost</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/downloads.html">braidio.downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/genre.html">braidio.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/mcp.html">braidio.mcp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/mcp/_docs.html">braidio.mcp._docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/mcp/_guide.html">braidio.mcp._guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/mcp/_helpers.html">braidio.mcp._helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/mcp/_media.html">braidio.mcp._media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/mcp/credentials.html">braidio.mcp.credentials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/mcp/metering.html">braidio.mcp.metering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/mcp/tools.html">braidio.mcp.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/structure.html">braidio.structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/style.html">braidio.style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/timeline.html">braidio.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/transforms/_dialogue.html">braidio.transforms._dialogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/transforms/_voice.html">braidio.transforms._voice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/video.html">braidio.video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">braidio</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for braidio</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""braidio — weave narration with extracted media segments into productions.</span>
+
+<span class="sd">Braid two kinds of strand into one production: authored **narration** (TTS —</span>
+<span class="sd">single voice or a cycled pool) and extracted **segments** of source media (song</span>
+<span class="sd">clips, audiobook passages, news, SFX). The result renders to an audiovisual</span>
+<span class="sd">object.</span>
+
+<span class="sd">This is the **functional core** (pure Python over files + numbers; deps:</span>
+<span class="sd">``mixing``, ``elevenlabs``, and ``ffmpeg`` on PATH). An optional nw-app layer</span>
+<span class="sd">(graph bodies, transforms, provenance / partial re-render) will be added on top</span>
+<span class="sd">and imported only when ``nw`` is available — ``import braidio`` never requires</span>
+<span class="sd">it.</span>
+
+<span class="sd">Extracted from the Hamilton lyrics-podcast; the extraction is designed in</span>
+<span class="sd">Hamilton#18 (the epic) and Hamilton#28 (placement + naming). Those numbers are</span>
+<span class="sd">in the *Hamilton* repo — braidio has its own #18 about something else.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="c1"># --- composition model ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.script</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">Script</span><span class="p">,</span>
+    <span class="n">Narration</span><span class="p">,</span>
+    <span class="n">SegmentBeat</span><span class="p">,</span>
+    <span class="n">Dialogue</span><span class="p">,</span>
+    <span class="n">SceneBreak</span><span class="p">,</span>
+    <span class="n">SCENE_MARKERS</span><span class="p">,</span>
+    <span class="n">Beat</span><span class="p">,</span>
+    <span class="n">narration_segments</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- rights profiles ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.rights</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">Profile</span><span class="p">,</span>
+    <span class="n">DEFAULT_PROFILE</span><span class="p">,</span>
+    <span class="n">RightsPolicy</span><span class="p">,</span>
+    <span class="n">RenderPlan</span><span class="p">,</span>
+    <span class="n">PlannedBeat</span><span class="p">,</span>
+    <span class="n">plan_production</span><span class="p">,</span>
+    <span class="n">clip_plays_under</span><span class="p">,</span>
+    <span class="n">rights_are_publishable</span><span class="p">,</span>
+    <span class="n">RightsViolation</span><span class="p">,</span>
+    <span class="n">find_verbatim_text</span><span class="p">,</span>
+    <span class="n">content_violations</span><span class="p">,</span>
+    <span class="n">segment_is_publishable</span><span class="p">,</span>
+    <span class="n">PUBLISHABLE_CLIP_RIGHTS</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- segment sources (reference -&gt; cuttable window) ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.sources</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">SegmentSource</span><span class="p">,</span>
+    <span class="n">ResolvedSegment</span><span class="p">,</span>
+    <span class="n">Segment</span><span class="p">,</span>
+    <span class="n">TimedLine</span><span class="p">,</span>
+    <span class="n">TimedLineSegmentSource</span><span class="p">,</span>
+    <span class="n">find_segment</span><span class="p">,</span>
+    <span class="n">load_timing</span><span class="p">,</span>
+    <span class="n">cut_quote</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- narration synthesis ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">narrate</span><span class="p">,</span>
+    <span class="n">text_to_dialogue</span><span class="p">,</span>
+    <span class="n">resolve_voice_id</span><span class="p">,</span>
+    <span class="n">DEFAULT_VOICE_ID</span><span class="p">,</span>
+    <span class="n">DEFAULT_MODEL_ID</span><span class="p">,</span>
+    <span class="n">DEFAULT_VOICE_SETTINGS</span><span class="p">,</span>
+    <span class="n">VOICE_ENV_VAR</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- cost model (ElevenLabs TTS spend) ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.cost</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">estimate_cost</span><span class="p">,</span>
+    <span class="n">tts_cost_usd</span><span class="p">,</span>
+    <span class="n">billable_chars</span><span class="p">,</span>
+    <span class="n">usd_per_1k_chars</span><span class="p">,</span>
+    <span class="n">CostRollup</span><span class="p">,</span>
+    <span class="n">CostLine</span><span class="p">,</span>
+    <span class="n">RATE_ENV_VAR</span><span class="p">,</span>
+    <span class="n">DEFAULT_USD_PER_1K_CHARS</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.conversation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">ConversationCast</span><span class="p">,</span>
+    <span class="n">DEFAULT_CAST</span><span class="p">,</span>
+    <span class="n">render_dialogue</span><span class="p">,</span>
+    <span class="n">render_turns_sequential</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.delivery</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">Delivery</span><span class="p">,</span>
+    <span class="n">DELIVERIES</span><span class="p">,</span>
+    <span class="n">BASELINE</span><span class="p">,</span>
+    <span class="n">V2_TUNED</span><span class="p">,</span>
+    <span class="n">V2_AGGRESSIVE</span><span class="p">,</span>
+    <span class="n">V2_PRESENTER</span><span class="p">,</span>
+    <span class="n">V2_NARRATOR</span><span class="p">,</span>
+    <span class="n">V3_NATURAL</span><span class="p">,</span>
+    <span class="n">V3_CREATIVE</span><span class="p">,</span>
+    <span class="n">NARRATION</span><span class="p">,</span>
+    <span class="n">CONVERSATIONAL</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- multi-voice casting ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.multivoice</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">Voice</span><span class="p">,</span>
+    <span class="n">POOL_4</span><span class="p">,</span>
+    <span class="n">POOL_MANY</span><span class="p">,</span>
+    <span class="n">POOLS</span><span class="p">,</span>
+    <span class="n">strip_markup</span><span class="p">,</span>
+    <span class="n">split_segments</span><span class="p">,</span>
+    <span class="n">assign_voices</span><span class="p">,</span>
+    <span class="n">group_turns</span><span class="p">,</span>
+    <span class="n">render_multivoice</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- configuration ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.weave_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeaveConfig</span><span class="p">,</span> <span class="n">PRESETS</span>  <span class="c1"># noqa: F401</span>
+
+<span class="c1"># --- music bed (instrumental underscore) ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.music</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">MusicBed</span><span class="p">,</span>
+    <span class="n">bed_for_intensity</span><span class="p">,</span>
+    <span class="n">BED_GAIN_BY_INTENSITY</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- structural music (stings at scene breaks, fade-to-spotlight) ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.structure</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">Sting</span><span class="p">,</span>
+    <span class="n">MusicStructure</span><span class="p">,</span>
+    <span class="n">DEFAULT_STRUCTURE</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- ready-made format templates (standard-named presets) ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.formats</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">Format</span><span class="p">,</span>
+    <span class="n">render_format</span><span class="p">,</span>
+    <span class="n">describe_asset_application</span><span class="p">,</span>
+    <span class="n">FORMATS</span><span class="p">,</span>
+    <span class="n">SOLO_EXPLAINER</span><span class="p">,</span>
+    <span class="n">DEEP_DIVE</span><span class="p">,</span>
+    <span class="n">INTERVIEW</span><span class="p">,</span>
+    <span class="n">SONG_EXPLODER</span><span class="p">,</span>
+    <span class="n">PANEL</span><span class="p">,</span>
+    <span class="n">DEBATE</span><span class="p">,</span>
+    <span class="n">DOCUMENTARY_VO</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- composition + weaving (audio) ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.compose</span><span class="w"> </span><span class="kn">import</span> <span class="n">compose_narration</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.render</span><span class="w"> </span><span class="kn">import</span> <span class="n">render_production</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.timeline</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">BeatSpan</span><span class="p">,</span>
+    <span class="n">TimelineBreakdown</span><span class="p">,</span>
+    <span class="n">build_timeline</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- captions (pure: authored text + the render's own timeline, no ASR) ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.captions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">Cue</span><span class="p">,</span>
+    <span class="n">captions_for</span><span class="p">,</span>
+    <span class="n">cues_for</span><span class="p">,</span>
+    <span class="n">format_srt</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- text prep + style audit (reusable script helpers) ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.textprep</span><span class="w"> </span><span class="kn">import</span> <span class="n">clean_ocr</span><span class="p">,</span> <span class="n">strip_speaker_labels</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.style</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">Finding</span><span class="p">,</span>
+    <span class="n">PLATITUDE_PATTERNS</span><span class="p">,</span>
+    <span class="n">audit_platitudes</span><span class="p">,</span>
+    <span class="n">platitude_rate</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.weave</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">TimelineItem</span><span class="p">,</span>
+    <span class="n">extract_padded</span><span class="p">,</span>
+    <span class="n">weave_timeline</span><span class="p">,</span>
+    <span class="n">layout_starts</span><span class="p">,</span>
+    <span class="n">duration_s</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- production kinds (pure) ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.kinds</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeaveKind</span>  <span class="c1"># noqa: F401</span>
+
+<span class="c1"># --- version ---------------------------------------------------------------</span>
+<span class="c1"># Read from installed distribution metadata rather than written literally here:</span>
+<span class="c1"># CI bumps the version in pyproject.toml and pushes back, so a literal in this</span>
+<span class="c1"># file would silently drift from the released version. `"unknown"` is the honest</span>
+<span class="c1"># answer for a source tree that was never installed (not even editable).</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">PackageNotFoundError</span><span class="p">,</span> <span class="n">version</span> <span class="k">as</span> <span class="n">_dist_version</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">__version__</span> <span class="o">=</span> <span class="n">_dist_version</span><span class="p">(</span><span class="s2">"braidio"</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">PackageNotFoundError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - source tree, not installed</span>
+    <span class="n">__version__</span> <span class="o">=</span> <span class="s2">"unknown"</span>
+
+<span class="c1"># --- optional nw-app layer (graph bodies + provenance) --------------------</span>
+<span class="c1"># Registers braidio's domain/render body schemas with lacing and exposes the</span>
+<span class="c1"># provenance / partial-re-render helpers. Guarded: `import braidio` never needs</span>
+<span class="c1"># lacing/nw. `HAS_GRAPH` / `HAS_NW` report what's available.</span>
+<span class="n">HAS_GRAPH</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">HAS_NW</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="k">try</span><span class="p">:</span>  <span class="c1"># needs lacing</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio</span><span class="w"> </span><span class="kn">import</span> <span class="n">bodies</span>  <span class="c1"># noqa: F401  (registers schemas)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.provenance</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+        <span class="n">record_render</span><span class="p">,</span>
+        <span class="n">stale_after</span><span class="p">,</span>
+        <span class="n">descendants_of</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">HAS_GRAPH</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional dep</span>
+    <span class="k">pass</span>
+<span class="k">try</span><span class="p">:</span>  <span class="c1"># needs nw</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span>  <span class="c1"># noqa: F401</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio</span><span class="w"> </span><span class="kn">import</span> <span class="n">transforms</span>  <span class="c1"># noqa: F401  (registers braidio's nw.Transforms)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">weave_project</span>  <span class="c1"># noqa: F401</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.genre</span><span class="w"> </span><span class="kn">import</span> <span class="n">COMMENTARY_WEAVE</span>  <span class="c1"># noqa: F401  (registers the nw.Genre)</span>
+
+    <span class="n">HAS_NW</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional dep</span>
+    <span class="k">pass</span>
+
+<div class="viewcode-block" id="skills_dir">
+<a class="viewcode-back" href="../module_docs/braidio.html#braidio.skills_dir">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">skills_dir</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Path to the agent skills that ship with braidio.</span>
+
+<span class="sd">    They install with the package, so an agent host can be pointed at them</span>
+<span class="sd">    without cloning the repo::</span>
+
+<span class="sd">        ln -s "$(python -c 'import braidio; print(braidio.skills_dir())')/braidio" \\</span>
+<span class="sd">              ~/.claude/skills/braidio</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"skills"</span></div>
+
+
+
+<span class="c1"># --- optional video layer (Ken Burns film over stills) --------------------</span>
+<span class="c1"># `braidio.video` itself imports cleanly with nothing extra installed — its</span>
+<span class="c1"># dependencies (burns, pillow) are imported inside the functions that need them,</span>
+<span class="c1"># so the pure planners stay usable. `HAS_VIDEO` reports whether the *render* path</span>
+<span class="c1"># is actually available; `braidio.video.missing_dependencies()` names what's absent.</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.video</span><span class="w"> </span><span class="kn">import</span> <span class="n">HAS_VIDEO</span>  <span class="c1"># noqa: F401,E402</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"__version__"</span><span class="p">,</span>
+    <span class="c1"># production kinds</span>
+    <span class="s2">"WeaveKind"</span><span class="p">,</span>
+    <span class="s2">"HAS_GRAPH"</span><span class="p">,</span>
+    <span class="s2">"HAS_NW"</span><span class="p">,</span>
+    <span class="s2">"HAS_VIDEO"</span><span class="p">,</span>
+    <span class="s2">"skills_dir"</span><span class="p">,</span>
+    <span class="c1"># captions</span>
+    <span class="s2">"Cue"</span><span class="p">,</span>
+    <span class="s2">"captions_for"</span><span class="p">,</span>
+    <span class="s2">"cues_for"</span><span class="p">,</span>
+    <span class="s2">"format_srt"</span><span class="p">,</span>
+    <span class="c1"># script</span>
+    <span class="s2">"Script"</span><span class="p">,</span>
+    <span class="s2">"Narration"</span><span class="p">,</span>
+    <span class="s2">"SegmentBeat"</span><span class="p">,</span>
+    <span class="s2">"Dialogue"</span><span class="p">,</span>
+    <span class="s2">"SceneBreak"</span><span class="p">,</span>
+    <span class="s2">"SCENE_MARKERS"</span><span class="p">,</span>
+    <span class="s2">"Sting"</span><span class="p">,</span>
+    <span class="s2">"MusicStructure"</span><span class="p">,</span>
+    <span class="s2">"DEFAULT_STRUCTURE"</span><span class="p">,</span>
+    <span class="s2">"Beat"</span><span class="p">,</span>
+    <span class="s2">"narration_segments"</span><span class="p">,</span>
+    <span class="c1"># rights</span>
+    <span class="s2">"Profile"</span><span class="p">,</span>
+    <span class="s2">"DEFAULT_PROFILE"</span><span class="p">,</span>
+    <span class="s2">"RightsPolicy"</span><span class="p">,</span>
+    <span class="s2">"RenderPlan"</span><span class="p">,</span>
+    <span class="s2">"PlannedBeat"</span><span class="p">,</span>
+    <span class="s2">"plan_production"</span><span class="p">,</span>
+    <span class="s2">"clip_plays_under"</span><span class="p">,</span>
+    <span class="s2">"rights_are_publishable"</span><span class="p">,</span>
+    <span class="s2">"RightsViolation"</span><span class="p">,</span>
+    <span class="s2">"find_verbatim_text"</span><span class="p">,</span>
+    <span class="s2">"content_violations"</span><span class="p">,</span>
+    <span class="s2">"segment_is_publishable"</span><span class="p">,</span>
+    <span class="s2">"PUBLISHABLE_CLIP_RIGHTS"</span><span class="p">,</span>
+    <span class="c1"># render</span>
+    <span class="s2">"render_production"</span><span class="p">,</span>
+    <span class="c1"># sources</span>
+    <span class="s2">"SegmentSource"</span><span class="p">,</span>
+    <span class="s2">"ResolvedSegment"</span><span class="p">,</span>
+    <span class="s2">"Segment"</span><span class="p">,</span>
+    <span class="s2">"TimedLine"</span><span class="p">,</span>
+    <span class="s2">"TimedLineSegmentSource"</span><span class="p">,</span>
+    <span class="s2">"find_segment"</span><span class="p">,</span>
+    <span class="s2">"load_timing"</span><span class="p">,</span>
+    <span class="s2">"cut_quote"</span><span class="p">,</span>
+    <span class="c1"># tts</span>
+    <span class="s2">"narrate"</span><span class="p">,</span>
+    <span class="s2">"resolve_voice_id"</span><span class="p">,</span>
+    <span class="s2">"DEFAULT_VOICE_ID"</span><span class="p">,</span>
+    <span class="s2">"DEFAULT_MODEL_ID"</span><span class="p">,</span>
+    <span class="s2">"DEFAULT_VOICE_SETTINGS"</span><span class="p">,</span>
+    <span class="s2">"VOICE_ENV_VAR"</span><span class="p">,</span>
+    <span class="c1"># cost (ElevenLabs TTS spend)</span>
+    <span class="s2">"estimate_cost"</span><span class="p">,</span>
+    <span class="s2">"tts_cost_usd"</span><span class="p">,</span>
+    <span class="s2">"billable_chars"</span><span class="p">,</span>
+    <span class="s2">"usd_per_1k_chars"</span><span class="p">,</span>
+    <span class="s2">"CostRollup"</span><span class="p">,</span>
+    <span class="s2">"CostLine"</span><span class="p">,</span>
+    <span class="s2">"RATE_ENV_VAR"</span><span class="p">,</span>
+    <span class="s2">"DEFAULT_USD_PER_1K_CHARS"</span><span class="p">,</span>
+    <span class="c1"># delivery</span>
+    <span class="s2">"Delivery"</span><span class="p">,</span>
+    <span class="s2">"DELIVERIES"</span><span class="p">,</span>
+    <span class="s2">"BASELINE"</span><span class="p">,</span>
+    <span class="s2">"V2_TUNED"</span><span class="p">,</span>
+    <span class="s2">"V2_AGGRESSIVE"</span><span class="p">,</span>
+    <span class="s2">"V2_PRESENTER"</span><span class="p">,</span>
+    <span class="s2">"V2_NARRATOR"</span><span class="p">,</span>
+    <span class="s2">"V3_NATURAL"</span><span class="p">,</span>
+    <span class="s2">"V3_CREATIVE"</span><span class="p">,</span>
+    <span class="s2">"NARRATION"</span><span class="p">,</span>
+    <span class="s2">"CONVERSATIONAL"</span><span class="p">,</span>
+    <span class="c1"># multivoice</span>
+    <span class="s2">"Voice"</span><span class="p">,</span>
+    <span class="s2">"POOL_4"</span><span class="p">,</span>
+    <span class="s2">"POOL_MANY"</span><span class="p">,</span>
+    <span class="s2">"POOLS"</span><span class="p">,</span>
+    <span class="s2">"strip_markup"</span><span class="p">,</span>
+    <span class="s2">"split_segments"</span><span class="p">,</span>
+    <span class="s2">"assign_voices"</span><span class="p">,</span>
+    <span class="s2">"group_turns"</span><span class="p">,</span>
+    <span class="s2">"render_multivoice"</span><span class="p">,</span>
+    <span class="c1"># config</span>
+    <span class="s2">"WeaveConfig"</span><span class="p">,</span>
+    <span class="s2">"PRESETS"</span><span class="p">,</span>
+    <span class="c1"># music bed</span>
+    <span class="s2">"MusicBed"</span><span class="p">,</span>
+    <span class="s2">"bed_for_intensity"</span><span class="p">,</span>
+    <span class="s2">"BED_GAIN_BY_INTENSITY"</span><span class="p">,</span>
+    <span class="c1"># formats (ready-made templates)</span>
+    <span class="s2">"Format"</span><span class="p">,</span>
+    <span class="s2">"render_format"</span><span class="p">,</span>
+    <span class="s2">"describe_asset_application"</span><span class="p">,</span>
+    <span class="s2">"FORMATS"</span><span class="p">,</span>
+    <span class="s2">"SOLO_EXPLAINER"</span><span class="p">,</span>
+    <span class="s2">"DEEP_DIVE"</span><span class="p">,</span>
+    <span class="s2">"INTERVIEW"</span><span class="p">,</span>
+    <span class="s2">"SONG_EXPLODER"</span><span class="p">,</span>
+    <span class="s2">"PANEL"</span><span class="p">,</span>
+    <span class="s2">"DEBATE"</span><span class="p">,</span>
+    <span class="s2">"DOCUMENTARY_VO"</span><span class="p">,</span>
+    <span class="c1"># compose + weave</span>
+    <span class="s2">"compose_narration"</span><span class="p">,</span>
+    <span class="s2">"TimelineItem"</span><span class="p">,</span>
+    <span class="s2">"extract_padded"</span><span class="p">,</span>
+    <span class="s2">"weave_timeline"</span><span class="p">,</span>
+    <span class="s2">"layout_starts"</span><span class="p">,</span>
+    <span class="s2">"duration_s"</span><span class="p">,</span>
+    <span class="c1"># timeline breakdown</span>
+    <span class="s2">"BeatSpan"</span><span class="p">,</span>
+    <span class="s2">"TimelineBreakdown"</span><span class="p">,</span>
+    <span class="s2">"build_timeline"</span><span class="p">,</span>
+    <span class="c1"># text prep + style audit</span>
+    <span class="s2">"clean_ocr"</span><span class="p">,</span>
+    <span class="s2">"strip_speaker_labels"</span><span class="p">,</span>
+    <span class="s2">"Finding"</span><span class="p">,</span>
+    <span class="s2">"PLATITUDE_PATTERNS"</span><span class="p">,</span>
+    <span class="s2">"audit_platitudes"</span><span class="p">,</span>
+    <span class="s2">"platitude_rate"</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

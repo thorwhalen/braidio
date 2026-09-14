@@ -1,0 +1,4 @@
+braidio.video
+=============
+.. automodule:: braidio.video
+   :members:

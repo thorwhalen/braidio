@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio &mdash; braidio 0.0.36 documentation</title>
+  <title>braidio &mdash; braidio 0.0.37 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=0e525676"></script>
+      <script src="../_static/documentation_options.js?v=aa2ad26f"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -56,6 +56,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#braidio.CostRollup.summary"><code class="docutils literal notranslate"><span class="pre">CostRollup.summary</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.Cue"><code class="docutils literal notranslate"><span class="pre">Cue</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.Delivery"><code class="docutils literal notranslate"><span class="pre">Delivery</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.Dialogue"><code class="docutils literal notranslate"><span class="pre">Dialogue</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.Finding"><code class="docutils literal notranslate"><span class="pre">Finding</span></code></a></li>
@@ -108,16 +109,19 @@
 <li class="toctree-l2"><a class="reference internal" href="#braidio.bed_for_intensity"><code class="docutils literal notranslate"><span class="pre">bed_for_intensity()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.billable_chars"><code class="docutils literal notranslate"><span class="pre">billable_chars()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.build_timeline"><code class="docutils literal notranslate"><span class="pre">build_timeline()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.captions_for"><code class="docutils literal notranslate"><span class="pre">captions_for()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.clean_ocr"><code class="docutils literal notranslate"><span class="pre">clean_ocr()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.clip_plays_under"><code class="docutils literal notranslate"><span class="pre">clip_plays_under()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.compose_narration"><code class="docutils literal notranslate"><span class="pre">compose_narration()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.content_violations"><code class="docutils literal notranslate"><span class="pre">content_violations()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.cues_for"><code class="docutils literal notranslate"><span class="pre">cues_for()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.cut_quote"><code class="docutils literal notranslate"><span class="pre">cut_quote()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.describe_asset_application"><code class="docutils literal notranslate"><span class="pre">describe_asset_application()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.estimate_cost"><code class="docutils literal notranslate"><span class="pre">estimate_cost()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.extract_padded"><code class="docutils literal notranslate"><span class="pre">extract_padded()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.find_segment"><code class="docutils literal notranslate"><span class="pre">find_segment()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.find_verbatim_text"><code class="docutils literal notranslate"><span class="pre">find_verbatim_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.format_srt"><code class="docutils literal notranslate"><span class="pre">format_srt()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.group_turns"><code class="docutils literal notranslate"><span class="pre">group_turns()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.layout_starts"><code class="docutils literal notranslate"><span class="pre">layout_starts()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.load_timing"><code class="docutils literal notranslate"><span class="pre">load_timing()</span></code></a></li>
@@ -131,6 +135,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#braidio.resolve_voice_id"><code class="docutils literal notranslate"><span class="pre">resolve_voice_id()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.rights_are_publishable"><code class="docutils literal notranslate"><span class="pre">rights_are_publishable()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.segment_is_publishable"><code class="docutils literal notranslate"><span class="pre">segment_is_publishable()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.skills_dir"><code class="docutils literal notranslate"><span class="pre">skills_dir()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.split_segments"><code class="docutils literal notranslate"><span class="pre">split_segments()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.strip_speaker_labels"><code class="docutils literal notranslate"><span class="pre">strip_speaker_labels()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#braidio.tts_cost_usd"><code class="docutils literal notranslate"><span class="pre">tts_cost_usd()</span></code></a></li>
@@ -142,6 +147,7 @@
 <li class="toctree-l1"><a class="reference internal" href="braidio/bodies/_domain.html">braidio.bodies._domain</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braidio/captions.html">braidio.captions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/compose.html">braidio.compose</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/conversation.html">braidio.conversation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/cost.html">braidio.cost</a></li>
@@ -180,6 +186,7 @@
 <li class="toctree-l1"><a class="reference internal" href="braidio/transforms/_segment.html">braidio.transforms._segment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/transforms/_voice.html">braidio.transforms._voice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braidio/video.html">braidio.video</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/weave.html">braidio.weave</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braidio/weave_config.html">braidio.weave_config</a></li>
 </ul>
@@ -252,6 +259,12 @@ lines (e.g. an all-segment script) gives <code class="docutils literal notransla
 <dd><p>One-line human summary (handy for a CLI/MCP preview).</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.Cue">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">Cue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/captions.html#Cue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.Cue" title="Link to this definition"></a></dt>
+<dd><p>One subtitle: <code class="docutils literal notranslate"><span class="pre">[start_s,</span> <span class="pre">end_s)</span></code> and the text shown.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -386,7 +399,7 @@ renderer marks it with music). <code class="docutils literal notranslate"><span 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.Profile">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">Profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/rights.html#Profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.Profile" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">Profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/rights.html#Profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.Profile" title="Link to this definition"></a></dt>
 <dd><p>Which projection of the production we render.</p>
 </dd></dl>
 
@@ -573,7 +586,7 @@ a bed.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.WeaveKind">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">WeaveKind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/kinds.html#WeaveKind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.WeaveKind" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">WeaveKind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/kinds.html#WeaveKind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.WeaveKind" title="Link to this definition"></a></dt>
 <dd><p>A braidio production kind. <code class="docutils literal notranslate"><span class="pre">COMMENTARY_WEAVE</span></code> = narration woven with
 extracted media segments (audio now, video later).</p>
 </dd></dl>
@@ -625,6 +638,12 @@ computed with the same <a class="reference internal" href="braidio/weave.html#br
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="braidio.captions_for">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">captions_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">script</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeline</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/braidio/captions.html#captions_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.captions_for" title="Link to this definition"></a></dt>
+<dd><p>The SRT document for <code class="docutils literal notranslate"><span class="pre">script</span></code> as laid out by <code class="docutils literal notranslate"><span class="pre">timeline</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="braidio.clean_ocr">
 <span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">clean_ocr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">collapse_whitespace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/braidio/textprep.html#clean_ocr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.clean_ocr" title="Link to this definition"></a></dt>
 <dd><p>Normalize OCR/PDF-extracted text for clean narration.</p>
@@ -662,6 +681,33 @@ turn); <code class="docutils literal notranslate"><span class="pre">None</span><
 <dd><p>Rights violations in a <em>published</em> plan (empty list = clean).</p>
 <p>Fails if any planned beat plays non-publishable segment audio, or any
 narration beat contains forbidden verbatim text.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.cues_for">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">cues_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">script</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeline</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="braidio/captions.html#braidio.captions.Cue" title="braidio.captions.Cue"><span class="pre">Cue</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/braidio/captions.html#cues_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.cues_for" title="Link to this definition"></a></dt>
+<dd><p>Subtitle cues for <code class="docutils literal notranslate"><span class="pre">script</span></code> as laid out by <code class="docutils literal notranslate"><span class="pre">timeline</span></code>.</p>
+<p>Beats are matched by index, so a timeline built from the same script lines up
+even when some beats were dropped by a rights profile (a dropped beat simply
+has no span and contributes no cue).</p>
+<p>Cues never overlap. That matters because the weave <em>crossfades</em> consecutive
+beats, so a beat’s <code class="docutils literal notranslate"><span class="pre">start</span></code> sits slightly before the previous beat’s end;
+left alone that produces subtitles that fight each other. Each cue is clamped
+to begin where the previous one finished.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>script</strong> – the <a class="reference internal" href="braidio/script.html#braidio.script.Script" title="braidio.script.Script"><code class="xref py py-class docutils literal notranslate"><span class="pre">Script</span></code></a> that was rendered.</p></li>
+<li><p><strong>timeline</strong> – the <a class="reference internal" href="braidio/timeline.html#braidio.timeline.TimelineBreakdown" title="braidio.timeline.TimelineBreakdown"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimelineBreakdown</span></code></a> from
+<code class="docutils literal notranslate"><span class="pre">render_production(...,</span> <span class="pre">return_timeline=True)</span></code>.</p></li>
+<li><p><strong>max_chars</strong> – if &gt; 0, split sentences longer than this at whitespace, so no
+single cue overflows a player’s two lines. 0 leaves sentences whole.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Cues in playback order.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -740,6 +786,12 @@ against the reference’s tokens and returns the highest-scoring run clearing
 <p>A line counts as leaked if <code class="docutils literal notranslate"><span class="pre">text</span></code> shares a run of <code class="docutils literal notranslate"><span class="pre">min_words</span></code> consecutive
 words with it (case-insensitive, word-level). Single words and short common
 phrases don’t trip it — only substantial verbatim quoting.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.format_srt">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">format_srt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cues</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/braidio/captions.html#format_srt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.format_srt" title="Link to this definition"></a></dt>
+<dd><p>Render <code class="docutils literal notranslate"><span class="pre">cues</span></code> as an SRT document.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -887,6 +939,18 @@ unwrapped, never a parallel rule.</p>
 <dt class="sig sig-object py" id="braidio.segment_is_publishable">
 <span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">segment_is_publishable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="braidio/script.html#braidio.script.SegmentBeat" title="braidio.script.SegmentBeat"><span class="pre">SegmentBeat</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">publishable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">frozenset</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">frozenset({'public-domain'})</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/braidio/rights.html#segment_is_publishable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.segment_is_publishable" title="Link to this definition"></a></dt>
 <dd><p>Whether <code class="docutils literal notranslate"><span class="pre">beat</span></code>’s audio may play in the published cut.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.skills_dir">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">skills_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio.html#skills_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.skills_dir" title="Link to this definition"></a></dt>
+<dd><p>Path to the agent skills that ship with braidio.</p>
+<p>They install with the package, so an agent host can be pointed at them
+without cloning the repo:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ln</span> <span class="o">-</span><span class="n">s</span> <span class="s2">"$(python -c 'import braidio; print(braidio.skills_dir())')/braidio"</span> \
+      <span class="o">~/.</span><span class="n">claude</span><span class="o">/</span><span class="n">skills</span><span class="o">/</span><span class="n">braidio</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">

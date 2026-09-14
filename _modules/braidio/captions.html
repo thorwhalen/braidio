@@ -1,0 +1,336 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.captions &mdash; braidio 0.0.37 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=aa2ad26f"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/captions.html">braidio.captions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp.html">braidio.mcp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_docs.html">braidio.mcp._docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_guide.html">braidio.mcp._guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_helpers.html">braidio.mcp._helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_media.html">braidio.mcp._media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/credentials.html">braidio.mcp.credentials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/metering.html">braidio.mcp.metering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/tools.html">braidio.mcp.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/structure.html">braidio.structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/style.html">braidio.style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/timeline.html">braidio.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_dialogue.html">braidio.transforms._dialogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_voice.html">braidio.transforms._voice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/video.html">braidio.video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../braidio.html">braidio</a></li>
+      <li class="breadcrumb-item active">braidio.captions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for braidio.captions</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Subtitles for a rendered production, built from the script it was rendered from.</span>
+
+<span class="sd">A braidio render is one of the rare cases where the caption track needs no speech</span>
+<span class="sd">recognition: the narration text is *authored*, and</span>
+<span class="sd">:func:`~braidio.render.render_production` will hand back a</span>
+<span class="sd">:class:`~braidio.timeline.TimelineBreakdown` saying exactly when each beat plays.</span>
+<span class="sd">Transcribing the mix back into text would pay an ASR pass to recover something</span>
+<span class="sd">that was never lost -- and do it worse (a measured pass on braidio's own output</span>
+<span class="sd">turned "purse sets up hurts" into "Perse sets up herts").</span>
+
+<span class="sd">So :func:`captions_for` joins the two: beat text from the ``Script``, beat timing</span>
+<span class="sd">from the ``TimelineBreakdown``. Narration and dialogue beats are split into</span>
+<span class="sd">sentence-sized cues timed *within* their beat in proportion to length; a</span>
+<span class="sd">``SegmentBeat`` becomes one cue carrying its reference, marked as lyric/quote.</span>
+
+<span class="sd">Pure and dependency-free -- part of the functional core, importable with nothing</span>
+<span class="sd">installed beyond braidio itself.</span>
+
+<span class="sd">Examples:</span>
+<span class="sd">    &gt;&gt;&gt; from braidio.script import Narration, Script</span>
+<span class="sd">    &gt;&gt;&gt; from braidio.timeline import build_timeline</span>
+<span class="sd">    &gt;&gt;&gt; script = Script(title="t", id_slug="01", beats=[Narration("One. Two.")])</span>
+<span class="sd">    &gt;&gt;&gt; tl = build_timeline(kinds=["narration"], durations=[4.0])</span>
+<span class="sd">    &gt;&gt;&gt; print(captions_for(script, tl))  # doctest: +ELLIPSIS</span>
+<span class="sd">    1</span>
+<span class="sd">    00:00:00,000 --&gt; 00:00:02,000</span>
+<span class="sd">    One.</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">    2</span>
+<span class="sd">    00:00:02,000 --&gt; 00:00:04,000</span>
+<span class="sd">    Two.</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.script</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dialogue</span><span class="p">,</span> <span class="n">Narration</span><span class="p">,</span> <span class="n">SegmentBeat</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Cue"</span><span class="p">,</span> <span class="s2">"captions_for"</span><span class="p">,</span> <span class="s2">"cues_for"</span><span class="p">,</span> <span class="s2">"format_srt"</span><span class="p">]</span>
+
+<span class="c1">#: Sentence boundary: end punctuation followed by whitespace. The text is ours</span>
+<span class="c1">#: (authored, not scraped), so a full NLP splitter would be ceremony.</span>
+<span class="n">_SENTENCE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?&lt;=[.?!])\s+"</span><span class="p">)</span>
+
+<span class="c1">#: Wraps a segment beat's reference, so a lyric/quote reads as one in the player.</span>
+<span class="n">_QUOTE_MARK</span> <span class="o">=</span> <span class="s2">"♪"</span>  <span class="c1"># ♪</span>
+
+
+<div class="viewcode-block" id="Cue">
+<a class="viewcode-back" href="../../module_docs/braidio/captions.html#braidio.Cue">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Cue</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One subtitle: ``[start_s, end_s)`` and the text shown."""</span>
+
+    <span class="n">start_s</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">end_s</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">duration_s</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_s</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_s</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sentences</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">_SENTENCE</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span> <span class="k">if</span> <span class="n">s</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_beat_text</span><span class="p">(</span><span class="n">beat</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``(text, is_quote)`` for a beat, or ``("", False)`` to skip it."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">beat</span><span class="p">,</span> <span class="n">SegmentBeat</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">beat</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">beat</span><span class="p">,</span> <span class="n">Narration</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">beat</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">beat</span><span class="p">,</span> <span class="n">Dialogue</span><span class="p">):</span>
+        <span class="c1"># One cue stream; the speaker labels are the useful part on screen.</span>
+        <span class="k">return</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">role</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">beat</span><span class="o">.</span><span class="n">turns</span><span class="p">),</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="s2">""</span><span class="p">,</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="cues_for">
+<a class="viewcode-back" href="../../module_docs/braidio/captions.html#braidio.cues_for">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cues_for</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_chars</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Subtitle cues for ``script`` as laid out by ``timeline``.</span>
+
+<span class="sd">    Beats are matched by index, so a timeline built from the same script lines up</span>
+<span class="sd">    even when some beats were dropped by a rights profile (a dropped beat simply</span>
+<span class="sd">    has no span and contributes no cue).</span>
+
+<span class="sd">    Cues never overlap. That matters because the weave *crossfades* consecutive</span>
+<span class="sd">    beats, so a beat's ``start`` sits slightly before the previous beat's end;</span>
+<span class="sd">    left alone that produces subtitles that fight each other. Each cue is clamped</span>
+<span class="sd">    to begin where the previous one finished.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        script: the :class:`~braidio.script.Script` that was rendered.</span>
+<span class="sd">        timeline: the :class:`~braidio.timeline.TimelineBreakdown` from</span>
+<span class="sd">            ``render_production(..., return_timeline=True)``.</span>
+<span class="sd">        max_chars: if &gt; 0, split sentences longer than this at whitespace, so no</span>
+<span class="sd">            single cue overflows a player's two lines. 0 leaves sentences whole.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Cues in playback order.</span>
+<span class="sd">    """</span>
+    <span class="n">spans</span> <span class="o">=</span> <span class="p">{</span><span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="p">:</span> <span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">timeline</span><span class="o">.</span><span class="n">beats</span><span class="p">}</span>
+    <span class="n">raw</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">beat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">script</span><span class="o">.</span><span class="n">beats</span><span class="p">):</span>
+        <span class="n">span</span> <span class="o">=</span> <span class="n">spans</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">span</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">text</span><span class="p">,</span> <span class="n">is_quote</span> <span class="o">=</span> <span class="n">_beat_text</span><span class="p">(</span><span class="n">beat</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">pieces</span> <span class="o">=</span> <span class="p">[</span><span class="n">text</span><span class="p">]</span> <span class="k">if</span> <span class="n">is_quote</span> <span class="k">else</span> <span class="n">_sentences</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_chars</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">pieces</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">piece</span> <span class="ow">in</span> <span class="n">pieces</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">_wrap</span><span class="p">(</span><span class="n">piece</span><span class="p">,</span> <span class="n">max_chars</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">is_quote</span><span class="p">:</span>
+            <span class="n">pieces</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_QUOTE_MARK</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">_QUOTE_MARK</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pieces</span><span class="p">]</span>
+
+        <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pieces</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">1</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">start</span>
+        <span class="k">for</span> <span class="n">piece</span> <span class="ow">in</span> <span class="n">pieces</span><span class="p">:</span>
+            <span class="n">share</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">duration</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">piece</span><span class="p">)</span> <span class="o">/</span> <span class="n">total</span>
+            <span class="n">raw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Cue</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span> <span class="o">+</span> <span class="n">share</span><span class="p">,</span> <span class="n">piece</span><span class="p">))</span>
+            <span class="n">t</span> <span class="o">+=</span> <span class="n">share</span>
+
+    <span class="n">raw</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">start_s</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Cue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">cue</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">cue</span><span class="o">.</span><span class="n">start_s</span><span class="p">,</span> <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">end_s</span> <span class="k">if</span> <span class="n">out</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cue</span><span class="o">.</span><span class="n">end_s</span> <span class="o">&gt;</span> <span class="n">start</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Cue</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">cue</span><span class="o">.</span><span class="n">end_s</span><span class="p">,</span> <span class="n">cue</span><span class="o">.</span><span class="n">text</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_wrap</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_chars</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Split ``text`` into &lt;= ``max_chars`` chunks at whitespace."""</span>
+    <span class="n">words</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="s2">""</span><span class="p">,</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2">"</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">line</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_chars</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">w</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">candidate</span>
+    <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span> <span class="ow">or</span> <span class="p">[</span><span class="n">text</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_timestamp</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""SRT timestamp ``HH:MM:SS,mmm`` (comma, not period -- that is the format)."""</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">hours</span><span class="p">,</span> <span class="n">rem</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">3600</span><span class="p">)</span>
+    <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">rem</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="n">whole</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">seconds</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">hours</span><span class="p">)</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">whole</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="nb">round</span><span class="p">((</span><span class="n">seconds</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">whole</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1000</span><span class="p">)</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">"</span>
+
+
+<div class="viewcode-block" id="format_srt">
+<a class="viewcode-back" href="../../module_docs/braidio/captions.html#braidio.format_srt">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">format_srt</span><span class="p">(</span><span class="n">cues</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render ``cues`` as an SRT document."""</span>
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">_timestamp</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">start_s</span><span class="p">)</span><span class="si">}</span><span class="s2"> --&gt; </span><span class="si">{</span><span class="n">_timestamp</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">end_s</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">c</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cues</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="captions_for">
+<a class="viewcode-back" href="../../module_docs/braidio/captions.html#braidio.captions_for">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">captions_for</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_chars</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The SRT document for ``script`` as laid out by ``timeline``."""</span>
+    <span class="k">return</span> <span class="n">format_srt</span><span class="p">(</span><span class="n">cues_for</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="n">timeline</span><span class="p">,</span> <span class="n">max_chars</span><span class="o">=</span><span class="n">max_chars</span><span class="p">))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

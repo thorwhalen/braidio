@@ -1,0 +1,612 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.video &mdash; braidio 0.0.37 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=aa2ad26f"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/captions.html">braidio.captions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp.html">braidio.mcp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_docs.html">braidio.mcp._docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_guide.html">braidio.mcp._guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_helpers.html">braidio.mcp._helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_media.html">braidio.mcp._media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/credentials.html">braidio.mcp.credentials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/metering.html">braidio.mcp.metering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/tools.html">braidio.mcp.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/structure.html">braidio.structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/style.html">braidio.style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/timeline.html">braidio.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_dialogue.html">braidio.transforms._dialogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_voice.html">braidio.transforms._voice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/video.html">braidio.video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../braidio.html">braidio</a></li>
+      <li class="breadcrumb-item active">braidio.video</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for braidio.video</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Turn a rendered production into a Ken Burns film over still images.</span>
+
+<span class="sd">braidio's delegation table sends *video render* to ``reelee`` -- and still does</span>
+<span class="sd">for anything with generated footage, characters or shots. This module is the one</span>
+<span class="sd">case reelee cannot serve: reelee imports braidio, so braidio cannot import</span>
+<span class="sd">reelee. What it needs instead is a leaf dependency, and pan/zoom over stills is</span>
+<span class="sd">exactly that: :mod:`burns` owns the motion, this module owns *where the cuts go*,</span>
+<span class="sd">which is braidio-specific knowledge because only braidio knows where a beat ends.</span>
+
+<span class="sd">**Optional layer.** Nothing here is imported by ``braidio/__init__`` eagerly and</span>
+<span class="sd">no function-level dependency is imported at module scope, so ``import</span>
+<span class="sd">braidio.video`` succeeds with nothing extra installed. :data:`HAS_VIDEO` reports</span>
+<span class="sd">whether the render path's dependencies (``braidio[video]`` -&gt; ``burns``,</span>
+<span class="sd">``pillow``) are actually present; :func:`plan_spans` and :func:`assign_stills`</span>
+<span class="sd">are pure and work regardless.</span>
+
+<span class="sd">The seams, and what each defaults to:</span>
+
+<span class="sd">===================== ====================================== =========================</span>
+<span class="sd">Seam                  v1 default                             Replaced by</span>
+<span class="sd">===================== ====================================== =========================</span>
+<span class="sd">where stills come     caller supplies paths; braidio fetches  any image source in the</span>
+<span class="sd">from                  nothing (same rule as ``SegmentSource``) consuming app</span>
+<span class="sd">camera motion         ``burns.content_aware_path_for``        any ``path_for=``</span>
+<span class="sd">                      (saliency-framed, so a push does not    callable returning a</span>
+<span class="sd">                      drift off a face)                       ``BurnsPath``</span>
+<span class="sd">still -&gt; frame        blurred-fill composite, nothing         any ``prepare=``</span>
+<span class="sd">                      cropped away                            callable</span>
+<span class="sd">===================== ====================================== =========================</span>
+
+<span class="sd">Deliberately *not* seams: sentence splitting, the credits-card layout, the</span>
+<span class="sd">panel-length bounds. They are written directly, with constants at module top.</span>
+
+<span class="sd">Why the blurred fill: a pool of found stills mixes portrait and landscape, and</span>
+<span class="sd">cover-cropping a tall image into a wide frame throws most of it away. Compositing</span>
+<span class="sd">onto a blurred, darkened enlargement of the image itself keeps the whole picture</span>
+<span class="sd">and never shows dead black bars.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"HAS_VIDEO"</span><span class="p">,</span>
+    <span class="s2">"Panel"</span><span class="p">,</span>
+    <span class="s2">"Span"</span><span class="p">,</span>
+    <span class="s2">"assign_stills"</span><span class="p">,</span>
+    <span class="s2">"credits_card"</span><span class="p">,</span>
+    <span class="s2">"missing_dependencies"</span><span class="p">,</span>
+    <span class="s2">"plan_spans"</span><span class="p">,</span>
+    <span class="s2">"prepare_still"</span><span class="p">,</span>
+    <span class="s2">"render_video"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#: Default frame. 16:9 at 1080p is what every consumer player and upload wants.</span>
+<span class="n">DEFAULT_SIZE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1920</span><span class="p">,</span> <span class="mi">1080</span><span class="p">)</span>
+<span class="n">DEFAULT_FPS</span> <span class="o">=</span> <span class="mi">30</span>
+
+<span class="c1">#: A still holds the screen this long. Under the floor it reads as a flicker;</span>
+<span class="c1">#: over the ceiling a static photograph starts to feel stalled even while moving.</span>
+<span class="n">MIN_PANEL_S</span> <span class="o">=</span> <span class="mf">5.0</span>
+<span class="n">MAX_PANEL_S</span> <span class="o">=</span> <span class="mf">9.0</span>
+
+<span class="c1">#: Blurred-fill background: blur hard and darken, so it reads as depth rather</span>
+<span class="c1">#: than as a second picture competing with the foreground.</span>
+<span class="n">_BG_BLUR_PX</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="n">_BG_BRIGHTNESS</span> <span class="o">=</span> <span class="mf">0.45</span>
+
+<span class="c1">#: Alternating camera moves, so consecutive panels never travel the same way.</span>
+<span class="n">_STYLES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"push"</span><span class="p">,</span> <span class="s2">"drift"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="missing_dependencies">
+<a class="viewcode-back" href="../../module_docs/braidio/video.html#braidio.video.missing_dependencies">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">missing_dependencies</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Which ``braidio[video]`` dependencies are absent (empty when ready)."""</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">mod</span><span class="p">,</span> <span class="n">dist</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"burns"</span><span class="p">,</span> <span class="s2">"burns"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"PIL"</span><span class="p">,</span> <span class="s2">"pillow"</span><span class="p">)):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">__import__</span><span class="p">(</span><span class="n">mod</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">missing</span></div>
+
+
+
+<span class="n">HAS_VIDEO</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">missing_dependencies</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_require</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="n">missing_dependencies</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">"braidio.video needs "</span> <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span> <span class="o">+</span> <span class="s2">" — install braidio[video]"</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_split_count</span><span class="p">(</span><span class="n">length</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">min_panel_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">max_panel_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""How many panels a stretch of ``length`` should become.</span>
+
+<span class="sd">    Ceiling division, so no panel exceeds ``max_panel_s`` -- ``round`` would let a</span>
+<span class="sd">    20s beat become two 10s panels, over a 9s ceiling. But the ceiling yields to</span>
+<span class="sd">    the floor: if splitting would make every part shorter than ``min_panel_s``, one</span>
+<span class="sd">    slightly-too-long panel beats a row of flickers.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; _split_count(20.0, 5.0, 9.0)   # 3 x 6.67, all under the ceiling</span>
+<span class="sd">        3</span>
+<span class="sd">        &gt;&gt;&gt; _split_count(9.5, 5.0, 9.0)    # 2 x 4.75 would breach the floor</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; _split_count(4.0, 5.0, 9.0)</span>
+<span class="sd">        1</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+    <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;=</span> <span class="n">max_panel_s</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">length</span> <span class="o">/</span> <span class="n">max_panel_s</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">parts</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">length</span> <span class="o">/</span> <span class="n">parts</span> <span class="o">&lt;</span> <span class="n">min_panel_s</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">parts</span>
+
+
+<div class="viewcode-block" id="Span">
+<a class="viewcode-back" href="../../module_docs/braidio/video.html#braidio.video.Span">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Span</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A stretch of screen time, before any image is chosen for it.</span>
+
+<span class="sd">    ``beat_index`` / ``kind`` / ``label`` carry the beat this came from, so a</span>
+<span class="sd">    caller assigning pictures can see what is being said over each span.</span>
+<span class="sd">    """</span>
+
+    <span class="n">start</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">end</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">beat_index</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">duration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span></div>
+
+
+
+<div class="viewcode-block" id="Panel">
+<a class="viewcode-back" href="../../module_docs/braidio/video.html#braidio.video.Panel">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Panel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A :class:`Span` with a still and its camera move."""</span>
+
+    <span class="n">start</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">end</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">still</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"push"</span>
+    <span class="n">zoom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.18</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">duration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span></div>
+
+
+
+<div class="viewcode-block" id="plan_spans">
+<a class="viewcode-back" href="../../module_docs/braidio/video.html#braidio.video.plan_spans">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plan_spans</span><span class="p">(</span>
+    <span class="n">timeline</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">min_panel_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">MIN_PANEL_S</span><span class="p">,</span>
+    <span class="n">max_panel_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">MAX_PANEL_S</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Span</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Cut ``timeline`` into contiguous spans of roughly one still each.</span>
+
+<span class="sd">    Cuts land on **beat boundaries** wherever a beat is already a comfortable</span>
+<span class="sd">    length, because that is where the narration actually changes subject. A beat</span>
+<span class="sd">    longer than ``max_panel_s`` is divided into equal parts (so a 30-second</span>
+<span class="sd">    passage becomes four panels rather than one stalled photograph); a beat</span>
+<span class="sd">    shorter than ``min_panel_s`` is merged forward into the next one rather than</span>
+<span class="sd">    producing a flicker.</span>
+
+<span class="sd">    The result is gapless and ordered: ``spans[i].end == spans[i + 1].start``.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        timeline: a :class:`~braidio.timeline.TimelineBreakdown`.</span>
+<span class="sd">        min_panel_s: below this, a beat is merged into the following span.</span>
+<span class="sd">        max_panel_s: above this, a beat is split into equal parts.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Spans covering the whole production, in playback order.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from braidio.timeline import build_timeline</span>
+<span class="sd">        &gt;&gt;&gt; tl = build_timeline(kinds=["narration"], durations=[20.0])</span>
+<span class="sd">        &gt;&gt;&gt; [round(s.duration, 2) for s in plan_spans(tl)]</span>
+<span class="sd">        [6.67, 6.67, 6.67]</span>
+
+<span class="sd">        A short beat does not become its own panel:</span>
+
+<span class="sd">        &gt;&gt;&gt; tl = build_timeline(kinds=["narration", "narration"], durations=[2.0, 8.0])</span>
+<span class="sd">        &gt;&gt;&gt; len(plan_spans(tl))</span>
+<span class="sd">        1</span>
+<span class="sd">    """</span>
+    <span class="n">beats</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">timeline</span><span class="o">.</span><span class="n">beats</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">beats</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="c1"># The weave crossfades beats, so spans would overlap if taken verbatim. Walk a</span>
+    <span class="c1"># single cursor instead: each span runs from wherever the last one ended.</span>
+    <span class="n">spans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Span</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">beats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span>
+    <span class="n">pending</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">beat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">beats</span><span class="p">):</span>
+        <span class="n">pending</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">beat</span><span class="p">)</span>
+        <span class="n">is_last</span> <span class="o">=</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">beats</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">beats</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_last</span> <span class="k">else</span> <span class="n">beat</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="n">beat</span><span class="o">.</span><span class="n">duration</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">cursor</span>
+        <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;</span> <span class="n">min_panel_s</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_last</span><span class="p">:</span>
+            <span class="k">continue</span>  <span class="c1"># too short to stand alone — carry it into the next beat</span>
+
+        <span class="n">head</span> <span class="o">=</span> <span class="n">pending</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">_split_count</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">min_panel_s</span><span class="p">,</span> <span class="n">max_panel_s</span><span class="p">)</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="n">length</span> <span class="o">/</span> <span class="n">parts</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">parts</span><span class="p">):</span>
+            <span class="n">spans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">Span</span><span class="p">(</span>
+                    <span class="n">start</span><span class="o">=</span><span class="n">cursor</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="n">step</span><span class="p">,</span>
+                    <span class="n">end</span><span class="o">=</span><span class="n">cursor</span> <span class="o">+</span> <span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">step</span><span class="p">,</span>
+                    <span class="n">beat_index</span><span class="o">=</span><span class="n">head</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                    <span class="n">kind</span><span class="o">=</span><span class="n">head</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span>
+                    <span class="n">label</span><span class="o">=</span><span class="n">head</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">end</span>
+        <span class="n">pending</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">return</span> <span class="n">spans</span></div>
+
+
+
+<div class="viewcode-block" id="assign_stills">
+<a class="viewcode-back" href="../../module_docs/braidio/video.html#braidio.video.assign_stills">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assign_stills</span><span class="p">(</span>
+    <span class="n">spans</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Span</span><span class="p">],</span>
+    <span class="n">stills</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">zoom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.18</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Panel</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Attach stills to ``spans``, cycling so none repeats back-to-back.</span>
+
+<span class="sd">    This is the *mechanical* default. Which picture belongs over which sentence is</span>
+<span class="sd">    an authoring decision — it needs to know what is being said — so a caller that</span>
+<span class="sd">    cares builds :class:`Panel` objects directly and uses each span's ``label``</span>
+<span class="sd">    and ``beat_index`` to choose. This function is what you want when the stills</span>
+<span class="sd">    are interchangeable texture.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; spans = [Span(0, 5, 0), Span(5, 10, 1), Span(10, 15, 2)]</span>
+<span class="sd">        &gt;&gt;&gt; [p.still for p in assign_stills(spans, ["a.jpg", "b.jpg"])]</span>
+<span class="sd">        ['a.jpg', 'b.jpg', 'a.jpg']</span>
+<span class="sd">        &gt;&gt;&gt; [p.style for p in assign_stills(spans, ["a.jpg", "b.jpg"])]</span>
+<span class="sd">        ['push', 'drift', 'push']</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">stills</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"assign_stills needs at least one still"</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">span</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spans</span><span class="p">):</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">Panel</span><span class="p">(</span>
+                <span class="n">start</span><span class="o">=</span><span class="n">span</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">end</span><span class="o">=</span><span class="n">span</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
+                <span class="n">still</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">stills</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">stills</span><span class="p">)]),</span>
+                <span class="n">style</span><span class="o">=</span><span class="n">_STYLES</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">_STYLES</span><span class="p">)],</span>
+                <span class="n">zoom</span><span class="o">=</span><span class="n">zoom</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="n">span</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="prepare_still">
+<a class="viewcode-back" href="../../module_docs/braidio/video.html#braidio.video.prepare_still">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">prepare_still</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_SIZE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Composite ``src`` onto a blurred fill of itself at exactly ``size``.</span>
+
+<span class="sd">    Nothing is cropped away and no dead black bar appears, whatever the source</span>
+<span class="sd">    aspect. Idempotent: an existing ``dst`` is returned untouched, so re-running a</span>
+<span class="sd">    build does not redo the work.</span>
+<span class="sd">    """</span>
+    <span class="n">_require</span><span class="p">()</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageEnhance</span><span class="p">,</span> <span class="n">ImageFilter</span>
+
+    <span class="n">dst</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dst</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">dst</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">size</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">"RGB"</span><span class="p">)</span>
+
+    <span class="n">cover</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">width</span> <span class="o">/</span> <span class="n">img</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">/</span> <span class="n">img</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+    <span class="n">bg</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span>
+        <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">cover</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="n">cover</span><span class="p">)),</span> <span class="n">Image</span><span class="o">.</span><span class="n">LANCZOS</span>
+    <span class="p">)</span>
+    <span class="n">left</span><span class="p">,</span> <span class="n">top</span> <span class="o">=</span> <span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">width</span> <span class="o">-</span> <span class="n">width</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">height</span> <span class="o">-</span> <span class="n">height</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">bg</span> <span class="o">=</span> <span class="n">bg</span><span class="o">.</span><span class="n">crop</span><span class="p">((</span><span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">left</span> <span class="o">+</span> <span class="n">width</span><span class="p">,</span> <span class="n">top</span> <span class="o">+</span> <span class="n">height</span><span class="p">))</span>
+    <span class="n">bg</span> <span class="o">=</span> <span class="n">bg</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ImageFilter</span><span class="o">.</span><span class="n">GaussianBlur</span><span class="p">(</span><span class="n">_BG_BLUR_PX</span><span class="p">))</span>
+    <span class="n">bg</span> <span class="o">=</span> <span class="n">ImageEnhance</span><span class="o">.</span><span class="n">Brightness</span><span class="p">(</span><span class="n">bg</span><span class="p">)</span><span class="o">.</span><span class="n">enhance</span><span class="p">(</span><span class="n">_BG_BRIGHTNESS</span><span class="p">)</span>
+
+    <span class="n">contain</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">width</span> <span class="o">/</span> <span class="n">img</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">/</span> <span class="n">img</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+    <span class="n">fg</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span>
+        <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">contain</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">height</span> <span class="o">*</span> <span class="n">contain</span><span class="p">)),</span> <span class="n">Image</span><span class="o">.</span><span class="n">LANCZOS</span>
+    <span class="p">)</span>
+    <span class="n">bg</span><span class="o">.</span><span class="n">paste</span><span class="p">(</span><span class="n">fg</span><span class="p">,</span> <span class="p">((</span><span class="n">width</span> <span class="o">-</span> <span class="n">fg</span><span class="o">.</span><span class="n">width</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">height</span> <span class="o">-</span> <span class="n">fg</span><span class="o">.</span><span class="n">height</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">bg</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="n">quality</span><span class="o">=</span><span class="mi">94</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dst</span></div>
+
+
+
+<div class="viewcode-block" id="credits_card">
+<a class="viewcode-back" href="../../module_docs/braidio/video.html#braidio.video.credits_card">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">credits_card</span><span class="p">(</span>
+    <span class="n">lines</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">dst</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">heading</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Credits"</span><span class="p">,</span>
+    <span class="n">footer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_SIZE</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render an end card listing ``lines``.</span>
+
+<span class="sd">    Reusing a photograph under CC BY / CC BY-SA is conditional on crediting it, so</span>
+<span class="sd">    for a film built from found images this card is part of the licence</span>
+<span class="sd">    compliance, not decoration. Generate ``lines`` from whatever manifest recorded</span>
+<span class="sd">    the fetches, so the card cannot drift from what was actually used.</span>
+<span class="sd">    """</span>
+    <span class="n">_require</span><span class="p">()</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageDraw</span><span class="p">,</span> <span class="n">ImageFont</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">font</span><span class="p">(</span><span class="n">px</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">"/System/Library/Fonts/Supplemental/Arial.ttf"</span><span class="p">,</span>
+            <span class="s2">"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"</span><span class="p">,</span>
+            <span class="s2">"/System/Library/Fonts/Helvetica.ttc"</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">ImageFont</span><span class="o">.</span><span class="n">truetype</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">px</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ImageFont</span><span class="o">.</span><span class="n">load_default</span><span class="p">()</span>
+
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">size</span>
+    <span class="n">card</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">"RGB"</span><span class="p">,</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">),</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">14</span><span class="p">))</span>
+    <span class="n">draw</span> <span class="o">=</span> <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">card</span><span class="p">)</span>
+    <span class="n">draw</span><span class="o">.</span><span class="n">text</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="mi">62</span><span class="p">),</span> <span class="n">heading</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="p">(</span><span class="mi">238</span><span class="p">,</span> <span class="mi">238</span><span class="p">,</span> <span class="mi">243</span><span class="p">),</span> <span class="n">font</span><span class="o">=</span><span class="n">font</span><span class="p">(</span><span class="mi">34</span><span class="p">))</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="mi">140</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="n">draw</span><span class="o">.</span><span class="n">text</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">line</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="p">(</span><span class="mi">186</span><span class="p">,</span> <span class="mi">186</span><span class="p">,</span> <span class="mi">198</span><span class="p">),</span> <span class="n">font</span><span class="o">=</span><span class="n">font</span><span class="p">(</span><span class="mi">21</span><span class="p">))</span>
+        <span class="n">y</span> <span class="o">+=</span> <span class="mi">31</span>
+    <span class="k">if</span> <span class="n">footer</span><span class="p">:</span>
+        <span class="n">draw</span><span class="o">.</span><span class="n">text</span><span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="n">height</span> <span class="o">-</span> <span class="mi">78</span><span class="p">),</span> <span class="n">footer</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">132</span><span class="p">),</span> <span class="n">font</span><span class="o">=</span><span class="n">font</span><span class="p">(</span><span class="mi">21</span><span class="p">))</span>
+    <span class="n">dst</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">card</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="n">quality</span><span class="o">=</span><span class="mi">94</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dst</span></div>
+
+
+
+<div class="viewcode-block" id="render_video">
+<a class="viewcode-back" href="../../module_docs/braidio/video.html#braidio.video.render_video">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_video</span><span class="p">(</span>
+    <span class="n">panels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Panel</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">audio_path</span><span class="p">,</span>
+    <span class="n">out_path</span><span class="p">,</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_SIZE</span><span class="p">,</span>
+    <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_FPS</span><span class="p">,</span>
+    <span class="n">workdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">prepare</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">path_for</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">write_kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Render ``panels`` as one Ken Burns film and mux ``audio_path`` under it.</span>
+
+<span class="sd">    One ``burns.ken_burns_film`` pass rather than per-panel renders plus a concat:</span>
+<span class="sd">    that avoids a re-encode seam at every cut and a frozen frame at every panel</span>
+<span class="sd">    tail.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        panels: the stills and their screen time, in order.</span>
+<span class="sd">        audio_path: the finished mix. Its length should match the panels; pad it</span>
+<span class="sd">            first if the film ends on a credits card.</span>
+<span class="sd">        out_path: mp4 to write.</span>
+<span class="sd">        size, fps: frame geometry and rate.</span>
+<span class="sd">        workdir: where prepared canvases are cached (default: next to ``out_path``).</span>
+<span class="sd">        prepare: still -&gt; frame-sized image. Default :func:`prepare_still`.</span>
+<span class="sd">        path_for: ``(image_path, index, panel) -&gt; BurnsPath``. Default is</span>
+<span class="sd">            ``burns.content_aware_path_for``, which frames on the image's salient</span>
+<span class="sd">            region so a slow push stays on the subject.</span>
+<span class="sd">        **write_kwargs: forwarded to ``burns.ken_burns_film``.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The written mp4 path.</span>
+<span class="sd">    """</span>
+    <span class="n">_require</span><span class="p">()</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">burns</span><span class="w"> </span><span class="kn">import</span> <span class="n">content_aware_path_for</span><span class="p">,</span> <span class="n">ken_burns_film</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">panels</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"render_video needs at least one panel"</span><span class="p">)</span>
+
+    <span class="n">out_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
+    <span class="n">workdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span> <span class="k">if</span> <span class="n">workdir</span> <span class="k">else</span> <span class="n">out_path</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"_frames"</span>
+    <span class="n">prepare</span> <span class="o">=</span> <span class="n">prepare</span> <span class="ow">or</span> <span class="n">prepare_still</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">default_path_for</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">panel</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">content_aware_path_for</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">image</span><span class="p">),</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">output_aspect</span><span class="o">=</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">zoom</span><span class="o">=</span><span class="n">panel</span><span class="o">.</span><span class="n">zoom</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">"in"</span> <span class="k">if</span> <span class="n">panel</span><span class="o">.</span><span class="n">style</span> <span class="o">==</span> <span class="s2">"push"</span> <span class="k">else</span> <span class="s2">"auto"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">path_for</span> <span class="o">=</span> <span class="n">path_for</span> <span class="ow">or</span> <span class="n">default_path_for</span>
+
+    <span class="n">triples</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">panel</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">panels</span><span class="p">):</span>
+        <span class="n">canvas</span> <span class="o">=</span> <span class="n">prepare</span><span class="p">(</span>
+            <span class="n">panel</span><span class="o">.</span><span class="n">still</span><span class="p">,</span> <span class="n">workdir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">still</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">.jpg"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span>
+        <span class="p">)</span>
+        <span class="n">triples</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">canvas</span><span class="p">),</span> <span class="n">path_for</span><span class="p">(</span><span class="n">canvas</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">panel</span><span class="p">),</span> <span class="n">panel</span><span class="o">.</span><span class="n">duration</span><span class="p">))</span>
+
+    <span class="n">out_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ken_burns_film</span><span class="p">(</span>
+        <span class="n">triples</span><span class="p">,</span>
+        <span class="n">saveas</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">out_path</span><span class="p">),</span>
+        <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span>
+        <span class="n">audio_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">audio_path</span><span class="p">),</span>
+        <span class="o">**</span><span class="n">write_kwargs</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">with_credits</span><span class="p">(</span>
+    <span class="n">panels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Panel</span><span class="p">],</span> <span class="n">card</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">duration_s</span><span class="p">:</span> <span class="nb">float</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Panel</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Append a credits card to ``panels``, held for ``duration_s``.</span>
+
+<span class="sd">    The audio must be padded to match — see the skill for the one-line ``ffmpeg``</span>
+<span class="sd">    ``apad`` that does it.</span>
+<span class="sd">    """</span>
+    <span class="n">last_end</span> <span class="o">=</span> <span class="n">panels</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">end</span> <span class="k">if</span> <span class="n">panels</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="o">*</span><span class="n">panels</span><span class="p">,</span>
+        <span class="n">Panel</span><span class="p">(</span><span class="n">last_end</span><span class="p">,</span> <span class="n">last_end</span> <span class="o">+</span> <span class="n">duration_s</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">card</span><span class="p">),</span> <span class="n">style</span><span class="o">=</span><span class="s2">"drift"</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="mf">1.04</span><span class="p">),</span>
+    <span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
