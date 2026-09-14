@@ -71,7 +71,7 @@ Each layer only knows the ones beneath it. Keep it that way.
 
 | Layer | Modules | Depends on |
 |---|---|---|
-| **1. Functional core** | `script` (Narration/SegmentBeat/Dialogue/Script), `rights` (Profile + plan_production), `sources` (SegmentSource, TimedLine), `tts`, `cost`, `delivery`, `multivoice`, `weave_config`, `music`, `compose`, `weave`, `render`, `timeline`, `captions`, `textprep`, `style`, `kinds` | `mixing`, `elevenlabs`, `ffmpeg` on PATH — nothing else |
+| **1. Functional core** | `script` (Narration/SegmentBeat/Dialogue/Script), `rights` (Profile + plan_production), `sources` (SegmentSource, TimedLine), `tts`, `cost`, `delivery`, `pacing`, `multivoice`, `weave_config`, `music`, `compose`, `weave`, `render`, `timeline`, `captions`, `textprep`, `style`, `kinds` | `mixing`, `elevenlabs`, `ffmpeg` on PATH — nothing else |
 | **2. Format templates** | `formats` (`Format`, `render_format`, `FORMATS`) | layer 1 only. Templates are *good defaults over the primitives*, never new mechanism |
 | **3. Graph vocabulary** | `bodies/` — lacing body schemas + tiers, registered as an import side effect | `lacing` (extra `graph`) |
 | **4. nw pipeline** | `transforms/` (voice-assignment → narration-render / dialogue-render → segment-extraction → episode), `provenance`, `project`, `genre` | layers 1–3 + `nw` (extra `nw-app`) |
@@ -305,6 +305,40 @@ email allow-set, and a per-principal monthly credit cap over
 production behaviour, while a change to `COSTED_TOOLS`, a tool's signature, or
 `INSTRUCTIONS` does. `current_email()` is written to work under either host's
 middleware — keep it that way.
+
+## What actually controls pacing
+
+This cost a round trip once, and the wrong answer got written into a shipped
+skill, so it is written down here. "The narration sounds robotic" has **four**
+possible causes and they live in different places.
+
+| Lever | Where | Live on which path |
+|---|---|---|
+| `WeaveConfig.segmentation_unit` | config | **The master switch** for intra-beat pacing. `"beat"` (the bare-`WeaveConfig()` default) = one TTS call per narration beat, one prosodic arc, no silence inside it |
+| `gap_turn_s`, `speed_jitter`, `speed_base`, `min_turn`/`max_turn` | config | `render_production` **only when `segmentation_unit != "beat"`**; `compose_narration` → `render_multivoice` always |
+| `Narration.lead_gap_s` | the beat | every path, always — `render.py`'s `_lead_gap` |
+| `Delivery` | render arg | v2 cannot render `[audio tags]` **at all**; only a v3 delivery makes `[pause]`/`[dryly]` fire. v3 in exchange has **no speed knob** (`Delivery.supports_speed`) |
+
+The trap (braidio#64): before the pacing wiring, `gap_turn_s` and `speed_jitter`
+were read by `compose.py` and **nothing else**. `render_format` /
+`render_production` — what every `Format` template runs — ignored them, so
+`gap_turn_s=0.0`, `0.28` and `3.0` produced byte-identical files. The audible
+improvement that got credited to them actually came from `lead_gap_s` and the
+eleven_v3 delivery. `tests/test_pacing.py::test_gap_turn_s_changes_the_rendered_timeline`
+is the guard: it renders twice, changes only that knob, and fails on a zero
+delta. Do not delete it, and do not relax it to a "config is threaded" assertion —
+it has to measure the *output*.
+
+`braidio/pacing.py` is the pure planner (text + knobs → `NarrationTurn`s: what to
+say, how fast, how much silence after). `render.py` executes it and owns no
+pacing policy of its own. Boundary strength is a named table (`BOUNDARIES`) —
+a paragraph break pauses longer than a comma, and each boundary also slows the
+approach to it, because *pause without final lengthening* is the robotic
+signature. Add a boundary class there, not an `if` in the renderer.
+
+Two format templates opt in (`solo_explainer`, `documentary_vo` — the
+narration-heavy ones), on a v3 delivery. Everything else keeps
+`segmentation_unit="beat"` and renders exactly as before.
 
 ## Conventions
 

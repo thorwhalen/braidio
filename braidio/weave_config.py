@@ -20,6 +20,7 @@ from dataclasses import asdict, dataclass, field, replace
 from typing import Any, Mapping
 
 from braidio.multivoice import POOL_4, POOL_MANY
+from braidio.pacing import SEGMENTATION_UNITS
 from braidio.tts import DEFAULT_VOICE_ID
 
 # Research-recommended base narration settings (v2-tuned).
@@ -48,17 +49,23 @@ class WeaveConfig:
     )
 
     # --- Segmentation / turns ----------------------------------------------
-    segmentation_unit: str = "sentence"  # sentence | clause | paragraph | beat
+    # How a narration beat is cut into turns. ``"beat"`` (the default) = one TTS
+    # call for the whole beat, i.e. no intra-beat pacing at all — historical
+    # behavior. Anything else engages :mod:`braidio.pacing` in
+    # :func:`braidio.render.render_production`, which is what makes
+    # ``min_turn``/``max_turn``/``speed_jitter``/``gap_turn_s`` audible there.
+    segmentation_unit: str = "beat"  # beat | paragraph | sentence | clause
     min_turn: int = 2  # segments a voice speaks before switching
     max_turn: int = 4
 
     # --- Pacing -------------------------------------------------------------
-    speed_base: float = 1.0
-    speed_jitter: float = 0.04  # ± per turn
+    speed_base: float = 1.0  # fallback center when the Delivery sets no speed
+    speed_jitter: float = 0.04  # ± per turn (models with a speed knob only)
 
     # --- Timing between turns ----------------------------------------------
     crossfade_s: float = 0.12
-    gap_turn_s: float = 0.0  # silence between turns (mutually exclusive w/ crossfade)
+    gap_turn_s: float = 0.0  # silence at a *sentence* boundary between turns;
+    # other boundaries scale off it (braidio.pacing.BOUNDARIES)
     overlap_turn_s: float = 0.0  # speaker interruption (#22 — not yet rendered)
 
     # --- Clip weaving (#21) -------------------------------------------------
@@ -82,6 +89,28 @@ class WeaveConfig:
             raise ValueError("WeaveConfig.voices must have at least one voice id")
         if not (1 <= self.min_turn <= self.max_turn):
             raise ValueError("require 1 <= min_turn <= max_turn")
+        if self.segmentation_unit not in SEGMENTATION_UNITS:
+            raise ValueError(
+                f"WeaveConfig.segmentation_unit must be one of {SEGMENTATION_UNITS}, "
+                f"got {self.segmentation_unit!r} — a typo here would silently "
+                "disable intra-beat pacing"
+            )
+
+    @property
+    def paces_narration(self) -> bool:
+        """Whether a render cuts each narration beat into separately-spoken turns.
+
+        ``False`` (the default, ``segmentation_unit="beat"``) is one TTS call per
+        beat — no intra-beat gaps, no per-turn speed, so ``gap_turn_s`` and
+        ``speed_jitter`` do nothing on the :func:`braidio.render.render_production`
+        path. Opt in by setting ``segmentation_unit`` to a smaller unit.
+
+        >>> WeaveConfig().paces_narration
+        False
+        >>> WeaveConfig(segmentation_unit="sentence").paces_narration
+        True
+        """
+        return self.segmentation_unit != "beat"
 
     @property
     def is_multivoice(self) -> bool:
