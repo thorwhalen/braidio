@@ -1,7 +1,9 @@
 """Render a :class:`~braidio.script.Script` into an audio file.
 
 Walks the beats (filtered by the rights :class:`~braidio.rights.Profile`):
-narration beats are synthesized (:mod:`braidio.tts`); segment beats are resolved
+narration beats are synthesized (:mod:`braidio.tts`) — as one call, or as paced
+turns when the :class:`~braidio.weave_config.WeaveConfig` asks for a smaller
+``segmentation_unit`` (:mod:`braidio.pacing`); segment beats are resolved
 via a :class:`~braidio.sources.SegmentSource` and extracted (padded + faded);
 scene breaks become a sting or a pause (:mod:`braidio.structure`). Every spoken
 or clipped part is loudness-normalized, then either woven on a timeline (clips
@@ -22,6 +24,7 @@ from mixing import concatenate_audio
 
 from braidio.conversation import DEFAULT_CAST, ConversationCast, render_dialogue
 from braidio.delivery import V2_TUNED, Delivery
+from braidio.pacing import NarrationTurn, plan_turns
 from braidio.rights import (
     DEFAULT_PROFILE,
     PUBLISHABLE_CLIP_RIGHTS,
@@ -57,6 +60,94 @@ def _lead_gap(src: Path, dst: Path, *, gap_s: float) -> Path:
         capture_output=True,
     )
     return dst
+
+
+def _tail_gap(src: Path, dst: Path, *, gap_s: float) -> Path:
+    """Append ``gap_s`` seconds of silence (the pause *after* a spoken turn)."""
+    _require_ffmpeg()
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(src), "-af", f"apad=pad_dur={gap_s:.3f}", str(dst)],
+        check=True,
+        capture_output=True,
+    )
+    return dst
+
+
+def _plan_beat_turns(
+    text: str,
+    *,
+    config: WeaveConfig | None,
+    delivery: Delivery,
+    settings: dict,
+    seed_offset: int,
+) -> list[NarrationTurn]:
+    """Plan one narration beat's turns, or ``[]`` for the unpaced single call.
+
+    The speed each turn is jittered around is the *delivery's* own ``speed``
+    when it sets one (so a grave ``v2-narrator``'s 0.94 survives being paced),
+    falling back to ``WeaveConfig.speed_base``. A model with no speed control
+    (eleven v3 — :attr:`braidio.delivery.Delivery.supports_speed`) plans none.
+    """
+    if config is None or not config.paces_narration:
+        return []
+    speed_base = (
+        settings.get("speed", config.speed_base) if delivery.supports_speed else None
+    )
+    return plan_turns(
+        text,
+        unit=config.segmentation_unit,
+        min_turn=config.min_turn,
+        max_turn=config.max_turn,
+        seed=config.voice_seed + seed_offset,
+        gap_s=config.gap_turn_s,
+        speed_base=speed_base,
+        speed_jitter=config.speed_jitter,
+    )
+
+
+def _narrate_turns(
+    turns: list[NarrationTurn],
+    *,
+    stem: Path,
+    api_key: str | None,
+    voice_id: str | None,
+    model_id: str,
+    voice_settings: dict,
+) -> Path:
+    """Synthesize a paced narration beat: one TTS call per turn, real silence between.
+
+    This is the point of :mod:`braidio.pacing` — within one beat the tempo now
+    varies (a fresh prosodic arc per turn, a per-turn speed where the model has
+    one) and the silence between turns is proportional to how strongly the
+    boundary closes, instead of one flat arc with nothing inside it.
+    """
+    parts: list[Path] = []
+    for j, turn in enumerate(turns):
+        settings = dict(voice_settings)
+        if turn.speed is not None:
+            settings["speed"] = turn.speed
+        part = narrate(
+            turn.text,
+            stem.with_name(f"{stem.name}-turn{j:02d}.mp3"),
+            api_key=api_key,
+            voice_id=voice_id,
+            model_id=model_id,
+            voice_settings=settings,
+        )
+        if turn.gap_after_s > 0:
+            part = _tail_gap(
+                part,
+                stem.with_name(f"{stem.name}-turn{j:02d}-gap.mp3"),
+                gap_s=turn.gap_after_s,
+            )
+        parts.append(part)
+    if len(parts) == 1:
+        return parts[0]
+    out = stem.with_name(f"{stem.name}-paced.mp3")
+    # crossfade=0: the planned gaps ARE the spacing; a crossfade would eat them.
+    concatenate_audio(*[str(p) for p in parts], output=str(out), crossfade=0.0)
+    return out
 
 
 def _end_tail(path: Path, *, fade_s: float, silence_s: float) -> None:
@@ -155,6 +246,16 @@ def render_production(
     uses the inert defaults — no sting asset, no clip spotlit by default — so a
     script without scene breaks or spotlight flags renders exactly as before.
 
+    **Pacing inside a narration beat** is a ``config`` choice. By default
+    (``WeaveConfig.segmentation_unit == "beat"``) a beat is one TTS call — one
+    prosodic arc, no silence anywhere in it. Set a smaller
+    ``segmentation_unit`` and the beat is cut into turns of
+    ``min_turn..max_turn`` units, each synthesized separately with a jittered
+    ``speed_base ± speed_jitter`` (where the model has a speed knob) and
+    followed by ``gap_turn_s`` scaled to how strongly the boundary closes —
+    see :mod:`braidio.pacing`. Those four knobs do **nothing** here at the
+    default unit, which is the historical behavior kept byte-identical.
+
     ``api_key`` is an optional per-request ElevenLabs key threaded to every
     synthesized beat — both narration (:func:`braidio.tts.narrate`) and dialogue
     (:func:`braidio.conversation.render_dialogue`). When ``None`` (default) each
@@ -194,9 +295,9 @@ def render_production(
     parts: list[Path] = []
     kinds: list[str] = []
     placements: list[str] = []  # "sequential" | "under" (per part, for the weave)
-    roles: list[
-        str
-    ] = []  # aggregation label per beat (clip / narration / style / dialogue)
+    roles: list[str] = (
+        []
+    )  # aggregation label per beat (clip / narration / style / dialogue)
     spans: list[tuple[float, float] | None] = []  # source [start,end) for clips
     labels: list[str] = []
     spotlights: list[bool] = []  # per part: the bed drops out over it
@@ -227,15 +328,37 @@ def render_production(
             beat_settings = (
                 getattr(orig, "voice_settings", None) or delivery.voice_settings
             )
-            raw = narrate(
-                pb.content,
+            beat_stem = (
                 Path(tts_dir)
-                / f"{script.id_slug}-{profile.value}-{delivery.name}-beat{i:02d}.mp3",
-                api_key=api_key,
-                voice_id=beat_voice,
-                model_id=delivery.model_id,
-                voice_settings=beat_settings,
+                / f"{script.id_slug}-{profile.value}-{delivery.name}-beat{i:02d}"
             )
+            # Intra-beat pacing — empty plan (the default `segmentation_unit=
+            # "beat"`) keeps the historical one-call-per-beat path untouched.
+            turns = _plan_beat_turns(
+                pb.content,
+                config=config,
+                delivery=delivery,
+                settings=beat_settings,
+                seed_offset=i,
+            )
+            if turns:
+                raw = _narrate_turns(
+                    turns,
+                    stem=beat_stem,
+                    api_key=api_key,
+                    voice_id=beat_voice,
+                    model_id=delivery.model_id,
+                    voice_settings=beat_settings,
+                )
+            else:
+                raw = narrate(
+                    pb.content,
+                    beat_stem.with_name(beat_stem.name + ".mp3"),
+                    api_key=api_key,
+                    voice_id=beat_voice,
+                    model_id=delivery.model_id,
+                    voice_settings=beat_settings,
+                )
             # breathing room before a register change (Narration.lead_gap_s)
             gap = getattr(orig, "lead_gap_s", 0.0)
             if gap and gap > 0:
@@ -323,8 +446,13 @@ def render_production(
             bed=music_bed,
         )
     else:
+        # `crossfade`, not `crossfade_s`: the config's crossfade was read by the
+        # woven branch and by the returned TimelineBreakdown, but NOT here — so a
+        # narration-only render used the function default while the breakdown
+        # reported the config's value. Same value at the shared default (0.12),
+        # so this only starts honouring a crossfade a caller explicitly set.
         concatenate_audio(
-            *[str(p) for p in parts], output=str(out), crossfade=crossfade_s
+            *[str(p) for p in parts], output=str(out), crossfade=crossfade
         )
     # soft landing so the production doesn't cut dead on the last word
     if end_silence_s > 0 or end_fade_s > 0:

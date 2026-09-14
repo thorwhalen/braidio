@@ -43,9 +43,7 @@ path, timeline = braidio.render_format(  # 1. audio + exact beat timings
     script,
     source=source,
     out_path="ep.mp3",
-    delivery=braidio.DELIVERIES["conversational"],
-    config=fmt.weave.with_(gap_turn_s=0.28, speed_jitter=0.07, crossfade_s=0.14),
-    return_timeline=True,
+    return_timeline=True,          # no delivery/config overrides needed
 )
 spans = plan_spans(timeline)  # 2. where the cuts fall
 panels = [Panel(s.start, s.end, pick(s)) for s in spans]  # 3. YOUR choice of image
@@ -62,16 +60,42 @@ when the images are interchangeable texture, wrong when relevance matters. Which
 picture belongs over which sentence needs to know what is being *said*; each
 `Span` carries `label`, `kind` and `beat_index` so you can choose.
 
-## Two defaults that will make it sound like AI
+## What actually controls pacing (read this before tuning anything)
+
+An earlier version of this file told you to pass
+`config=fmt.weave.with_(gap_turn_s=0.28, speed_jitter=0.07)`. **That advice was
+wrong** for the whole of braidio ≤ 0.0.40: on the `render_format` /
+`render_production` path those two fields were read by nothing. Renders with
+`gap_turn_s=0.0`, `0.28` and `3.0` came out byte-identical. They were live only
+inside `compose_narration`, which the format templates never call. Fixed in
+braidio#64 — but know which knob acts on which path before you reach for one.
+
+| Knob | Where it lives | What it does on the `render_format` path |
+|---|---|---|
+| `WeaveConfig.segmentation_unit` | config | **The master switch.** `"beat"` (the bare `WeaveConfig()` default) = one TTS call per narration beat, and then `gap_turn_s` / `speed_jitter` / `min_turn` / `max_turn` do nothing. `"sentence"` / `"clause"` / `"paragraph"` cut the beat into turns and switch the rest on |
+| `WeaveConfig.gap_turn_s` | config | Silence at a **sentence** boundary between turns; other boundaries scale off it (a paragraph break ≈ 2.2×, a comma ≈ 0.5× — `braidio.pacing.BOUNDARIES`). Live only when `segmentation_unit != "beat"` |
+| `WeaveConfig.speed_jitter`, `speed_base` | config | Per-turn speed jitter, **v2 only** — eleven v3 has no speed control, so a v3 delivery plans none (`Delivery.supports_speed`) |
+| `WeaveConfig.min_turn` / `max_turn` | config | How many units one turn speaks. Fewer units per turn = more independent takes = more prosodic variety, and more inserted breath |
+| `Narration.lead_gap_s` | **the beat** | Silence *before* a beat. Always live, on every path — this is the one that was doing the work all along. Put `0.3–0.5` on any beat that follows a clip |
+| `Delivery` | render arg | `eleven_multilingual_v2` **cannot render `[audio tags]` at all**. Only a v3 delivery makes `[pause]` / `[dryly]` fire |
+
+**Defaults you no longer need to override.** `solo_explainer` and
+`documentary_vo` now ship a v3 delivery *and* sentence-level pacing, so
+`render_format(FORMATS["solo_explainer"], …)` with no overrides is the intended
+sound. Override only to move away from that — and if you do pass a `config`,
+remember you are replacing the format's, so start from `fmt.weave.with_(…)`,
+never a bare `WeaveConfig()` (which would silently switch pacing back off).
+
+## Two things that will still make it sound like AI
 
 Both bit on a real episode; the user's words were *"the pace is a bit robotic and
 without pause and the expressions are a bit kitsch."*
 
-**1. Pacing is a config default, not the voice.** The format templates ship
-`gap_turn_s: 0.0` — every sentence starts the instant the last one ends, no breath
-in the whole piece — on `eleven_multilingual_v2`, which cannot render audio tags
-at all. Override, as above, and add `lead_gap_s=0.3–0.5` on beats that follow a
-clip.
+**1. Write the performance into the text.** On a v3 delivery the script is the
+control surface: inline `[audio tags]` (`[slowly]` on a punchline, `[rushed]` on
+an aside, `[pause]` where a breath belongs) and punctuation (em-dash flows, `…`
+adds weight, a period is a full stop). Sparingly — a tag on every sentence is the
+"kitsch" half of that complaint.
 
 **2. Epigram density is the actual tell.** A first draft landed a designed turn of
 phrase at the end of *every* beat — 8 in 338 words. No speaking human sustains

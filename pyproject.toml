@@ -83,7 +83,15 @@ graph = ["lacing"]
 # NOT a hard dependency, and deliberately not `reelee` or `artful`: reelee imports
 # braidio (so the reverse would be circular), and nothing here needs a storyboard
 # model. See braidio/video.py's docstring for the boundary.
-video = ["burns>=0.0.9", "pillow"]
+# burns>=0.0.11: first release containing `sample_box_exact`, the sub-pixel frame
+# sampling. Below it the pan/zoom window rounds to whole source pixels, so a slow
+# push emits runs of pixel-identical frames (up to ~75% consecutive duplicates)
+# and then snaps — visibly stepped motion. That is a defect in the rendered
+# output, not an optimisation, so the floor excludes it. Verified against the
+# published wheels, not the git log: wads CI bumps the version in a commit AFTER
+# the feature, so the fix commit's own pyproject still reads 0.0.10 and the log
+# makes it look like 0.0.12 (the same trap documented for nw#27 below).
+video = ["burns>=0.0.11", "pillow"]
 # nw>=0.0.29: `derive_provenance` takes the Transform instance rather than
 # (name, version) — it reads `name` and `impl_version` off it (nw#27). The break is
 # at CALL time, not import time, so an older nw installs cleanly and then fails

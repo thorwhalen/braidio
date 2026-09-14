@@ -97,8 +97,21 @@ from braidio.delivery import (  # noqa: F401
     V2_NARRATOR,
     V3_NATURAL,
     V3_CREATIVE,
+    V3_PRESENTER,
+    V3_NARRATOR,
     NARRATION,
     CONVERSATIONAL,
+)
+
+# --- intra-beat narration pacing (pure planner; the renderer executes it) ---
+from braidio.pacing import (  # noqa: F401
+    NarrationTurn,
+    Boundary,
+    BOUNDARIES,
+    SEGMENTATION_UNITS,
+    plan_turns,
+    classify_boundary,
+    split_units,
 )
 
 # --- multi-voice casting ---

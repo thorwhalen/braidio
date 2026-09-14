@@ -38,7 +38,13 @@ from pathlib import Path
 from typing import Mapping
 
 from braidio.conversation import CHRIS, JESSICA, LAURA, WILL, ConversationCast
-from braidio.delivery import Delivery, V2_NARRATOR, V2_PRESENTER
+from braidio.delivery import (
+    Delivery,
+    V2_NARRATOR,
+    V2_PRESENTER,
+    V3_NARRATOR,
+    V3_PRESENTER,
+)
 from braidio.rights import DEFAULT_PROFILE, Profile
 from braidio.structure import MusicStructure, Sting
 from braidio.tts import DEFAULT_VOICE_ID
@@ -86,7 +92,9 @@ class Format:
     clip_placement: str = (
         "before"  # recommended default SegmentBeat.placement (before|under|after)
     )
-    music_bed: str = "light"  # bed intensity when a bed_asset is given: continuous | light | sparse | none
+    music_bed: str = (
+        "light"  # bed intensity when a bed_asset is given: continuous | light | sparse | none
+    )
     scripting: str = ""  # how to author a Script for this format (authoring)
 
     def __post_init__(self) -> None:
@@ -264,8 +272,22 @@ SOLO_EXPLAINER = Format(
     summary="One presenter advances a thesis over exhibits; narration is the spine.",
     cast=None,  # no dialogue — a single voice throughout
     narration_voice=GEORGE,
-    narration_delivery=V2_PRESENTER,
-    weave=WeaveConfig(voices=(GEORGE,), pool_label="single", min_turn=1, max_turn=3),
+    # v3, not v2: this format is ~all narration, so the spine voice is the whole
+    # production and it has to carry itself. v2 cannot render audio tags at all.
+    narration_delivery=V3_PRESENTER,
+    weave=WeaveConfig(
+        voices=(GEORGE,),
+        pool_label="single",
+        min_turn=1,
+        max_turn=3,
+        # paced out of the box: 1–3 sentences per turn, a real breath at each
+        # boundary (longer at a paragraph, shorter at a comma). Without this the
+        # whole beat is one breathless TTS arc — braidio#64.
+        segmentation_unit="sentence",
+        gap_turn_s=0.28,
+        speed_jitter=0.07,
+        crossfade_s=0.14,
+    ),
     roles={"presenter": "narrator=host=expert, collapsed into one authoritative voice"},
     clip_placement="before",  # set up every exhibit before it plays
     music_bed="continuous",
@@ -275,7 +297,13 @@ SOLO_EXPLAINER = Format(
         "Intro (hook + thesis) → body as repeated (claim → clip → analysis) → "
         "conclusion. Per-exhibit micro-shape: hook → describe → meaning → memorable "
         "detail → prompt (~60–90s). Scripted, dense; every exhibit is set up first. "
-        "Serialize by emitting one Script per sub-topic with an end-of-episode hook."
+        "Serialize by emitting one Script per sub-topic with an end-of-episode hook. "
+        "Delivery is eleven_v3, so WRITE THE PERFORMANCE INTO THE TEXT: inline "
+        "[audio tags] fire — [slowly] on a punchline, [rushed] on an aside, "
+        "[dryly]/[wryly] for a turn, [pause] where a breath belongs. Punctuation is "
+        "the pause dial (em-dash flows, '…' adds weight, a period is a full stop). "
+        "Use tags sparingly — a tag every sentence reads as kitsch, and a designed "
+        "epigram every beat reads as AI; budget ≤2 per 3 minutes."
     ),
 )
 
@@ -425,8 +453,17 @@ DOCUMENTARY_VO = Format(
         roles={"guest": CHRIS, "expert": LAURA}, settings={"stability": 0.45}
     ),
     narration_voice=GEORGE,  # omniscient narrator — the top, driest layer
-    narration_delivery=V2_NARRATOR,
-    weave=WeaveConfig(min_turn=1, max_turn=3),
+    # v3 for the same reason as solo_explainer: narration is the spine here, and
+    # an expository VO with no breath in it is the "Voice of God" read as robot.
+    narration_delivery=V3_NARRATOR,
+    weave=WeaveConfig(
+        min_turn=1,
+        max_turn=3,
+        segmentation_unit="sentence",
+        gap_turn_s=0.34,  # a documentary breathes longer than a presenter
+        speed_jitter=0.05,
+        crossfade_s=0.14,
+    ),
     roles={
         "narrator": "omniscient, authoritative — the spine, top layer",
         "guest": "first-person testimony",
@@ -442,7 +479,11 @@ DOCUMENTARY_VO = Format(
         "in numbered 'acts' with a prologue stating the theme; land a 'turn'. Layer "
         "bottom→top: ambience → bed (ducked) → clips/actuality → testimony → narration "
         "on top. Optional cold open (best tape pulled forward). Narration is always the "
-        "top layer; everything below illustrates."
+        "top layer; everything below illustrates. Delivery is eleven_v3, so write the "
+        "performance into the narration: inline [audio tags] fire ([slowly] on the "
+        "turn, [pause] before a reveal, [quietly] for reflection), and punctuation is "
+        "the pause dial (em-dash flows, '…' adds weight). Sparingly — a narrator who "
+        "emotes on every line stops sounding authoritative."
     ),
 )
 

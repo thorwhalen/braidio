@@ -24,6 +24,13 @@ class Delivery:
     model_id: str
     voice_settings: dict = field(default_factory=dict)
     supports_audio_tags: bool = False  # True for eleven_v3 (bracketed [tags])
+    #: Whether the model honors ``voice_settings["speed"]``. **False for eleven
+    #: v3**, which has no speed control at all ("Speed is not available for the
+    #: Eleven v3 model"), so sending one there is undefined. The paced narration
+    #: path (:mod:`braidio.pacing`) reads this: on a speedless model it plans no
+    #: speed and varies tempo through real inter-turn silence, punctuation and
+    #: audio tags instead.
+    supports_speed: bool = True
     note: str = ""
 
 
@@ -107,6 +114,7 @@ V3_NATURAL = Delivery(
     model_id="eleven_v3",
     voice_settings={"stability": 0.5, "use_speaker_boost": True},
     supports_audio_tags=True,
+    supports_speed=False,
     note="Eleven v3, clean text (no tags) — v3's baseline is more dynamic.",
 )
 
@@ -115,7 +123,37 @@ V3_CREATIVE = Delivery(
     model_id="eleven_v3",
     voice_settings={"stability": 0.3, "use_speaker_boost": True},
     supports_audio_tags=True,
+    supports_speed=False,
     note="Eleven v3, low stability, driven by inline audio tags. Alpha; per-take variance.",
+)
+
+# --- v3 role deliveries: the defaults for the narration-heavy formats ---------
+# The v2 pair above cannot render audio tags at all, so a solo script literally
+# could not use ``[pause]`` / ``[dryly]`` out of the box. These are the same two
+# roles on ``eleven_v3``, whose baseline is more dynamic and whose tags fire.
+# Stability follows the research table: 0.5 ("Natural") is the balanced default,
+# ~0.4 for a livelier presenter; never 1.0 ("Robust" mutes tags and IS the
+# robotic voice). Neither model has a speed knob, so tempo variation comes from
+# :mod:`braidio.pacing` (real inter-turn silence) plus punctuation and tags.
+
+V3_PRESENTER = Delivery(
+    name="v3-presenter",
+    model_id="eleven_v3",
+    voice_settings={"stability": 0.4, "use_speaker_boost": True},
+    supports_audio_tags=True,
+    supports_speed=False,
+    note="Host/presenter commentary on v3 — livelier, audio tags fire. The "
+    "narration-spine default (solo_explainer).",
+)
+
+V3_NARRATOR = Delivery(
+    name="v3-narrator",
+    model_id="eleven_v3",
+    voice_settings={"stability": 0.5, "use_speaker_boost": True},
+    supports_audio_tags=True,
+    supports_speed=False,
+    note="Documentary/book-read narrator on v3 — steadier than v3-presenter, "
+    "still tag-responsive. Contrast partner to v3-presenter.",
 )
 
 # --- register presets: narration (reading) vs conversational (talking) --------
@@ -145,6 +183,7 @@ CONVERSATIONAL = Delivery(
     model_id="eleven_v3",
     voice_settings={"stability": 0.35, "use_speaker_boost": True},
     supports_audio_tags=True,
+    supports_speed=False,
     note="Register that sounds like talking, not reading: eleven_v3 with loosened "
     "stability so audio tags/disfluencies in the text fire. Pair with a "
     "conversationalized script (contractions, [tags], ellipses). Single-voice — "
@@ -161,6 +200,8 @@ DELIVERIES: dict[str, Delivery] = {
         V2_NARRATOR,
         V3_NATURAL,
         V3_CREATIVE,
+        V3_PRESENTER,
+        V3_NARRATOR,
         NARRATION,
         CONVERSATIONAL,
     )
