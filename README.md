@@ -169,8 +169,9 @@ timeline. `burns` owns the motion; braidio owns only where the picture changes.
 import braidio
 from braidio.video import plan_spans, assign_stills, render_video
 
-path, timeline = braidio.render_format(fmt, script, source=src,
-                                       out_path="ep.mp3", return_timeline=True)
+path, timeline = braidio.render_format(
+    fmt, script, source=src, out_path="ep.mp3", return_timeline=True
+)
 panels = assign_stills(plan_spans(timeline), ["a.jpg", "b.jpg", "c.jpg"])
 render_video(panels, audio_path="ep.mp3", out_path="ep.mp4")
 ```

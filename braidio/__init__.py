@@ -221,6 +221,7 @@ try:  # needs nw
 except ImportError:  # pragma: no cover - optional dep
     pass
 
+
 def skills_dir():
     """Path to the agent skills that ship with braidio.
 

@@ -35,14 +35,17 @@ from braidio.formats import FORMATS
 from braidio.video import plan_spans, render_video, Panel, with_credits, credits_card
 
 fmt = FORMATS["solo_explainer"]
-path, timeline = braidio.render_format(          # 1. audio + exact beat timings
-    fmt, script, source=source, out_path="ep.mp3",
+path, timeline = braidio.render_format(  # 1. audio + exact beat timings
+    fmt,
+    script,
+    source=source,
+    out_path="ep.mp3",
     delivery=braidio.DELIVERIES["conversational"],
     config=fmt.weave.with_(gap_turn_s=0.28, speed_jitter=0.07, crossfade_s=0.14),
     return_timeline=True,
 )
-spans = plan_spans(timeline)                     # 2. where the cuts fall
-panels = [Panel(s.start, s.end, pick(s)) for s in spans]   # 3. YOUR choice of image
+spans = plan_spans(timeline)  # 2. where the cuts fall
+panels = [Panel(s.start, s.end, pick(s)) for s in spans]  # 3. YOUR choice of image
 render_video(panels, audio_path="ep.mp3", out_path="ep.mp4")
 ```
 
@@ -137,10 +140,15 @@ from yb.youtube import CaptionTrack, VideoMetadata, publish_video
 
 publish_video(
     "ep.mp4",
-    VideoMetadata(title=..., description=..., category_id="10",
-                  default_audio_language="en",
-                  contains_synthetic_media=True),   # the narration is TTS — disclose it
-    privacy_status="private", playlist="TW Uploads",
+    VideoMetadata(
+        title=...,
+        description=...,
+        category_id="10",
+        default_audio_language="en",
+        contains_synthetic_media=True,
+    ),  # the narration is TTS — disclose it
+    privacy_status="private",
+    playlist="TW Uploads",
     captions=[CaptionTrack(path="ep.srt", language="en", name="English")],
     thumbnail="thumb.jpg",
 )
