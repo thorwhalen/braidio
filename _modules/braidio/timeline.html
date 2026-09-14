@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.timeline &mdash; braidio 0.0.41 documentation</title>
+  <title>braidio.timeline &mdash; braidio 0.0.42 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=20c5f126"></script>
+      <script src="../../_static/documentation_options.js?v=173d7b4c"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -148,8 +148,13 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">html</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_html</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Mapping</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.weave</span><span class="w"> </span><span class="kn">import</span> <span class="n">layout_placed</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover - typing only</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.delivery</span><span class="w"> </span><span class="kn">import</span> <span class="n">Delivery</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.weave_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeaveConfig</span>
 
 <span class="c1"># Neutral kind → accent colour for the HTML view (falls back to a grey).</span>
 <span class="n">KIND_COLORS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -165,6 +170,9 @@
     <span class="s2">"scene-break"</span><span class="p">:</span> <span class="s2">"#7a5c99"</span><span class="p">,</span>
 <span class="p">}</span>
 <span class="n">_FALLBACK_COLOR</span> <span class="o">=</span> <span class="s2">"#8a8577"</span>
+
+<span class="c1"># What a render without a WeaveConfig does to a narration beat: one TTS call.</span>
+<span class="n">_UNPACED_UNIT</span> <span class="o">=</span> <span class="s2">"beat"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_mmss</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -197,10 +205,26 @@
 <a class="viewcode-back" href="../../module_docs/braidio/timeline.html#braidio.TimelineBreakdown">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TimelineBreakdown</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""The ordered beats of a production, with per-kind totals and an HTML view."""</span>
+<span class="w">    </span><span class="sd">"""The ordered beats of a production, with per-kind totals and an HTML view.</span>
+
+<span class="sd">    ``settings`` is the **render record**: the settings that actually produced</span>
+<span class="sd">    these timings (see :func:`render_settings`), or ``None`` for a breakdown</span>
+<span class="sd">    built by hand. It exists because a render stopped being reproducible from</span>
+<span class="sd">    the script alone the moment ``WeaveConfig.segmentation_unit`` became a real</span>
+<span class="sd">    switch (braidio#63): the same script now renders to different durations</span>
+<span class="sd">    under different pacing knobs, so a persisted breakdown whose settings are</span>
+<span class="sd">    unknown cannot be re-derived, and any downstream data keyed to its timings</span>
+<span class="sd">    (panel cues, captions) silently stops matching a later re-render. Recording</span>
+<span class="sd">    the settings next to the timings closes that hole on the no-graph fast path,</span>
+<span class="sd">    where the nw/lacing provenance layer is not in play at all.</span>
+
+<span class="sd">    It is always plain JSON types, so a consumer that already persists the</span>
+<span class="sd">    breakdown gets the record for free.</span>
+<span class="sd">    """</span>
 
     <span class="n">beats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">BeatSpan</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">tuple</span><span class="p">)</span>
     <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="TimelineBreakdown.totals">
 <a class="viewcode-back" href="../../module_docs/braidio/timeline.html#braidio.TimelineBreakdown.totals">[docs]</a>
@@ -231,6 +255,7 @@
             <span class="s2">"title"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
             <span class="s2">"duration"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
             <span class="s2">"totals"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">totals</span><span class="p">(),</span>
+            <span class="s2">"settings"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="s2">"beats"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="p">{</span>
                     <span class="s2">"index"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
@@ -272,6 +297,7 @@
     <span class="n">clip_edge_overlap_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
     <span class="n">narration_crossfade_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.12</span><span class="p">,</span>
     <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimelineBreakdown</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Assemble a :class:`TimelineBreakdown` from per-beat render data (pure).</span>
 
@@ -279,6 +305,11 @@
 <span class="sd">    the layout treats specially — as an overlapping segment). ``placements`` is</span>
 <span class="sd">    the per-beat ``"sequential"``/``"under"`` used by the weave; offsets are</span>
 <span class="sd">    computed with the same :func:`~braidio.weave.layout_placed` the renderer uses.</span>
+
+<span class="sd">    ``settings`` is the optional render record (:func:`render_settings`) — what</span>
+<span class="sd">    produced these durations. It stays optional so building a timeline by hand</span>
+<span class="sd">    (tests, a hand-cut episode, the captions/video doctests) needs nothing</span>
+<span class="sd">    extra; a real render always passes one.</span>
 <span class="sd">    """</span>
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">kinds</span><span class="p">)</span>
     <span class="n">placements</span> <span class="o">=</span> <span class="n">placements</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">"sequential"</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
@@ -304,7 +335,81 @@
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">TimelineBreakdown</span><span class="p">(</span><span class="n">spans</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">TimelineBreakdown</span><span class="p">(</span><span class="n">spans</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="render_settings">
+<a class="viewcode-back" href="../../module_docs/braidio/timeline.html#braidio.render_settings">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">render_settings</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="s2">"WeaveConfig | None"</span><span class="p">,</span>
+    <span class="n">crossfade_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">clip_edge_overlap_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">target_lufs</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">duck_db</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">delivery</span><span class="p">:</span> <span class="s2">"Delivery | None"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">profile</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The record of *how* a production was rendered, as plain JSON types.</span>
+
+<span class="sd">    Why it exists: since braidio#63 the pacing knobs are real, so two renders of</span>
+<span class="sd">    one script can differ by minutes — and until this, nothing on disk said which</span>
+<span class="sd">    settings produced which file. This is the cheap, no-graph answer: the</span>
+<span class="sd">    renderer hands it to the :class:`TimelineBreakdown` it already returns, so a</span>
+<span class="sd">    consumer that persists the breakdown persists the settings with it.</span>
+
+<span class="sd">    The whole resolved :class:`~braidio.weave_config.WeaveConfig` goes in under</span>
+<span class="sd">    ``"weave"`` rather than a hand-picked subset — adding a knob then keeps the</span>
+<span class="sd">    record correct for free, where a curated list would quietly drift.</span>
+<span class="sd">    ``"resolved"`` carries the values the render *actually used*, which are not</span>
+<span class="sd">    always the config's: a caller may pass no config at all (``"weave"`` is then</span>
+<span class="sd">    ``None``, and the pacing knobs were never consulted — each beat was one TTS</span>
+<span class="sd">    call), the concat path resolves its crossfade from either the config or the</span>
+<span class="sd">    ``crossfade_s`` argument, and ``normalize`` is a render argument rather than</span>
+<span class="sd">    a weave choice.</span>
+
+<span class="sd">    &gt;&gt;&gt; from braidio.delivery import V2_TUNED</span>
+<span class="sd">    &gt;&gt;&gt; from braidio.weave_config import WeaveConfig</span>
+<span class="sd">    &gt;&gt;&gt; rec = render_settings(</span>
+<span class="sd">    ...     config=WeaveConfig(segmentation_unit="sentence", gap_turn_s=0.28),</span>
+<span class="sd">    ...     crossfade_s=0.12, clip_edge_overlap_s=0.5,</span>
+<span class="sd">    ...     target_lufs=-16.0, duck_db=-15.0,</span>
+<span class="sd">    ...     delivery=V2_TUNED, profile="published",</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; rec["weave"]["gap_turn_s"], rec["resolved"]["paces_narration"]</span>
+<span class="sd">    (0.28, True)</span>
+<span class="sd">    &gt;&gt;&gt; rec["delivery"]["model_id"], rec["profile"]</span>
+<span class="sd">    ('eleven_multilingual_v2', 'published')</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"weave"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"delivery"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">delivery</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">{</span>
+                <span class="s2">"name"</span><span class="p">:</span> <span class="n">delivery</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">"model_id"</span><span class="p">:</span> <span class="n">delivery</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
+                <span class="s2">"voice_settings"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">delivery</span><span class="o">.</span><span class="n">voice_settings</span><span class="p">),</span>
+            <span class="p">}</span>
+        <span class="p">),</span>
+        <span class="c1"># An enum in the renderer, a plain string anywhere else.</span>
+        <span class="s2">"profile"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="n">profile</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">,</span> <span class="n">profile</span><span class="p">))</span>
+        <span class="p">),</span>
+        <span class="s2">"resolved"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"segmentation_unit"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">config</span><span class="o">.</span><span class="n">segmentation_unit</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_UNPACED_UNIT</span>
+            <span class="p">),</span>
+            <span class="s2">"paces_narration"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">paces_narration</span><span class="p">),</span>
+            <span class="s2">"crossfade_s"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">crossfade_s</span><span class="p">),</span>
+            <span class="s2">"clip_edge_overlap_s"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">clip_edge_overlap_s</span><span class="p">),</span>
+            <span class="s2">"target_lufs"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">target_lufs</span><span class="p">),</span>
+            <span class="s2">"duck_db"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">duck_db</span><span class="p">),</span>
+            <span class="s2">"normalize"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">normalize</span><span class="p">),</span>
+        <span class="p">},</span>
+    <span class="p">}</span></div>
 
 
 
