@@ -340,6 +340,35 @@ Two format templates opt in (`solo_explainer`, `documentary_vo` — the
 narration-heavy ones), on a v3 delivery. Everything else keeps
 `segmentation_unit="beat"` and renders exactly as before.
 
+### A render records its own settings
+
+Making the knobs real made a render *un*reproducible: one script now has many
+possible cuts, and a file on disk said nothing about which one it was. So
+`render_production(..., return_timeline=True)` fills
+`TimelineBreakdown.settings` (`braidio.timeline.render_settings`) — the whole
+resolved `WeaveConfig` under `"weave"`, the delivery (name + model_id +
+voice_settings), the rights `profile`, and a `"resolved"` block of what the
+render *actually used*. Plain JSON, so a consumer that already persists the
+breakdown (Hamilton's episode anatomy, from which its video pipeline takes panel
+timings) persists the settings for free.
+
+Two rules keep it honest:
+
+- **Record the whole config, not a chosen subset.** A curated list drifts the
+  day someone adds a knob; `WeaveConfig.to_dict()` cannot.
+- **Record what was resolved, not what was passed.** `"resolved"` exists because
+  those are not the same: a caller may pass no `config` at all (then `"weave"`
+  is `None` and the pacing knobs were never consulted), the concat path takes
+  its crossfade from the config *or* the `crossfade_s` argument, and `normalize`
+  is a render argument, not a weave choice. A record of the caller's partial
+  override would be worse than none.
+
+The field is optional with a default, so `build_timeline` stays usable by hand
+and older serialized breakdowns still load.
+`tests/test_render_settings.py` pins the invariant that earns it: a `"beat"`
+render and a `"sentence"` render of one script produce different durations *and*
+different records.
+
 ## Conventions
 
 - Favour functional style; small focused helpers (`_underscore` for

@@ -230,7 +230,11 @@ def render_production(
 
     With ``return_timeline=True`` returns ``(path, TimelineBreakdown)`` instead —
     the render records what it spent time on (per-beat kind, source interval,
-    duration, and offset) rather than leaving it to be reconstructed afterward.
+    duration, and offset) rather than leaving it to be reconstructed afterward,
+    plus, in ``TimelineBreakdown.settings``, the settings that produced those
+    timings (see :func:`braidio.timeline.render_settings`). Recording them is
+    what keeps a render reproducible: the pacing knobs below mean one script has
+    many possible cuts, so a persisted breakdown has to say which one it is.
 
     Segment beats are resolved through ``source`` (a :class:`SegmentSource`).
     When ``config`` has ``clip_edge_overlap_s > 0``, a clip is ``placement="under"``,
@@ -459,7 +463,7 @@ def render_production(
         _end_tail(out, fade_s=end_fade_s, silence_s=end_silence_s)
 
     if return_timeline:
-        from braidio.timeline import build_timeline
+        from braidio.timeline import build_timeline, render_settings
         from braidio.weave import duration_s
 
         durs = [duration_s(p) for p in parts]
@@ -472,6 +476,21 @@ def render_production(
             clip_edge_overlap_s=edge_overlap,
             narration_crossfade_s=crossfade,
             title=script.title,
+            # The settings that produced these timings, not the ones asked for:
+            # `crossfade`/`edge_overlap`/`target_lufs`/`duck_db` are the values
+            # this render resolved above. Without the record, a re-render months
+            # later can silently cut differently and nothing says why (#63 made
+            # the pacing knobs real, which is what opened that hole).
+            settings=render_settings(
+                config=config,
+                crossfade_s=crossfade,
+                clip_edge_overlap_s=edge_overlap,
+                target_lufs=target_lufs,
+                duck_db=duck_db,
+                delivery=delivery,
+                profile=profile,
+                normalize=normalize,
+            ),
         )
         return out, tl
     return out
