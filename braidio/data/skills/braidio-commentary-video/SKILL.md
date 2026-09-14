@@ -26,6 +26,9 @@ pip install 'braidio[video]'   # adds burns + pillow; ffmpeg must be on PATH
 Everything below is `braidio.video` (panels, canvases, render) and
 `braidio.captions` (subtitles). braidio fetches **no images** — that is the
 caller's job, exactly as `SegmentSource` leaves audio acquisition to the caller.
+**Use `illustration` to do that job** (see *Images* below); it is the fleet's
+image-retrieval package and already carries licence, attribution and
+same-subject deduplication.
 
 ## The pipeline
 
@@ -80,17 +83,45 @@ over-writing. It cannot be the only gate.
 
 ## Images
 
-Source freely-licensed stills and **record the licence with the bytes**. Wikimedia
-Commons works well and needs no key — its `extmetadata` carries
-`LicenseShortName` and `Artist` per file, so filter to free licences at fetch time
-and reject anything marked non-free.
+**`illustration` is the fleet's image-finding package — use it rather than
+writing an HTTP client against Commons or a stock API.** One `search()` over
+Openverse / Wikimedia / Pexels / Pixabay, licence and attribution carried on
+every hit, and `dedupe()` for the failure below.
 
-**Always look at a contact sheet before rendering.** On a real run, plausible
-filenames returned an empty stadium exterior for "Taylor Swift" and the Chiang
-Kai-shek Memorial in Taipei for "concert crowd"; a third still was too dark to
-read. Filenames are not evidence. Also watch for museum catalogue shots carrying
-scale bars and institutional copyright stamps — on screen those read as a rights
-claim over your whole frame. Crop them.
+```bash
+pip install illustration
+```
+```python
+import illustration
+hits = illustration.search("a woman alone with a letter by candlelight", n=20)
+keep = illustration.dedupe(hits)                       # one image per SUBJECT
+illustration.search("Category:Trinity Church (Manhattan)", source="wikimedia")
+```
+
+Read `illustration`'s own skill before sourcing pictures — it carries the
+licence/attribution obligations in full.
+
+Three things it exists to save you, each of which cost a real episode a rebuild:
+
+**Same subject, different file.** A search for one person returns a painting,
+engravings after it, and a library's re-scan of an engraving — different ids,
+different bytes, one picture. Four of them shipped in one film, which then
+looked like it had run out of pictures. `illustration.dedupe()` groups by
+subject (DINOv2) and keeps the best copy; a perceptual hash does **not** catch
+this, because those engravings genuinely differ pixel by pixel.
+
+**Search guesses; categories are curated.** On Wikimedia,
+`search("Hamilton Grange")` returns a branch *library* of that name;
+`search("Category:Hamilton Grange National Memorial")` returns the house.
+
+**Filenames are not evidence — look at a contact sheet before rendering.** On a
+real run, plausible filenames returned an empty stadium exterior for "Taylor
+Swift" and the Chiang Kai-shek Memorial in Taipei for "concert crowd"; a third
+still was too dark to read. Also watch for museum catalogue shots carrying scale
+bars and accession stamps — on screen those read as a rights claim over your
+whole frame. Crop them. And a transparent source (an SVG rendered to PNG, a
+signature in black ink on nothing) flattens to an entirely black frame under a
+naive `convert("RGB")`.
 
 `prepare_still` composites each image onto a blurred, darkened enlargement of
 itself to reach 16:9, so portraits are not cover-cropped and no dead black bars
