@@ -1,0 +1,319 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.pacing &mdash; braidio 0.0.40 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=84bd753f"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="braidio.project" href="project.html" />
+    <link rel="prev" title="braidio.music" href="music.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="captions.html">braidio.captions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cost.html">braidio.cost</a></li>
+<li class="toctree-l1"><a class="reference internal" href="delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downloads.html">braidio.downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genre.html">braidio.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">braidio.mcp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/_docs.html">braidio.mcp._docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/_guide.html">braidio.mcp._guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/_helpers.html">braidio.mcp._helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/_media.html">braidio.mcp._media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/credentials.html">braidio.mcp.credentials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/metering.html">braidio.mcp.metering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/tools.html">braidio.mcp.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp/workspace.html">braidio.mcp.workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="music.html">braidio.music</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">braidio.pacing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.pacing.BOUNDARIES"><code class="docutils literal notranslate"><span class="pre">BOUNDARIES</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.pacing.Boundary"><code class="docutils literal notranslate"><span class="pre">Boundary</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.pacing.NarrationTurn"><code class="docutils literal notranslate"><span class="pre">NarrationTurn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.pacing.SEGMENTATION_UNITS"><code class="docutils literal notranslate"><span class="pre">SEGMENTATION_UNITS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.pacing.SPEED_RANGE"><code class="docutils literal notranslate"><span class="pre">SPEED_RANGE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.pacing.classify_boundary"><code class="docutils literal notranslate"><span class="pre">classify_boundary()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.pacing.plan_turns"><code class="docutils literal notranslate"><span class="pre">plan_turns()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.pacing.planned_gap_total_s"><code class="docutils literal notranslate"><span class="pre">planned_gap_total_s()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.pacing.split_paragraphs"><code class="docutils literal notranslate"><span class="pre">split_paragraphs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#braidio.pacing.split_units"><code class="docutils literal notranslate"><span class="pre">split_units()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">braidio.structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="style.html">braidio.style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeline.html">braidio.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_dialogue.html">braidio.transforms._dialogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transforms/_voice.html">braidio.transforms._voice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="video.html">braidio.video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">braidio.pacing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/braidio/pacing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-braidio.pacing">
+<span id="braidio-pacing"></span><h1>braidio.pacing<a class="headerlink" href="#module-braidio.pacing" title="Link to this heading"></a></h1>
+<p>Intra-beat narration pacing — how one narration beat becomes spoken <em>turns</em>.</p>
+<p>A narration beat used to be exactly one TTS call: one prosodic arc, one speed,
+and no silence anywhere inside it. That is the mechanical read — a human varies
+tempo within a paragraph and pauses <em>proportionally to how strongly a boundary
+closes</em> (a paragraph break is not a comma).</p>
+<p>This module is the pure, deterministic planner for that. It takes the beat’s
+text and the pacing knobs off a <a class="reference internal" href="weave_config.html#braidio.weave_config.WeaveConfig" title="braidio.weave_config.WeaveConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeaveConfig</span></code></a> and
+returns a list of <a class="reference internal" href="#braidio.pacing.NarrationTurn" title="braidio.pacing.NarrationTurn"><code class="xref py py-class docutils literal notranslate"><span class="pre">NarrationTurn</span></code></a> — what to synthesize, how fast, and how
+much silence to leave after it. No audio, no API, no I/O: the renderer
+(<a class="reference internal" href="render.html#braidio.render.render_production" title="braidio.render.render_production"><code class="xref py py-func docutils literal notranslate"><span class="pre">braidio.render.render_production()</span></code></a>) executes the plan.</p>
+<p>Two research findings drive the design
+(<code class="docutils literal notranslate"><span class="pre">misc/docs/research/notebooklm-and-conversational-pacing.md</span></code>):</p>
+<ul class="simple">
+<li><p><strong>Boundary-proportional pauses.</strong> Punctuation is the engine’s pause
+instruction, and a pause is only human when the boundary that earns it is
+strong. <a class="reference internal" href="#braidio.pacing.BOUNDARIES" title="braidio.pacing.BOUNDARIES"><code class="xref py py-data docutils literal notranslate"><span class="pre">BOUNDARIES</span></code></a> is that table.</p></li>
+<li><p><strong>Final lengthening.</strong> The robotic signature is <em>pause without lengthening</em> —
+a clipped last word followed by dead air. So each boundary carries a
+<code class="docutils literal notranslate"><span class="pre">speed_scale</span></code> as well as a <code class="docutils literal notranslate"><span class="pre">gap_scale</span></code>, and they stay correlated.</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">unit=&quot;beat&quot;</span></code> plan is empty by construction: that is the historical
+one-call-per-beat behavior, and it is the default, so nothing paces unless a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">WeaveConfig</span></code> asks for it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">turns</span> <span class="o">=</span> <span class="n">plan_turns</span><span class="p">(</span><span class="s2">"One. Two. Three."</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"sentence"</span><span class="p">,</span> <span class="n">min_turn</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_turn</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">turns</span><span class="p">]</span>
+<span class="go">['One.', 'Two.', 'Three.']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plan_turns</span><span class="p">(</span><span class="s2">"One. Two."</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"beat"</span><span class="p">)</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="braidio.pacing.BOUNDARIES">
+<span class="sig-prename descclassname"><span class="pre">braidio.pacing.</span></span><span class="sig-name descname"><span class="pre">BOUNDARIES</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#braidio.pacing.Boundary" title="braidio.pacing.Boundary"><span class="pre">Boundary</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'clause':</span> <span class="pre">Boundary(name='clause',</span> <span class="pre">gap_scale=0.5,</span> <span class="pre">speed_scale=0.99),</span> <span class="pre">'ellipsis':</span> <span class="pre">Boundary(name='ellipsis',</span> <span class="pre">gap_scale=1.4,</span> <span class="pre">speed_scale=0.97),</span> <span class="pre">'flowing':</span> <span class="pre">Boundary(name='flowing',</span> <span class="pre">gap_scale=0.35,</span> <span class="pre">speed_scale=1.0),</span> <span class="pre">'none':</span> <span class="pre">Boundary(name='none',</span> <span class="pre">gap_scale=0.25,</span> <span class="pre">speed_scale=1.0),</span> <span class="pre">'paragraph':</span> <span class="pre">Boundary(name='paragraph',</span> <span class="pre">gap_scale=2.2,</span> <span class="pre">speed_scale=0.96),</span> <span class="pre">'sentence':</span> <span class="pre">Boundary(name='sentence',</span> <span class="pre">gap_scale=1.0,</span> <span class="pre">speed_scale=0.98)}</span></span><a class="headerlink" href="#braidio.pacing.BOUNDARIES" title="Link to this definition"></a></dt>
+<dd><p>The boundary table. Scales are relative to <code class="docutils literal notranslate"><span class="pre">&quot;sentence&quot;</span></code> (== the configured
+<code class="docutils literal notranslate"><span class="pre">gap_turn_s</span></code>), from the punctuation→break-strength table in
+<code class="docutils literal notranslate"><span class="pre">misc/docs/research/notebooklm-and-conversational-pacing.md</span></code>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.pacing.Boundary">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.pacing.</span></span><span class="sig-name descname"><span class="pre">Boundary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/pacing.html#Boundary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.pacing.Boundary" title="Link to this definition"></a></dt>
+<dd><p>How strongly a unit’s trailing punctuation closes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">gap_scale</span></code> multiplies the base gap (<code class="docutils literal notranslate"><span class="pre">WeaveConfig.gap_turn_s</span></code>) and
+<code class="docutils literal notranslate"><span class="pre">speed_scale</span></code> multiplies the turn’s speed — <em>final lengthening</em>, the thing
+that keeps a pause from sounding like a dropout. The two are deliberately
+correlated: a stronger boundary gets both a longer silence and a slower
+approach to it.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.pacing.NarrationTurn">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.pacing.</span></span><span class="sig-name descname"><span class="pre">NarrationTurn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_after_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sentence'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/braidio/pacing.html#NarrationTurn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.pacing.NarrationTurn" title="Link to this definition"></a></dt>
+<dd><p>One synthesizable chunk of a narration beat, with its pacing.</p>
+<p><code class="docutils literal notranslate"><span class="pre">speed</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> when the delivery’s model has no speed control (eleven
+v3) — the renderer then leaves <code class="docutils literal notranslate"><span class="pre">voice_settings[&quot;speed&quot;]</span></code> alone rather than
+sending a parameter the model is documented not to honor.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="braidio.pacing.SEGMENTATION_UNITS">
+<span class="sig-prename descclassname"><span class="pre">braidio.pacing.</span></span><span class="sig-name descname"><span class="pre">SEGMENTATION_UNITS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('beat',</span> <span class="pre">'paragraph',</span> <span class="pre">'sentence',</span> <span class="pre">'clause')</span></span><a class="headerlink" href="#braidio.pacing.SEGMENTATION_UNITS" title="Link to this definition"></a></dt>
+<dd><p>How a beat’s text is cut into the units a turn is built from. <code class="docutils literal notranslate"><span class="pre">&quot;beat&quot;</span></code>
+means “don’t cut at all” — one TTS call per beat, the historical behavior.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="braidio.pacing.SPEED_RANGE">
+<span class="sig-prename descclassname"><span class="pre">braidio.pacing.</span></span><span class="sig-name descname"><span class="pre">SPEED_RANGE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(0.7,</span> <span class="pre">1.2)</span></span><a class="headerlink" href="#braidio.pacing.SPEED_RANGE" title="Link to this definition"></a></dt>
+<dd><p>ElevenLabs clamps <code class="docutils literal notranslate"><span class="pre">voice_settings.speed</span></code> to this range in practice; a
+jittered speed outside it is silently useless, so the planner clamps.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.pacing.classify_boundary">
+<span class="sig-prename descclassname"><span class="pre">braidio.pacing.</span></span><span class="sig-name descname"><span class="pre">classify_boundary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/braidio/pacing.html#classify_boundary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.pacing.classify_boundary" title="Link to this definition"></a></dt>
+<dd><p>Name the boundary implied by <code class="docutils literal notranslate"><span class="pre">text</span></code>’s trailing punctuation.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">classify_boundary</span><span class="p">(</span><span class="s2">"So that's the charge sheet."</span><span class="p">)</span>
+<span class="go">'sentence'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">classify_boundary</span><span class="p">(</span><span class="s1">'He said "no," and left,'</span><span class="p">)</span>
+<span class="go">'clause'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">classify_boundary</span><span class="p">(</span><span class="s2">"and then —"</span><span class="p">)</span>
+<span class="go">'flowing'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">classify_boundary</span><span class="p">(</span><span class="s2">"well…"</span><span class="p">)</span>
+<span class="go">'ellipsis'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">classify_boundary</span><span class="p">(</span><span class="s2">"no punctuation here"</span><span class="p">)</span>
+<span class="go">'none'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.pacing.plan_turns">
+<span class="sig-prename descclassname"><span class="pre">braidio.pacing.</span></span><span class="sig-name descname"><span class="pre">plan_turns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sentence'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_turn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_turn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed_base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed_jitter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_scale_cap_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#braidio.pacing.NarrationTurn" title="braidio.pacing.NarrationTurn"><span class="pre">NarrationTurn</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/braidio/pacing.html#plan_turns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.pacing.plan_turns" title="Link to this definition"></a></dt>
+<dd><p>Plan how to speak one narration beat. Pure and deterministic in <code class="docutils literal notranslate"><span class="pre">seed</span></code>.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">[]</span></code> for <code class="docutils literal notranslate"><span class="pre">unit=&quot;beat&quot;</span></code> (and for empty text) — the caller’s signal
+to keep the historical single-call path, byte for byte. Otherwise each
+returned <a class="reference internal" href="#braidio.pacing.NarrationTurn" title="braidio.pacing.NarrationTurn"><code class="xref py py-class docutils literal notranslate"><span class="pre">NarrationTurn</span></code></a> is one TTS call, with the silence to append
+after it and the speed to read it at.</p>
+<p><code class="docutils literal notranslate"><span class="pre">gap_s</span></code> is the <em>sentence-boundary</em> gap; every other boundary scales off it
+via <a class="reference internal" href="#braidio.pacing.BOUNDARIES" title="braidio.pacing.BOUNDARIES"><code class="xref py py-data docutils literal notranslate"><span class="pre">BOUNDARIES</span></code></a>, capped at <code class="docutils literal notranslate"><span class="pre">gap_scale_cap_s</span></code> (long silences read as
+a dropout, and the engines are unstable past ~3 s). The final turn of the
+beat never gets a trailing gap — the beat boundary belongs to the renderer’s
+crossfade and to the next beat’s <code class="docutils literal notranslate"><span class="pre">Narration.lead_gap_s</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">speed_base=None</span></code> plans no speed at all (eleven v3, which has no speed
+control); a float centers a per-turn jitter of <code class="docutils literal notranslate"><span class="pre">±speed_jitter</span></code> on it,
+scaled by the boundary’s final lengthening and clamped to <a class="reference internal" href="#braidio.pacing.SPEED_RANGE" title="braidio.pacing.SPEED_RANGE"><code class="xref py py-data docutils literal notranslate"><span class="pre">SPEED_RANGE</span></code></a>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">turns</span> <span class="o">=</span> <span class="n">plan_turns</span><span class="p">(</span><span class="s2">"One. Two. Three. Four."</span><span class="p">,</span> <span class="n">min_turn</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_turn</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">gap_s</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">t</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">gap_after_s</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">turns</span><span class="p">]</span>
+<span class="go">[('One. Two.', 0.3), ('Three. Four.', 0.0)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plan_turns</span><span class="p">(</span><span class="s2">"A.</span><span class="se">\n\n</span><span class="s2">B."</span><span class="p">,</span> <span class="n">gap_s</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">gap_after_s</span>  <span class="c1"># paragraph &gt; sentence</span>
+<span class="go">0.44</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.pacing.planned_gap_total_s">
+<span class="sig-prename descclassname"><span class="pre">braidio.pacing.</span></span><span class="sig-name descname"><span class="pre">planned_gap_total_s</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">turns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#braidio.pacing.NarrationTurn" title="braidio.pacing.NarrationTurn"><span class="pre">NarrationTurn</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../../_modules/braidio/pacing.html#planned_gap_total_s"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.pacing.planned_gap_total_s" title="Link to this definition"></a></dt>
+<dd><p>Total silence a plan inserts inside the beat (for reporting / tests).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">planned_gap_total_s</span><span class="p">(</span><span class="n">plan_turns</span><span class="p">(</span><span class="s2">"A. B. C."</span><span class="p">,</span> <span class="n">min_turn</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_turn</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">gap_s</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+<span class="go">0.6</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.pacing.split_paragraphs">
+<span class="sig-prename descclassname"><span class="pre">braidio.pacing.</span></span><span class="sig-name descname"><span class="pre">split_paragraphs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/braidio/pacing.html#split_paragraphs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.pacing.split_paragraphs" title="Link to this definition"></a></dt>
+<dd><p>Split <code class="docutils literal notranslate"><span class="pre">text</span></code> on blank lines, collapsing runs of spaces within each.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.pacing.split_units">
+<span class="sig-prename descclassname"><span class="pre">braidio.pacing.</span></span><span class="sig-name descname"><span class="pre">split_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sentence'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/braidio/pacing.html#split_units"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.pacing.split_units" title="Link to this definition"></a></dt>
+<dd><p>Cut <code class="docutils literal notranslate"><span class="pre">text</span></code> into <code class="docutils literal notranslate"><span class="pre">unit</span></code>-sized pieces, grouped by paragraph.</p>
+<p>Returns a list of paragraphs, each a list of units, so a caller can keep
+turns from straddling a paragraph break (which would swallow the strongest
+pause in the beat). <code class="docutils literal notranslate"><span class="pre">unit=&quot;beat&quot;</span></code> returns one paragraph of one unit.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">split_units</span><span class="p">(</span><span class="s2">"A one. A two.</span><span class="se">\n\n</span><span class="s2">B one."</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"sentence"</span><span class="p">)</span>
+<span class="go">[['A one.', 'A two.'], ['B one.']]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">split_units</span><span class="p">(</span><span class="s2">"Yes, really. No."</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"clause"</span><span class="p">)</span>
+<span class="go">[['Yes,', 'really.', 'No.']]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="music.html" class="btn btn-neutral float-left" title="braidio.music" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="project.html" class="btn btn-neutral float-right" title="braidio.project" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

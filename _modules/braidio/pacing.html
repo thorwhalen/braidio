@@ -1,0 +1,442 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>braidio.pacing &mdash; braidio 0.0.40 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=84bd753f"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            braidio
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio.html">braidio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies.html">braidio.bodies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_domain.html">braidio.bodies._domain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_render_nodes.html">braidio.bodies._render_nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/bodies/_tiers.html">braidio.bodies._tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/captions.html">braidio.captions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/compose.html">braidio.compose</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/conversation.html">braidio.conversation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/cost.html">braidio.cost</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/delivery.html">braidio.delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/downloads.html">braidio.downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/formats.html">braidio.formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/genre.html">braidio.genre</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/kinds.html">braidio.kinds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp.html">braidio.mcp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_docs.html">braidio.mcp._docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_guide.html">braidio.mcp._guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_helpers.html">braidio.mcp._helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/_media.html">braidio.mcp._media</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/credentials.html">braidio.mcp.credentials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/metering.html">braidio.mcp.metering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/tools.html">braidio.mcp.tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/pacing.html">braidio.pacing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/project.html">braidio.project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/rights.html">braidio.rights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/script.html">braidio.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/sources.html">braidio.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/structure.html">braidio.structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/style.html">braidio.style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/textprep.html">braidio.textprep</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/timeline.html">braidio.timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms.html">braidio.transforms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_common.html">braidio.transforms._common</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_dialogue.html">braidio.transforms._dialogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_episode.html">braidio.transforms._episode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_ingest.html">braidio.transforms._ingest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_narration.html">braidio.transforms._narration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_segment.html">braidio.transforms._segment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/transforms/_voice.html">braidio.transforms._voice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/tts.html">braidio.tts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/video.html">braidio.video</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave.html">braidio.weave</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/weave_config.html">braidio.weave_config</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">braidio</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../braidio.html">braidio</a></li>
+      <li class="breadcrumb-item active">braidio.pacing</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for braidio.pacing</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Intra-beat narration pacing — how one narration beat becomes spoken *turns*.</span>
+
+<span class="sd">A narration beat used to be exactly one TTS call: one prosodic arc, one speed,</span>
+<span class="sd">and no silence anywhere inside it. That is the mechanical read — a human varies</span>
+<span class="sd">tempo within a paragraph and pauses *proportionally to how strongly a boundary</span>
+<span class="sd">closes* (a paragraph break is not a comma).</span>
+
+<span class="sd">This module is the pure, deterministic planner for that. It takes the beat's</span>
+<span class="sd">text and the pacing knobs off a :class:`~braidio.weave_config.WeaveConfig` and</span>
+<span class="sd">returns a list of :class:`NarrationTurn` — what to synthesize, how fast, and how</span>
+<span class="sd">much silence to leave after it. No audio, no API, no I/O: the renderer</span>
+<span class="sd">(:func:`braidio.render.render_production`) executes the plan.</span>
+
+<span class="sd">Two research findings drive the design</span>
+<span class="sd">(``misc/docs/research/notebooklm-and-conversational-pacing.md``):</span>
+
+<span class="sd">- **Boundary-proportional pauses.** Punctuation is the engine's pause</span>
+<span class="sd">  instruction, and a pause is only human when the boundary that earns it is</span>
+<span class="sd">  strong. :data:`BOUNDARIES` is that table.</span>
+<span class="sd">- **Final lengthening.** The robotic signature is *pause without lengthening* —</span>
+<span class="sd">  a clipped last word followed by dead air. So each boundary carries a</span>
+<span class="sd">  ``speed_scale`` as well as a ``gap_scale``, and they stay correlated.</span>
+
+<span class="sd">The ``unit="beat"`` plan is empty by construction: that is the historical</span>
+<span class="sd">one-call-per-beat behavior, and it is the default, so nothing paces unless a</span>
+<span class="sd">:class:`WeaveConfig` asks for it.</span>
+
+<span class="sd">&gt;&gt;&gt; turns = plan_turns("One. Two. Three.", unit="sentence", min_turn=1, max_turn=1)</span>
+<span class="sd">&gt;&gt;&gt; [t.text for t in turns]</span>
+<span class="sd">['One.', 'Two.', 'Three.']</span>
+<span class="sd">&gt;&gt;&gt; plan_turns("One. Two.", unit="beat")</span>
+<span class="sd">[]</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+
+<span class="c1">#: How a beat's text is cut into the units a turn is built from. ``"beat"``</span>
+<span class="c1">#: means "don't cut at all" — one TTS call per beat, the historical behavior.</span>
+<span class="n">SEGMENTATION_UNITS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"beat"</span><span class="p">,</span> <span class="s2">"paragraph"</span><span class="p">,</span> <span class="s2">"sentence"</span><span class="p">,</span> <span class="s2">"clause"</span><span class="p">)</span>
+
+<span class="c1">#: ElevenLabs clamps ``voice_settings.speed`` to this range in practice; a</span>
+<span class="c1">#: jittered speed outside it is silently useless, so the planner clamps.</span>
+<span class="n">SPEED_RANGE</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">)</span>
+
+<span class="n">_PARAGRAPH_SPLIT</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\n\s*\n+"</span><span class="p">)</span>
+<span class="c1"># Sentence-final .?! (and …), allowing a closing quote/bracket after it.</span>
+<span class="n">_SENTENCE_SPLIT</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">'(?&lt;=[.!?…])["</span><span class="se">\'</span><span class="s1">”’)\]]*\s+'</span><span class="p">)</span>
+<span class="c1"># Clause-final , ; : — allowing the same trailing closers.</span>
+<span class="n">_CLAUSE_SPLIT</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">'(?&lt;=[,;:])["</span><span class="se">\'</span><span class="s1">”’)\]]*\s+'</span><span class="p">)</span>
+<span class="n">_WS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[ \t]+"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Boundary">
+<a class="viewcode-back" href="../../module_docs/braidio/pacing.html#braidio.pacing.Boundary">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Boundary</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""How strongly a unit's trailing punctuation closes.</span>
+
+<span class="sd">    ``gap_scale`` multiplies the base gap (``WeaveConfig.gap_turn_s``) and</span>
+<span class="sd">    ``speed_scale`` multiplies the turn's speed — *final lengthening*, the thing</span>
+<span class="sd">    that keeps a pause from sounding like a dropout. The two are deliberately</span>
+<span class="sd">    correlated: a stronger boundary gets both a longer silence and a slower</span>
+<span class="sd">    approach to it.</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">gap_scale</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">speed_scale</span><span class="p">:</span> <span class="nb">float</span></div>
+
+
+
+<span class="c1">#: The boundary table. Scales are relative to ``"sentence"`` (== the configured</span>
+<span class="c1">#: ``gap_turn_s``), from the punctuation→break-strength table in</span>
+<span class="c1">#: ``misc/docs/research/notebooklm-and-conversational-pacing.md``.</span>
+<span class="n">BOUNDARIES</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Boundary</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"paragraph"</span><span class="p">:</span> <span class="n">Boundary</span><span class="p">(</span><span class="s2">"paragraph"</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="mf">0.96</span><span class="p">),</span>
+    <span class="s2">"ellipsis"</span><span class="p">:</span> <span class="n">Boundary</span><span class="p">(</span><span class="s2">"ellipsis"</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">,</span> <span class="mf">0.97</span><span class="p">),</span>
+    <span class="s2">"sentence"</span><span class="p">:</span> <span class="n">Boundary</span><span class="p">(</span><span class="s2">"sentence"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.98</span><span class="p">),</span>
+    <span class="s2">"clause"</span><span class="p">:</span> <span class="n">Boundary</span><span class="p">(</span><span class="s2">"clause"</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">),</span>
+    <span class="s2">"flowing"</span><span class="p">:</span> <span class="n">Boundary</span><span class="p">(</span><span class="s2">"flowing"</span><span class="p">,</span> <span class="mf">0.35</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>  <span class="c1"># em-dash: connect-through</span>
+    <span class="s2">"none"</span><span class="p">:</span> <span class="n">Boundary</span><span class="p">(</span><span class="s2">"none"</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>  <span class="c1"># no punctuation: words run together</span>
+<span class="p">}</span>
+
+<span class="n">_TERMINAL_CLOSERS</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\"</span><span class="s2">'”’)]»"</span>
+
+
+<div class="viewcode-block" id="NarrationTurn">
+<a class="viewcode-back" href="../../module_docs/braidio/pacing.html#braidio.pacing.NarrationTurn">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NarrationTurn</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One synthesizable chunk of a narration beat, with its pacing.</span>
+
+<span class="sd">    ``speed`` is ``None`` when the delivery's model has no speed control (eleven</span>
+<span class="sd">    v3) — the renderer then leaves ``voice_settings["speed"]`` alone rather than</span>
+<span class="sd">    sending a parameter the model is documented not to honor.</span>
+<span class="sd">    """</span>
+
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">gap_after_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">boundary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"sentence"</span></div>
+
+
+
+<div class="viewcode-block" id="classify_boundary">
+<a class="viewcode-back" href="../../module_docs/braidio/pacing.html#braidio.pacing.classify_boundary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">classify_boundary</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Name the boundary implied by ``text``'s trailing punctuation.</span>
+
+<span class="sd">    &gt;&gt;&gt; classify_boundary("So that's the charge sheet.")</span>
+<span class="sd">    'sentence'</span>
+<span class="sd">    &gt;&gt;&gt; classify_boundary('He said "no," and left,')</span>
+<span class="sd">    'clause'</span>
+<span class="sd">    &gt;&gt;&gt; classify_boundary("and then —")</span>
+<span class="sd">    'flowing'</span>
+<span class="sd">    &gt;&gt;&gt; classify_boundary("well…")</span>
+<span class="sd">    'ellipsis'</span>
+<span class="sd">    &gt;&gt;&gt; classify_boundary("no punctuation here")</span>
+<span class="sd">    'none'</span>
+<span class="sd">    """</span>
+    <span class="n">tail</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="n">_TERMINAL_CLOSERS</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">tail</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"…"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">tail</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"..."</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"ellipsis"</span>
+    <span class="k">if</span> <span class="n">tail</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">"."</span><span class="p">,</span> <span class="s2">"!"</span><span class="p">,</span> <span class="s2">"?"</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="s2">"sentence"</span>
+    <span class="k">if</span> <span class="n">tail</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">","</span><span class="p">,</span> <span class="s2">";"</span><span class="p">,</span> <span class="s2">":"</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="s2">"clause"</span>
+    <span class="k">if</span> <span class="n">tail</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">"—"</span><span class="p">,</span> <span class="s2">"–"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="s2">"flowing"</span>
+    <span class="k">return</span> <span class="s2">"none"</span></div>
+
+
+
+<div class="viewcode-block" id="split_paragraphs">
+<a class="viewcode-back" href="../../module_docs/braidio/pacing.html#braidio.pacing.split_paragraphs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">split_paragraphs</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Split ``text`` on blank lines, collapsing runs of spaces within each."""</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_WS</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">_PARAGRAPH_SPLIT</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">if</span> <span class="n">p</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="split_units">
+<a class="viewcode-back" href="../../module_docs/braidio/pacing.html#braidio.pacing.split_units">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">split_units</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"sentence"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Cut ``text`` into ``unit``-sized pieces, grouped by paragraph.</span>
+
+<span class="sd">    Returns a list of paragraphs, each a list of units, so a caller can keep</span>
+<span class="sd">    turns from straddling a paragraph break (which would swallow the strongest</span>
+<span class="sd">    pause in the beat). ``unit="beat"`` returns one paragraph of one unit.</span>
+
+<span class="sd">    &gt;&gt;&gt; split_units("A one. A two.\\n\\nB one.", unit="sentence")</span>
+<span class="sd">    [['A one.', 'A two.'], ['B one.']]</span>
+<span class="sd">    &gt;&gt;&gt; split_units("Yes, really. No.", unit="clause")</span>
+<span class="sd">    [['Yes,', 'really.', 'No.']]</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SEGMENTATION_UNITS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unit must be one of </span><span class="si">{</span><span class="n">SEGMENTATION_UNITS</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">unit</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">paragraphs</span> <span class="o">=</span> <span class="n">split_paragraphs</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">"beat"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[[</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">paragraphs</span><span class="p">)]]</span> <span class="k">if</span> <span class="n">paragraphs</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">"paragraph"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[[</span><span class="n">p</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paragraphs</span><span class="p">]</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">para</span> <span class="ow">in</span> <span class="n">paragraphs</span><span class="p">:</span>
+        <span class="n">sentences</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">_SENTENCE_SPLIT</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">para</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">"clause"</span><span class="p">:</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">c</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sentences</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">_CLAUSE_SPLIT</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="n">sentences</span>
+        <span class="k">if</span> <span class="n">units</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_group</span><span class="p">(</span>
+    <span class="n">units</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">min_turn</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_turn</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Join consecutive ``units`` into turns of ``min_turn..max_turn`` units."""</span>
+    <span class="n">turns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">units</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">min_turn</span><span class="p">,</span> <span class="n">max_turn</span><span class="p">)</span>
+        <span class="n">turns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">units</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">k</span><span class="p">]))</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="n">k</span>
+    <span class="k">return</span> <span class="n">turns</span>
+
+
+<div class="viewcode-block" id="plan_turns">
+<a class="viewcode-back" href="../../module_docs/braidio/pacing.html#braidio.pacing.plan_turns">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plan_turns</span><span class="p">(</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"sentence"</span><span class="p">,</span>
+    <span class="n">min_turn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">max_turn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>
+    <span class="n">gap_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">speed_base</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">speed_jitter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">gap_scale_cap_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">NarrationTurn</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Plan how to speak one narration beat. Pure and deterministic in ``seed``.</span>
+
+<span class="sd">    Returns ``[]`` for ``unit="beat"`` (and for empty text) — the caller's signal</span>
+<span class="sd">    to keep the historical single-call path, byte for byte. Otherwise each</span>
+<span class="sd">    returned :class:`NarrationTurn` is one TTS call, with the silence to append</span>
+<span class="sd">    after it and the speed to read it at.</span>
+
+<span class="sd">    ``gap_s`` is the *sentence-boundary* gap; every other boundary scales off it</span>
+<span class="sd">    via :data:`BOUNDARIES`, capped at ``gap_scale_cap_s`` (long silences read as</span>
+<span class="sd">    a dropout, and the engines are unstable past ~3 s). The final turn of the</span>
+<span class="sd">    beat never gets a trailing gap — the beat boundary belongs to the renderer's</span>
+<span class="sd">    crossfade and to the next beat's ``Narration.lead_gap_s``.</span>
+
+<span class="sd">    ``speed_base=None`` plans no speed at all (eleven v3, which has no speed</span>
+<span class="sd">    control); a float centers a per-turn jitter of ``±speed_jitter`` on it,</span>
+<span class="sd">    scaled by the boundary's final lengthening and clamped to :data:`SPEED_RANGE`.</span>
+
+<span class="sd">    &gt;&gt;&gt; turns = plan_turns("One. Two. Three. Four.", min_turn=2, max_turn=2, gap_s=0.3)</span>
+<span class="sd">    &gt;&gt;&gt; [(t.text, t.gap_after_s) for t in turns]</span>
+<span class="sd">    [('One. Two.', 0.3), ('Three. Four.', 0.0)]</span>
+<span class="sd">    &gt;&gt;&gt; plan_turns("A.\\n\\nB.", gap_s=0.2)[0].gap_after_s  # paragraph &gt; sentence</span>
+<span class="sd">    0.44</span>
+<span class="sd">    """</span>
+    <span class="n">paragraphs</span> <span class="o">=</span> <span class="n">split_units</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">unit</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">"beat"</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">paragraphs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">min_turn</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">max_turn</span> <span class="o">&lt;</span> <span class="n">min_turn</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"require 1 &lt;= min_turn &lt;= max_turn"</span><span class="p">)</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span> <span class="o">*</span> <span class="mi">17</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">grouped</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># (turn text, is last of its paragraph)</span>
+    <span class="k">for</span> <span class="n">para</span> <span class="ow">in</span> <span class="n">paragraphs</span><span class="p">:</span>
+        <span class="n">turns</span> <span class="o">=</span> <span class="n">_group</span><span class="p">(</span><span class="n">para</span><span class="p">,</span> <span class="n">min_turn</span><span class="o">=</span><span class="n">min_turn</span><span class="p">,</span> <span class="n">max_turn</span><span class="o">=</span><span class="n">max_turn</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
+        <span class="n">grouped</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="n">t</span><span class="p">,</span> <span class="n">j</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">turns</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">turns</span><span class="p">))</span>
+
+    <span class="n">jitter_rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span> <span class="o">*</span> <span class="mi">31</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">NarrationTurn</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">turn_text</span><span class="p">,</span> <span class="n">ends_paragraph</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">grouped</span><span class="p">):</span>
+        <span class="n">last</span> <span class="o">=</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">grouped</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"paragraph"</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">ends_paragraph</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">last</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">classify_boundary</span><span class="p">(</span><span class="n">turn_text</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">boundary</span> <span class="o">=</span> <span class="n">BOUNDARIES</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">speed</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">speed_base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">jittered</span> <span class="o">=</span> <span class="n">speed_base</span> <span class="o">+</span> <span class="n">jitter_rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">speed_jitter</span><span class="p">,</span> <span class="n">speed_jitter</span><span class="p">)</span>
+            <span class="n">speed</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span>
+                <span class="nb">min</span><span class="p">(</span>
+                    <span class="nb">max</span><span class="p">(</span><span class="n">jittered</span> <span class="o">*</span> <span class="n">boundary</span><span class="o">.</span><span class="n">speed_scale</span><span class="p">,</span> <span class="n">SPEED_RANGE</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">SPEED_RANGE</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="p">),</span>
+                <span class="mi">3</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">gap</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mf">0.0</span> <span class="k">if</span> <span class="n">last</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">gap_s</span> <span class="o">*</span> <span class="n">boundary</span><span class="o">.</span><span class="n">gap_scale</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">gap_scale_cap_s</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">NarrationTurn</span><span class="p">(</span><span class="n">turn_text</span><span class="p">,</span> <span class="n">gap_after_s</span><span class="o">=</span><span class="n">gap</span><span class="p">,</span> <span class="n">speed</span><span class="o">=</span><span class="n">speed</span><span class="p">,</span> <span class="n">boundary</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="planned_gap_total_s">
+<a class="viewcode-back" href="../../module_docs/braidio/pacing.html#braidio.pacing.planned_gap_total_s">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">planned_gap_total_s</span><span class="p">(</span><span class="n">turns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">NarrationTurn</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Total silence a plan inserts inside the beat (for reporting / tests).</span>
+
+<span class="sd">    &gt;&gt;&gt; planned_gap_total_s(plan_turns("A. B. C.", min_turn=1, max_turn=1, gap_s=0.3))</span>
+<span class="sd">    0.6</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">gap_after_s</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">turns</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

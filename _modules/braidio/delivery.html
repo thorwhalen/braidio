@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.delivery &mdash; braidio 0.0.39 documentation</title>
+  <title>braidio.delivery &mdash; braidio 0.0.40 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=e648f5b4"></script>
+      <script src="../../_static/documentation_options.js?v=84bd753f"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -71,6 +71,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/pacing.html">braidio.pacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/project.html">braidio.project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
@@ -149,6 +150,13 @@
     <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">voice_settings</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
     <span class="n">supports_audio_tags</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># True for eleven_v3 (bracketed [tags])</span>
+    <span class="c1">#: Whether the model honors ``voice_settings["speed"]``. **False for eleven</span>
+    <span class="c1">#: v3**, which has no speed control at all ("Speed is not available for the</span>
+    <span class="c1">#: Eleven v3 model"), so sending one there is undefined. The paced narration</span>
+    <span class="c1">#: path (:mod:`braidio.pacing`) reads this: on a speedless model it plans no</span>
+    <span class="c1">#: speed and varies tempo through real inter-turn silence, punctuation and</span>
+    <span class="c1">#: audio tags instead.</span>
+    <span class="n">supports_speed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">note</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span></div>
 
 
@@ -233,6 +241,7 @@
     <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_v3"</span><span class="p">,</span>
     <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
     <span class="n">supports_audio_tags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">supports_speed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">note</span><span class="o">=</span><span class="s2">"Eleven v3, clean text (no tags) — v3's baseline is more dynamic."</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -241,7 +250,37 @@
     <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_v3"</span><span class="p">,</span>
     <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
     <span class="n">supports_audio_tags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">supports_speed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">note</span><span class="o">=</span><span class="s2">"Eleven v3, low stability, driven by inline audio tags. Alpha; per-take variance."</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- v3 role deliveries: the defaults for the narration-heavy formats ---------</span>
+<span class="c1"># The v2 pair above cannot render audio tags at all, so a solo script literally</span>
+<span class="c1"># could not use ``[pause]`` / ``[dryly]`` out of the box. These are the same two</span>
+<span class="c1"># roles on ``eleven_v3``, whose baseline is more dynamic and whose tags fire.</span>
+<span class="c1"># Stability follows the research table: 0.5 ("Natural") is the balanced default,</span>
+<span class="c1"># ~0.4 for a livelier presenter; never 1.0 ("Robust" mutes tags and IS the</span>
+<span class="c1"># robotic voice). Neither model has a speed knob, so tempo variation comes from</span>
+<span class="c1"># :mod:`braidio.pacing` (real inter-turn silence) plus punctuation and tags.</span>
+
+<span class="n">V3_PRESENTER</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"v3-presenter"</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_v3"</span><span class="p">,</span>
+    <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="n">supports_audio_tags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">supports_speed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">"Host/presenter commentary on v3 — livelier, audio tags fire. The "</span>
+    <span class="s2">"narration-spine default (solo_explainer)."</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">V3_NARRATOR</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"v3-narrator"</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_v3"</span><span class="p">,</span>
+    <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="n">supports_audio_tags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">supports_speed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">"Documentary/book-read narrator on v3 — steadier than v3-presenter, "</span>
+    <span class="s2">"still tag-responsive. Contrast partner to v3-presenter."</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># --- register presets: narration (reading) vs conversational (talking) --------</span>
@@ -271,6 +310,7 @@
     <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_v3"</span><span class="p">,</span>
     <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span> <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
     <span class="n">supports_audio_tags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">supports_speed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">note</span><span class="o">=</span><span class="s2">"Register that sounds like talking, not reading: eleven_v3 with loosened "</span>
     <span class="s2">"stability so audio tags/disfluencies in the text fire. Pair with a "</span>
     <span class="s2">"conversationalized script (contractions, [tags], ellipses). Single-voice — "</span>
@@ -287,6 +327,8 @@
         <span class="n">V2_NARRATOR</span><span class="p">,</span>
         <span class="n">V3_NATURAL</span><span class="p">,</span>
         <span class="n">V3_CREATIVE</span><span class="p">,</span>
+        <span class="n">V3_PRESENTER</span><span class="p">,</span>
+        <span class="n">V3_NARRATOR</span><span class="p">,</span>
         <span class="n">NARRATION</span><span class="p">,</span>
         <span class="n">CONVERSATIONAL</span><span class="p">,</span>
     <span class="p">)</span>

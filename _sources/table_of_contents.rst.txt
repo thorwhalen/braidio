@@ -27,6 +27,7 @@
    module_docs/braidio/mcp/workspace
    module_docs/braidio/multivoice
    module_docs/braidio/music
+   module_docs/braidio/pacing
    module_docs/braidio/project
    module_docs/braidio/provenance
    module_docs/braidio/render

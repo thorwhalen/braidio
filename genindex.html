@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; braidio 0.0.39 documentation</title>
+  <title>Index &mdash; braidio 0.0.40 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=e648f5b4"></script>
+      <script src="_static/documentation_options.js?v=84bd753f"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -71,6 +71,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/pacing.html">braidio.pacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/project.html">braidio.project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/provenance.html">braidio.provenance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/braidio/render.html">braidio.render</a></li>
@@ -189,6 +190,10 @@
         <li><a href="module_docs/braidio/cost.html#braidio.cost.billable_chars">(in module braidio.cost)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/braidio/pacing.html#braidio.pacing.BOUNDARIES">BOUNDARIES (in module braidio.pacing)</a>
+</li>
+      <li><a href="module_docs/braidio/pacing.html#braidio.pacing.Boundary">Boundary (class in braidio.pacing)</a>
+</li>
       <li>
     braidio
 
@@ -266,6 +271,13 @@
 
       <ul>
         <li><a href="module_docs/braidio/music.html#module-braidio.music">module</a>
+</li>
+      </ul></li>
+      <li>
+    braidio.pacing
+
+      <ul>
+        <li><a href="module_docs/braidio/pacing.html#module-braidio.pacing">module</a>
 </li>
       </ul></li>
       <li>
@@ -372,6 +384,8 @@
         <li><a href="module_docs/braidio/captions.html#braidio.captions.captions_for">(in module braidio.captions)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/braidio/pacing.html#braidio.pacing.classify_boundary">classify_boundary() (in module braidio.pacing)</a>
+</li>
       <li><a href="module_docs/braidio.html#braidio.clean_ocr">clean_ocr() (in module braidio)</a>
 
       <ul>
@@ -618,6 +632,8 @@
 </li>
         <li><a href="module_docs/braidio/music.html#module-braidio.music">braidio.music</a>
 </li>
+        <li><a href="module_docs/braidio/pacing.html#module-braidio.pacing">braidio.pacing</a>
+</li>
         <li><a href="module_docs/braidio/render.html#module-braidio.render">braidio.render</a>
 </li>
         <li><a href="module_docs/braidio/rights.html#module-braidio.rights">braidio.rights</a>
@@ -683,12 +699,20 @@
         <li><a href="module_docs/braidio/script.html#braidio.script.narration_segments">(in module braidio.script)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/braidio/pacing.html#braidio.pacing.NarrationTurn">NarrationTurn (class in braidio.pacing)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/braidio/weave_config.html#braidio.weave_config.WeaveConfig.paces_narration">paces_narration (braidio.weave_config.WeaveConfig property)</a>
+
+      <ul>
+        <li><a href="module_docs/braidio.html#braidio.WeaveConfig.paces_narration">(braidio.WeaveConfig property)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/braidio/video.html#braidio.video.Panel">Panel (class in braidio.video)</a>
 </li>
       <li><a href="module_docs/braidio.html#braidio.plan_production">plan_production() (in module braidio)</a>
@@ -698,6 +722,10 @@
 </li>
       </ul></li>
       <li><a href="module_docs/braidio/video.html#braidio.video.plan_spans">plan_spans() (in module braidio.video)</a>
+</li>
+      <li><a href="module_docs/braidio/pacing.html#braidio.pacing.plan_turns">plan_turns() (in module braidio.pacing)</a>
+</li>
+      <li><a href="module_docs/braidio/pacing.html#braidio.pacing.planned_gap_total_s">planned_gap_total_s() (in module braidio.pacing)</a>
 </li>
       <li><a href="module_docs/braidio.html#braidio.PlannedBeat">PlannedBeat (class in braidio)</a>
 
@@ -713,14 +741,14 @@
         <li><a href="module_docs/braidio/style.html#braidio.style.platitude_rate">(in module braidio.style)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/braidio.html#braidio.MusicStructure.plays_sting">plays_sting() (braidio.MusicStructure method)</a>
 
       <ul>
         <li><a href="module_docs/braidio/structure.html#braidio.structure.MusicStructure.plays_sting">(braidio.structure.MusicStructure method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/braidio.html#braidio.MusicStructure.plays_sting_of">plays_sting_of() (braidio.MusicStructure method)</a>
 
       <ul>
@@ -845,6 +873,8 @@
         <li><a href="module_docs/braidio/rights.html#braidio.rights.segment_is_publishable">(in module braidio.rights)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/braidio/pacing.html#braidio.pacing.SEGMENTATION_UNITS">SEGMENTATION_UNITS (in module braidio.pacing)</a>
+</li>
       <li><a href="module_docs/braidio.html#braidio.SegmentBeat">SegmentBeat (class in braidio)</a>
 
       <ul>
@@ -863,11 +893,15 @@
         <li><a href="module_docs/braidio.html#braidio.TimelineBreakdown.shares">(braidio.TimelineBreakdown method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/braidio.html#braidio.skills_dir">skills_dir() (in module braidio)</a>
 </li>
       <li><a href="module_docs/braidio/video.html#braidio.video.Span">Span (class in braidio.video)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/braidio/pacing.html#braidio.pacing.SPEED_RANGE">SPEED_RANGE (in module braidio.pacing)</a>
+</li>
+      <li><a href="module_docs/braidio/pacing.html#braidio.pacing.split_paragraphs">split_paragraphs() (in module braidio.pacing)</a>
 </li>
       <li><a href="module_docs/braidio.html#braidio.split_segments">split_segments() (in module braidio)</a>
 
@@ -875,6 +909,8 @@
         <li><a href="module_docs/braidio/multivoice.html#braidio.multivoice.split_segments">(in module braidio.multivoice)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/braidio/pacing.html#braidio.pacing.split_units">split_units() (in module braidio.pacing)</a>
+</li>
       <li><a href="module_docs/braidio.html#braidio.MusicStructure.spotlight_for">spotlight_for() (braidio.MusicStructure method)</a>
 
       <ul>
@@ -905,6 +941,12 @@
 
       <ul>
         <li><a href="module_docs/braidio.html#braidio.CostRollup.summary">(braidio.CostRollup property)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/braidio.html#braidio.Delivery.supports_speed">supports_speed (braidio.Delivery attribute)</a>
+
+      <ul>
+        <li><a href="module_docs/braidio/delivery.html#braidio.delivery.Delivery.supports_speed">(braidio.delivery.Delivery attribute)</a>
 </li>
       </ul></li>
   </ul></td>

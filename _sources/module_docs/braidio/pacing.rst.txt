@@ -1,0 +1,4 @@
+braidio.pacing
+==============
+.. automodule:: braidio.pacing
+   :members:

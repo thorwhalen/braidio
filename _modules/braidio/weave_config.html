@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.weave_config &mdash; braidio 0.0.39 documentation</title>
+  <title>braidio.weave_config &mdash; braidio 0.0.40 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=e648f5b4"></script>
+      <script src="../../_static/documentation_options.js?v=84bd753f"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -71,6 +71,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/pacing.html">braidio.pacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/project.html">braidio.project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
@@ -143,6 +144,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Mapping</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.multivoice</span><span class="w"> </span><span class="kn">import</span> <span class="n">POOL_4</span><span class="p">,</span> <span class="n">POOL_MANY</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.pacing</span><span class="w"> </span><span class="kn">import</span> <span class="n">SEGMENTATION_UNITS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_VOICE_ID</span>
 
 <span class="c1"># Research-recommended base narration settings (v2-tuned).</span>
@@ -173,17 +175,23 @@
     <span class="p">)</span>
 
     <span class="c1"># --- Segmentation / turns ----------------------------------------------</span>
-    <span class="n">segmentation_unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"sentence"</span>  <span class="c1"># sentence | clause | paragraph | beat</span>
+    <span class="c1"># How a narration beat is cut into turns. ``"beat"`` (the default) = one TTS</span>
+    <span class="c1"># call for the whole beat, i.e. no intra-beat pacing at all — historical</span>
+    <span class="c1"># behavior. Anything else engages :mod:`braidio.pacing` in</span>
+    <span class="c1"># :func:`braidio.render.render_production`, which is what makes</span>
+    <span class="c1"># ``min_turn``/``max_turn``/``speed_jitter``/``gap_turn_s`` audible there.</span>
+    <span class="n">segmentation_unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"beat"</span>  <span class="c1"># beat | paragraph | sentence | clause</span>
     <span class="n">min_turn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># segments a voice speaks before switching</span>
     <span class="n">max_turn</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
 
     <span class="c1"># --- Pacing -------------------------------------------------------------</span>
-    <span class="n">speed_base</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-    <span class="n">speed_jitter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.04</span>  <span class="c1"># ± per turn</span>
+    <span class="n">speed_base</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># fallback center when the Delivery sets no speed</span>
+    <span class="n">speed_jitter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.04</span>  <span class="c1"># ± per turn (models with a speed knob only)</span>
 
     <span class="c1"># --- Timing between turns ----------------------------------------------</span>
     <span class="n">crossfade_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.12</span>
-    <span class="n">gap_turn_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># silence between turns (mutually exclusive w/ crossfade)</span>
+    <span class="n">gap_turn_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># silence at a *sentence* boundary between turns;</span>
+    <span class="c1"># other boundaries scale off it (braidio.pacing.BOUNDARIES)</span>
     <span class="n">overlap_turn_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># speaker interruption (#22 — not yet rendered)</span>
 
     <span class="c1"># --- Clip weaving (#21) -------------------------------------------------</span>
@@ -207,6 +215,28 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"WeaveConfig.voices must have at least one voice id"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_turn</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_turn</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"require 1 &lt;= min_turn &lt;= max_turn"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">segmentation_unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SEGMENTATION_UNITS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"WeaveConfig.segmentation_unit must be one of </span><span class="si">{</span><span class="n">SEGMENTATION_UNITS</span><span class="si">}</span><span class="s2">, "</span>
+                <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">segmentation_unit</span><span class="si">!r}</span><span class="s2"> — a typo here would silently "</span>
+                <span class="s2">"disable intra-beat pacing"</span>
+            <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">paces_narration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether a render cuts each narration beat into separately-spoken turns.</span>
+
+<span class="sd">        ``False`` (the default, ``segmentation_unit="beat"``) is one TTS call per</span>
+<span class="sd">        beat — no intra-beat gaps, no per-turn speed, so ``gap_turn_s`` and</span>
+<span class="sd">        ``speed_jitter`` do nothing on the :func:`braidio.render.render_production`</span>
+<span class="sd">        path. Opt in by setting ``segmentation_unit`` to a smaller unit.</span>
+
+<span class="sd">        &gt;&gt;&gt; WeaveConfig().paces_narration</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; WeaveConfig(segmentation_unit="sentence").paces_narration</span>
+<span class="sd">        True</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">segmentation_unit</span> <span class="o">!=</span> <span class="s2">"beat"</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_multivoice</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.compose &mdash; braidio 0.0.39 documentation</title>
+  <title>braidio.compose &mdash; braidio 0.0.40 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=e648f5b4"></script>
+      <script src="../../_static/documentation_options.js?v=84bd753f"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -71,6 +71,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/pacing.html">braidio.pacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/project.html">braidio.project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
@@ -171,6 +172,13 @@
 <span class="sd">    ``api_key`` is an optional per-request ElevenLabs key threaded to</span>
 <span class="sd">    :func:`braidio.multivoice.render_multivoice` (and thence every synthesized</span>
 <span class="sd">    turn); ``None`` (default) keeps the ``$ELEVENLABS_API_KEY`` fallback.</span>
+
+<span class="sd">    Note ``config.segmentation_unit`` is **not** read here: this function is</span>
+<span class="sd">    handed ``segments`` already cut, so the unit was chosen upstream (usually</span>
+<span class="sd">    :func:`braidio.script.narration_segments`). It is the</span>
+<span class="sd">    :func:`braidio.render.render_production` path that cuts a beat itself, and</span>
+<span class="sd">    there the field is the switch that turns pacing on — see</span>
+<span class="sd">    :mod:`braidio.pacing`.</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">render_multivoice</span><span class="p">(</span>
         <span class="n">segments</span><span class="p">,</span>

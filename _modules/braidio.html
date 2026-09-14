@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio &mdash; braidio 0.0.39 documentation</title>
+  <title>braidio &mdash; braidio 0.0.40 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=e648f5b4"></script>
+      <script src="../_static/documentation_options.js?v=84bd753f"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -71,6 +71,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/pacing.html">braidio.pacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/project.html">braidio.project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/provenance.html">braidio.provenance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../module_docs/braidio/render.html">braidio.render</a></li>
@@ -219,8 +220,21 @@
     <span class="n">V2_NARRATOR</span><span class="p">,</span>
     <span class="n">V3_NATURAL</span><span class="p">,</span>
     <span class="n">V3_CREATIVE</span><span class="p">,</span>
+    <span class="n">V3_PRESENTER</span><span class="p">,</span>
+    <span class="n">V3_NARRATOR</span><span class="p">,</span>
     <span class="n">NARRATION</span><span class="p">,</span>
     <span class="n">CONVERSATIONAL</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- intra-beat narration pacing (pure planner; the renderer executes it) ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.pacing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">NarrationTurn</span><span class="p">,</span>
+    <span class="n">Boundary</span><span class="p">,</span>
+    <span class="n">BOUNDARIES</span><span class="p">,</span>
+    <span class="n">SEGMENTATION_UNITS</span><span class="p">,</span>
+    <span class="n">plan_turns</span><span class="p">,</span>
+    <span class="n">classify_boundary</span><span class="p">,</span>
+    <span class="n">split_units</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># --- multi-voice casting ---</span>

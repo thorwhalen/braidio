@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>braidio.render &mdash; braidio 0.0.39 documentation</title>
+  <title>braidio.render &mdash; braidio 0.0.40 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=e648f5b4"></script>
+      <script src="../../_static/documentation_options.js?v=84bd753f"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -71,6 +71,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/mcp/workspace.html">braidio.mcp.workspace</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/multivoice.html">braidio.multivoice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/music.html">braidio.music</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/pacing.html">braidio.pacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/project.html">braidio.project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/provenance.html">braidio.provenance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/braidio/render.html">braidio.render</a></li>
@@ -124,7 +125,9 @@
 <span></span><span class="sd">"""Render a :class:`~braidio.script.Script` into an audio file.</span>
 
 <span class="sd">Walks the beats (filtered by the rights :class:`~braidio.rights.Profile`):</span>
-<span class="sd">narration beats are synthesized (:mod:`braidio.tts`); segment beats are resolved</span>
+<span class="sd">narration beats are synthesized (:mod:`braidio.tts`) — as one call, or as paced</span>
+<span class="sd">turns when the :class:`~braidio.weave_config.WeaveConfig` asks for a smaller</span>
+<span class="sd">``segmentation_unit`` (:mod:`braidio.pacing`); segment beats are resolved</span>
 <span class="sd">via a :class:`~braidio.sources.SegmentSource` and extracted (padded + faded);</span>
 <span class="sd">scene breaks become a sting or a pause (:mod:`braidio.structure`). Every spoken</span>
 <span class="sd">or clipped part is loudness-normalized, then either woven on a timeline (clips</span>
@@ -145,6 +148,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.conversation</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_CAST</span><span class="p">,</span> <span class="n">ConversationCast</span><span class="p">,</span> <span class="n">render_dialogue</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.delivery</span><span class="w"> </span><span class="kn">import</span> <span class="n">V2_TUNED</span><span class="p">,</span> <span class="n">Delivery</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.pacing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NarrationTurn</span><span class="p">,</span> <span class="n">plan_turns</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.rights</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DEFAULT_PROFILE</span><span class="p">,</span>
     <span class="n">PUBLISHABLE_CLIP_RIGHTS</span><span class="p">,</span>
@@ -180,6 +184,94 @@
         <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">dst</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_tail_gap</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">gap_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Append ``gap_s`` seconds of silence (the pause *after* a spoken turn)."""</span>
+    <span class="n">_require_ffmpeg</span><span class="p">()</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">"ffmpeg"</span><span class="p">,</span> <span class="s2">"-y"</span><span class="p">,</span> <span class="s2">"-i"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">src</span><span class="p">),</span> <span class="s2">"-af"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"apad=pad_dur=</span><span class="si">{</span><span class="n">gap_s</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">dst</span><span class="p">)],</span>
+        <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">dst</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plan_beat_turns</span><span class="p">(</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">WeaveConfig</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">delivery</span><span class="p">:</span> <span class="n">Delivery</span><span class="p">,</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="n">seed_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">NarrationTurn</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Plan one narration beat's turns, or ``[]`` for the unpaced single call.</span>
+
+<span class="sd">    The speed each turn is jittered around is the *delivery's* own ``speed``</span>
+<span class="sd">    when it sets one (so a grave ``v2-narrator``'s 0.94 survives being paced),</span>
+<span class="sd">    falling back to ``WeaveConfig.speed_base``. A model with no speed control</span>
+<span class="sd">    (eleven v3 — :attr:`braidio.delivery.Delivery.supports_speed`) plans none.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">paces_narration</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">speed_base</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"speed"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">speed_base</span><span class="p">)</span> <span class="k">if</span> <span class="n">delivery</span><span class="o">.</span><span class="n">supports_speed</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">plan_turns</span><span class="p">(</span>
+        <span class="n">text</span><span class="p">,</span>
+        <span class="n">unit</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">segmentation_unit</span><span class="p">,</span>
+        <span class="n">min_turn</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">min_turn</span><span class="p">,</span>
+        <span class="n">max_turn</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">max_turn</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">voice_seed</span> <span class="o">+</span> <span class="n">seed_offset</span><span class="p">,</span>
+        <span class="n">gap_s</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">gap_turn_s</span><span class="p">,</span>
+        <span class="n">speed_base</span><span class="o">=</span><span class="n">speed_base</span><span class="p">,</span>
+        <span class="n">speed_jitter</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">speed_jitter</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_narrate_turns</span><span class="p">(</span>
+    <span class="n">turns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">NarrationTurn</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">stem</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">voice_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">model_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">voice_settings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Synthesize a paced narration beat: one TTS call per turn, real silence between.</span>
+
+<span class="sd">    This is the point of :mod:`braidio.pacing` — within one beat the tempo now</span>
+<span class="sd">    varies (a fresh prosodic arc per turn, a per-turn speed where the model has</span>
+<span class="sd">    one) and the silence between turns is proportional to how strongly the</span>
+<span class="sd">    boundary closes, instead of one flat arc with nothing inside it.</span>
+<span class="sd">    """</span>
+    <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">turn</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">turns</span><span class="p">):</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">voice_settings</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">turn</span><span class="o">.</span><span class="n">speed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s2">"speed"</span><span class="p">]</span> <span class="o">=</span> <span class="n">turn</span><span class="o">.</span><span class="n">speed</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="n">narrate</span><span class="p">(</span>
+            <span class="n">turn</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+            <span class="n">stem</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stem</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-turn</span><span class="si">{</span><span class="n">j</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">.mp3"</span><span class="p">),</span>
+            <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
+            <span class="n">voice_id</span><span class="o">=</span><span class="n">voice_id</span><span class="p">,</span>
+            <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
+            <span class="n">voice_settings</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">turn</span><span class="o">.</span><span class="n">gap_after_s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">part</span> <span class="o">=</span> <span class="n">_tail_gap</span><span class="p">(</span>
+                <span class="n">part</span><span class="p">,</span>
+                <span class="n">stem</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stem</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-turn</span><span class="si">{</span><span class="n">j</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">-gap.mp3"</span><span class="p">),</span>
+                <span class="n">gap_s</span><span class="o">=</span><span class="n">turn</span><span class="o">.</span><span class="n">gap_after_s</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">stem</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stem</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-paced.mp3"</span><span class="p">)</span>
+    <span class="c1"># crossfade=0: the planned gaps ARE the spacing; a crossfade would eat them.</span>
+    <span class="n">concatenate_audio</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span> <span class="n">crossfade</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_end_tail</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">fade_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">silence_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -280,6 +372,16 @@
 <span class="sd">    uses the inert defaults — no sting asset, no clip spotlit by default — so a</span>
 <span class="sd">    script without scene breaks or spotlight flags renders exactly as before.</span>
 
+<span class="sd">    **Pacing inside a narration beat** is a ``config`` choice. By default</span>
+<span class="sd">    (``WeaveConfig.segmentation_unit == "beat"``) a beat is one TTS call — one</span>
+<span class="sd">    prosodic arc, no silence anywhere in it. Set a smaller</span>
+<span class="sd">    ``segmentation_unit`` and the beat is cut into turns of</span>
+<span class="sd">    ``min_turn..max_turn`` units, each synthesized separately with a jittered</span>
+<span class="sd">    ``speed_base ± speed_jitter`` (where the model has a speed knob) and</span>
+<span class="sd">    followed by ``gap_turn_s`` scaled to how strongly the boundary closes —</span>
+<span class="sd">    see :mod:`braidio.pacing`. Those four knobs do **nothing** here at the</span>
+<span class="sd">    default unit, which is the historical behavior kept byte-identical.</span>
+
 <span class="sd">    ``api_key`` is an optional per-request ElevenLabs key threaded to every</span>
 <span class="sd">    synthesized beat — both narration (:func:`braidio.tts.narrate`) and dialogue</span>
 <span class="sd">    (:func:`braidio.conversation.render_dialogue`). When ``None`` (default) each</span>
@@ -319,9 +421,9 @@
     <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">kinds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">placements</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># "sequential" | "under" (per part, for the weave)</span>
-    <span class="n">roles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span>
-        <span class="nb">str</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># aggregation label per beat (clip / narration / style / dialogue)</span>
+    <span class="n">roles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">[]</span>
+    <span class="p">)</span>  <span class="c1"># aggregation label per beat (clip / narration / style / dialogue)</span>
     <span class="n">spans</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># source [start,end) for clips</span>
     <span class="n">labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">spotlights</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># per part: the bed drops out over it</span>
@@ -352,15 +454,37 @@
             <span class="n">beat_settings</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="nb">getattr</span><span class="p">(</span><span class="n">orig</span><span class="p">,</span> <span class="s2">"voice_settings"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">delivery</span><span class="o">.</span><span class="n">voice_settings</span>
             <span class="p">)</span>
-            <span class="n">raw</span> <span class="o">=</span> <span class="n">narrate</span><span class="p">(</span>
-                <span class="n">pb</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+            <span class="n">beat_stem</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">Path</span><span class="p">(</span><span class="n">tts_dir</span><span class="p">)</span>
-                <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">script</span><span class="o">.</span><span class="n">id_slug</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">profile</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">delivery</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-beat</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">.mp3"</span><span class="p">,</span>
-                <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
-                <span class="n">voice_id</span><span class="o">=</span><span class="n">beat_voice</span><span class="p">,</span>
-                <span class="n">model_id</span><span class="o">=</span><span class="n">delivery</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
-                <span class="n">voice_settings</span><span class="o">=</span><span class="n">beat_settings</span><span class="p">,</span>
+                <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">script</span><span class="o">.</span><span class="n">id_slug</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">profile</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">delivery</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-beat</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
+            <span class="c1"># Intra-beat pacing — empty plan (the default `segmentation_unit=</span>
+            <span class="c1"># "beat"`) keeps the historical one-call-per-beat path untouched.</span>
+            <span class="n">turns</span> <span class="o">=</span> <span class="n">_plan_beat_turns</span><span class="p">(</span>
+                <span class="n">pb</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+                <span class="n">delivery</span><span class="o">=</span><span class="n">delivery</span><span class="p">,</span>
+                <span class="n">settings</span><span class="o">=</span><span class="n">beat_settings</span><span class="p">,</span>
+                <span class="n">seed_offset</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">turns</span><span class="p">:</span>
+                <span class="n">raw</span> <span class="o">=</span> <span class="n">_narrate_turns</span><span class="p">(</span>
+                    <span class="n">turns</span><span class="p">,</span>
+                    <span class="n">stem</span><span class="o">=</span><span class="n">beat_stem</span><span class="p">,</span>
+                    <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
+                    <span class="n">voice_id</span><span class="o">=</span><span class="n">beat_voice</span><span class="p">,</span>
+                    <span class="n">model_id</span><span class="o">=</span><span class="n">delivery</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
+                    <span class="n">voice_settings</span><span class="o">=</span><span class="n">beat_settings</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">raw</span> <span class="o">=</span> <span class="n">narrate</span><span class="p">(</span>
+                    <span class="n">pb</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+                    <span class="n">beat_stem</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="n">beat_stem</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">".mp3"</span><span class="p">),</span>
+                    <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
+                    <span class="n">voice_id</span><span class="o">=</span><span class="n">beat_voice</span><span class="p">,</span>
+                    <span class="n">model_id</span><span class="o">=</span><span class="n">delivery</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
+                    <span class="n">voice_settings</span><span class="o">=</span><span class="n">beat_settings</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="c1"># breathing room before a register change (Narration.lead_gap_s)</span>
             <span class="n">gap</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">orig</span><span class="p">,</span> <span class="s2">"lead_gap_s"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">gap</span> <span class="ow">and</span> <span class="n">gap</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -448,8 +572,13 @@
             <span class="n">bed</span><span class="o">=</span><span class="n">music_bed</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># `crossfade`, not `crossfade_s`: the config's crossfade was read by the</span>
+        <span class="c1"># woven branch and by the returned TimelineBreakdown, but NOT here — so a</span>
+        <span class="c1"># narration-only render used the function default while the breakdown</span>
+        <span class="c1"># reported the config's value. Same value at the shared default (0.12),</span>
+        <span class="c1"># so this only starts honouring a crossfade a caller explicitly set.</span>
         <span class="n">concatenate_audio</span><span class="p">(</span>
-            <span class="o">*</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span> <span class="n">crossfade</span><span class="o">=</span><span class="n">crossfade_s</span>
+            <span class="o">*</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">],</span> <span class="n">output</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">out</span><span class="p">),</span> <span class="n">crossfade</span><span class="o">=</span><span class="n">crossfade</span>
         <span class="p">)</span>
     <span class="c1"># soft landing so the production doesn't cut dead on the last word</span>
     <span class="k">if</span> <span class="n">end_silence_s</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">end_fade_s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
