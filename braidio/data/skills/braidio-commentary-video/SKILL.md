@@ -200,13 +200,36 @@ and a designed credits roll. `pip install tituli` (`tituli[saliency]` adds
 `burns.salient_box` as its subject-avoidance seam) and read its skill.
 
 ```python
-from tituli import Frame, Span, Label, UNLABELLED, schedule_labels, TimedOverlay, note, resolve
+from tituli import (
+    Frame,
+    Span,
+    Label,
+    UNLABELLED,
+    schedule_labels,
+    TimedOverlay,
+    note,
+    resolve,
+)
 from tituli.video import overlay
-f = Frame.blank((1920, 1080)).with_delivery("youtube")   # keeps the subtitle band clear
-cards = [TimedOverlay(note(["What Hamilton is", "…"], headline="Before we go on", frame=f), 12.0, 18.0, weight=2)]
+
+f = Frame.blank((1920, 1080)).with_delivery("youtube")  # keeps the subtitle band clear
+cards = [
+    TimedOverlay(
+        note(["What Hamilton is", "…"], headline="Before we go on", frame=f),
+        12.0,
+        18.0,
+        weight=2,
+    )
+]
 spans = [Span(p.start, p.end, key=p.still) for p in panels]
-labels = schedule_labels(spans, lambda s: Label(title, attribution) if known(s) else UNLABELLED, suppressed_by=cards)
-overlay("ep.mp4", resolve([*cards, *labels]), "ep_captioned.mp4")   # one ffmpeg pass onto the FINISHED film
+labels = schedule_labels(
+    spans,
+    lambda s: Label(title, attribution) if known(s) else UNLABELLED,
+    suppressed_by=cards,
+)
+overlay(
+    "ep.mp4", resolve([*cards, *labels]), "ep_captioned.mp4"
+)  # one ffmpeg pass onto the FINISHED film
 ```
 
 Rules it already enforces: composite onto the finished motion video (text
