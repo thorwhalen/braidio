@@ -312,12 +312,22 @@ def credits_card(
     footer: str = "",
     size: tuple[int, int] = DEFAULT_SIZE,
 ) -> Path:
-    """Render an end card listing ``lines``.
+    """Render an end card listing ``lines``, **fitted** so none is lost.
 
     Reusing a photograph under CC BY / CC BY-SA is conditional on crediting it, so
     for a film built from found images this card is part of the licence
     compliance, not decoration. Generate ``lines`` from whatever manifest recorded
     the fetches, so the card cannot drift from what was actually used.
+
+    Because it is compliance, it must not *silently* drop an attribution — and a
+    fixed 31px leading did exactly that past roughly thirty lines: the tail ran
+    off the bottom of the frame and the footer drew over whatever was left. A
+    forty-three-image film credited twenty-eight of them and looked fine.
+
+    So the type is fitted to the content instead. Leading shrinks first, then the
+    list goes to two columns, and only if it still will not fit does this raise —
+    which is the right failure, because a caller who cannot see the problem cannot
+    fix it. Pass a bigger ``size`` or split across two cards.
     """
     _require()
     from PIL import Image, ImageDraw, ImageFont
@@ -336,10 +346,52 @@ def credits_card(
     card = Image.new("RGB", (width, height), (12, 12, 14))
     draw = ImageDraw.Draw(card)
     draw.text((100, 62), heading, fill=(238, 238, 243), font=font(34))
-    y = 140
-    for line in lines:
-        draw.text((100, y), line, fill=(186, 186, 198), font=font(21))
-        y += 31
+
+    lines = list(lines)
+    top, bottom = 140, height - (96 if footer else 40)
+    available = bottom - top
+    gutter = 40
+
+    # Fit on BOTH axes, measuring the real text: a credit line is long ("<title>
+    # — <artist> — <licence>"), so a layout that has the rows for it can still be
+    # too narrow for it. Larger type first, and one column before two, since a
+    # single column reads in the order the film used the pictures.
+    layout = None
+    for columns in (1, 2):
+        column_width = (width - 200 - (columns - 1) * gutter) // columns
+        for px in (21, 19, 17, 15, 13, 12):
+            leading = round(px * 1.45)
+            per_column = int(available // leading)
+            if per_column * columns < len(lines):
+                continue
+            widest = max(
+                (draw.textlength(line, font=font(px)) for line in lines), default=0
+            )
+            if widest > column_width:
+                continue
+            layout = (columns, px, leading, per_column, column_width)
+            break
+        if layout:
+            break
+
+    if layout is None:
+        raise ValueError(
+            f"credits_card: {len(lines)} lines will not fit {width}x{height} "
+            f"without dropping some. Shorten the lines, pass a larger size=, or "
+            f"split the roll across two cards — silently truncating an "
+            f"attribution would break the licence this card exists to satisfy."
+        )
+
+    columns, px, leading, per_column, column_width = layout
+    for index, line in enumerate(lines):
+        column, row = divmod(index, per_column)
+        draw.text(
+            (100 + column * (column_width + gutter), top + row * leading),
+            line,
+            fill=(186, 186, 198),
+            font=font(px),
+        )
+
     if footer:
         draw.text((100, height - 78), footer, fill=(120, 120, 132), font=font(21))
     dst = Path(dst)
