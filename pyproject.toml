@@ -62,6 +62,7 @@ dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "ruff>=0.1.0",
+    "build",
 ]
 docs = [
     "sphinx>=6.0",
@@ -114,6 +115,26 @@ nw-app = ["lacing", "nw>=0.0.51", "falaw"]
 #   older dol without it.
 # nw>=0.0.51: see the nw-app note above (the `secrets=` seam, braidio#58).
 mcp = ["fastmcp", "py2mcp>=0.1.9", "pypdf", "dol>=0.3.57", "lacing", "nw>=0.0.51", "falaw", "yb[download]>=0.1.7"]
+
+# Packaging. The two shipped skills live at braidio/data/skills/<name>/ with
+# relative symlinks from .claude/skills/. hatchling walks the tree with
+# followlinks and remembers each REAL directory it has visited, so the
+# `.claude/skills/<name>` symlinks (walked first, alphabetically) mark the real
+# `braidio/data/skills/<name>` dirs as seen and they are skipped. Exclusion
+# alone does not help — it filters files after the walk — hence
+# `skip-excluded-dirs`. Without both, the sdist carried `.claude/skills/...`
+# (and, once worktrees existed, every file of every worktree under .claude/)
+# and dropped the canonical copies; CI builds the wheel from the sdist, so
+# no skill shipped (verified on the published 0.0.43 wheel: 0 SKILL.md).
+# tests/test_packaging.py builds sdist -> wheel to keep it fixed.
+[tool.hatch.build]
+skip-excluded-dirs = true
+
+[tool.hatch.build.targets.sdist]
+exclude = [".claude", ".github", "scrap"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["braidio"]
 
 [tool.ruff]
 line-length = 88
