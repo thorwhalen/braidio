@@ -152,10 +152,62 @@ braidio is a thin orchestration layer. It **delegates**:
 | Content acquisition (Genius, audiobooks, news…) | the consuming app, via `SegmentSource` adapters |
 | Linked-artifact graph / content-addressed media | [`lacing`](https://github.com/thorwhalen/lacing) |
 | Project workflow, provenance, plan/execute, partial re-render | [`nw`](https://github.com/thorwhalen/nw) |
-| Video render + visual support | [`reelee`](https://github.com/thorwhalen/reelee) |
+| Video render + visual support | [`reelee`](https://github.com/thorwhalen/reelee) — except the stills case below |
+| Pan/zoom motion over a still | [`burns`](https://github.com/thorwhalen/burns) |
 | Raw audio DSP + TTS (crop, concat, duck, loudnorm, synth) | [`mixing`](https://github.com/thorwhalen/mixing) / `falaw` |
 
 braidio orchestrates these; it never reimplements the DSP or the graph.
+
+## Video: a commentary episode you can watch
+
+`braidio[video]` turns a rendered episode into a **Ken Burns film over still
+images** — the one video case that stays here rather than going to `reelee`,
+because reelee imports braidio and the cuts have to land on braidio's own beat
+timeline. `burns` owns the motion; braidio owns only where the picture changes.
+
+```python
+import braidio
+from braidio.video import plan_spans, assign_stills, render_video
+
+path, timeline = braidio.render_format(fmt, script, source=src,
+                                       out_path="ep.mp3", return_timeline=True)
+panels = assign_stills(plan_spans(timeline), ["a.jpg", "b.jpg", "c.jpg"])
+render_video(panels, audio_path="ep.mp3", out_path="ep.mp4")
+```
+
+`plan_spans` cuts on beat boundaries — splitting a long passage so no photograph
+stalls on screen, merging a short beat so none flickers. Each `Span` carries the
+beat's `label` and `kind`, because *which* picture belongs over a sentence needs
+to know what the sentence says; `assign_stills` is the mechanical default for when
+the images are interchangeable texture. Motion is content-aware by default, so a
+slow push stays on the subject. braidio fetches **no images** — supply them, as
+with `SegmentSource`.
+
+Subtitles need no ASR: you authored the words and the timeline says when they
+play.
+
+```python
+Path("ep.srt").write_text(braidio.captions_for(script, timeline, max_chars=42))
+```
+
+`braidio.captions` is part of the core (pure, no extra dependencies);
+`braidio.video`'s dependencies are imported inside the functions that use them, so
+`import braidio.video` works on a bare install and the planners stay usable —
+`braidio.HAS_VIDEO` reports whether the render path is available.
+
+## Agent skills
+
+braidio ships skills that install with it, so an agent host can use them without
+cloning the repo:
+
+| Skill | For |
+|---|---|
+| `braidio` | authoring and rendering a commentary production (audio) |
+| `braidio-commentary-video` | the video pipeline above — panels, stills, captions, credits, rights |
+
+```bash
+ln -s "$(python -c 'import braidio; print(braidio.skills_dir())')/braidio" ~/.claude/skills/braidio
+```
 
 ## Ecosystem
 

@@ -21,8 +21,9 @@ keywords = [
 ]
 # Development Status is 3 - Alpha on purpose: the README says the engine is early
 # and "APIs will move quickly", and the version is still 0.0.x. No Typing :: Typed
-# (no py.typed marker ships) and no Multimedia :: Video (video is roadmap only —
-# every render path today produces audio).
+# (no py.typed marker ships). Multimedia :: Video is claimed now that
+# `braidio[video]` renders a Ken Burns film over stills — an optional extra, but a
+# real render path, not roadmap.
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -37,6 +38,7 @@ classifiers = [
     "Topic :: Multimedia :: Sound/Audio",
     "Topic :: Multimedia :: Sound/Audio :: Editors",
     "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Multimedia :: Video",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 authors = [
@@ -69,6 +71,19 @@ docs = [
 # nw.Project). `import braidio` never needs these — the layer loads only when
 # present (braidio.HAS_GRAPH / HAS_NW).
 graph = ["lacing"]
+# The video layer (`braidio.video`): a Ken Burns film over caller-supplied stills,
+# muxed under a rendered episode. `burns` owns the pan/zoom motion; braidio owns
+# only where the cuts fall, which needs the beat timeline it already produces.
+#
+# Declared here rather than leaned on: `mixing` happens to pull `burns` and
+# `pillow` transitively today, so this extra is usually already satisfied — but a
+# transitive dep is not a contract, and `mixing` is free to drop either. An
+# explicit extra is what makes `braidio.video` honest about what it needs.
+#
+# NOT a hard dependency, and deliberately not `reelee` or `artful`: reelee imports
+# braidio (so the reverse would be circular), and nothing here needs a storyboard
+# model. See braidio/video.py's docstring for the boundary.
+video = ["burns>=0.0.9", "pillow"]
 # nw>=0.0.29: `derive_provenance` takes the Transform instance rather than
 # (name, version) — it reads `name` and `impl_version` off it (nw#27). The break is
 # at CALL time, not import time, so an older nw installs cleanly and then fails
