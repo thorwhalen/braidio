@@ -46,6 +46,13 @@ def compose_narration(
     ``api_key`` is an optional per-request ElevenLabs key threaded to
     :func:`braidio.multivoice.render_multivoice` (and thence every synthesized
     turn); ``None`` (default) keeps the ``$ELEVENLABS_API_KEY`` fallback.
+
+    Note ``config.segmentation_unit`` is **not** read here: this function is
+    handed ``segments`` already cut, so the unit was chosen upstream (usually
+    :func:`braidio.script.narration_segments`). It is the
+    :func:`braidio.render.render_production` path that cuts a beat itself, and
+    there the field is the switch that turns pacing on — see
+    :mod:`braidio.pacing`.
     """
     return render_multivoice(
         segments,
