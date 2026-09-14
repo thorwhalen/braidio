@@ -24,8 +24,13 @@ from __future__ import annotations
 
 import html as _html
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Mapping
 
 from braidio.weave import layout_placed
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from braidio.delivery import Delivery
+    from braidio.weave_config import WeaveConfig
 
 # Neutral kind → accent colour for the HTML view (falls back to a grey).
 KIND_COLORS: dict[str, str] = {
@@ -41,6 +46,9 @@ KIND_COLORS: dict[str, str] = {
     "scene-break": "#7a5c99",
 }
 _FALLBACK_COLOR = "#8a8577"
+
+# What a render without a WeaveConfig does to a narration beat: one TTS call.
+_UNPACED_UNIT = "beat"
 
 
 def _mmss(s: float) -> str:
@@ -68,10 +76,26 @@ class BeatSpan:
 
 @dataclass(frozen=True)
 class TimelineBreakdown:
-    """The ordered beats of a production, with per-kind totals and an HTML view."""
+    """The ordered beats of a production, with per-kind totals and an HTML view.
+
+    ``settings`` is the **render record**: the settings that actually produced
+    these timings (see :func:`render_settings`), or ``None`` for a breakdown
+    built by hand. It exists because a render stopped being reproducible from
+    the script alone the moment ``WeaveConfig.segmentation_unit`` became a real
+    switch (braidio#63): the same script now renders to different durations
+    under different pacing knobs, so a persisted breakdown whose settings are
+    unknown cannot be re-derived, and any downstream data keyed to its timings
+    (panel cues, captions) silently stops matching a later re-render. Recording
+    the settings next to the timings closes that hole on the no-graph fast path,
+    where the nw/lacing provenance layer is not in play at all.
+
+    It is always plain JSON types, so a consumer that already persists the
+    breakdown gets the record for free.
+    """
 
     beats: tuple[BeatSpan, ...] = field(default_factory=tuple)
     title: str = ""
+    settings: Mapping[str, Any] | None = None
 
     def totals(self) -> dict[str, float]:
         """Seconds spent per ``kind`` (insertion-ordered by first appearance)."""
@@ -96,6 +120,7 @@ class TimelineBreakdown:
             "title": self.title,
             "duration": self.duration,
             "totals": self.totals(),
+            "settings": dict(self.settings) if self.settings is not None else None,
             "beats": [
                 {
                     "index": b.index,
@@ -131,6 +156,7 @@ def build_timeline(
     clip_edge_overlap_s: float = 0.5,
     narration_crossfade_s: float = 0.12,
     title: str = "",
+    settings: Mapping[str, Any] | None = None,
 ) -> TimelineBreakdown:
     """Assemble a :class:`TimelineBreakdown` from per-beat render data (pure).
 
@@ -138,6 +164,11 @@ def build_timeline(
     the layout treats specially — as an overlapping segment). ``placements`` is
     the per-beat ``"sequential"``/``"under"`` used by the weave; offsets are
     computed with the same :func:`~braidio.weave.layout_placed` the renderer uses.
+
+    ``settings`` is the optional render record (:func:`render_settings`) — what
+    produced these durations. It stays optional so building a timeline by hand
+    (tests, a hand-cut episode, the captions/video doctests) needs nothing
+    extra; a real render always passes one.
     """
     n = len(kinds)
     placements = placements or ["sequential"] * n
@@ -163,7 +194,78 @@ def build_timeline(
         )
         for i in range(n)
     )
-    return TimelineBreakdown(spans, title=title)
+    return TimelineBreakdown(spans, title=title, settings=settings)
+
+
+def render_settings(
+    *,
+    config: "WeaveConfig | None",
+    crossfade_s: float,
+    clip_edge_overlap_s: float,
+    target_lufs: float,
+    duck_db: float,
+    delivery: "Delivery | None" = None,
+    profile: Any = None,
+    normalize: bool = True,
+) -> dict[str, Any]:
+    """The record of *how* a production was rendered, as plain JSON types.
+
+    Why it exists: since braidio#63 the pacing knobs are real, so two renders of
+    one script can differ by minutes — and until this, nothing on disk said which
+    settings produced which file. This is the cheap, no-graph answer: the
+    renderer hands it to the :class:`TimelineBreakdown` it already returns, so a
+    consumer that persists the breakdown persists the settings with it.
+
+    The whole resolved :class:`~braidio.weave_config.WeaveConfig` goes in under
+    ``"weave"`` rather than a hand-picked subset — adding a knob then keeps the
+    record correct for free, where a curated list would quietly drift.
+    ``"resolved"`` carries the values the render *actually used*, which are not
+    always the config's: a caller may pass no config at all (``"weave"`` is then
+    ``None``, and the pacing knobs were never consulted — each beat was one TTS
+    call), the concat path resolves its crossfade from either the config or the
+    ``crossfade_s`` argument, and ``normalize`` is a render argument rather than
+    a weave choice.
+
+    >>> from braidio.delivery import V2_TUNED
+    >>> from braidio.weave_config import WeaveConfig
+    >>> rec = render_settings(
+    ...     config=WeaveConfig(segmentation_unit="sentence", gap_turn_s=0.28),
+    ...     crossfade_s=0.12, clip_edge_overlap_s=0.5,
+    ...     target_lufs=-16.0, duck_db=-15.0,
+    ...     delivery=V2_TUNED, profile="published",
+    ... )
+    >>> rec["weave"]["gap_turn_s"], rec["resolved"]["paces_narration"]
+    (0.28, True)
+    >>> rec["delivery"]["model_id"], rec["profile"]
+    ('eleven_multilingual_v2', 'published')
+    """
+    return {
+        "weave": config.to_dict() if config is not None else None,
+        "delivery": (
+            None
+            if delivery is None
+            else {
+                "name": delivery.name,
+                "model_id": delivery.model_id,
+                "voice_settings": dict(delivery.voice_settings),
+            }
+        ),
+        # An enum in the renderer, a plain string anywhere else.
+        "profile": (
+            None if profile is None else str(getattr(profile, "value", profile))
+        ),
+        "resolved": {
+            "segmentation_unit": (
+                config.segmentation_unit if config is not None else _UNPACED_UNIT
+            ),
+            "paces_narration": bool(config is not None and config.paces_narration),
+            "crossfade_s": float(crossfade_s),
+            "clip_edge_overlap_s": float(clip_edge_overlap_s),
+            "target_lufs": float(target_lufs),
+            "duck_db": float(duck_db),
+            "normalize": bool(normalize),
+        },
+    }
 
 
 def _render_html(tl: TimelineBreakdown, title: str, subtitle: str) -> str:

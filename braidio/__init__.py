@@ -166,6 +166,7 @@ from braidio.timeline import (  # noqa: F401
     BeatSpan,
     TimelineBreakdown,
     build_timeline,
+    render_settings,
 )
 
 # --- captions (pure: authored text + the render's own timeline, no ASR) ---
@@ -374,6 +375,7 @@ __all__ = [
     "BeatSpan",
     "TimelineBreakdown",
     "build_timeline",
+    "render_settings",
     # text prep + style audit
     "clean_ocr",
     "strip_speaker_labels",
