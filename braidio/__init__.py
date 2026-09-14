@@ -155,6 +155,14 @@ from braidio.timeline import (  # noqa: F401
     build_timeline,
 )
 
+# --- captions (pure: authored text + the render's own timeline, no ASR) ---
+from braidio.captions import (  # noqa: F401
+    Cue,
+    captions_for,
+    cues_for,
+    format_srt,
+)
+
 # --- text prep + style audit (reusable script helpers) ---
 from braidio.textprep import clean_ocr, strip_speaker_labels  # noqa: F401
 from braidio.style import (  # noqa: F401
@@ -213,12 +221,40 @@ try:  # needs nw
 except ImportError:  # pragma: no cover - optional dep
     pass
 
+def skills_dir():
+    """Path to the agent skills that ship with braidio.
+
+    They install with the package, so an agent host can be pointed at them
+    without cloning the repo::
+
+        ln -s "$(python -c 'import braidio; print(braidio.skills_dir())')/braidio" \\
+              ~/.claude/skills/braidio
+    """
+    from pathlib import Path
+
+    return Path(__file__).parent / "data" / "skills"
+
+
+# --- optional video layer (Ken Burns film over stills) --------------------
+# `braidio.video` itself imports cleanly with nothing extra installed — its
+# dependencies (burns, pillow) are imported inside the functions that need them,
+# so the pure planners stay usable. `HAS_VIDEO` reports whether the *render* path
+# is actually available; `braidio.video.missing_dependencies()` names what's absent.
+from braidio.video import HAS_VIDEO  # noqa: F401,E402
+
 __all__ = [
     "__version__",
     # production kinds
     "WeaveKind",
     "HAS_GRAPH",
     "HAS_NW",
+    "HAS_VIDEO",
+    "skills_dir",
+    # captions
+    "Cue",
+    "captions_for",
+    "cues_for",
+    "format_srt",
     # script
     "Script",
     "Narration",

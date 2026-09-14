@@ -71,7 +71,7 @@ Each layer only knows the ones beneath it. Keep it that way.
 
 | Layer | Modules | Depends on |
 |---|---|---|
-| **1. Functional core** | `script` (Narration/SegmentBeat/Dialogue/Script), `rights` (Profile + plan_production), `sources` (SegmentSource, TimedLine), `tts`, `cost`, `delivery`, `multivoice`, `weave_config`, `music`, `compose`, `weave`, `render`, `timeline`, `textprep`, `style`, `kinds` | `mixing`, `elevenlabs`, `ffmpeg` on PATH — nothing else |
+| **1. Functional core** | `script` (Narration/SegmentBeat/Dialogue/Script), `rights` (Profile + plan_production), `sources` (SegmentSource, TimedLine), `tts`, `cost`, `delivery`, `multivoice`, `weave_config`, `music`, `compose`, `weave`, `render`, `timeline`, `captions`, `textprep`, `style`, `kinds` | `mixing`, `elevenlabs`, `ffmpeg` on PATH — nothing else |
 | **2. Format templates** | `formats` (`Format`, `render_format`, `FORMATS`) | layer 1 only. Templates are *good defaults over the primitives*, never new mechanism |
 | **3. Graph vocabulary** | `bodies/` — lacing body schemas + tiers, registered as an import side effect | `lacing` (extra `graph`) |
 | **4. nw pipeline** | `transforms/` (voice-assignment → narration-render / dialogue-render → segment-extraction → episode), `provenance`, `project`, `genre` | layers 1–3 + `nw` (extra `nw-app`) |
@@ -197,8 +197,37 @@ Delegation contract (from the README, and it holds):
 | Raw audio DSP + TTS (crop, concat, duck, loudnorm, synth) | `mixing` / `falaw` |
 | Linked-artifact graph / content-addressed media | `lacing` |
 | Project workflow, provenance, partial re-render | `nw` |
-| Video render + visual support | `reelee` |
+| Video render + visual support | `reelee` — **except** the one case below |
 | Content acquisition (lyrics, audiobooks, news…) | the consuming app, via a `SegmentSource` |
+
+### The one video exception: `braidio.video`
+
+`reelee` owns video — generated footage, characters, shots, storyboards — and that
+has not changed. But **reelee imports braidio**, so braidio can never import
+reelee, and "a rendered episode over caller-supplied stills" needs something
+braidio already has and reelee would have to ask for: the beat timeline. So
+`braidio.video` owns exactly one thing, *where the cuts fall*, and delegates the
+pan/zoom motion to **`burns`** — the same leaf package reelee's
+`panel_to_clip.kenburns` uses. Two wrappers over one shared primitive, not two
+implementations.
+
+The boundary, and the reason it is narrow:
+
+- braidio: a finished braidio mix + stills the caller supplies → one Ken Burns
+  film. It fetches no images (same rule as `SegmentSource`) and generates nothing.
+- reelee: anything with panels, model sheets, shots, or generated media.
+
+`braidio[video]` (`burns`, `pillow`) is **optional**, and the guard is stricter
+than the other optional layers: `braidio/video.py` imports its dependencies
+*inside the functions that use them*, so `import braidio.video` works on a bare
+install and the pure planners (`plan_spans`, `assign_stills`) stay usable.
+`HAS_VIDEO` reports the render path; `missing_dependencies()` names what's absent.
+`mixing` happens to pull `burns` transitively today — do not rely on that, it is
+not a contract.
+
+`braidio.captions` is **core**, not optional: it is pure, and building subtitles
+from the authored script plus the render's own timeline is strictly better than
+running ASR over a mix whose words you already have.
 
 ## Money: ElevenLabs is the only spend
 
