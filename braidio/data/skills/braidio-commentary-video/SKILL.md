@@ -43,7 +43,7 @@ path, timeline = braidio.render_format(  # 1. audio + exact beat timings
     script,
     source=source,
     out_path="ep.mp3",
-    return_timeline=True,          # no delivery/config overrides needed
+    return_timeline=True,  # no delivery/config overrides needed
 )
 spans = plan_spans(timeline)  # 2. where the cuts fall
 panels = [Panel(s.start, s.end, pick(s)) for s in spans]  # 3. YOUR choice of image

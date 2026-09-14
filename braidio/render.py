@@ -295,9 +295,9 @@ def render_production(
     parts: list[Path] = []
     kinds: list[str] = []
     placements: list[str] = []  # "sequential" | "under" (per part, for the weave)
-    roles: list[str] = (
-        []
-    )  # aggregation label per beat (clip / narration / style / dialogue)
+    roles: list[
+        str
+    ] = []  # aggregation label per beat (clip / narration / style / dialogue)
     spans: list[tuple[float, float] | None] = []  # source [start,end) for clips
     labels: list[str] = []
     spotlights: list[bool] = []  # per part: the bed drops out over it

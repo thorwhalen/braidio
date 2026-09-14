@@ -92,9 +92,7 @@ class Format:
     clip_placement: str = (
         "before"  # recommended default SegmentBeat.placement (before|under|after)
     )
-    music_bed: str = (
-        "light"  # bed intensity when a bed_asset is given: continuous | light | sparse | none
-    )
+    music_bed: str = "light"  # bed intensity when a bed_asset is given: continuous | light | sparse | none
     scripting: str = ""  # how to author a Script for this format (authoring)
 
     def __post_init__(self) -> None:
