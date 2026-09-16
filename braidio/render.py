@@ -49,13 +49,22 @@ def _require_ffmpeg() -> None:
         raise RuntimeError("ffmpeg not found on PATH (brew install ffmpeg).")
 
 
+#: Re-normalising the stream before the encoder. ``adelay`` and ``apad`` hand
+#: libmp3lame frames whose layout it rejects on some builds — ffmpeg 9.x fails a
+#: bare ``adelay`` with "inadequate AVFrame plane padding" / "Error submitting
+#: audio frame to the encoder" on perfectly valid input, and the failure is
+#: per-file, so a render dies two thirds of the way through. ``aresample``
+#: rebuilds the frames and costs nothing audible.
+_RESAMPLE = "aresample=44100"
+
+
 def _lead_gap(src: Path, dst: Path, *, gap_s: float) -> Path:
     """Prepend ``gap_s`` seconds of silence (breathing room before a beat)."""
     _require_ffmpeg()
     dst.parent.mkdir(parents=True, exist_ok=True)
     ms = int(round(gap_s * 1000))
     subprocess.run(
-        ["ffmpeg", "-y", "-i", str(src), "-af", f"adelay={ms}:all=1", str(dst)],
+        ["ffmpeg", "-y", "-i", str(src), "-af", f"adelay={ms}:all=1,{_RESAMPLE}", str(dst)],
         check=True,
         capture_output=True,
     )
@@ -67,7 +76,11 @@ def _tail_gap(src: Path, dst: Path, *, gap_s: float) -> Path:
     _require_ffmpeg()
     dst.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
-        ["ffmpeg", "-y", "-i", str(src), "-af", f"apad=pad_dur={gap_s:.3f}", str(dst)],
+        [
+            "ffmpeg", "-y", "-i", str(src),
+            "-af", f"apad=pad_dur={gap_s:.3f},{_RESAMPLE}",
+            str(dst),
+        ],
         check=True,
         capture_output=True,
     )
