@@ -47,6 +47,9 @@
       clean_ocr
       strip_speaker_labels
       audit_platitudes
+      audit_expressiveness
+      audio_tag_rate
+      audio_tags
       platitude_rate
    
    .. rubric:: Classes

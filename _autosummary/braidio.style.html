@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=78cc6f98"></script>
+    <script src="../_static/documentation_options.js?v=eb4c61eb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="braidio.structure" href="braidio.structure.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.44" />
+  <meta name="docsearch:version" content="0.0.46" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -424,16 +424,28 @@ X that does Z”) isn’t reliably regex-detectable and is intentionally omitted
 <tr class="row-odd"><td><p><a class="reference internal" href="#braidio.style.PLATITUDE_PATTERNS" title="braidio.style.PLATITUDE_PATTERNS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PLATITUDE_PATTERNS</span></code></a></p></td>
 <td><p>name → compiled pattern for the detectable overused moves.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.style.TAG_RATE_FLOOR" title="braidio.style.TAG_RATE_FLOOR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TAG_RATE_FLOOR</span></code></a></p></td>
+<td><p>Tags per 100 words.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
 <p class="rubric">Functions</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.style.audit_platitudes" title="braidio.style.audit_platitudes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_platitudes</span></code></a>(text)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.style.audio_tag_rate" title="braidio.style.audio_tag_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audio_tag_rate</span></code></a>(text, *[, per])</p></td>
+<td><p>Inline audio tags per <code class="docutils literal notranslate"><span class="pre">per</span></code> words — the expressiveness dial.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.style.audio_tags" title="braidio.style.audio_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audio_tags</span></code></a>(text)</p></td>
+<td><p>Every inline <code class="docutils literal notranslate"><span class="pre">[audio</span> <span class="pre">tag]</span></code> in <code class="docutils literal notranslate"><span class="pre">text</span></code>, in order.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.style.audit_expressiveness" title="braidio.style.audit_expressiveness"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_expressiveness</span></code></a>(text)</p></td>
+<td><p>Human-readable complaints about a script's written-in performance.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.style.audit_platitudes" title="braidio.style.audit_platitudes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_platitudes</span></code></a>(text)</p></td>
 <td><p>Return every <a class="reference internal" href="#braidio.style.Finding" title="braidio.style.Finding"><code class="xref py py-class docutils literal notranslate"><span class="pre">Finding</span></code></a> in <code class="docutils literal notranslate"><span class="pre">text</span></code>, in document order.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#braidio.style.platitude_rate" title="braidio.style.platitude_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">platitude_rate</span></code></a>(text, *[, per])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.style.platitude_rate" title="braidio.style.platitude_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">platitude_rate</span></code></a>(text, *[, per])</p></td>
 <td><p>Flagged hits per <code class="docutils literal notranslate"><span class="pre">per</span></code> words (default 1000).</p></td>
 </tr>
 </tbody>
@@ -461,6 +473,53 @@ X that does Z”) isn’t reliably regex-detectable and is intentionally omitted
 <dt class="sig sig-object py" id="braidio.style.PLATITUDE_PATTERNS">
 <span class="sig-prename descclassname"><span class="pre">braidio.style.</span></span><span class="sig-name descname"><span class="pre">PLATITUDE_PATTERNS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/re.html#re.Pattern" title="(in Python v3.14)"><span class="pre">Pattern</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'director-cue':</span> <span class="pre">re.compile('\\b(?:listen</span> <span class="pre">to|notice|watch|catch)\\s+(?:how|what|the)\\b',</span> <span class="pre">re.IGNORECASE),</span> <span class="pre">'heres-the':</span> <span class="pre">re.compile(&quot;\\bhere'?s</span> <span class="pre">the\\b&quot;,</span> <span class="pre">re.IGNORECASE),</span> <span class="pre">'machinery-naming':</span> <span class="pre">re.compile('\\bthe</span> <span class="pre">(?:turn|tell|button|trick|move|thesis)\\b',</span> <span class="pre">re.IGNORECASE),</span> <span class="pre">'negation-just':</span> <span class="pre">re.compile(&quot;\\bisn'?t</span> <span class="pre">just\\b&quot;,</span> <span class="pre">re.IGNORECASE),</span> <span class="pre">'reduction':</span> <span class="pre">re.compile(&quot;\\b(?:that'?s</span> <span class="pre">the</span> <span class="pre">whole|the</span> <span class="pre">whole</span> <span class="pre">\\w+</span> <span class="pre">in|in</span> <span class="pre">(?:two|three|four|five|six|seven|eight|nine|ten|\\d+)</span> <span class="pre">words)\\b&quot;,</span> <span class="pre">re.IGNORECASE)}</span></span><a class="headerlink" href="#braidio.style.PLATITUDE_PATTERNS" title="Link to this definition">#</a></dt>
 <dd><p>name → compiled pattern for the detectable overused moves.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="braidio.style.TAG_RATE_FLOOR">
+<span class="sig-prename descclassname"><span class="pre">braidio.style.</span></span><span class="sig-name descname"><span class="pre">TAG_RATE_FLOOR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.5</span></span><a class="headerlink" href="#braidio.style.TAG_RATE_FLOOR" title="Link to this definition">#</a></dt>
+<dd><p>Tags per 100 words. Below the floor a v3 read goes flat; above the ceiling it
+starts performing every clause and reads as camp. Derived from the measured
+table above plus the “kitsch” complaint on a real episode.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.style.audio_tag_rate">
+<span class="sig-prename descclassname"><span class="pre">braidio.style.</span></span><span class="sig-name descname"><span class="pre">audio_tag_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">per</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/style.html#audio_tag_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.style.audio_tag_rate" title="Link to this definition">#</a></dt>
+<dd><p>Inline audio tags per <code class="docutils literal notranslate"><span class="pre">per</span></code> words — the expressiveness dial.</p>
+<p>Only meaningful on a delivery whose model renders tags at all
+(<code class="xref py py-attr docutils literal notranslate"><span class="pre">braidio.delivery.Delivery.supports_audio_tags</span></code>); on
+<code class="docutils literal notranslate"><span class="pre">eleven_multilingual_v2</span></code> the tags are inert text and this number is a lie.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.style.audio_tags">
+<span class="sig-prename descclassname"><span class="pre">braidio.style.</span></span><span class="sig-name descname"><span class="pre">audio_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/style.html#audio_tags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.style.audio_tags" title="Link to this definition">#</a></dt>
+<dd><p>Every inline <code class="docutils literal notranslate"><span class="pre">[audio</span> <span class="pre">tag]</span></code> in <code class="docutils literal notranslate"><span class="pre">text</span></code>, in order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.style.audit_expressiveness">
+<span class="sig-prename descclassname"><span class="pre">braidio.style.</span></span><span class="sig-name descname"><span class="pre">audit_expressiveness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/style.html#audit_expressiveness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.style.audit_expressiveness" title="Link to this definition">#</a></dt>
+<dd><p>Human-readable complaints about a script’s written-in performance.</p>
+<p>Returns an empty list when the script sits in the target band. This is the
+gate <a class="reference internal" href="#braidio.style.audit_platitudes" title="braidio.style.audit_platitudes"><code class="xref py py-func docutils literal notranslate"><span class="pre">audit_platitudes()</span></code></a> is not: platitudes catch recycled <em>phrases</em>,
+this catches a script that will be read flatly however good the words are.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -536,6 +595,10 @@ X that does Z”) isn’t reliably regex-detectable and is intentionally omitted
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.style.Finding"><code class="docutils literal notranslate"><span class="pre">Finding</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.style.PLATITUDE_PATTERNS"><code class="docutils literal notranslate"><span class="pre">PLATITUDE_PATTERNS</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.style.TAG_RATE_FLOOR"><code class="docutils literal notranslate"><span class="pre">TAG_RATE_FLOOR</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.style.audio_tag_rate"><code class="docutils literal notranslate"><span class="pre">audio_tag_rate()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.style.audio_tags"><code class="docutils literal notranslate"><span class="pre">audio_tags()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.style.audit_expressiveness"><code class="docutils literal notranslate"><span class="pre">audit_expressiveness()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.style.audit_platitudes"><code class="docutils literal notranslate"><span class="pre">audit_platitudes()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.style.platitude_rate"><code class="docutils literal notranslate"><span class="pre">platitude_rate()</span></code></a></li>
 </ul>

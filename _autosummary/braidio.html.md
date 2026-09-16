@@ -59,6 +59,9 @@ in the *Hamilton* repo — braidio has its own #18 about something else.
 | [`clean_ocr`](#braidio.clean_ocr)(text, \*[, collapse_whitespace])         | Normalize OCR/PDF-extracted text for clean narration.                                                                   |
 | [`strip_speaker_labels`](#braidio.strip_speaker_labels)(text)                         | Remove a leading speaker-label prefix (e.g. `"Chris: "`) if present.                                                    |
 | [`audit_platitudes`](#braidio.audit_platitudes)(text)                             | Return every [`Finding`](#braidio.Finding) in `text`, in document order.                     |
+| [`audit_expressiveness`](#braidio.audit_expressiveness)(text)                         | Human-readable complaints about a script's written-in performance.                                                      |
+| [`audio_tag_rate`](#braidio.audio_tag_rate)(text, \*[, per])                    | Inline audio tags per `per` words — the expressiveness dial.                                                            |
+| [`audio_tags`](#braidio.audio_tags)(text)                                   | Every inline `[audio tag]` in `text`, in order.                                                                         |
 | [`platitude_rate`](#braidio.platitude_rate)(text, \*[, per])                    | Flagged hits per `per` words (default 1000).                                                                            |
 
 ### Classes
@@ -586,6 +589,35 @@ repeats (so it isn’t a rigid round-robin).
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Voice`](braidio.multivoice.html.md#braidio.multivoice.Voice)]
+
+### braidio.audio_tag_rate(text, , per=100)
+
+Inline audio tags per `per` words — the expressiveness dial.
+
+Only meaningful on a delivery whose model renders tags at all
+(`braidio.delivery.Delivery.supports_audio_tags`); on
+`eleven_multilingual_v2` the tags are inert text and this number is a lie.
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
+### braidio.audio_tags(text)
+
+Every inline `[audio tag]` in `text`, in order.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### braidio.audit_expressiveness(text)
+
+Human-readable complaints about a script’s written-in performance.
+
+Returns an empty list when the script sits in the target band. This is the
+gate [`audit_platitudes()`](#braidio.audit_platitudes) is not: platitudes catch recycled *phrases*,
+this catches a script that will be read flatly however good the words are.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### braidio.audit_platitudes(text)
 

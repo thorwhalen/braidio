@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=78cc6f98"></script>
+    <script src="../../_static/documentation_options.js?v=eb4c61eb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -410,7 +410,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.44" />
+  <meta name="docsearch:version" content="0.0.46" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -850,24 +850,47 @@ window.runMermaid = runMermaid;</script>
 <span class="c1"># The v2 pair above cannot render audio tags at all, so a solo script literally</span>
 <span class="c1"># could not use ``[pause]`` / ``[dryly]`` out of the box. These are the same two</span>
 <span class="c1"># roles on ``eleven_v3``, whose baseline is more dynamic and whose tags fire.</span>
-<span class="c1"># Stability follows the research table: 0.5 ("Natural") is the balanced default,</span>
-<span class="c1"># ~0.4 for a livelier presenter; never 1.0 ("Robust" mutes tags and IS the</span>
-<span class="c1"># robotic voice). Neither model has a speed knob, so tempo variation comes from</span>
-<span class="c1"># :mod:`braidio.pacing` (real inter-turn silence) plus punctuation and tags.</span>
+<span class="c1">#</span>
+<span class="c1"># **What actually makes a v3 read expressive — measured, not assumed.** One</span>
+<span class="c1"># sentence, one voice, pitch range (f0 p5-p95) as the proxy for liveliness:</span>
+<span class="c1">#</span>
+<span class="c1">#   | lever                                     | effect              |</span>
+<span class="c1">#   |-------------------------------------------|---------------------|</span>
+<span class="c1">#   | plain text -&gt; densely tagged text         | 70.8 Hz -&gt; 124.4 Hz |</span>
+<span class="c1">#   | voice choice (a warm read -&gt; a vivid one) | 124 Hz  -&gt; 199 Hz   |</span>
+<span class="c1">#   | ``stability`` across its WHOLE range 0-&gt;1 | 85 Hz   -&gt; 72 Hz    |</span>
+<span class="c1">#</span>
+<span class="c1"># So: **tag density is the engine and ``stability`` is nearly noise.** An earlier</span>
+<span class="c1"># version of this file implied the reverse, and a production that varied</span>
+<span class="c1"># stability between 0.30 and 0.65 to get "four registers" came out uniformly</span>
+<span class="c1"># flat -- the listener's word was "somniferous". Those two values differ by</span>
+<span class="c1"># about 2 Hz of pitch range. If you want colour, write it into the text and pick</span>
+<span class="c1"># the right voice; do not reach for stability.</span>
+<span class="c1">#</span>
+<span class="c1"># Stability is therefore pinned at 0.0 on the presenter: it is the most</span>
+<span class="c1"># expressive end, it costs nothing, and the per-take variance it buys is a</span>
+<span class="c1"># feature in a read that is supposed to sound alive. Never 1.0 -- "Robust"</span>
+<span class="c1"># suppresses tags and IS the robotic voice. Neither model has a speed knob, so</span>
+<span class="c1"># tempo variation comes from :mod:`braidio.pacing` (real inter-turn silence)</span>
+<span class="c1"># plus punctuation and tags.</span>
 
 <span class="n">V3_PRESENTER</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">"v3-presenter"</span><span class="p">,</span>
     <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_v3"</span><span class="p">,</span>
-    <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
     <span class="n">supports_audio_tags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">supports_speed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">note</span><span class="o">=</span><span class="s2">"Host/presenter commentary on v3 — livelier, audio tags fire. The "</span>
-    <span class="s2">"narration-spine default (solo_explainer)."</span><span class="p">,</span>
+    <span class="n">note</span><span class="o">=</span><span class="s2">"Host/presenter commentary on v3 -- the expressive end. The "</span>
+    <span class="s2">"narration-spine default (solo_explainer). Colour comes from tag density "</span>
+    <span class="s2">"in the script; this setting just gets out of its way."</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">V3_NARRATOR</span> <span class="o">=</span> <span class="n">Delivery</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">"v3-narrator"</span><span class="p">,</span>
     <span class="n">model_id</span><span class="o">=</span><span class="s2">"eleven_v3"</span><span class="p">,</span>
+    <span class="c1"># 0.5 rather than 0.0 is a deliberately SMALL difference (see the table</span>
+    <span class="c1"># above). What makes this voice read as "the record" is the voice id and a</span>
+    <span class="c1"># sparser tag budget, not this number.</span>
     <span class="n">voice_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">"stability"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">"use_speaker_boost"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
     <span class="n">supports_audio_tags</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">supports_speed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>

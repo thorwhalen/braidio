@@ -9,11 +9,15 @@ braidio.style
    .. autosummary::
    
       PLATITUDE_PATTERNS
+      TAG_RATE_FLOOR
    
    .. rubric:: Functions
 
    .. autosummary::
    
+      audio_tag_rate
+      audio_tags
+      audit_expressiveness
       audit_platitudes
       platitude_rate
    

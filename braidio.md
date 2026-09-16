@@ -1,4 +1,4 @@
-> built 2026-09-16 08:50 UTC from fe9a09b (main) · braidio 0.0.44. Details: build_info.json
+> built 2026-09-16 16:36 UTC from 390c128 (main) · braidio 0.0.46. Details: build_info.json
 
 # index.html.md
 
@@ -843,6 +843,9 @@ in the *Hamilton* repo — braidio has its own #18 about something else.
 | [`clean_ocr`](_autosummary/braidio.html.md#braidio.clean_ocr)(text, \*[, collapse_whitespace])         | Normalize OCR/PDF-extracted text for clean narration.                                                                   |
 | [`strip_speaker_labels`](_autosummary/braidio.html.md#braidio.strip_speaker_labels)(text)                         | Remove a leading speaker-label prefix (e.g. `"Chris: "`) if present.                                                    |
 | [`audit_platitudes`](_autosummary/braidio.html.md#braidio.audit_platitudes)(text)                             | Return every [`Finding`](_autosummary/braidio.html.md#braidio.Finding) in `text`, in document order.                     |
+| [`audit_expressiveness`](_autosummary/braidio.html.md#braidio.audit_expressiveness)(text)                         | Human-readable complaints about a script's written-in performance.                                                      |
+| [`audio_tag_rate`](_autosummary/braidio.html.md#braidio.audio_tag_rate)(text, \*[, per])                    | Inline audio tags per `per` words — the expressiveness dial.                                                            |
+| [`audio_tags`](_autosummary/braidio.html.md#braidio.audio_tags)(text)                                   | Every inline `[audio tag]` in `text`, in order.                                                                         |
 | [`platitude_rate`](_autosummary/braidio.html.md#braidio.platitude_rate)(text, \*[, per])                    | Flagged hits per `per` words (default 1000).                                                                            |
 
 ### Classes
@@ -1370,6 +1373,35 @@ repeats (so it isn’t a rigid round-robin).
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Voice`](_autosummary/braidio.multivoice.html.md#braidio.multivoice.Voice)]
+
+### braidio.audio_tag_rate(text, , per=100)
+
+Inline audio tags per `per` words — the expressiveness dial.
+
+Only meaningful on a delivery whose model renders tags at all
+(`braidio.delivery.Delivery.supports_audio_tags`); on
+`eleven_multilingual_v2` the tags are inert text and this number is a lie.
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
+### braidio.audio_tags(text)
+
+Every inline `[audio tag]` in `text`, in order.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### braidio.audit_expressiveness(text)
+
+Human-readable complaints about a script’s written-in performance.
+
+Returns an empty list when the script sits in the target band. This is the
+gate [`audit_platitudes()`](_autosummary/braidio.html.md#braidio.audit_platitudes) is not: platitudes catch recycled *phrases*,
+this catches a script that will be read flatly however good the words are.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### braidio.audit_platitudes(text)
 
@@ -3024,12 +3056,16 @@ X that does Z”) isn’t reliably regex-detectable and is intentionally omitted
 
 | [`PLATITUDE_PATTERNS`](_autosummary/braidio.style.html.md#braidio.style.PLATITUDE_PATTERNS)   | name → compiled pattern for the detectable overused moves.   |
 |-----------------------------------------------------------------------|--------------------------------------------------------------|
+| [`TAG_RATE_FLOOR`](_autosummary/braidio.style.html.md#braidio.style.TAG_RATE_FLOOR)       | Tags per 100 words.                                          |
 
 ### Functions
 
-| [`audit_platitudes`](_autosummary/braidio.style.html.md#braidio.style.audit_platitudes)(text)          | Return every [`Finding`](_autosummary/braidio.style.html.md#braidio.style.Finding) in `text`, in document order.   |
-|----------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| [`platitude_rate`](_autosummary/braidio.style.html.md#braidio.style.platitude_rate)(text, \*[, per]) | Flagged hits per `per` words (default 1000).                                                          |
+| [`audio_tag_rate`](_autosummary/braidio.style.html.md#braidio.style.audio_tag_rate)(text, \*[, per])   | Inline audio tags per `per` words — the expressiveness dial.                                        |
+|------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| [`audio_tags`](_autosummary/braidio.style.html.md#braidio.style.audio_tags)(text)                  | Every inline `[audio tag]` in `text`, in order.                                                     |
+| [`audit_expressiveness`](_autosummary/braidio.style.html.md#braidio.style.audit_expressiveness)(text)        | Human-readable complaints about a script's written-in performance.                                  |
+| [`audit_platitudes`](_autosummary/braidio.style.html.md#braidio.style.audit_platitudes)(text)            | Return every [`Finding`](_autosummary/braidio.style.html.md#braidio.style.Finding) in `text`, in document order. |
+| [`platitude_rate`](_autosummary/braidio.style.html.md#braidio.style.platitude_rate)(text, \*[, per])   | Flagged hits per `per` words (default 1000).                                                        |
 
 ### Classes
 
@@ -3045,6 +3081,41 @@ One flagged platitude.
 ### braidio.style.PLATITUDE_PATTERNS *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Pattern](https://docs.python.org/3/library/re.html#re.Pattern)]* *= {'director-cue': re.compile('\\\\b(?:listen to|notice|watch|catch)\\\\s+(?:how|what|the)\\\\b', re.IGNORECASE), 'heres-the': re.compile("\\\\bhere'?s the\\\\b", re.IGNORECASE), 'machinery-naming': re.compile('\\\\bthe (?:turn|tell|button|trick|move|thesis)\\\\b', re.IGNORECASE), 'negation-just': re.compile("\\\\bisn'?t just\\\\b", re.IGNORECASE), 'reduction': re.compile("\\\\b(?:that'?s the whole|the whole \\\\w+ in|in (?:two|three|four|five|six|seven|eight|nine|ten|\\\\d+) words)\\\\b", re.IGNORECASE)}*
 
 name → compiled pattern for the detectable overused moves.
+
+### braidio.style.TAG_RATE_FLOOR *= 1.5*
+
+Tags per 100 words. Below the floor a v3 read goes flat; above the ceiling it
+starts performing every clause and reads as camp. Derived from the measured
+table above plus the “kitsch” complaint on a real episode.
+
+### braidio.style.audio_tag_rate(text, , per=100)
+
+Inline audio tags per `per` words — the expressiveness dial.
+
+Only meaningful on a delivery whose model renders tags at all
+(`braidio.delivery.Delivery.supports_audio_tags`); on
+`eleven_multilingual_v2` the tags are inert text and this number is a lie.
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
+### braidio.style.audio_tags(text)
+
+Every inline `[audio tag]` in `text`, in order.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### braidio.style.audit_expressiveness(text)
+
+Human-readable complaints about a script’s written-in performance.
+
+Returns an empty list when the script sits in the target band. This is the
+gate [`audit_platitudes()`](_autosummary/braidio.style.html.md#braidio.style.audit_platitudes) is not: platitudes catch recycled *phrases*,
+this catches a script that will be read flatly however good the words are.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### braidio.style.audit_platitudes(text)
 
@@ -3712,7 +3783,7 @@ Return a copy with fields overridden (e.g. `cfg.with_(min_turn=1)`).
 
 # About this build
 
-This documentation was built on **2026-09-16 08:50 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/fe9a09b970be337d4da113ac9aa0a2abacb2dd76"><code>fe9a09b</code></a> on branch <code>main</code>, for **braidio 0.0.44** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-16 16:36 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/390c12892d73854d92ca7584280dff8ae2fd6b89"><code>390c128</code></a> on branch <code>main</code>, for **braidio 0.0.46** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -3721,9 +3792,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/fe9a09b970be337d4da113ac9aa0a2abacb2dd76"><code>fe9a09b970be337d4da113ac9aa0a2abacb2dd76</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/390c12892d73854d92ca7584280dff8ae2fd6b89"><code>390c12892d73854d92ca7584280dff8ae2fd6b89</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | none                                                                                                                                                      |
+| Tags at this commit | <code>0.0.46</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/braidio</code>                                                                                                        |
 
@@ -3732,9 +3803,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/braidio</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35075695503">35075695503</a>   |
+| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35122513801">35122513801</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>fe9a09b970be337d4da113ac9aa0a2abacb2dd76</code> (in the history of the built commit) |
+| Event commit | <code>bf38a7730cf7de83a0adf900a4e4276facab419b</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -3759,13 +3830,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/braidio/0.0.44/">0.0.44</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/braidio/0.0.46/">0.0.46</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/braidio && cd braidio
-git checkout fe9a09b970be337d4da113ac9aa0a2abacb2dd76
+git checkout 390c12892d73854d92ca7584280dff8ae2fd6b89
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

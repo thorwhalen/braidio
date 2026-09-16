@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=78cc6f98"></script>
+    <script src="../_static/documentation_options.js?v=eb4c61eb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="API reference" href="../api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.44" />
+  <meta name="docsearch:version" content="0.0.46" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -536,7 +536,16 @@ in the <em>Hamilton</em> repo — braidio has its own #18 about something else.<
 <tr class="row-odd"><td><p><a class="reference internal" href="#braidio.audit_platitudes" title="braidio.audit_platitudes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_platitudes</span></code></a>(text)</p></td>
 <td><p>Return every <a class="reference internal" href="#braidio.Finding" title="braidio.Finding"><code class="xref py py-class docutils literal notranslate"><span class="pre">Finding</span></code></a> in <code class="docutils literal notranslate"><span class="pre">text</span></code>, in document order.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#braidio.platitude_rate" title="braidio.platitude_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">platitude_rate</span></code></a>(text, *[, per])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.audit_expressiveness" title="braidio.audit_expressiveness"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_expressiveness</span></code></a>(text)</p></td>
+<td><p>Human-readable complaints about a script's written-in performance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.audio_tag_rate" title="braidio.audio_tag_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audio_tag_rate</span></code></a>(text, *[, per])</p></td>
+<td><p>Inline audio tags per <code class="docutils literal notranslate"><span class="pre">per</span></code> words — the expressiveness dial.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.audio_tags" title="braidio.audio_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audio_tags</span></code></a>(text)</p></td>
+<td><p>Every inline <code class="docutils literal notranslate"><span class="pre">[audio</span> <span class="pre">tag]</span></code> in <code class="docutils literal notranslate"><span class="pre">text</span></code>, in order.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.platitude_rate" title="braidio.platitude_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">platitude_rate</span></code></a>(text, *[, per])</p></td>
 <td><p>Flagged hits per <code class="docutils literal notranslate"><span class="pre">per</span></code> words (default 1000).</p></td>
 </tr>
 </tbody>
@@ -1256,6 +1265,45 @@ repeats (so it isn’t a rigid round-robin).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="braidio.multivoice.html#braidio.multivoice.Voice" title="braidio.multivoice.Voice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Voice</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.audio_tag_rate">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">audio_tag_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">per</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/style.html#audio_tag_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.audio_tag_rate" title="Link to this definition">#</a></dt>
+<dd><p>Inline audio tags per <code class="docutils literal notranslate"><span class="pre">per</span></code> words — the expressiveness dial.</p>
+<p>Only meaningful on a delivery whose model renders tags at all
+(<code class="xref py py-attr docutils literal notranslate"><span class="pre">braidio.delivery.Delivery.supports_audio_tags</span></code>); on
+<code class="docutils literal notranslate"><span class="pre">eleven_multilingual_v2</span></code> the tags are inert text and this number is a lie.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.audio_tags">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">audio_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/style.html#audio_tags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.audio_tags" title="Link to this definition">#</a></dt>
+<dd><p>Every inline <code class="docutils literal notranslate"><span class="pre">[audio</span> <span class="pre">tag]</span></code> in <code class="docutils literal notranslate"><span class="pre">text</span></code>, in order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.audit_expressiveness">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">audit_expressiveness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/style.html#audit_expressiveness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.audit_expressiveness" title="Link to this definition">#</a></dt>
+<dd><p>Human-readable complaints about a script’s written-in performance.</p>
+<p>Returns an empty list when the script sits in the target band. This is the
+gate <a class="reference internal" href="#braidio.audit_platitudes" title="braidio.audit_platitudes"><code class="xref py py-func docutils literal notranslate"><span class="pre">audit_platitudes()</span></code></a> is not: platitudes catch recycled <em>phrases</em>,
+this catches a script that will be read flatly however good the words are.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2090,6 +2138,9 @@ whole-span file. Falls back to a plain concat feel when
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.WeaveKind"><code class="docutils literal notranslate"><span class="pre">WeaveKind</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.assign_voices"><code class="docutils literal notranslate"><span class="pre">assign_voices()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.audio_tag_rate"><code class="docutils literal notranslate"><span class="pre">audio_tag_rate()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.audio_tags"><code class="docutils literal notranslate"><span class="pre">audio_tags()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.audit_expressiveness"><code class="docutils literal notranslate"><span class="pre">audit_expressiveness()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.audit_platitudes"><code class="docutils literal notranslate"><span class="pre">audit_platitudes()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.bed_for_intensity"><code class="docutils literal notranslate"><span class="pre">bed_for_intensity()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.billable_chars"><code class="docutils literal notranslate"><span class="pre">billable_chars()</span></code></a></li>
