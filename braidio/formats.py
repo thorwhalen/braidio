@@ -92,7 +92,9 @@ class Format:
     clip_placement: str = (
         "before"  # recommended default SegmentBeat.placement (before|under|after)
     )
-    music_bed: str = "light"  # bed intensity when a bed_asset is given: continuous | light | sparse | none
+    music_bed: str = (
+        "light"  # bed intensity when a bed_asset is given: continuous | light | sparse | none
+    )
     scripting: str = ""  # how to author a Script for this format (authoring)
 
     def __post_init__(self) -> None:
@@ -296,12 +298,20 @@ SOLO_EXPLAINER = Format(
         "conclusion. Per-exhibit micro-shape: hook → describe → meaning → memorable "
         "detail → prompt (~60–90s). Scripted, dense; every exhibit is set up first. "
         "Serialize by emitting one Script per sub-topic with an end-of-episode hook. "
-        "Delivery is eleven_v3, so WRITE THE PERFORMANCE INTO THE TEXT: inline "
-        "[audio tags] fire — [slowly] on a punchline, [rushed] on an aside, "
-        "[dryly]/[wryly] for a turn, [pause] where a breath belongs. Punctuation is "
-        "the pause dial (em-dash flows, '…' adds weight, a period is a full stop). "
-        "Use tags sparingly — a tag every sentence reads as kitsch, and a designed "
-        "epigram every beat reads as AI; budget ≤2 per 3 minutes."
+        "Delivery is eleven_v3, so WRITE THE PERFORMANCE INTO THE TEXT — the "
+        "single biggest lever on whether the read sounds alive. Measured on one "
+        "sentence: plain text gives 70.8 Hz of pitch range, the same sentence "
+        "densely tagged gives 124.4 Hz, while voice_settings['stability'] moves "
+        "it only 85→72 Hz across its entire range. Tags are the engine; "
+        "stability is nearly noise. Aim for 2–5 inline [audio tags] per 100 "
+        "words (braidio.audio_tag_rate; gated by braidio.audit_expressiveness) "
+        "and vary WHICH tag: [laughs] [sighs] [dryly] [incredulous] [excited] "
+        "[quietly] [rushed] [slowly] [pause] [beat]. Punctuation is the pause "
+        "dial (em-dash flows, '…' adds weight, a period is a full stop); write "
+        "contractions, fragments, asides. What to ration is the DESIGNED "
+        "EPIGRAM, not the tag: ≤2 memorable turns of phrase per 3 minutes, the "
+        "rest plain talk. Under-tagging is the commoner failure and it reads as "
+        "somniferous; a tag on every clause reads as camp."
     ),
 )
 

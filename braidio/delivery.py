@@ -131,24 +131,47 @@ V3_CREATIVE = Delivery(
 # The v2 pair above cannot render audio tags at all, so a solo script literally
 # could not use ``[pause]`` / ``[dryly]`` out of the box. These are the same two
 # roles on ``eleven_v3``, whose baseline is more dynamic and whose tags fire.
-# Stability follows the research table: 0.5 ("Natural") is the balanced default,
-# ~0.4 for a livelier presenter; never 1.0 ("Robust" mutes tags and IS the
-# robotic voice). Neither model has a speed knob, so tempo variation comes from
-# :mod:`braidio.pacing` (real inter-turn silence) plus punctuation and tags.
+#
+# **What actually makes a v3 read expressive — measured, not assumed.** One
+# sentence, one voice, pitch range (f0 p5-p95) as the proxy for liveliness:
+#
+#   | lever                                     | effect              |
+#   |-------------------------------------------|---------------------|
+#   | plain text -> densely tagged text         | 70.8 Hz -> 124.4 Hz |
+#   | voice choice (a warm read -> a vivid one) | 124 Hz  -> 199 Hz   |
+#   | ``stability`` across its WHOLE range 0->1 | 85 Hz   -> 72 Hz    |
+#
+# So: **tag density is the engine and ``stability`` is nearly noise.** An earlier
+# version of this file implied the reverse, and a production that varied
+# stability between 0.30 and 0.65 to get "four registers" came out uniformly
+# flat -- the listener's word was "somniferous". Those two values differ by
+# about 2 Hz of pitch range. If you want colour, write it into the text and pick
+# the right voice; do not reach for stability.
+#
+# Stability is therefore pinned at 0.0 on the presenter: it is the most
+# expressive end, it costs nothing, and the per-take variance it buys is a
+# feature in a read that is supposed to sound alive. Never 1.0 -- "Robust"
+# suppresses tags and IS the robotic voice. Neither model has a speed knob, so
+# tempo variation comes from :mod:`braidio.pacing` (real inter-turn silence)
+# plus punctuation and tags.
 
 V3_PRESENTER = Delivery(
     name="v3-presenter",
     model_id="eleven_v3",
-    voice_settings={"stability": 0.4, "use_speaker_boost": True},
+    voice_settings={"stability": 0.0, "use_speaker_boost": True},
     supports_audio_tags=True,
     supports_speed=False,
-    note="Host/presenter commentary on v3 — livelier, audio tags fire. The "
-    "narration-spine default (solo_explainer).",
+    note="Host/presenter commentary on v3 -- the expressive end. The "
+    "narration-spine default (solo_explainer). Colour comes from tag density "
+    "in the script; this setting just gets out of its way.",
 )
 
 V3_NARRATOR = Delivery(
     name="v3-narrator",
     model_id="eleven_v3",
+    # 0.5 rather than 0.0 is a deliberately SMALL difference (see the table
+    # above). What makes this voice read as "the record" is the voice id and a
+    # sparser tag budget, not this number.
     voice_settings={"stability": 0.5, "use_speaker_boost": True},
     supports_audio_tags=True,
     supports_speed=False,

@@ -110,10 +110,38 @@ is the timeline.
 The envelope is `{"title": …, "id_slug": "01", "beats": [...]}`. `id_slug` is a
 short stable id used to name the render.
 
-Per-beat overrides are how one timeline carries contrasting roles: a lively
-presenter and a graver book-narrator in the same episode is just
-`Narration(text, voice_settings=braidio.V2_NARRATOR.voice_settings)` on the
-beats that should read gravely.
+### Two voices in one production — the commentary and the record
+
+**Trigger: your script contains both your own argument *and* a documented
+record** — dates, names, sourced quotes, a passage from a book, the findings of
+research someone else did. The moment those two kinds of material sit in one
+timeline, give the record its own voice. The handoff is what tells a listener
+"this is no longer the essayist talking", and it does that work without a single
+word of signposting.
+
+```python
+PRESENTER = "iP95p4xoKVk53GoZ742B"  # the spine: your argument
+RECORD    = "nPczCjzI2devNBz1zQrb"  # deep, level: the documented record
+
+Narration(claim, voice=PRESENTER)                       # format's delivery
+Narration(dates_and_quotes, voice=RECORD, style="archive",
+          voice_settings=braidio.V3_NARRATOR.voice_settings, lead_gap_s=0.55)
+```
+
+**The contrast has to come from the `voice=`, not from the settings.** Two
+voices measured across a real episode: presenter 127-134 Hz median f0, record
+95-103 Hz — about four semitones, unmistakable. Reaching for `voice_settings`
+instead buys you almost nothing (see *Making it sound alive* below).
+
+Three details that make it read as deliberate rather than accidental:
+
+- `lead_gap_s=0.5-0.6` entering each record block — the beat of silence is the
+  handoff.
+- `style="archive"` (any label) makes the renderer report those beats as their
+  own kind in the returned timeline, so you can check the balance afterwards.
+- Write the record voice *differently*: declarative, chronological, no
+  rhetorical questions, a much sparser tag budget. Same voice id reading the
+  presenter's prose does not sound like a different role.
 
 `placement` on a segment beat is the weaving grammar:
 
@@ -145,6 +173,78 @@ you the shape the format expects (cold open → walkthrough → recap; state the
 motion up front; strip the host's questions; …). Use the role names from the
 format's cast as your Dialogue turn roles.
 
+## Making it sound alive (read this before writing a word)
+
+The commonest failure of a braidio script is not a wrong fact or a clumsy
+sentence. It is that the finished thing is **boring to listen to** — an
+even, unvarying read that puts people to sleep. This is a solved problem and
+the solution is counter-intuitive, so here are the measurements. One sentence,
+one voice, pitch range (f0 p5-p95) as the proxy for liveliness:
+
+| lever | effect |
+|---|---|
+| **plain text → densely tagged text** | 70.8 Hz → **124.4 Hz** (+76%) |
+| **voice choice** (a warm read → a vivid one) | 124 Hz → **199 Hz** |
+| `voice_settings["stability"]`, across its **whole** range 0→1 | 85 Hz → 72 Hz (−15%) |
+
+**Tag density is the engine. `stability` is nearly noise.** A production that
+varied stability between 0.30 and 0.65 to get "four registers" came out
+uniformly flat — those two numbers are worth about 2 Hz of pitch range. Its
+script carried ten tags in 1371 words. The listener's word was *somniferous*.
+
+So:
+
+1. **Write the performance into the text.** Target **2–5 inline `[audio tags]`
+   per 100 words** and vary which one: `[laughs]` `[sighs]` `[dryly]`
+   `[incredulous]` `[excited]` `[quietly]` `[rushed]` `[slowly]` `[pause]`
+   `[beat]`. Tags only fire on a v3 delivery — on `eleven_multilingual_v2` they
+   are read out as literal text.
+2. **Gate it.** `braidio.audit_expressiveness(prose)` returns `[]` when you are
+   in the band, and tells you which way you are out otherwise;
+   `braidio.audio_tag_rate(prose)` is the bare number.
+3. **Pick a voice with range.** `list_voice_pools` / the ElevenLabs voice list;
+   a "warm storyteller" voice is a lovely thing to fall asleep to.
+4. **Then leave `stability` alone.** The v3 presets already sit at the
+   expressive end.
+
+**What you *do* ration is the designed epigram.** A first draft once landed a
+turn of phrase at the end of every beat — 8 in 338 words. No speaking human
+sustains that, and it is the relentlessness that reads as machine-written.
+Budget **≤2 per 3 minutes** and let the rest be plain talk with contractions,
+fragments and uneven sentence length. `audit_platitudes` catches recycled tics,
+not over-writing; it cannot be the only gate.
+
+The two failures pull in opposite directions and you need both gates:
+under-tagged and over-written is the classic AI read.
+
+## Getting the words — lyrics, annotations, transcripts
+
+braidio composes a production; it does **not** fetch the material you are
+commenting on. That acquisition is the caller's job, exactly as image retrieval
+is (see the `braidio-commentary-video` skill's *Images* section). Do not invent
+the source material and do not type a lyric in by hand.
+
+| you need | use |
+|---|---|
+| **word-level timings** for a recording | `mixing.transcribe(path, timestamps_granularity="word", cache=True)` — ElevenLabs Scribe. Disk-cached, so re-runs are free |
+| **line-level timings** from those words | walk the measured words against the *known* line structure; a greedy match fixes ASR errors because you already know the words |
+| **lyrics + per-line annotations** | the Genius acquisition path (`GeniusClient` / `acquire_song` / `extract_lyrics`, currently in `$PP/misc/Hamilton/hamilton_genius`, tokenless path works) |
+| **synced lyrics** where they exist | LRCLIB (`fetch_synced_lyrics` / `parse_lrc` in the same place) |
+| **the background of a *recording*** | ordinary web research — see the warning below |
+
+⚠️ **Annotation sources describe the WORK, not the RECORDING.** Genius will tell
+you what a lyric means and nothing at all about the circumstances of a
+particular take. On one real episode the Genius entry for the studio version
+carried nine annotations and the entry for the live version carried **zero** —
+while the live recording's story (a free reunion concert in front of half a
+million people) was the entire reason the episode was worth making. Always ask
+separately: *who made this specific recording, when, and under what
+circumstances?* That research is usually where the story is.
+
+⚠️ **Scribe's `audio_event` tags are evidence, not decoration.** `[crowd
+cheering]`, `[laughter]`, `[applause]` come back with timestamps, and they can
+confirm — or refute — a claim you were about to make about a recording.
+
 ## Bringing in source clips
 
 A segment beat needs a **source**: time-aligned lines plus the media file to cut
@@ -172,11 +272,17 @@ use, and set each segment beat's `rights` honestly.
 
 ## Knobs worth knowing
 
-- **Delivery** (`list_deliveries`) — the speaking register. `"narration"`
-  (default; reading a script) vs `"conversational"` (eleven_v3 with loosened
-  stability, so inline `[audio tags]` and written-in disfluencies actually fire).
-  Also `v2-presenter` (lively) / `v2-narrator` (graver) for contrast within one
-  episode.
+- **Delivery** (`list_deliveries`) — the speaking register, and mostly a
+  question of *which model*. Anything on `eleven_multilingual_v2` cannot render
+  `[audio tags]` **at all**, which caps how alive it can sound; the `v3-*`
+  presets can. Within one model the preset differences are small — see *Making
+  it sound alive*. `v3-presenter` (the spine) and `v3-narrator` (the record) are
+  the contrast pair, and the contrast that matters is the **voice id** you pass
+  alongside them.
+- **Per-beat `voice_settings` on a v3 delivery** — only `stability` does
+  anything. `style`, `similarity_boost` and `speed` are accepted and **silently
+  ignored**, so copying a `V2_*` preset's settings onto a v3 format quietly
+  drops most of what you thought you were asking for.
 - **Voice pools** (`list_voice_pools`) — `"four"` and `"many"`, for narration
   that cycles voices across segments (`render_multivoice`, `assign_voices`).
 - **WeaveConfig presets** (`list_presets`) — `single_narrator`,
