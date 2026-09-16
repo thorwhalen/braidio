@@ -1,4 +1,0 @@
-braidio.textprep
-================
-.. automodule:: braidio.textprep
-   :members:

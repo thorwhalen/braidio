@@ -1,4 +1,0 @@
-braidio.structure
-=================
-.. automodule:: braidio.structure
-   :members:

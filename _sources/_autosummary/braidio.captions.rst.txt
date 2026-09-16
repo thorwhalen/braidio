@@ -1,0 +1,20 @@
+braidio.captions
+================
+
+.. automodule:: braidio.captions
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      captions_for
+      cues_for
+      format_srt
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Cue
+   

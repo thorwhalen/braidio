@@ -1,0 +1,12 @@
+braidio.weave\_config
+=====================
+
+.. automodule:: braidio.weave_config
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      WeaveConfig
+   

@@ -1,4 +1,0 @@
-braidio.kinds
-=============
-.. automodule:: braidio.kinds
-   :members:

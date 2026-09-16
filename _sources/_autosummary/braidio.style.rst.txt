@@ -1,0 +1,25 @@
+braidio.style
+=============
+
+.. automodule:: braidio.style
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      PLATITUDE_PATTERNS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      audit_platitudes
+      platitude_rate
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Finding
+   

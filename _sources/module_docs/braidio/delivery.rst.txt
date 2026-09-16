@@ -1,4 +1,0 @@
-braidio.delivery
-================
-.. automodule:: braidio.delivery
-   :members:

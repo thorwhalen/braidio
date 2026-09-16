@@ -1,0 +1,127 @@
+﻿braidio
+=======
+
+.. automodule:: braidio
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      skills_dir
+      captions_for
+      cues_for
+      format_srt
+      narration_segments
+      plan_production
+      clip_plays_under
+      rights_are_publishable
+      find_verbatim_text
+      content_violations
+      segment_is_publishable
+      render_production
+      find_segment
+      load_timing
+      cut_quote
+      narrate
+      resolve_voice_id
+      estimate_cost
+      tts_cost_usd
+      billable_chars
+      usd_per_1k_chars
+      strip_markup
+      split_segments
+      assign_voices
+      group_turns
+      render_multivoice
+      bed_for_intensity
+      render_format
+      describe_asset_application
+      compose_narration
+      extract_padded
+      weave_timeline
+      layout_starts
+      duration_s
+      build_timeline
+      render_settings
+      clean_ocr
+      strip_speaker_labels
+      audit_platitudes
+      platitude_rate
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      WeaveKind
+      Cue
+      Script
+      Narration
+      SegmentBeat
+      Dialogue
+      SceneBreak
+      Sting
+      MusicStructure
+      Profile
+      RightsPolicy
+      RenderPlan
+      PlannedBeat
+      SegmentSource
+      ResolvedSegment
+      Segment
+      TimedLine
+      NamespacedSegmentSource
+      TimedLineSegmentSource
+      CostRollup
+      CostLine
+      Delivery
+      Voice
+      WeaveConfig
+      MusicBed
+      Format
+      TimelineItem
+      BeatSpan
+      TimelineBreakdown
+      Finding
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      RightsViolation
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   bodies
+   captions
+   compose
+   conversation
+   cost
+   delivery
+   downloads
+   formats
+   genre
+   kinds
+   mcp
+   multivoice
+   music
+   pacing
+   project
+   provenance
+   render
+   rights
+   script
+   sources
+   structure
+   style
+   textprep
+   timeline
+   transforms
+   tts
+   video
+   weave
+   weave_config

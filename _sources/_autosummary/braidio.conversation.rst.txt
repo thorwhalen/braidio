@@ -1,0 +1,19 @@
+braidio.conversation
+====================
+
+.. automodule:: braidio.conversation
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      render_dialogue
+      render_turns_sequential
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ConversationCast
+   

@@ -1,4 +1,0 @@
-braidio.weave_config
-====================
-.. automodule:: braidio.weave_config
-   :members:

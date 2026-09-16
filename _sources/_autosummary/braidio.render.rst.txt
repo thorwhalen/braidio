@@ -1,0 +1,12 @@
+braidio.render
+==============
+
+.. automodule:: braidio.render
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      render_production
+   

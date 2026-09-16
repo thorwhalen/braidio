@@ -1,4 +1,0 @@
-braidio.sources
-===============
-.. automodule:: braidio.sources
-   :members:

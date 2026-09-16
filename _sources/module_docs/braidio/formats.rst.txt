@@ -1,4 +1,0 @@
-braidio.formats
-===============
-.. automodule:: braidio.formats
-   :members:

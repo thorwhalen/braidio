@@ -1,0 +1,24 @@
+braidio.video
+=============
+
+.. automodule:: braidio.video
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      assign_stills
+      credits_card
+      missing_dependencies
+      plan_spans
+      prepare_still
+      render_video
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Panel
+      Span
+   

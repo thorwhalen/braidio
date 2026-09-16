@@ -1,0 +1,22 @@
+braidio.music
+=============
+
+.. automodule:: braidio.music
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      bed_for_intensity
+      bed_regions
+      prepare_bed
+      prepare_bed_regions
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BedRegion
+      MusicBed
+   

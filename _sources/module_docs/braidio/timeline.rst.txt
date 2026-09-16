@@ -1,4 +1,0 @@
-braidio.timeline
-================
-.. automodule:: braidio.timeline
-   :members:

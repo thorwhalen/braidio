@@ -1,0 +1,20 @@
+braidio.formats
+===============
+
+.. automodule:: braidio.formats
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      describe_asset_application
+      render_format
+      sting_would_play
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Format
+   

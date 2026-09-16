@@ -1,0 +1,31 @@
+braidio.pacing
+==============
+
+.. automodule:: braidio.pacing
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      SEGMENTATION_UNITS
+      SPEED_RANGE
+      BOUNDARIES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      classify_boundary
+      plan_turns
+      planned_gap_total_s
+      split_paragraphs
+      split_units
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Boundary
+      NarrationTurn
+   

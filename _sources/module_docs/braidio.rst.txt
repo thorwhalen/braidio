@@ -1,4 +1,0 @@
-braidio
-=======
-.. automodule:: braidio
-   :members:

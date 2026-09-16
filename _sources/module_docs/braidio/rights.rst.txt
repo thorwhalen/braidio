@@ -1,4 +1,0 @@
-braidio.rights
-==============
-.. automodule:: braidio.rights
-   :members:

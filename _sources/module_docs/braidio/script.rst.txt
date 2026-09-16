@@ -1,4 +1,0 @@
-braidio.script
-==============
-.. automodule:: braidio.script
-   :members:

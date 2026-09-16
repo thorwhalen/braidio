@@ -1,0 +1,22 @@
+braidio.weave
+=============
+
+.. automodule:: braidio.weave
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      duration_s
+      extract_padded
+      layout_placed
+      layout_starts
+      weave_timeline
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      TimelineItem
+   

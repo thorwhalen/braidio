@@ -1,4 +1,0 @@
-braidio.mcp
-===========
-.. automodule:: braidio.mcp
-   :members:

@@ -1,4 +1,0 @@
-braidio.transforms._ingest
-==========================
-.. automodule:: braidio.transforms._ingest
-   :members:

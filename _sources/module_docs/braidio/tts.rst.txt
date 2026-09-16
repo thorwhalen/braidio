@@ -1,4 +1,0 @@
-braidio.tts
-===========
-.. automodule:: braidio.tts
-   :members:

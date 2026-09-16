@@ -1,0 +1,22 @@
+braidio.multivoice
+==================
+
+.. automodule:: braidio.multivoice
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      assign_voices
+      group_turns
+      render_multivoice
+      split_segments
+      strip_markup
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Voice
+   

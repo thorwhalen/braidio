@@ -1,4 +1,0 @@
-braidio.downloads
-=================
-.. automodule:: braidio.downloads
-   :members:

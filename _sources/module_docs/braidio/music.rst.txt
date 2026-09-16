@@ -1,4 +1,0 @@
-braidio.music
-=============
-.. automodule:: braidio.music
-   :members:

@@ -1,0 +1,20 @@
+braidio.structure
+=================
+
+.. automodule:: braidio.structure
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      prepare_pause
+      prepare_sting
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      MusicStructure
+      Sting
+   

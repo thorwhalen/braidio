@@ -1,4 +1,0 @@
-braidio.bodies
-==============
-.. automodule:: braidio.bodies
-   :members:

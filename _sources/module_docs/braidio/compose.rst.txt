@@ -1,4 +1,0 @@
-braidio.compose
-===============
-.. automodule:: braidio.compose
-   :members:

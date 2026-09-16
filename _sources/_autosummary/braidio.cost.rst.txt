@@ -1,0 +1,30 @@
+braidio.cost
+============
+
+.. automodule:: braidio.cost
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      RATE_ENV_VAR
+      DEFAULT_USD_PER_1K_CHARS
+      MODEL_USD_PER_1K_CHARS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      billable_chars
+      estimate_cost
+      tts_cost_usd
+      usd_per_1k_chars
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CostLine
+      CostRollup
+   

@@ -1,0 +1,42 @@
+# braidio
+
+> Weave narration with extracted media segments into audiovisual productions
+
+
+## Pages
+
+- [braidio](index.html.md): **Weave *commentary* — solo, duo, panel, debate, interview, documentary — with
+- [API reference](api.html.md): | [`braidio`](_autosummary/braidio.html.md#module-braidio)   | braidio — weave narration with extrac...
+- [braidio](_autosummary/braidio.html.md): braidio — weave narration with extracted media segments into productions.
+- [braidio.captions](_autosummary/braidio.captions.html.md): Subtitles for a rendered production, built from the script it was rendered from.
+- [braidio.compose](_autosummary/braidio.compose.html.md): Config-driven narration composition (#20) — the reusable entrypoint.
+- [braidio.conversation](_autosummary/braidio.conversation.html.md): Conversational register: render an exchange as people *talking to each other*.
+- [braidio.cost](_autosummary/braidio.cost.html.md): Cost model for braidio’s paid operations (ElevenLabs TTS).
+- [braidio.delivery](_autosummary/braidio.delivery.html.md): Narration *delivery* presets — model + voice settings (issue #10, expressiveness).
+- [braidio.formats](_autosummary/braidio.formats.html.md): Ready-made **format templates** — high-quality presets under standard names.
+- [braidio.kinds](_autosummary/braidio.kinds.html.md): Production kinds braidio defines. Pure (no optional deps).
+- [braidio.multivoice](_autosummary/braidio.multivoice.html.md): Multi-voice narration: cycle a pool of voices across segments (issue #10).
+- [braidio.music](_autosummary/braidio.music.html.md): Music bed — an instrumental underscore laid under the whole production, ducked.
+- [braidio.pacing](_autosummary/braidio.pacing.html.md): Intra-beat narration pacing — how one narration beat becomes spoken *turns*.
+- [braidio.render](_autosummary/braidio.render.html.md): Render a [`Script`](braidio.script.html.md#braidio.script.Script) into an audio file.
+- [braidio.rights](_autosummary/braidio.rights.html.md): Render profiles: enforce personal-vs-published rights as data.
+- [braidio.script](_autosummary/braidio.script.html.md): Composition model — the ordered beats a render walks.
+- [braidio.sources](_autosummary/braidio.sources.html.md): Segment sources: resolve a *reference* to a cuttable `[start, end]` window.
+- [braidio.structure](_autosummary/braidio.structure.html.md): Structural music — stings at scene breaks, fade-to-spotlight on exhibits.
+- [braidio.style](_autosummary/braidio.style.html.md): Style audit — flag the recycled rhetorical tics in commentary text.
+- [braidio.textprep](_autosummary/braidio.textprep.html.md): Text preparation for scripts — clean OCR’d source, tidy authored lines.
+- [braidio.timeline](_autosummary/braidio.timeline.html.md): Timeline breakdown — what a production spends its time on, and in what order.
+- [braidio.tts](_autosummary/braidio.tts.html.md): ElevenLabs narration synthesis.
+- [braidio.video](_autosummary/braidio.video.html.md): Turn a rendered production into a Ken Burns film over still images.
+- [braidio.weave](_autosummary/braidio.weave.html.md): Weave narration + audio clips on a timeline (#21) — the reusable mix engine.
+- [braidio.weave_config](_autosummary/braidio.weave_config.html.md): WeaveConfig — every editing choice for weaving narration + segments (#20).
+- [For AI agents](ai-agents.html.md): `braidio` ships artifacts for coding agents alongside its code. This page lists
+- [About this build](about-this-build.html.md): This documentation was built on **2026-09-16 08:50 UTC** from commit <a href="https://github.com/tho...
+
+---
+
+For more comprehensive documentation, see [braidio.md](braidio.md)
+
+## Build
+
+- [build_info.json](build_info.json): build provenance (commit, version, tool versions, whether the docs match the package)

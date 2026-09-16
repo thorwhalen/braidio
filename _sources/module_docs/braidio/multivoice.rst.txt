@@ -1,4 +1,0 @@
-braidio.multivoice
-==================
-.. automodule:: braidio.multivoice
-   :members:

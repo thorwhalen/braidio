@@ -1,0 +1,20 @@
+braidio.timeline
+================
+
+.. automodule:: braidio.timeline
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      build_timeline
+      render_settings
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BeatSpan
+      TimelineBreakdown
+   

@@ -1,0 +1,25 @@
+braidio.sources
+===============
+
+.. automodule:: braidio.sources
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      cut_quote
+      find_segment
+      load_timing
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      NamespacedSegmentSource
+      ResolvedSegment
+      Segment
+      SegmentSource
+      TimedLine
+      TimedLineSegmentSource
+   

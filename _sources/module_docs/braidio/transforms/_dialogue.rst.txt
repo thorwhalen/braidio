@@ -1,4 +1,0 @@
-braidio.transforms._dialogue
-============================
-.. automodule:: braidio.transforms._dialogue
-   :members:

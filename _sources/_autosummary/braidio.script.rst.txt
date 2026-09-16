@@ -1,0 +1,22 @@
+braidio.script
+==============
+
+.. automodule:: braidio.script
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      narration_segments
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Dialogue
+      Narration
+      SceneBreak
+      Script
+      SegmentBeat
+   

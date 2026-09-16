@@ -1,4 +1,0 @@
-braidio.bodies._tiers
-=====================
-.. automodule:: braidio.bodies._tiers
-   :members:

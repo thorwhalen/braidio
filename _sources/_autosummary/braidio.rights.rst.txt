@@ -1,0 +1,38 @@
+braidio.rights
+==============
+
+.. automodule:: braidio.rights
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DEFAULT_PROFILE
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      clip_plays_under
+      content_violations
+      find_verbatim_text
+      plan_production
+      rights_are_publishable
+      segment_is_publishable
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      PlannedBeat
+      Profile
+      RenderPlan
+      RightsPolicy
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      RightsViolation
+   

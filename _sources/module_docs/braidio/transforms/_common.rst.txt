@@ -1,4 +1,0 @@
-braidio.transforms._common
-==========================
-.. automodule:: braidio.transforms._common
-   :members:

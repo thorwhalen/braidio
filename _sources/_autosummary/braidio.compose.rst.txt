@@ -1,0 +1,12 @@
+braidio.compose
+===============
+
+.. automodule:: braidio.compose
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      compose_narration
+   

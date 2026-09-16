@@ -1,0 +1,14 @@
+braidio.tts
+===========
+
+.. automodule:: braidio.tts
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      narrate
+      resolve_voice_id
+      text_to_dialogue
+   

@@ -1,0 +1,12 @@
+braidio.kinds
+=============
+
+.. automodule:: braidio.kinds
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      WeaveKind
+   
