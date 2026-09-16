@@ -64,7 +64,15 @@ def _lead_gap(src: Path, dst: Path, *, gap_s: float) -> Path:
     dst.parent.mkdir(parents=True, exist_ok=True)
     ms = int(round(gap_s * 1000))
     subprocess.run(
-        ["ffmpeg", "-y", "-i", str(src), "-af", f"adelay={ms}:all=1,{_RESAMPLE}", str(dst)],
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(src),
+            "-af",
+            f"adelay={ms}:all=1,{_RESAMPLE}",
+            str(dst),
+        ],
         check=True,
         capture_output=True,
     )
@@ -77,8 +85,12 @@ def _tail_gap(src: Path, dst: Path, *, gap_s: float) -> Path:
     dst.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
         [
-            "ffmpeg", "-y", "-i", str(src),
-            "-af", f"apad=pad_dur={gap_s:.3f},{_RESAMPLE}",
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(src),
+            "-af",
+            f"apad=pad_dur={gap_s:.3f},{_RESAMPLE}",
             str(dst),
         ],
         check=True,
