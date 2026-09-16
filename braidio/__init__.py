@@ -184,6 +184,11 @@ from braidio.style import (  # noqa: F401
     Finding,
     PLATITUDE_PATTERNS,
     audit_platitudes,
+    audit_expressiveness,
+    audio_tag_rate,
+    audio_tags,
+    TAG_RATE_FLOOR,
+    TAG_RATE_CEILING,
     platitude_rate,
 )
 from braidio.weave import (  # noqa: F401
@@ -384,5 +389,10 @@ __all__ = [
     "Finding",
     "PLATITUDE_PATTERNS",
     "audit_platitudes",
+    "audit_expressiveness",
+    "audio_tag_rate",
+    "audio_tags",
+    "TAG_RATE_FLOOR",
+    "TAG_RATE_CEILING",
     "platitude_rate",
 ]

@@ -91,22 +91,61 @@ never a bare `WeaveConfig()` (which would silently switch pacing back off).
 
 ## Two things that will still make it sound like AI
 
-Both bit on a real episode; the user's words were *"the pace is a bit robotic and
-without pause and the expressions are a bit kitsch."*
+Two complaints from two real episodes, and they pull in **opposite** directions.
+You need both gates.
 
-**1. Write the performance into the text.** On a v3 delivery the script is the
-control surface: inline `[audio tags]` (`[slowly]` on a punchline, `[rushed]` on
-an aside, `[pause]` where a breath belongs) and punctuation (em-dash flows, `…`
-adds weight, a period is a full stop). Sparingly — a tag on every sentence is the
-"kitsch" half of that complaint.
+**1. Under-tagged reads as somniferous.** The second episode's verdict was
+exactly that word. Its script carried ten `[audio tags]` in 1371 words while
+dutifully varying `voice_settings["stability"]` between 0.30 and 0.65 to get
+"four registers". Measured: those two stability values are worth about **2 Hz**
+of pitch range, whereas plain-vs-densely-tagged text is worth **54 Hz** (70.8 →
+124.4). **Tags are the engine; stability is nearly noise.** Target **2–5 tags
+per 100 words**, vary which tag, and gate it with
+`braidio.audit_expressiveness(prose)`. The `braidio` skill has the full table.
 
-**2. Epigram density is the actual tell.** A first draft landed a designed turn of
-phrase at the end of *every* beat — 8 in 338 words. No speaking human sustains
-that; it is the relentlessness, not any one sentence. Budget **≤ 2 per 3 minutes**
-and let the rest be plain exposition with contractions and uneven sentence length.
+**2. Over-written reads as kitsch.** The first episode's verdict. A draft landed
+a designed turn of phrase at the end of *every* beat — 8 in 338 words. No
+speaking human sustains that; it is the relentlessness, not any one sentence.
+Budget **≤ 2 per 3 minutes** and let the rest be plain talk with contractions,
+fragments and uneven sentence length.
 
-`audit_platitudes` returns `[]` on copy like that — it catches recycled tics, not
-over-writing. It cannot be the only gate.
+The thing to ration is the **epigram**, not the tag. `audit_platitudes` catches
+recycled tics, not over-writing, and says nothing at all about flatness — it
+cannot be the only gate.
+
+## Two recordings of the same work
+
+A comparison piece — a studio master against a live take, two performances, a
+text read twice — hits one wall immediately: `render_format(..., source=...)`
+takes **exactly one** `SegmentSource`, and a token matcher scores the same lyric
+line equally well in every recording of it. Which take a quote comes from is a
+production decision, not something the reference text can carry.
+
+```python
+from braidio import NamespacedSegmentSource, TimedLineSegmentSource
+
+source = NamespacedSegmentSource({
+    "1966": TimedLineSegmentSource(lines=studio_lines, asset_path="studio.mp3"),
+    "1981": TimedLineSegmentSource(lines=live_lines,   asset_path="live.mp3"),
+})
+
+SegmentBeat("1981: and in the naked light i saw")   # -> the live master
+```
+
+An unknown prefix raises rather than falling through, deliberately: silently
+picking the wrong recording ships one performance under commentary describing
+another, which the listener cannot detect and a diff does not show.
+
+**Such a piece needs the two-voice pattern at the same time** (see the `braidio`
+skill). A comparison has to say *which recording is playing* — a `tituli` lower
+third over every clip — **and** distinguish your argument from the documented
+record. They arrive as one problem.
+
+**And research each recording separately.** Annotation sources describe the
+*work*. On a real episode the Genius entry for the studio version carried nine
+annotations and the entry for the live version carried **zero**, while the live
+recording's circumstances were the whole reason the episode existed. Ask
+per recording: who made it, when, and what was happening.
 
 ## Images
 
@@ -145,11 +184,49 @@ this, because those engravings genuinely differ pixel by pixel.
 **Filenames are not evidence — look at a contact sheet before rendering.** On a
 real run, plausible filenames returned an empty stadium exterior for "Taylor
 Swift" and the Chiang Kai-shek Memorial in Taipei for "concert crowd"; a third
-still was too dark to read. Also watch for museum catalogue shots carrying scale
-bars and accession stamps — on screen those read as a rights claim over your
-whole frame. Crop them. And a transparent source (an SVG rendered to PNG, a
-signature in black ink on nothing) flattens to an entirely black frame under a
-naive `convert("RGB")`.
+still was too dark to read. On another, `Category:Snare drums` returned museum
+vitrines of **Nazi-flagged military drums** in its top six. Also watch for museum
+catalogue shots carrying scale bars and accession stamps — on screen those read
+as a rights claim over your whole frame. Crop them. And a transparent source (an
+SVG rendered to PNG, a signature in black ink on nothing) flattens to an entirely
+black frame under a naive `convert("RGB")`.
+
+**The contact sheet is not enough on its own — read the title too.** Six stills
+once passed a visual check and were still wrong: `Category:Crowds` returned
+Library of Congress *portraits of jazz musicians*, a Dresden apartment block sat
+under the words "tenement halls", and a 1910 hotel was captioned as a record
+shop. A thumbnail tells you what a picture looks like, not what it is.
+
+**A picture that is right-shaped but wrong-specific needs a label, not a
+deletion.** A photograph of a genuine large concert in the right park that is
+*not the concert you are discussing* is honest illustration the moment `tituli`
+names it on screen ("The Beach Boys in Central Park, 1971 — not this concert"),
+and an implicit false claim the moment it is unlabelled. Decide which you are
+shipping.
+
+**Queries come from the research, not from the topic.** "Illustrate the 1965
+overdub" gives you generic studio stock; knowing *what the research turned up*
+gives you the trade advertisement for the album that flopped, the Rembrandt of
+the hand writing on the wall for the lyric's biblical reference, the period
+Times Square sign for the "neon god". Do the research first and let it write the
+query list.
+
+**Downloading the bytes is its own job, with its own traps.** Wikimedia throttles
+on **User-Agent policy**, not only on rate, and the failure looks exactly like a
+rate limit: with a vague UA, `upload.wikimedia.org` returned HTTP 429 with
+`Retry-After: 10` at roughly two successful requests per 100 seconds; with a
+compliant `Tool/1.0 (https://url; email)` string the same URLs returned 200
+immediately. Prefer the thumbnail service (`.../1280px-Name.jpg`) over the 15 MB
+original you are about to downscale anyway. And **never cache on existence
+alone** — a throttled first pass writes 330 px fallbacks, and every later run
+"finds" them and never retries, so the whole film is built from 6× upscales
+before anyone checks a pixel dimension.
+
+**Compose the credit line; do not trust `attribution`.** For a minority of
+Wikimedia hits it comes back as the bare author with no licence named at all,
+while `license` and `license_url` on the same hit are correct — so rendering it
+as documented ships "EliziR" as the entire credit for a CC BY-SA image. Build
+the line from the parts and assert that every finished line names a licence.
 
 `prepare_still` composites each image onto a blurred, darkened enlargement of
 itself to reach 16:9, so portraits are not cover-cropped and no dead black bars
