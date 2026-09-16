@@ -6,11 +6,14 @@ concrete ``[start, end]`` span of a source asset is pluggable via the
 :class:`SegmentSource` protocol — the weave engine never needs to know it is
 lyrics.
 
-This module ships one generic implementation: :class:`TimedLineSegmentSource`,
+This module ships two generic implementations. :class:`TimedLineSegmentSource`,
 a token-F1 matcher over time-aligned lines (:class:`TimedLine`). It answers a
 reference by the best contiguous run of lines — handling exact, sub-line, and
 multi-line references. Consumers bind it to their own timed lines + asset (e.g.
-Hamilton binds LRCLIB line timings + owned song audio).
+Hamilton binds LRCLIB line timings + owned song audio). And
+:class:`NamespacedSegmentSource` routes a *prefixed* reference to one of several
+sub-sources, which is how a production that cuts between two recordings of the
+same work says which recording a given quote should come from.
 
 Also provides the lower-level resolver (:func:`find_segment`, :func:`load_timing`)
 and the resolve-and-cut convenience (:func:`cut_quote`) used directly by the
@@ -247,3 +250,78 @@ def cut_quote(
         capture_output=True,
     )
     return seg
+
+
+class NamespacedSegmentSource:
+    """A :class:`SegmentSource` that routes prefixed references to sub-sources.
+
+    A production that cuts between *several* recordings of the same work — two
+    takes of one song, a studio master and a live version, an audiobook read in
+    two languages — hits a wall: ``render_production(..., source=...)`` takes one
+    :class:`SegmentSource`, and a reference like a lyric line matches equally
+    well in every recording. Which asset a quote should come from is a
+    *production* decision, not something a token matcher can infer.
+
+    This routes on an explicit prefix, so the script says which recording it
+    means::
+
+        source = NamespacedSegmentSource(
+            {
+                "1966": TimedLineSegmentSource(lines=studio, asset_path="studio.mp3"),
+                "1981": TimedLineSegmentSource(lines=live, asset_path="live.mp3"),
+            }
+        )
+        SegmentBeat("1981: and in the naked light I saw")  # → the live master
+
+    Args:
+        sources: Namespace → sub-source. Namespaces are matched
+            case-insensitively and with surrounding whitespace stripped.
+        sep: Separator between the namespace and the reference body.
+        default: Namespace used for an *unprefixed* reference. ``None`` (the
+            default) makes an unprefixed reference an error.
+
+    Raises:
+        KeyError: on an unknown namespace, or an unprefixed reference with no
+            ``default``. This is deliberate: silently falling through to the
+            wrong recording would ship one performance under commentary that
+            describes another — the failure a listener cannot detect and the
+            author cannot see in a diff.
+    """
+
+    def __init__(
+        self,
+        sources: dict[str, SegmentSource],
+        *,
+        sep: str = ":",
+        default: str | None = None,
+    ) -> None:
+        if not sources:
+            raise ValueError("NamespacedSegmentSource needs at least one source")
+        self._sources = {k.strip().lower(): v for k, v in sources.items()}
+        self._sep = sep
+        if default is not None and default.strip().lower() not in self._sources:
+            raise KeyError(f"default namespace {default!r} not in {self.namespaces}")
+        self._default = None if default is None else default.strip().lower()
+
+    @property
+    def namespaces(self) -> list[str]:
+        """The namespaces this source routes, in insertion order."""
+        return list(self._sources)
+
+    def split(self, reference: str) -> tuple[str, str]:
+        """Split ``reference`` into ``(namespace, body)``, applying the default."""
+        head, found, tail = reference.partition(self._sep)
+        key = head.strip().lower()
+        if found and key in self._sources:
+            return key, tail.strip()
+        if self._default is not None:
+            return self._default, reference.strip()
+        raise KeyError(
+            f"reference {reference!r} has no known namespace prefix; "
+            f"expected one of {self.namespaces} followed by {self._sep!r}, "
+            "or construct with default=<namespace>"
+        )
+
+    def resolve(self, reference: str) -> ResolvedSegment | None:
+        key, body = self.split(reference)
+        return self._sources[key].resolve(body)
