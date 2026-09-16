@@ -124,12 +124,14 @@ production decision, not something the reference text can carry.
 ```python
 from braidio import NamespacedSegmentSource, TimedLineSegmentSource
 
-source = NamespacedSegmentSource({
-    "1966": TimedLineSegmentSource(lines=studio_lines, asset_path="studio.mp3"),
-    "1981": TimedLineSegmentSource(lines=live_lines,   asset_path="live.mp3"),
-})
+source = NamespacedSegmentSource(
+    {
+        "1966": TimedLineSegmentSource(lines=studio_lines, asset_path="studio.mp3"),
+        "1981": TimedLineSegmentSource(lines=live_lines, asset_path="live.mp3"),
+    }
+)
 
-SegmentBeat("1981: and in the naked light i saw")   # -> the live master
+SegmentBeat("1981: and in the naked light i saw")  # -> the live master
 ```
 
 An unknown prefix raises rather than falling through, deliberately: silently

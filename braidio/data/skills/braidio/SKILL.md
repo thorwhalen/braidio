@@ -121,11 +121,16 @@ word of signposting.
 
 ```python
 PRESENTER = "iP95p4xoKVk53GoZ742B"  # the spine: your argument
-RECORD    = "nPczCjzI2devNBz1zQrb"  # deep, level: the documented record
+RECORD = "nPczCjzI2devNBz1zQrb"  # deep, level: the documented record
 
-Narration(claim, voice=PRESENTER)                       # format's delivery
-Narration(dates_and_quotes, voice=RECORD, style="archive",
-          voice_settings=braidio.V3_NARRATOR.voice_settings, lead_gap_s=0.55)
+Narration(claim, voice=PRESENTER)  # format's delivery
+Narration(
+    dates_and_quotes,
+    voice=RECORD,
+    style="archive",
+    voice_settings=braidio.V3_NARRATOR.voice_settings,
+    lead_gap_s=0.55,
+)
 ```
 
 **The contrast has to come from the `voice=`, not from the settings.** Two
