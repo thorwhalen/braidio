@@ -173,6 +173,8 @@ def test_rendered_record_names_the_delivery_and_profile(
     script, tmp_path, tone_narration
 ):
     _, tl = _render(script, tmp_path, config=WeaveConfig(), name="d")
-    assert tl.settings["delivery"]["name"] == braidio.V2_TUNED.name
+    # The resolved default, not a hard-coded name: this is exactly the
+    # assertion that should follow a defaults change rather than block it.
+    assert tl.settings["delivery"]["name"] == braidio.default_delivery().name
     assert tl.settings["profile"] == braidio.DEFAULT_PROFILE.value
     json.dumps(tl.to_dict())  # still JSON on the real render path

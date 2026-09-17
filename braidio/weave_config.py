@@ -23,11 +23,12 @@ from braidio.multivoice import POOL_4, POOL_MANY
 from braidio.pacing import SEGMENTATION_UNITS
 from braidio.tts import DEFAULT_VOICE_ID
 
-# Research-recommended base narration settings (v2-tuned).
+# Base narration settings. Shaped for eleven_v3, which is the default model:
+# it honours `stability` and silently ignores `style` / `similarity_boost` /
+# `speed`, so carrying those here would advertise control that does not exist.
+# 0.0 is the expressive end; see braidio.delivery for the measurements.
 _DEFAULT_VOICE_SETTINGS: dict[str, Any] = {
-    "stability": 0.35,
-    "similarity_boost": 0.75,
-    "style": 0.35,
+    "stability": 0.0,
     "use_speaker_boost": True,
 }
 

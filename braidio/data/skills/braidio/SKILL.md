@@ -178,6 +178,35 @@ you the shape the format expects (cold open → walkthrough → recap; state the
 motion up front; strip the host's questions; …). Use the role names from the
 format's cast as your Dialogue turn roles.
 
+## Your defaults, and how to change them
+
+Out of the box braidio renders on **`eleven_v3` at the expressive end** — every
+shipped format, not just the solo ones. That is deliberate: the previous default
+(`eleven_multilingual_v2`) cannot render `[audio tags]` *at all*, so it capped
+every production at the flat end before an author wrote a word.
+
+Resolution order, highest first:
+
+| | |
+|---|---|
+| `render_production(delivery=…)` | a `Delivery`, or a name like `"v3-narrator"` |
+| `$BRAIDIO_DELIVERY`, `$BRAIDIO_VOICE_ID` | per-shell |
+| `~/.config/braidio/config.json` | **your persisted default** |
+| the package default | `v3-presenter` |
+
+```json
+{
+  "delivery": "v3-presenter",
+  "voice_id": "iP95p4xoKVk53GoZ742B",
+  "voice_settings": {"stability": 0.0, "use_speaker_boost": true}
+}
+```
+
+Every key is optional. `braidio.describe_defaults()` prints what is in force and
+where each part came from — reach for it first when a render does not sound the
+way somebody expected, because the usual answer is a config file they forgot
+they wrote.
+
 ## Making it sound alive (read this before writing a word)
 
 The commonest failure of a braidio script is not a wrong fact or a clumsy

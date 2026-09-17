@@ -165,11 +165,12 @@ def tone_narration(monkeypatch):
     return calls
 
 
-def _render(script, tmp_path, *, config, name):
+def _render(script, tmp_path, *, config, name, delivery=None):
     return braidio.render_production(
         script,
         source=None,
         config=config,
+        delivery=delivery,
         out_path=tmp_path / f"{name}.mp3",
         normalize=False,
         end_fade_s=0.0,
@@ -231,7 +232,10 @@ def test_paced_beat_synthesizes_each_turn_separately(script, tmp_path, tone_narr
     cfg = WeaveConfig(
         segmentation_unit="sentence", min_turn=1, max_turn=1, gap_turn_s=0.2
     )
-    _render(script, tmp_path, config=cfg, name="paced")
+    # V2_TUNED explicitly: the default delivery is eleven_v3, which has no speed
+    # control at all, and the last assertion here is *about* per-turn speed.
+    # (The speedless case is its own test, just below.)
+    _render(script, tmp_path, config=cfg, name="paced", delivery=braidio.V2_TUNED)
     texts = [c["text"] for c in tone_narration]
     assert len(texts) == 4  # four sentences, one TTS call each
     assert " ".join(texts) == _TEXT.replace("\n\n", " ")
