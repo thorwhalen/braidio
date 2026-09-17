@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=4f34e5f2"></script>
+    <script src="../_static/documentation_options.js?v=a72e4630"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="API reference" href="../api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.47" />
+  <meta name="docsearch:version" content="0.0.48" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -321,6 +321,7 @@
 <li class="toctree-l2"><a class="reference internal" href="braidio.compose.html">braidio.compose</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.conversation.html">braidio.conversation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.cost.html">braidio.cost</a></li>
+<li class="toctree-l2"><a class="reference internal" href="braidio.defaults.html">braidio.defaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.delivery.html">braidio.delivery</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.formats.html">braidio.formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.kinds.html">braidio.kinds</a></li>
@@ -532,6 +533,24 @@ in the <em>Hamilton</em> repo — braidio has its own #18 about something else.<
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#braidio.strip_speaker_labels" title="braidio.strip_speaker_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">strip_speaker_labels</span></code></a>(text)</p></td>
 <td><p>Remove a leading speaker-label prefix (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;Chris:</span> <span class="pre">&quot;</span></code>) if present.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.config_path" title="braidio.config_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">config_path</span></code></a>()</p></td>
+<td><p>Where the user's persisted defaults live (the file need not exist).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.default_delivery" title="braidio.default_delivery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_delivery</span></code></a>([explicit])</p></td>
+<td><p>Resolve the delivery to render with.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.default_voice_id" title="braidio.default_voice_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_voice_id</span></code></a>([explicit])</p></td>
+<td><p>Resolve the narration voice id, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to let the caller decide.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.default_voice_settings" title="braidio.default_voice_settings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_voice_settings</span></code></a>()</p></td>
+<td><p>The resolved delivery's voice settings, as a fresh dict.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.describe_defaults" title="braidio.describe_defaults"><code class="xref py py-obj docutils literal notranslate"><span class="pre">describe_defaults</span></code></a>()</p></td>
+<td><p>What is in force, and where each part came from.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.user_config" title="braidio.user_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">user_config</span></code></a>()</p></td>
+<td><p>The user's persisted defaults, or <code class="docutils literal notranslate"><span class="pre">{}</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#braidio.audit_platitudes" title="braidio.audit_platitudes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_platitudes</span></code></a>(text)</p></td>
 <td><p>Return every <a class="reference internal" href="#braidio.Finding" title="braidio.Finding"><code class="xref py py-class docutils literal notranslate"><span class="pre">Finding</span></code></a> in <code class="docutils literal notranslate"><span class="pre">text</span></code>, in document order.</p></td>
@@ -1436,6 +1455,17 @@ there the field is the switch that turns pacing on — see
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="braidio.config_path">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">config_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/defaults.html#config_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.config_path" title="Link to this definition">#</a></dt>
+<dd><p>Where the user’s persisted defaults live (the file need not exist).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="braidio.content_violations">
 <span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">content_violations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plan</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forbidden</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_words</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/rights.html#content_violations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.content_violations" title="Link to this definition">#</a></dt>
 <dd><p>Rights violations in a <em>published</em> plan (empty list = clean).</p>
@@ -1493,6 +1523,50 @@ should prefer a <a class="reference internal" href="#braidio.SegmentSource" titl
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="braidio.default_delivery">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">default_delivery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">explicit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/defaults.html#default_delivery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.default_delivery" title="Link to this definition">#</a></dt>
+<dd><p>Resolve the delivery to render with.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>explicit</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="braidio.delivery.html#braidio.delivery.Delivery" title="braidio.delivery.Delivery"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delivery</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span>) – a <a class="reference internal" href="braidio.delivery.html#braidio.delivery.Delivery" title="braidio.delivery.Delivery"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delivery</span></code></a>, or the name of one
+(see <code class="xref py py-data docutils literal notranslate"><span class="pre">braidio.delivery.DELIVERIES</span></code>). Wins over everything.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="braidio.delivery.html#braidio.delivery.Delivery" title="braidio.delivery.Delivery"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delivery</span></code></a></span></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">default_delivery</span><span class="p">(</span><span class="n">V3_PRESENTER</span><span class="p">)</span> <span class="ow">is</span> <span class="n">V3_PRESENTER</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">default_delivery</span><span class="p">(</span><span class="s2">"v3-narrator"</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+<span class="go">'v3-narrator'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.default_voice_id">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">default_voice_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">explicit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/defaults.html#default_voice_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.default_voice_id" title="Link to this definition">#</a></dt>
+<dd><p>Resolve the narration voice id, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to let the caller decide.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.default_voice_settings">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">default_voice_settings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/defaults.html#default_voice_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.default_voice_settings" title="Link to this definition">#</a></dt>
+<dd><p>The resolved delivery’s voice settings, as a fresh dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="braidio.describe_asset_application">
 <span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">describe_asset_application</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">script</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">bed_asset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sting_asset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/formats.html#describe_asset_application"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.describe_asset_application" title="Link to this definition">#</a></dt>
 <dd><p>Which of the supplied <code class="docutils literal notranslate"><span class="pre">bed_asset</span></code> / <code class="docutils literal notranslate"><span class="pre">sting_asset</span></code> this format will
@@ -1510,6 +1584,19 @@ case is reported here, not refused.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.describe_defaults">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">describe_defaults</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/defaults.html#describe_defaults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.describe_defaults" title="Link to this definition">#</a></dt>
+<dd><p>What is in force, and where each part came from.</p>
+<p>Worth printing when a render does not sound the way somebody expected: the
+commonest cause is a config file they forgot they wrote.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1635,7 +1722,7 @@ seeded-random within the range.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="braidio.narrate">
-<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">narrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voice_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'eleven_multilingual_v2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voice_settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mp3_44100_128'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_cache_status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/tts.html#narrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.narrate" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">narrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voice_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'eleven_v3'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voice_settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mp3_44100_128'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_cache_status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/tts.html#narrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.narrate" title="Link to this definition">#</a></dt>
 <dd><p>Synthesize <code class="docutils literal notranslate"><span class="pre">text</span></code> to <code class="docutils literal notranslate"><span class="pre">out_path</span></code> (mp3). Returns the path.</p>
 <p>Caching is handled by <code class="docutils literal notranslate"><span class="pre">mixing.text_to_speech</span></code> (keyed on text+voice+model);
 pass <code class="docutils literal notranslate"><span class="pre">refresh=True</span></code> to regenerate.</p>
@@ -1742,7 +1829,7 @@ upcoming parameters (tracked as issues) — this renders turns sequentially.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="braidio.render_production">
-<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">render_production</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">script</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Profile.PERSONAL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delivery</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Delivery(name='v2-tuned',</span> <span class="pre">model_id='eleven_multilingual_v2',</span> <span class="pre">voice_settings={'stability':</span> <span class="pre">0.35,</span> <span class="pre">'similarity_boost':</span> <span class="pre">0.75,</span> <span class="pre">'style':</span> <span class="pre">0.35,</span> <span class="pre">'use_speaker_boost':</span> <span class="pre">True,</span> <span class="pre">'speed':</span> <span class="pre">0.98},</span> <span class="pre">supports_audio_tags=False,</span> <span class="pre">supports_speed=True,</span> <span class="pre">note='★</span> <span class="pre">recommended:</span> <span class="pre">lower</span> <span class="pre">stability</span> <span class="pre">+</span> <span class="pre">raised</span> <span class="pre">style;</span> <span class="pre">pairs</span> <span class="pre">with</span> <span class="pre">annotated</span> <span class="pre">text.')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ConversationCast(roles={'A':</span> <span class="pre">'cgSgspJ2msm6clMCkdW9',</span> <span class="pre">'B':</span> <span class="pre">'iP95p4xoKVk53GoZ742B'},</span> <span class="pre">model_id='eleven_v3',</span> <span class="pre">settings={'stability':</span> <span class="pre">0.45})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voice_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crossfade_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">music_bed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_fade_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.35</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_silence_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_timeline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tts_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'data/tts'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clips_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'data/clips'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episodes_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'data/episodes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/render.html#render_production"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.render_production" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">render_production</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">script</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Profile.PERSONAL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delivery</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ConversationCast(roles={'A':</span> <span class="pre">'cgSgspJ2msm6clMCkdW9',</span> <span class="pre">'B':</span> <span class="pre">'iP95p4xoKVk53GoZ742B'},</span> <span class="pre">model_id='eleven_v3',</span> <span class="pre">settings={'stability':</span> <span class="pre">0.45})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voice_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crossfade_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">music_bed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_fade_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.35</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_silence_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_timeline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tts_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'data/tts'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clips_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'data/clips'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episodes_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'data/episodes'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/render.html#render_production"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.render_production" title="Link to this definition">#</a></dt>
 <dd><p>Render <code class="docutils literal notranslate"><span class="pre">script</span></code> under <code class="docutils literal notranslate"><span class="pre">profile</span></code> → a single audio file. Returns the path.</p>
 <p>With <code class="docutils literal notranslate"><span class="pre">return_timeline=True</span></code> returns <code class="docutils literal notranslate"><span class="pre">(path,</span> <span class="pre">TimelineBreakdown)</span></code> instead —
 the render records what it spent time on (per-beat kind, source interval,
@@ -1934,6 +2021,19 @@ number — a bad rate must never silently become a dishonest negative/NaN spend.
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="braidio.user_config">
+<span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">user_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/defaults.html#user_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.user_config" title="Link to this definition">#</a></dt>
+<dd><p>The user’s persisted defaults, or <code class="docutils literal notranslate"><span class="pre">{}</span></code>.</p>
+<p>A missing file is normal. A malformed one warns <em>once</em> per path and is then
+treated as absent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="braidio.weave_timeline">
 <span class="sig-prename descclassname"><span class="pre">braidio.</span></span><span class="sig-name descname"><span class="pre">weave_timeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_edge_overlap_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">narration_crossfade_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_lufs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-16.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">true_peak</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">44100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/weave.html#weave_timeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.weave_timeline" title="Link to this definition">#</a></dt>
 <dd><p>Place items on a timeline and mix. Clips overlap neighbours by
@@ -1968,58 +2068,61 @@ whole-span file. Falls back to a plain concat feel when
 <tr class="row-even"><td><p><a class="reference internal" href="braidio.cost.html#module-braidio.cost" title="braidio.cost"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cost</span></code></a></p></td>
 <td><p>Cost model for braidio's paid operations (ElevenLabs TTS).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="braidio.delivery.html#module-braidio.delivery" title="braidio.delivery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delivery</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="braidio.defaults.html#module-braidio.defaults" title="braidio.defaults"><code class="xref py py-obj docutils literal notranslate"><span class="pre">defaults</span></code></a></p></td>
+<td><p>User-overridable, persisted defaults for how braidio renders a voice.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="braidio.delivery.html#module-braidio.delivery" title="braidio.delivery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delivery</span></code></a></p></td>
 <td><p>Narration <em>delivery</em> presets — model + voice settings (issue #10, expressiveness).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="braidio.formats.html#module-braidio.formats" title="braidio.formats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formats</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="braidio.formats.html#module-braidio.formats" title="braidio.formats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">formats</span></code></a></p></td>
 <td><p>Ready-made <strong>format templates</strong> — high-quality presets under standard names.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="braidio.kinds.html#module-braidio.kinds" title="braidio.kinds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kinds</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="braidio.kinds.html#module-braidio.kinds" title="braidio.kinds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kinds</span></code></a></p></td>
 <td><p>Production kinds braidio defines.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="braidio.multivoice.html#module-braidio.multivoice" title="braidio.multivoice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">multivoice</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="braidio.multivoice.html#module-braidio.multivoice" title="braidio.multivoice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">multivoice</span></code></a></p></td>
 <td><p>Multi-voice narration: cycle a pool of voices across segments (issue #10).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="braidio.music.html#module-braidio.music" title="braidio.music"><code class="xref py py-obj docutils literal notranslate"><span class="pre">music</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="braidio.music.html#module-braidio.music" title="braidio.music"><code class="xref py py-obj docutils literal notranslate"><span class="pre">music</span></code></a></p></td>
 <td><p>Music bed — an instrumental underscore laid under the whole production, ducked.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="braidio.pacing.html#module-braidio.pacing" title="braidio.pacing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pacing</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="braidio.pacing.html#module-braidio.pacing" title="braidio.pacing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pacing</span></code></a></p></td>
 <td><p>Intra-beat narration pacing — how one narration beat becomes spoken <em>turns</em>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="braidio.render.html#module-braidio.render" title="braidio.render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="braidio.render.html#module-braidio.render" title="braidio.render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render</span></code></a></p></td>
 <td><p>Render a <a class="reference internal" href="braidio.script.html#braidio.script.Script" title="braidio.script.Script"><code class="xref py py-class docutils literal notranslate"><span class="pre">Script</span></code></a> into an audio file.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="braidio.rights.html#module-braidio.rights" title="braidio.rights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rights</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="braidio.rights.html#module-braidio.rights" title="braidio.rights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rights</span></code></a></p></td>
 <td><p>Render profiles: enforce personal-vs-published rights as data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="braidio.script.html#module-braidio.script" title="braidio.script"><code class="xref py py-obj docutils literal notranslate"><span class="pre">script</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="braidio.script.html#module-braidio.script" title="braidio.script"><code class="xref py py-obj docutils literal notranslate"><span class="pre">script</span></code></a></p></td>
 <td><p>Composition model — the ordered beats a render walks.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="braidio.sources.html#module-braidio.sources" title="braidio.sources"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sources</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="braidio.sources.html#module-braidio.sources" title="braidio.sources"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sources</span></code></a></p></td>
 <td><p>Segment sources: resolve a <em>reference</em> to a cuttable <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end]</span></code> window.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="braidio.structure.html#module-braidio.structure" title="braidio.structure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">structure</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="braidio.structure.html#module-braidio.structure" title="braidio.structure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">structure</span></code></a></p></td>
 <td><p>Structural music — stings at scene breaks, fade-to-spotlight on exhibits.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="braidio.style.html#module-braidio.style" title="braidio.style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">style</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="braidio.style.html#module-braidio.style" title="braidio.style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">style</span></code></a></p></td>
 <td><p>Style audit — flag the recycled rhetorical tics in commentary text.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="braidio.textprep.html#module-braidio.textprep" title="braidio.textprep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">textprep</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="braidio.textprep.html#module-braidio.textprep" title="braidio.textprep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">textprep</span></code></a></p></td>
 <td><p>Text preparation for scripts — clean OCR'd source, tidy authored lines.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="braidio.timeline.html#module-braidio.timeline" title="braidio.timeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">timeline</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="braidio.timeline.html#module-braidio.timeline" title="braidio.timeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">timeline</span></code></a></p></td>
 <td><p>Timeline breakdown — what a production spends its time on, and in what order.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="braidio.tts.html#module-braidio.tts" title="braidio.tts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tts</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="braidio.tts.html#module-braidio.tts" title="braidio.tts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tts</span></code></a></p></td>
 <td><p>ElevenLabs narration synthesis.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="braidio.video.html#module-braidio.video" title="braidio.video"><code class="xref py py-obj docutils literal notranslate"><span class="pre">video</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="braidio.video.html#module-braidio.video" title="braidio.video"><code class="xref py py-obj docutils literal notranslate"><span class="pre">video</span></code></a></p></td>
 <td><p>Turn a rendered production into a Ken Burns film over still images.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="braidio.weave.html#module-braidio.weave" title="braidio.weave"><code class="xref py py-obj docutils literal notranslate"><span class="pre">weave</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="braidio.weave.html#module-braidio.weave" title="braidio.weave"><code class="xref py py-obj docutils literal notranslate"><span class="pre">weave</span></code></a></p></td>
 <td><p>Weave narration + audio clips on a timeline (#21) — the reusable mix engine.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="braidio.weave_config.html#module-braidio.weave_config" title="braidio.weave_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">weave_config</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="braidio.weave_config.html#module-braidio.weave_config" title="braidio.weave_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">weave_config</span></code></a></p></td>
 <td><p>WeaveConfig — every editing choice for weaving narration + segments (#20).</p></td>
 </tr>
 </tbody>
@@ -2149,10 +2252,15 @@ whole-span file. Falls back to a plain concat feel when
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.clean_ocr"><code class="docutils literal notranslate"><span class="pre">clean_ocr()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.clip_plays_under"><code class="docutils literal notranslate"><span class="pre">clip_plays_under()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.compose_narration"><code class="docutils literal notranslate"><span class="pre">compose_narration()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.config_path"><code class="docutils literal notranslate"><span class="pre">config_path()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.content_violations"><code class="docutils literal notranslate"><span class="pre">content_violations()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.cues_for"><code class="docutils literal notranslate"><span class="pre">cues_for()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.cut_quote"><code class="docutils literal notranslate"><span class="pre">cut_quote()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.default_delivery"><code class="docutils literal notranslate"><span class="pre">default_delivery()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.default_voice_id"><code class="docutils literal notranslate"><span class="pre">default_voice_id()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.default_voice_settings"><code class="docutils literal notranslate"><span class="pre">default_voice_settings()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.describe_asset_application"><code class="docutils literal notranslate"><span class="pre">describe_asset_application()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.describe_defaults"><code class="docutils literal notranslate"><span class="pre">describe_defaults()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.estimate_cost"><code class="docutils literal notranslate"><span class="pre">estimate_cost()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.extract_padded"><code class="docutils literal notranslate"><span class="pre">extract_padded()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.find_segment"><code class="docutils literal notranslate"><span class="pre">find_segment()</span></code></a></li>
@@ -2177,6 +2285,7 @@ whole-span file. Falls back to a plain concat feel when
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.strip_speaker_labels"><code class="docutils literal notranslate"><span class="pre">strip_speaker_labels()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.tts_cost_usd"><code class="docutils literal notranslate"><span class="pre">tts_cost_usd()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.usd_per_1k_chars"><code class="docutils literal notranslate"><span class="pre">usd_per_1k_chars()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.user_config"><code class="docutils literal notranslate"><span class="pre">user_config()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.weave_timeline"><code class="docutils literal notranslate"><span class="pre">weave_timeline()</span></code></a></li>
 </ul>
   </nav></div>

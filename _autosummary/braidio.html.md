@@ -58,6 +58,12 @@ in the *Hamilton* repo — braidio has its own #18 about something else.
 | [`render_settings`](#braidio.render_settings)(\*, config, crossfade_s, ...)      | The record of *how* a production was rendered, as plain JSON types.                                                     |
 | [`clean_ocr`](#braidio.clean_ocr)(text, \*[, collapse_whitespace])         | Normalize OCR/PDF-extracted text for clean narration.                                                                   |
 | [`strip_speaker_labels`](#braidio.strip_speaker_labels)(text)                         | Remove a leading speaker-label prefix (e.g. `"Chris: "`) if present.                                                    |
+| [`config_path`](#braidio.config_path)()                                      | Where the user's persisted defaults live (the file need not exist).                                                     |
+| [`default_delivery`](#braidio.default_delivery)([explicit])                       | Resolve the delivery to render with.                                                                                    |
+| [`default_voice_id`](#braidio.default_voice_id)([explicit])                       | Resolve the narration voice id, or `None` to let the caller decide.                                                     |
+| [`default_voice_settings`](#braidio.default_voice_settings)()                           | The resolved delivery's voice settings, as a fresh dict.                                                                |
+| [`describe_defaults`](#braidio.describe_defaults)()                                | What is in force, and where each part came from.                                                                        |
+| [`user_config`](#braidio.user_config)()                                      | The user's persisted defaults, or `{}`.                                                                                 |
 | [`audit_platitudes`](#braidio.audit_platitudes)(text)                             | Return every [`Finding`](#braidio.Finding) in `text`, in document order.                     |
 | [`audit_expressiveness`](#braidio.audit_expressiveness)(text)                         | Human-readable complaints about a script's written-in performance.                                                      |
 | [`audio_tag_rate`](#braidio.audio_tag_rate)(text, \*[, per])                    | Inline audio tags per `per` words — the expressiveness dial.                                                            |
@@ -724,6 +730,13 @@ there the field is the switch that turns pacing on — see
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Voice`](braidio.multivoice.html.md#braidio.multivoice.Voice), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
+### braidio.config_path()
+
+Where the user’s persisted defaults live (the file need not exist).
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
 ### braidio.content_violations(plan, forbidden, , min_words=5)
 
 Rights violations in a *published* plan (empty list = clean).
@@ -769,6 +782,39 @@ should prefer a [`SegmentSource`](#braidio.SegmentSource) + [`braidio.weave.extr
 * **Return type:**
   [`Segment`](braidio.sources.html.md#braidio.sources.Segment)
 
+### braidio.default_delivery(explicit=None)
+
+Resolve the delivery to render with.
+
+* **Parameters:**
+  **explicit** ([`Delivery`](braidio.delivery.html.md#braidio.delivery.Delivery) | [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)) – a [`Delivery`](braidio.delivery.html.md#braidio.delivery.Delivery), or the name of one
+  (see `braidio.delivery.DELIVERIES`). Wins over everything.
+* **Return type:**
+  [`Delivery`](braidio.delivery.html.md#braidio.delivery.Delivery)
+
+### Examples
+
+```pycon
+>>> default_delivery(V3_PRESENTER) is V3_PRESENTER
+True
+>>> default_delivery("v3-narrator").name
+'v3-narrator'
+```
+
+### braidio.default_voice_id(explicit=None)
+
+Resolve the narration voice id, or `None` to let the caller decide.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### braidio.default_voice_settings()
+
+The resolved delivery’s voice settings, as a fresh dict.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+
 ### braidio.describe_asset_application(fmt, script, , bed_asset=None, sting_asset=None)
 
 Which of the supplied `bed_asset` / `sting_asset` this format will
@@ -787,6 +833,16 @@ case is reported here, not refused.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`bool`](https://docs.python.org/3/builtins/functions.html#bool) | [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)]
+
+### braidio.describe_defaults()
+
+What is in force, and where each part came from.
+
+Worth printing when a render does not sound the way somebody expected: the
+commonest cause is a config file they forgot they wrote.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### braidio.estimate_cost(source, , model_id=None)
 
@@ -887,7 +943,7 @@ TimedLine\`s.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`TimedLine`](braidio.sources.html.md#braidio.sources.TimedLine)]
 
-### braidio.narrate(text, out_path, , api_key=None, voice_id=None, model_id='eleven_multilingual_v2', voice_settings=None, output_format='mp3_44100_128', refresh=False, return_cache_status=False)
+### braidio.narrate(text, out_path, , api_key=None, voice_id=None, model_id='eleven_v3', voice_settings=None, output_format='mp3_44100_128', refresh=False, return_cache_status=False)
 
 Synthesize `text` to `out_path` (mp3). Returns the path.
 
@@ -976,7 +1032,7 @@ upcoming parameters (tracked as issues) — this renders turns sequentially.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Voice`](braidio.multivoice.html.md#braidio.multivoice.Voice), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
-### braidio.render_production(script, , source, api_key=None, config=None, profile=Profile.PERSONAL, rights=None, delivery=Delivery(name='v2-tuned', model_id='eleven_multilingual_v2', voice_settings={'stability': 0.35, 'similarity_boost': 0.75, 'style': 0.35, 'use_speaker_boost': True, 'speed': 0.98}, supports_audio_tags=False, supports_speed=True, note='★ recommended: lower stability + raised style; pairs with annotated text.'), cast=ConversationCast(roles={'A': 'cgSgspJ2msm6clMCkdW9', 'B': 'iP95p4xoKVk53GoZ742B'}, model_id='eleven_v3', settings={'stability': 0.45}), out_path=None, voice_id=None, crossfade_s=0.12, normalize=True, music_bed=None, structure=None, end_fade_s=0.35, end_silence_s=0.7, return_timeline=False, tts_dir='data/tts', clips_dir='data/clips', episodes_dir='data/episodes')
+### braidio.render_production(script, , source, api_key=None, config=None, profile=Profile.PERSONAL, rights=None, delivery=None, cast=ConversationCast(roles={'A': 'cgSgspJ2msm6clMCkdW9', 'B': 'iP95p4xoKVk53GoZ742B'}, model_id='eleven_v3', settings={'stability': 0.45}), out_path=None, voice_id=None, crossfade_s=0.12, normalize=True, music_bed=None, structure=None, end_fade_s=0.35, end_silence_s=0.7, return_timeline=False, tts_dir='data/tts', clips_dir='data/clips', episodes_dir='data/episodes')
 
 Render `script` under `profile` → a single audio file. Returns the path.
 
@@ -1147,6 +1203,16 @@ number — a bad rate must never silently become a dishonest negative/NaN spend.
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
 
+### braidio.user_config()
+
+The user’s persisted defaults, or `{}`.
+
+A missing file is normal. A malformed one warns *once* per path and is then
+treated as absent.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+
 ### braidio.weave_timeline(items, out_path, , clip_edge_overlap_s=0.5, narration_crossfade_s=0.12, target_lufs=-16.0, true_peak=-1.0, sample_rate=44100, bed=None)
 
 Place items on a timeline and mix. Clips overlap neighbours by
@@ -1171,6 +1237,7 @@ whole-span file. Falls back to a plain concat feel when
 | [`compose`](braidio.compose.html.md#module-braidio.compose)           | Config-driven narration composition (#20) — the reusable entrypoint.                                       |
 | [`conversation`](braidio.conversation.html.md#module-braidio.conversation) | Conversational register: render an exchange as people *talking to each other*.                             |
 | [`cost`](braidio.cost.html.md#module-braidio.cost)                 | Cost model for braidio's paid operations (ElevenLabs TTS).                                                 |
+| [`defaults`](braidio.defaults.html.md#module-braidio.defaults)         | User-overridable, persisted defaults for how braidio renders a voice.                                      |
 | [`delivery`](braidio.delivery.html.md#module-braidio.delivery)         | Narration *delivery* presets — model + voice settings (issue #10, expressiveness).                         |
 | [`formats`](braidio.formats.html.md#module-braidio.formats)           | Ready-made **format templates** — high-quality presets under standard names.                               |
 | [`kinds`](braidio.kinds.html.md#module-braidio.kinds)               | Production kinds braidio defines.                                                                          |

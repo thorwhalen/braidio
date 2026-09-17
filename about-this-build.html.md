@@ -2,20 +2,20 @@
 
 # About this build
 
-This documentation was built on **2026-09-16 16:45 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/67dba4160fd2c5fd50783a848d4c720d005c0ed1"><code>67dba41</code></a> on branch <code>main</code>, for **braidio 0.0.47** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-17 08:11 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/c8094d03ce3f5b5ae9ae79d49ce9de88da6d4618"><code>c8094d0</code></a> on branch <code>main</code>, for **braidio 0.0.48** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.47) is ahead of the latest release on PyPI (0.0.46): these docs describe unreleased code.
+- The documented version (0.0.48) is ahead of the latest release on PyPI (0.0.47): these docs describe unreleased code.
 
 ## Source
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/67dba4160fd2c5fd50783a848d4c720d005c0ed1"><code>67dba4160fd2c5fd50783a848d4c720d005c0ed1</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/c8094d03ce3f5b5ae9ae79d49ce9de88da6d4618"><code>c8094d03ce3f5b5ae9ae79d49ce9de88da6d4618</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.0.47</code>                                                                                                                                       |
+| Tags at this commit | <code>0.0.48</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/braidio</code>                                                                                                        |
 
@@ -24,9 +24,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/braidio</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35123485287">35123485287</a>   |
+| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35198127173">35198127173</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>784fa17dfd6cd1b69fbd1ea2cd7f978c61fa77d5</code> (in the history of the built commit) |
+| Event commit | <code>cc95b05d84985d9b87b9a1aa6191496aa585be8e</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -51,13 +51,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/braidio/0.0.46/">0.0.46</a>, older than the documented version (0.0.47).
+Latest release: <a href="https://pypi.org/project/braidio/0.0.47/">0.0.47</a>, older than the documented version (0.0.48).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/braidio && cd braidio
-git checkout 67dba4160fd2c5fd50783a848d4c720d005c0ed1
+git checkout c8094d03ce3f5b5ae9ae79d49ce9de88da6d4618
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

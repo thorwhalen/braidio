@@ -1,0 +1,23 @@
+braidio.defaults
+================
+
+.. automodule:: braidio.defaults
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      PACKAGE_DEFAULT_DELIVERY
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      config_path
+      user_config
+      default_delivery
+      default_voice_id
+      default_voice_settings
+      describe_defaults
+   

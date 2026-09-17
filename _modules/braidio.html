@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=4f34e5f2"></script>
+    <script src="../_static/documentation_options.js?v=a72e4630"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -410,7 +410,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.47" />
+  <meta name="docsearch:version" content="0.0.48" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -773,6 +773,17 @@ window.runMermaid = runMermaid;</script>
     <span class="n">cut_quote</span><span class="p">,</span>
 <span class="p">)</span>
 
+<span class="c1"># --- user-overridable defaults (explicit arg &gt; env &gt; config file &gt; package) ---</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.defaults</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
+    <span class="n">PACKAGE_DEFAULT_DELIVERY</span><span class="p">,</span>
+    <span class="n">config_path</span><span class="p">,</span>
+    <span class="n">default_delivery</span><span class="p">,</span>
+    <span class="n">default_voice_id</span><span class="p">,</span>
+    <span class="n">default_voice_settings</span><span class="p">,</span>
+    <span class="n">describe_defaults</span><span class="p">,</span>
+    <span class="n">user_config</span><span class="p">,</span>
+<span class="p">)</span>
+
 <span class="c1"># --- narration synthesis ---</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401</span>
     <span class="n">narrate</span><span class="p">,</span>
@@ -1104,6 +1115,13 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"strip_speaker_labels"</span><span class="p">,</span>
     <span class="s2">"Finding"</span><span class="p">,</span>
     <span class="s2">"PLATITUDE_PATTERNS"</span><span class="p">,</span>
+    <span class="s2">"PACKAGE_DEFAULT_DELIVERY"</span><span class="p">,</span>
+    <span class="s2">"config_path"</span><span class="p">,</span>
+    <span class="s2">"default_delivery"</span><span class="p">,</span>
+    <span class="s2">"default_voice_id"</span><span class="p">,</span>
+    <span class="s2">"default_voice_settings"</span><span class="p">,</span>
+    <span class="s2">"describe_defaults"</span><span class="p">,</span>
+    <span class="s2">"user_config"</span><span class="p">,</span>
     <span class="s2">"audit_platitudes"</span><span class="p">,</span>
     <span class="s2">"audit_expressiveness"</span><span class="p">,</span>
     <span class="s2">"audio_tag_rate"</span><span class="p">,</span>

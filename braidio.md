@@ -1,4 +1,4 @@
-> built 2026-09-16 16:45 UTC from 67dba41 (main) · braidio 0.0.47. Details: build_info.json
+> built 2026-09-17 08:11 UTC from c8094d0 (main) · braidio 0.0.48. Details: build_info.json
 
 # index.html.md
 
@@ -616,6 +616,121 @@ number — a bad rate must never silently become a dishonest negative/NaN spend.
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
 
 
+# _autosummary/braidio.defaults.html.md
+
+# braidio.defaults
+
+User-overridable, persisted defaults for how braidio renders a voice.
+
+**Why this module exists.** The package default used to be
+`eleven_multilingual_v2`, a model that cannot render inline `[audio tags]`
+*at all*. Since tag density is the main lever on whether a read sounds alive
+(measured: plain text 70.8 Hz of pitch range, densely tagged 124.4 Hz, while
+`stability` across its whole range moves it only 85 -> 72 Hz), the old default
+capped every production at the flat end before an author had written a word. One
+listener’s verdict on such a render was “somniferous”.
+
+So the package default is now the expressive one. But a default nobody can
+change is just a different imposition, hence the resolution order:
+
+> explicit argument  >  environment variable  >  user config file  >  package default
+
+The config file is JSON at `$BRAIDIO_CONFIG`, else
+`$XDG_CONFIG_HOME/braidio/config.json`, else `~/.config/braidio/config.json`:
+
+```json
+{
+  "delivery": "v3-presenter",
+  "voice_id": "iP95p4xoKVk53GoZ742B",
+  "voice_settings": {"stability": 0.0, "use_speaker_boost": true}
+}
+```
+
+Every key is optional; what you leave out keeps the package default. Nothing
+here touches the network, and a malformed file is reported once and then ignored
+rather than taking a render down with it.
+
+### Module Attributes
+
+| [`PACKAGE_DEFAULT_DELIVERY`](_autosummary/braidio.defaults.html.md#braidio.defaults.PACKAGE_DEFAULT_DELIVERY)   | What braidio uses when nothing else says otherwise.   |
+|-----------------------------------------------------------------------------|-------------------------------------------------------|
+
+### Functions
+
+| [`config_path`](_autosummary/braidio.defaults.html.md#braidio.defaults.config_path)()                | Where the user's persisted defaults live (the file need not exist).   |
+|-------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| [`user_config`](_autosummary/braidio.defaults.html.md#braidio.defaults.user_config)()                | The user's persisted defaults, or `{}`.                               |
+| [`default_delivery`](_autosummary/braidio.defaults.html.md#braidio.defaults.default_delivery)([explicit]) | Resolve the delivery to render with.                                  |
+| [`default_voice_id`](_autosummary/braidio.defaults.html.md#braidio.defaults.default_voice_id)([explicit]) | Resolve the narration voice id, or `None` to let the caller decide.   |
+| [`default_voice_settings`](_autosummary/braidio.defaults.html.md#braidio.defaults.default_voice_settings)()     | The resolved delivery's voice settings, as a fresh dict.              |
+| [`describe_defaults`](_autosummary/braidio.defaults.html.md#braidio.defaults.describe_defaults)()          | What is in force, and where each part came from.                      |
+
+### braidio.defaults.PACKAGE_DEFAULT_DELIVERY *: [Delivery](_autosummary/braidio.delivery.html.md#braidio.delivery.Delivery)* *= Delivery(name='v3-presenter', model_id='eleven_v3', voice_settings={'stability': 0.0, 'use_speaker_boost': True}, supports_audio_tags=True, supports_speed=False, note='Host/presenter commentary on v3 -- the expressive end. The narration-spine default (solo_explainer). Colour comes from tag density in the script; this setting just gets out of its way.')*
+
+What braidio uses when nothing else says otherwise. `eleven_v3` so inline
+`[audio tags]` fire, at the expressive end of `stability`.
+
+### braidio.defaults.config_path()
+
+Where the user’s persisted defaults live (the file need not exist).
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
+### braidio.defaults.default_delivery(explicit=None)
+
+Resolve the delivery to render with.
+
+* **Parameters:**
+  **explicit** ([`Delivery`](_autosummary/braidio.delivery.html.md#braidio.delivery.Delivery) | [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)) – a [`Delivery`](_autosummary/braidio.delivery.html.md#braidio.delivery.Delivery), or the name of one
+  (see `braidio.delivery.DELIVERIES`). Wins over everything.
+* **Return type:**
+  [`Delivery`](_autosummary/braidio.delivery.html.md#braidio.delivery.Delivery)
+
+### Examples
+
+```pycon
+>>> default_delivery(V3_PRESENTER) is V3_PRESENTER
+True
+>>> default_delivery("v3-narrator").name
+'v3-narrator'
+```
+
+### braidio.defaults.default_voice_id(explicit=None)
+
+Resolve the narration voice id, or `None` to let the caller decide.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### braidio.defaults.default_voice_settings()
+
+The resolved delivery’s voice settings, as a fresh dict.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+
+### braidio.defaults.describe_defaults()
+
+What is in force, and where each part came from.
+
+Worth printing when a render does not sound the way somebody expected: the
+commonest cause is a config file they forgot they wrote.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### braidio.defaults.user_config()
+
+The user’s persisted defaults, or `{}`.
+
+A missing file is normal. A malformed one warns *once* per path and is then
+treated as absent.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+
+
 # _autosummary/braidio.delivery.html.md
 
 # braidio.delivery
@@ -842,6 +957,12 @@ in the *Hamilton* repo — braidio has its own #18 about something else.
 | [`render_settings`](_autosummary/braidio.html.md#braidio.render_settings)(\*, config, crossfade_s, ...)      | The record of *how* a production was rendered, as plain JSON types.                                                     |
 | [`clean_ocr`](_autosummary/braidio.html.md#braidio.clean_ocr)(text, \*[, collapse_whitespace])         | Normalize OCR/PDF-extracted text for clean narration.                                                                   |
 | [`strip_speaker_labels`](_autosummary/braidio.html.md#braidio.strip_speaker_labels)(text)                         | Remove a leading speaker-label prefix (e.g. `"Chris: "`) if present.                                                    |
+| [`config_path`](_autosummary/braidio.html.md#braidio.config_path)()                                      | Where the user's persisted defaults live (the file need not exist).                                                     |
+| [`default_delivery`](_autosummary/braidio.html.md#braidio.default_delivery)([explicit])                       | Resolve the delivery to render with.                                                                                    |
+| [`default_voice_id`](_autosummary/braidio.html.md#braidio.default_voice_id)([explicit])                       | Resolve the narration voice id, or `None` to let the caller decide.                                                     |
+| [`default_voice_settings`](_autosummary/braidio.html.md#braidio.default_voice_settings)()                           | The resolved delivery's voice settings, as a fresh dict.                                                                |
+| [`describe_defaults`](_autosummary/braidio.html.md#braidio.describe_defaults)()                                | What is in force, and where each part came from.                                                                        |
+| [`user_config`](_autosummary/braidio.html.md#braidio.user_config)()                                      | The user's persisted defaults, or `{}`.                                                                                 |
 | [`audit_platitudes`](_autosummary/braidio.html.md#braidio.audit_platitudes)(text)                             | Return every [`Finding`](_autosummary/braidio.html.md#braidio.Finding) in `text`, in document order.                     |
 | [`audit_expressiveness`](_autosummary/braidio.html.md#braidio.audit_expressiveness)(text)                         | Human-readable complaints about a script's written-in performance.                                                      |
 | [`audio_tag_rate`](_autosummary/braidio.html.md#braidio.audio_tag_rate)(text, \*[, per])                    | Inline audio tags per `per` words — the expressiveness dial.                                                            |
@@ -1508,6 +1629,13 @@ there the field is the switch that turns pacing on — see
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Voice`](_autosummary/braidio.multivoice.html.md#braidio.multivoice.Voice), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
+### braidio.config_path()
+
+Where the user’s persisted defaults live (the file need not exist).
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
 ### braidio.content_violations(plan, forbidden, , min_words=5)
 
 Rights violations in a *published* plan (empty list = clean).
@@ -1553,6 +1681,39 @@ should prefer a [`SegmentSource`](_autosummary/braidio.html.md#braidio.SegmentSo
 * **Return type:**
   [`Segment`](_autosummary/braidio.sources.html.md#braidio.sources.Segment)
 
+### braidio.default_delivery(explicit=None)
+
+Resolve the delivery to render with.
+
+* **Parameters:**
+  **explicit** ([`Delivery`](_autosummary/braidio.delivery.html.md#braidio.delivery.Delivery) | [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)) – a [`Delivery`](_autosummary/braidio.delivery.html.md#braidio.delivery.Delivery), or the name of one
+  (see `braidio.delivery.DELIVERIES`). Wins over everything.
+* **Return type:**
+  [`Delivery`](_autosummary/braidio.delivery.html.md#braidio.delivery.Delivery)
+
+### Examples
+
+```pycon
+>>> default_delivery(V3_PRESENTER) is V3_PRESENTER
+True
+>>> default_delivery("v3-narrator").name
+'v3-narrator'
+```
+
+### braidio.default_voice_id(explicit=None)
+
+Resolve the narration voice id, or `None` to let the caller decide.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### braidio.default_voice_settings()
+
+The resolved delivery’s voice settings, as a fresh dict.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+
 ### braidio.describe_asset_application(fmt, script, , bed_asset=None, sting_asset=None)
 
 Which of the supplied `bed_asset` / `sting_asset` this format will
@@ -1571,6 +1732,16 @@ case is reported here, not refused.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`bool`](https://docs.python.org/3/builtins/functions.html#bool) | [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)]
+
+### braidio.describe_defaults()
+
+What is in force, and where each part came from.
+
+Worth printing when a render does not sound the way somebody expected: the
+commonest cause is a config file they forgot they wrote.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### braidio.estimate_cost(source, , model_id=None)
 
@@ -1671,7 +1842,7 @@ TimedLine\`s.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`TimedLine`](_autosummary/braidio.sources.html.md#braidio.sources.TimedLine)]
 
-### braidio.narrate(text, out_path, , api_key=None, voice_id=None, model_id='eleven_multilingual_v2', voice_settings=None, output_format='mp3_44100_128', refresh=False, return_cache_status=False)
+### braidio.narrate(text, out_path, , api_key=None, voice_id=None, model_id='eleven_v3', voice_settings=None, output_format='mp3_44100_128', refresh=False, return_cache_status=False)
 
 Synthesize `text` to `out_path` (mp3). Returns the path.
 
@@ -1760,7 +1931,7 @@ upcoming parameters (tracked as issues) — this renders turns sequentially.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Voice`](_autosummary/braidio.multivoice.html.md#braidio.multivoice.Voice), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
-### braidio.render_production(script, , source, api_key=None, config=None, profile=Profile.PERSONAL, rights=None, delivery=Delivery(name='v2-tuned', model_id='eleven_multilingual_v2', voice_settings={'stability': 0.35, 'similarity_boost': 0.75, 'style': 0.35, 'use_speaker_boost': True, 'speed': 0.98}, supports_audio_tags=False, supports_speed=True, note='★ recommended: lower stability + raised style; pairs with annotated text.'), cast=ConversationCast(roles={'A': 'cgSgspJ2msm6clMCkdW9', 'B': 'iP95p4xoKVk53GoZ742B'}, model_id='eleven_v3', settings={'stability': 0.45}), out_path=None, voice_id=None, crossfade_s=0.12, normalize=True, music_bed=None, structure=None, end_fade_s=0.35, end_silence_s=0.7, return_timeline=False, tts_dir='data/tts', clips_dir='data/clips', episodes_dir='data/episodes')
+### braidio.render_production(script, , source, api_key=None, config=None, profile=Profile.PERSONAL, rights=None, delivery=None, cast=ConversationCast(roles={'A': 'cgSgspJ2msm6clMCkdW9', 'B': 'iP95p4xoKVk53GoZ742B'}, model_id='eleven_v3', settings={'stability': 0.45}), out_path=None, voice_id=None, crossfade_s=0.12, normalize=True, music_bed=None, structure=None, end_fade_s=0.35, end_silence_s=0.7, return_timeline=False, tts_dir='data/tts', clips_dir='data/clips', episodes_dir='data/episodes')
 
 Render `script` under `profile` → a single audio file. Returns the path.
 
@@ -1931,6 +2102,16 @@ number — a bad rate must never silently become a dishonest negative/NaN spend.
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
 
+### braidio.user_config()
+
+The user’s persisted defaults, or `{}`.
+
+A missing file is normal. A malformed one warns *once* per path and is then
+treated as absent.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+
 ### braidio.weave_timeline(items, out_path, , clip_edge_overlap_s=0.5, narration_crossfade_s=0.12, target_lufs=-16.0, true_peak=-1.0, sample_rate=44100, bed=None)
 
 Place items on a timeline and mix. Clips overlap neighbours by
@@ -1955,6 +2136,7 @@ whole-span file. Falls back to a plain concat feel when
 | [`compose`](_autosummary/braidio.compose.html.md#module-braidio.compose)           | Config-driven narration composition (#20) — the reusable entrypoint.                                       |
 | [`conversation`](_autosummary/braidio.conversation.html.md#module-braidio.conversation) | Conversational register: render an exchange as people *talking to each other*.                             |
 | [`cost`](_autosummary/braidio.cost.html.md#module-braidio.cost)                 | Cost model for braidio's paid operations (ElevenLabs TTS).                                                 |
+| [`defaults`](_autosummary/braidio.defaults.html.md#module-braidio.defaults)         | User-overridable, persisted defaults for how braidio renders a voice.                                      |
 | [`delivery`](_autosummary/braidio.delivery.html.md#module-braidio.delivery)         | Narration *delivery* presets — model + voice settings (issue #10, expressiveness).                         |
 | [`formats`](_autosummary/braidio.formats.html.md#module-braidio.formats)           | Ready-made **format templates** — high-quality presets under standard names.                               |
 | [`kinds`](_autosummary/braidio.kinds.html.md#module-braidio.kinds)               | Production kinds braidio defines.                                                                          |
@@ -2408,7 +2590,7 @@ transforms (which add provenance + partial re-render).
 | [`render_production`](_autosummary/braidio.render.html.md#braidio.render.render_production)(script, \*, source[, ...])   | Render `script` under `profile` → a single audio file.   |
 |-------------------------------------------------------------------------------------------------|----------------------------------------------------------|
 
-### braidio.render.render_production(script, , source, api_key=None, config=None, profile=Profile.PERSONAL, rights=None, delivery=Delivery(name='v2-tuned', model_id='eleven_multilingual_v2', voice_settings={'stability': 0.35, 'similarity_boost': 0.75, 'style': 0.35, 'use_speaker_boost': True, 'speed': 0.98}, supports_audio_tags=False, supports_speed=True, note='★ recommended: lower stability + raised style; pairs with annotated text.'), cast=ConversationCast(roles={'A': 'cgSgspJ2msm6clMCkdW9', 'B': 'iP95p4xoKVk53GoZ742B'}, model_id='eleven_v3', settings={'stability': 0.45}), out_path=None, voice_id=None, crossfade_s=0.12, normalize=True, music_bed=None, structure=None, end_fade_s=0.35, end_silence_s=0.7, return_timeline=False, tts_dir='data/tts', clips_dir='data/clips', episodes_dir='data/episodes')
+### braidio.render.render_production(script, , source, api_key=None, config=None, profile=Profile.PERSONAL, rights=None, delivery=None, cast=ConversationCast(roles={'A': 'cgSgspJ2msm6clMCkdW9', 'B': 'iP95p4xoKVk53GoZ742B'}, model_id='eleven_v3', settings={'stability': 0.45}), out_path=None, voice_id=None, crossfade_s=0.12, normalize=True, music_bed=None, structure=None, end_fade_s=0.35, end_silence_s=0.7, return_timeline=False, tts_dir='data/tts', clips_dir='data/clips', episodes_dir='data/episodes')
 
 Render `script` under `profile` → a single audio file. Returns the path.
 
@@ -3346,6 +3528,11 @@ one narrator.
 Voice defaults to “George — Warm, Captivating Storyteller”; override with the
 `BRAIDIO_TTS_VOICE` env var (`VOICE_ENV_VAR`) or the `voice_id` arg.
 
+### Module Attributes
+
+| [`DEFAULT_MODEL_ID`](_autosummary/braidio.tts.html.md#braidio.tts.DEFAULT_MODEL_ID)   | The narration model.   |
+|---------------------------------------------------------------------|------------------------|
+
 ### Functions
 
 | [`narrate`](_autosummary/braidio.tts.html.md#braidio.tts.narrate)(text, out_path, \*[, api_key, ...])   | Synthesize `text` to `out_path` (mp3).                                         |
@@ -3353,7 +3540,16 @@ Voice defaults to “George — Warm, Captivating Storyteller”; override with 
 | [`resolve_voice_id`](_autosummary/braidio.tts.html.md#braidio.tts.resolve_voice_id)([voice_id])                  | Voice id from arg → `VOICE_ENV_VAR` env → default.                             |
 | [`text_to_dialogue`](_autosummary/braidio.tts.html.md#braidio.tts.text_to_dialogue)(turns, \*[, model_id, ...])  | Synthesize a multi-speaker exchange in ONE pass (ElevenLabs Text-to-Dialogue). |
 
-### braidio.tts.narrate(text, out_path, , api_key=None, voice_id=None, model_id='eleven_multilingual_v2', voice_settings=None, output_format='mp3_44100_128', refresh=False, return_cache_status=False)
+### braidio.tts.DEFAULT_MODEL_ID *= 'eleven_v3'*
+
+The narration model. eleven_v3 rather than eleven_multilingual_v2 because
+v2 cannot render inline [audio tags] AT ALL, and tag density is the main
+lever on whether a read sounds alive (braidio.style.audio_tag_rate). A v2
+default caps every production at the flat end before an author writes a
+word. Override per-render with `delivery=`, or persist your own in
+~/.config/braidio/config.json — see braidio.defaults.
+
+### braidio.tts.narrate(text, out_path, , api_key=None, voice_id=None, model_id='eleven_v3', voice_settings=None, output_format='mp3_44100_128', refresh=False, return_cache_status=False)
 
 Synthesize `text` to `out_path` (mp3). Returns the path.
 
@@ -3783,20 +3979,20 @@ Return a copy with fields overridden (e.g. `cfg.with_(min_turn=1)`).
 
 # About this build
 
-This documentation was built on **2026-09-16 16:45 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/67dba4160fd2c5fd50783a848d4c720d005c0ed1"><code>67dba41</code></a> on branch <code>main</code>, for **braidio 0.0.47** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-17 08:11 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/c8094d03ce3f5b5ae9ae79d49ce9de88da6d4618"><code>c8094d0</code></a> on branch <code>main</code>, for **braidio 0.0.48** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.0.47) is ahead of the latest release on PyPI (0.0.46): these docs describe unreleased code.
+- The documented version (0.0.48) is ahead of the latest release on PyPI (0.0.47): these docs describe unreleased code.
 
 ## Source
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/67dba4160fd2c5fd50783a848d4c720d005c0ed1"><code>67dba4160fd2c5fd50783a848d4c720d005c0ed1</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/c8094d03ce3f5b5ae9ae79d49ce9de88da6d4618"><code>c8094d03ce3f5b5ae9ae79d49ce9de88da6d4618</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.0.47</code>                                                                                                                                       |
+| Tags at this commit | <code>0.0.48</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/braidio</code>                                                                                                        |
 
@@ -3805,9 +4001,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/braidio</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35123485287">35123485287</a>   |
+| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35198127173">35198127173</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>784fa17dfd6cd1b69fbd1ea2cd7f978c61fa77d5</code> (in the history of the built commit) |
+| Event commit | <code>cc95b05d84985d9b87b9a1aa6191496aa585be8e</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -3832,13 +4028,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/braidio/0.0.46/">0.0.46</a>, older than the documented version (0.0.47).
+Latest release: <a href="https://pypi.org/project/braidio/0.0.47/">0.0.47</a>, older than the documented version (0.0.48).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/braidio && cd braidio
-git checkout 67dba4160fd2c5fd50783a848d4c720d005c0ed1
+git checkout c8094d03ce3f5b5ae9ae79d49ce9de88da6d4618
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

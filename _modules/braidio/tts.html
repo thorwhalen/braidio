@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=4f34e5f2"></script>
+    <script src="../../_static/documentation_options.js?v=a72e4630"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -410,7 +410,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.47" />
+  <meta name="docsearch:version" content="0.0.48" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -734,7 +734,13 @@ window.runMermaid = runMermaid;</script>
 
 <span class="c1"># "George — Warm, Captivating Storyteller" (ElevenLabs premade voice).</span>
 <span class="n">DEFAULT_VOICE_ID</span> <span class="o">=</span> <span class="s2">"JBFqnCBsd6RMkjVDRZzb"</span>
-<span class="n">DEFAULT_MODEL_ID</span> <span class="o">=</span> <span class="s2">"eleven_multilingual_v2"</span>
+<span class="c1">#: The narration model. eleven_v3 rather than eleven_multilingual_v2 because</span>
+<span class="c1">#: v2 cannot render inline [audio tags] AT ALL, and tag density is the main</span>
+<span class="c1">#: lever on whether a read sounds alive (braidio.style.audio_tag_rate). A v2</span>
+<span class="c1">#: default caps every production at the flat end before an author writes a</span>
+<span class="c1">#: word. Override per-render with `delivery=`, or persist your own in</span>
+<span class="c1">#: ~/.config/braidio/config.json — see braidio.defaults.</span>
+<span class="n">DEFAULT_MODEL_ID</span> <span class="o">=</span> <span class="s2">"eleven_v3"</span>
 <span class="n">VOICE_ENV_VAR</span> <span class="o">=</span> <span class="s2">"BRAIDIO_TTS_VOICE"</span>
 
 <span class="c1"># Preset from research: neutral-expressive documentary narration.</span>

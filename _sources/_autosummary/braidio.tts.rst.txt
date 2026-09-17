@@ -4,6 +4,12 @@ braidio.tts
 .. automodule:: braidio.tts
 
    
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DEFAULT_MODEL_ID
+   
    .. rubric:: Functions
 
    .. autosummary::

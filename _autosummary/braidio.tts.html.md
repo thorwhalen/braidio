@@ -10,6 +10,11 @@ one narrator.
 Voice defaults to “George — Warm, Captivating Storyteller”; override with the
 `BRAIDIO_TTS_VOICE` env var (`VOICE_ENV_VAR`) or the `voice_id` arg.
 
+### Module Attributes
+
+| [`DEFAULT_MODEL_ID`](#braidio.tts.DEFAULT_MODEL_ID)   | The narration model.   |
+|---------------------------------------------------------------------|------------------------|
+
 ### Functions
 
 | [`narrate`](#braidio.tts.narrate)(text, out_path, \*[, api_key, ...])   | Synthesize `text` to `out_path` (mp3).                                         |
@@ -17,7 +22,16 @@ Voice defaults to “George — Warm, Captivating Storyteller”; override with 
 | [`resolve_voice_id`](#braidio.tts.resolve_voice_id)([voice_id])                  | Voice id from arg → `VOICE_ENV_VAR` env → default.                             |
 | [`text_to_dialogue`](#braidio.tts.text_to_dialogue)(turns, \*[, model_id, ...])  | Synthesize a multi-speaker exchange in ONE pass (ElevenLabs Text-to-Dialogue). |
 
-### braidio.tts.narrate(text, out_path, , api_key=None, voice_id=None, model_id='eleven_multilingual_v2', voice_settings=None, output_format='mp3_44100_128', refresh=False, return_cache_status=False)
+### braidio.tts.DEFAULT_MODEL_ID *= 'eleven_v3'*
+
+The narration model. eleven_v3 rather than eleven_multilingual_v2 because
+v2 cannot render inline [audio tags] AT ALL, and tag density is the main
+lever on whether a read sounds alive (braidio.style.audio_tag_rate). A v2
+default caps every production at the flat end before an author writes a
+word. Override per-render with `delivery=`, or persist your own in
+~/.config/braidio/config.json — see braidio.defaults.
+
+### braidio.tts.narrate(text, out_path, , api_key=None, voice_id=None, model_id='eleven_v3', voice_settings=None, output_format='mp3_44100_128', refresh=False, return_cache_status=False)
 
 Synthesize `text` to `out_path` (mp3). Returns the path.
 

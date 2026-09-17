@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../_static/documentation_options.js?v=4f34e5f2"></script>
+    <script src="../../_static/documentation_options.js?v=a72e4630"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -410,7 +410,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.47" />
+  <meta name="docsearch:version" content="0.0.48" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -739,7 +739,8 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mixing</span><span class="w"> </span><span class="kn">import</span> <span class="n">concatenate_audio</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.conversation</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_CAST</span><span class="p">,</span> <span class="n">ConversationCast</span><span class="p">,</span> <span class="n">render_dialogue</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.delivery</span><span class="w"> </span><span class="kn">import</span> <span class="n">V2_TUNED</span><span class="p">,</span> <span class="n">Delivery</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.defaults</span><span class="w"> </span><span class="kn">import</span> <span class="n">default_delivery</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.delivery</span><span class="w"> </span><span class="kn">import</span> <span class="n">Delivery</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.pacing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NarrationTurn</span><span class="p">,</span> <span class="n">plan_turns</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.rights</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DEFAULT_PROFILE</span><span class="p">,</span>
@@ -954,7 +955,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">config</span><span class="p">:</span> <span class="n">WeaveConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">profile</span><span class="p">:</span> <span class="n">Profile</span> <span class="o">=</span> <span class="n">DEFAULT_PROFILE</span><span class="p">,</span>
     <span class="n">rights</span><span class="p">:</span> <span class="n">RightsPolicy</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">delivery</span><span class="p">:</span> <span class="n">Delivery</span> <span class="o">=</span> <span class="n">V2_TUNED</span><span class="p">,</span>
+    <span class="n">delivery</span><span class="p">:</span> <span class="n">Delivery</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">cast</span><span class="p">:</span> <span class="n">ConversationCast</span> <span class="o">=</span> <span class="n">DEFAULT_CAST</span><span class="p">,</span>
     <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">voice_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1027,6 +1028,12 @@ window.runMermaid = runMermaid;</script>
     <span class="n">work</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># extraction pads: from config when present, else small defaults</span>
+    <span class="c1"># `delivery=None` means "whatever this user/machine has settled on":</span>
+    <span class="c1"># explicit arg &gt; $BRAIDIO_DELIVERY &gt; ~/.config/braidio/config.json &gt; package</span>
+    <span class="c1"># default (v3-presenter). Resolved here rather than as a signature default so</span>
+    <span class="c1"># a config edit takes effect without reimporting.</span>
+    <span class="n">delivery</span> <span class="o">=</span> <span class="n">default_delivery</span><span class="p">(</span><span class="n">delivery</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">pre</span><span class="p">,</span> <span class="n">post</span><span class="p">,</span> <span class="n">fi</span><span class="p">,</span> <span class="n">fo</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">config</span><span class="o">.</span><span class="n">clip_pre_roll_s</span><span class="p">,</span>

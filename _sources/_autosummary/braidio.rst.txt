@@ -46,6 +46,12 @@
       render_settings
       clean_ocr
       strip_speaker_labels
+      config_path
+      default_delivery
+      default_voice_id
+      default_voice_settings
+      describe_defaults
+      user_config
       audit_platitudes
       audit_expressiveness
       audio_tag_rate
@@ -104,6 +110,7 @@
    compose
    conversation
    cost
+   defaults
    delivery
    downloads
    formats
