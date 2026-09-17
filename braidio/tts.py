@@ -18,7 +18,13 @@ from mixing import text_to_speech
 
 # "George — Warm, Captivating Storyteller" (ElevenLabs premade voice).
 DEFAULT_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"
-DEFAULT_MODEL_ID = "eleven_multilingual_v2"
+#: The narration model. eleven_v3 rather than eleven_multilingual_v2 because
+#: v2 cannot render inline [audio tags] AT ALL, and tag density is the main
+#: lever on whether a read sounds alive (braidio.style.audio_tag_rate). A v2
+#: default caps every production at the flat end before an author writes a
+#: word. Override per-render with `delivery=`, or persist your own in
+#: ~/.config/braidio/config.json — see braidio.defaults.
+DEFAULT_MODEL_ID = "eleven_v3"
 VOICE_ENV_VAR = "BRAIDIO_TTS_VOICE"
 
 # Preset from research: neutral-expressive documentary narration.

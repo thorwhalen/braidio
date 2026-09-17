@@ -8,6 +8,7 @@ per-character cost, and the Script-aware :func:`braidio.estimate_cost` (narratio
 import pytest
 
 from braidio import Script, Narration, Dialogue, SegmentBeat
+import braidio.cost as cost_module
 from braidio.cost import (
     RATE_ENV_VAR,
     DEFAULT_USD_PER_1K_CHARS,
@@ -65,8 +66,12 @@ def test_negative_or_nonfinite_rate_is_unpriced(monkeypatch, bad):
 
 def test_per_model_rate_wins_over_default(monkeypatch):
     # A confirmed per-model rate is used even with the env unset (default path).
-    monkeypatch.setitem(MODEL_USD_PER_1K_CHARS, DIALOGUE_MODEL_ID, 0.9)
-    assert usd_per_1k_chars(DIALOGUE_MODEL_ID) == 0.9
+    # Deliberately a model id no default uses: narration and dialogue both run on
+    # eleven_v3 now, so keying this off those constants would have the "priced"
+    # and "unaffected" models be the same one.
+    other = "test-only-model"
+    monkeypatch.setitem(MODEL_USD_PER_1K_CHARS, other, 0.9)
+    assert usd_per_1k_chars(other) == 0.9
     assert usd_per_1k_chars(DEFAULT_MODEL_ID) == DEFAULT_USD_PER_1K_CHARS  # unaffected
 
 
@@ -124,7 +129,10 @@ def test_estimate_script_bills_narration_and_dialogue_only():
 
 def test_estimate_dialogue_uses_dialogue_model_rate(monkeypatch):
     # A distinct per-model dialogue rate: estimate_cost sums the mixed rates.
-    monkeypatch.setitem(MODEL_USD_PER_1K_CHARS, DIALOGUE_MODEL_ID, 0.9)
+    # Dialogue is pinned to its own id here because it otherwise shares
+    # eleven_v3 with narration, which would make "mixed rates" untestable.
+    monkeypatch.setattr(cost_module, "DIALOGUE_MODEL_ID", "test-dialogue-model")
+    monkeypatch.setitem(MODEL_USD_PER_1K_CHARS, "test-dialogue-model", 0.9)
     script = Script(
         title="t",
         id_slug="01",

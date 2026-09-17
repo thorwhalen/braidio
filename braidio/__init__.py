@@ -60,6 +60,17 @@ from braidio.sources import (  # noqa: F401
     cut_quote,
 )
 
+# --- user-overridable defaults (explicit arg > env > config file > package) ---
+from braidio.defaults import (  # noqa: F401
+    PACKAGE_DEFAULT_DELIVERY,
+    config_path,
+    default_delivery,
+    default_voice_id,
+    default_voice_settings,
+    describe_defaults,
+    user_config,
+)
+
 # --- narration synthesis ---
 from braidio.tts import (  # noqa: F401
     narrate,
@@ -388,6 +399,13 @@ __all__ = [
     "strip_speaker_labels",
     "Finding",
     "PLATITUDE_PATTERNS",
+    "PACKAGE_DEFAULT_DELIVERY",
+    "config_path",
+    "default_delivery",
+    "default_voice_id",
+    "default_voice_settings",
+    "describe_defaults",
+    "user_config",
     "audit_platitudes",
     "audit_expressiveness",
     "audio_tag_rate",

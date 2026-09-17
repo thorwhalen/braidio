@@ -23,7 +23,8 @@ from pathlib import Path
 from mixing import concatenate_audio
 
 from braidio.conversation import DEFAULT_CAST, ConversationCast, render_dialogue
-from braidio.delivery import V2_TUNED, Delivery
+from braidio.defaults import default_delivery
+from braidio.delivery import Delivery
 from braidio.pacing import NarrationTurn, plan_turns
 from braidio.rights import (
     DEFAULT_PROFILE,
@@ -236,7 +237,7 @@ def render_production(
     config: WeaveConfig | None = None,
     profile: Profile = DEFAULT_PROFILE,
     rights: RightsPolicy | None = None,
-    delivery: Delivery = V2_TUNED,
+    delivery: Delivery | str | None = None,
     cast: ConversationCast = DEFAULT_CAST,
     out_path: str | Path | None = None,
     voice_id: str | None = None,
@@ -309,6 +310,12 @@ def render_production(
     work.mkdir(parents=True, exist_ok=True)
 
     # extraction pads: from config when present, else small defaults
+    # `delivery=None` means "whatever this user/machine has settled on":
+    # explicit arg > $BRAIDIO_DELIVERY > ~/.config/braidio/config.json > package
+    # default (v3-presenter). Resolved here rather than as a signature default so
+    # a config edit takes effect without reimporting.
+    delivery = default_delivery(delivery)
+
     if config is not None:
         pre, post, fi, fo = (
             config.clip_pre_roll_s,
@@ -324,9 +331,9 @@ def render_production(
     parts: list[Path] = []
     kinds: list[str] = []
     placements: list[str] = []  # "sequential" | "under" (per part, for the weave)
-    roles: list[
-        str
-    ] = []  # aggregation label per beat (clip / narration / style / dialogue)
+    roles: list[str] = (
+        []
+    )  # aggregation label per beat (clip / narration / style / dialogue)
     spans: list[tuple[float, float] | None] = []  # source [start,end) for clips
     labels: list[str] = []
     spotlights: list[bool] = []  # per part: the bed drops out over it

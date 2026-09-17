@@ -92,7 +92,9 @@ class Format:
     clip_placement: str = (
         "before"  # recommended default SegmentBeat.placement (before|under|after)
     )
-    music_bed: str = "light"  # bed intensity when a bed_asset is given: continuous | light | sparse | none
+    music_bed: str = (
+        "light"  # bed intensity when a bed_asset is given: continuous | light | sparse | none
+    )
     scripting: str = ""  # how to author a Script for this format (authoring)
 
     def __post_init__(self) -> None:
@@ -327,7 +329,7 @@ DEEP_DIVE = Format(
         roles={"host_a": JESSICA, "host_b": CHRIS}, settings={"stability": 0.45}
     ),
     narration_voice=GEORGE,  # for optional bridges between segments
-    narration_delivery=V2_NARRATOR,
+    narration_delivery=V3_NARRATOR,
     weave=WeaveConfig(),
     roles={"host_a": "explainer / driver", "host_b": "prober / curious surrogate"},
     clip_placement="after",  # hosts cue, then play/react (the cue is the bridge)
@@ -350,7 +352,7 @@ INTERVIEW = Format(
         roles={"host": JESSICA, "guest": CHRIS}, settings={"stability": 0.45}
     ),
     narration_voice=GEORGE,  # optional chapter bridges only
-    narration_delivery=V2_NARRATOR,
+    narration_delivery=V3_NARRATOR,
     weave=WeaveConfig(),
     roles={
         "host": "curious interviewer",
@@ -374,7 +376,7 @@ SONG_EXPLODER = Format(
     summary="Guest narrates in first person; every claim illustrated by its isolated stem; full artifact at the tail.",
     cast=None,  # host removed → continuous guest monologue (Narration voiced by the guest)
     narration_voice=CHRIS,  # the maker, first person
-    narration_delivery=V2_PRESENTER,
+    narration_delivery=V3_PRESENTER,
     weave=WeaveConfig(),
     roles={"guest": "the maker, sole voice; host is the invisible editor/curator"},
     clip_placement="before",  # name the element, then play the isolated stem
@@ -402,7 +404,7 @@ PANEL = Format(
         settings={"stability": 0.45},
     ),
     narration_voice=GEORGE,
-    narration_delivery=V2_NARRATOR,
+    narration_delivery=V3_NARRATOR,
     weave=WeaveConfig(),
     roles={
         "moderator": "neutral routing voice (spine + traffic control)",
@@ -431,7 +433,7 @@ DEBATE = Format(
         settings={"stability": 0.45},
     ),
     narration_voice=BILL,  # structural announcements, voiced by the moderator
-    narration_delivery=V2_NARRATOR,
+    narration_delivery=V3_NARRATOR,
     weave=WeaveConfig(),
     roles={
         "moderator": "neutral; frames + routes, never argues",
