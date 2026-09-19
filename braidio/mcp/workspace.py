@@ -21,6 +21,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from braidio._paths import safe_component
+
 #: Env var overriding the braidio data root (where per-user projects/renders live).
 DATA_HOME_ENV_VAR = "BRAIDIO_DATA_HOME"
 
@@ -29,14 +31,6 @@ def data_root() -> Path:
     """The braidio data root: ``$BRAIDIO_DATA_HOME`` or ``~/.local/share/braidio``."""
     override = os.environ.get(DATA_HOME_ENV_VAR)
     return Path(override) if override else Path.home() / ".local" / "share" / "braidio"
-
-
-def _safe_component(value: str, *, label: str) -> str:
-    """A single, traversal-safe path component (no ``/``, ``\\``, ``..``, or empties)."""
-    v = (value or "").strip()
-    if not v or v in (".", "..") or "/" in v or "\\" in v or "\x00" in v:
-        raise ValueError(f"invalid {label}: {value!r}")
-    return v
 
 
 @dataclass(frozen=True)
@@ -56,23 +50,28 @@ class Workspace:
 
     @property
     def projects_dir(self) -> Path:
-        return self.root / "projects" / _safe_component(self.email, label="email")
+        return self.root / "projects" / safe_component(self.email, label="email")
 
     @property
     def renders_dir(self) -> Path:
-        return self.root / "renders" / _safe_component(self.email, label="email")
+        return self.root / "renders" / safe_component(self.email, label="email")
 
     def project_root(self, project_id: str) -> Path:
-        pid = _safe_component(project_id, label="project_id")
+        pid = safe_component(project_id, label="project_id")
         return self.projects_dir / pid
 
     def create_project(self, project_id: str, *, title: str = "", force: bool = False):
-        """Create (and return) a new :class:`braidio.Project` under this user."""
-        from braidio import Project
+        """Create (and return) a new :class:`braidio.Project` under this user.
 
-        root = self.project_root(project_id)
-        root.parent.mkdir(parents=True, exist_ok=True)
-        return Project.init(root, title=title or project_id, force=force)
+        Delegates to :func:`braidio.project.create_project_at` — the one create —
+        with this caller's own projects dir as the placement, so the workspace path
+        and the host-placed path cannot drift apart.
+        """
+        from braidio.project import create_project_at
+
+        return create_project_at(
+            self.projects_dir, project_id, title=title, force=force
+        )
 
     def open_project(self, project_id: str):
         """Open an existing :class:`braidio.Project` (raises if it doesn't exist)."""
@@ -133,7 +132,7 @@ class Workspace:
         guarantee, defended at the create side too — organise's collision
         scan can only see names that exist when IT runs).
         """
-        stem = _safe_component(name, label="render name")
+        stem = safe_component(name, label="render name")
         from braidio.downloads import _media_exists, _stem_for_assigned_title
 
         holder = _stem_for_assigned_title(self.renders_dir, stem.casefold())
@@ -161,7 +160,7 @@ class Workspace:
 
     @property
     def assets_dir(self) -> Path:
-        return self.root / "assets" / _safe_component(self.email, label="email")
+        return self.root / "assets" / safe_component(self.email, label="email")
 
     def content_store(self):
         """The user's content-addressed asset store (``dol`` — local now, S3 later).
@@ -178,14 +177,14 @@ class Workspace:
         """The user's asset metadata sidecar (``{hash: {name, mimeType, size, ...}}``)."""
         from dol import JsonFiles
 
-        d = self.root / "assets_meta" / _safe_component(self.email, label="email")
+        d = self.root / "assets_meta" / safe_component(self.email, label="email")
         d.mkdir(parents=True, exist_ok=True)
         return JsonFiles(str(d))
 
     def asset_path(self, asset_id: str) -> str:
         """Resolve a stored asset (a :class:`dol.ContentRef` ``item_id``/hash) to its
         server-local file path — so weave/render can read the media."""
-        key = _safe_component(asset_id, label="asset_id")
+        key = safe_component(asset_id, label="asset_id")
         if key not in self.content_store():
             raise FileNotFoundError(f"no asset {asset_id!r} for {self.email}")
         return str(self.assets_dir / key)

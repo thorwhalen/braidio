@@ -108,8 +108,14 @@ video = ["burns>=0.0.11", "pillow", "tituli>=0.0.4"]
 # signature; 0.0.29 is the first release with the new one.
 # nw>=0.0.51: `execute(..., secrets=)` — the per-caller credential seam the two
 # paid transforms declare and `weave_project(api_key=)` threads (braidio#58, nw#78).
+# nw>=0.0.55: the project-factory PLACEMENT contract (`projects_dir`, nw#84). The
+# commentary_weave factory accepts it on any nw — an old one simply never passes it
+# — but `nw.can_place_genre_project` and `create_genre_project(projects_dir=)` are
+# what a HOST needs to place a commentary project in its own world, and they exist
+# only from 0.0.55. Below it the genre is still creatable, only never host-placeable,
+# so the floor is raised rather than guarded at runtime.
 # Same wads caveat as above: the feature commit is one release before the bump.
-nw-app = ["lacing", "nw>=0.0.51", "falaw"]
+nw-app = ["lacing", "nw>=0.0.55", "falaw"]
 # The MCP server (`braidio.mcp`): a Claude.ai connector's tool surface + usage
 # metering. `fastmcp` + `py2mcp` build and serve it; the nw-app powers the project
 # and weave tools. The usage-ledger store is dependency-injected by the connector
