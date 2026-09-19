@@ -193,6 +193,15 @@ Path("ep.srt").write_text(braidio.captions_for(script, timeline, max_chars=42))
 ```
 
 `braidio.captions` is part of the core (pure, no extra dependencies);
+For a production you will **reopen and re-edit** — swap a still, change a
+move, re-render — the picture track lives in the project graph instead: four
+`lacing` bodies (`still/v1`, `video-panel/v1`, `video-cut/v1`,
+`label-track/v1`) and three free transforms on the `commentary_weave` genre
+(`video_panels.plan`, `video_cut.render`, `video_cut.finish`). The episode
+persists its timeline, a panel pins its still to a span of the audio with an
+authored camera move, and a label edit re-runs the cheap text pass, not the
+frames. The `braidio-commentary-video` skill has the walkthrough.
+
 `braidio.video`’s dependencies are imported inside the functions that use them, so
 `import braidio.video` works on a bare install and the planners stay usable —
 `braidio.HAS_VIDEO` reports whether the render path is available.

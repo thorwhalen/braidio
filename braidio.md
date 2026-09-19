@@ -1,4 +1,4 @@
-> built 2026-09-17 08:11 UTC from c8094d0 (main) · braidio 0.0.48. Details: build_info.json
+> built 2026-09-19 22:06 UTC from 58529fc (main) · braidio 0.0.49. Details: build_info.json
 
 # index.html.md
 
@@ -197,6 +197,15 @@ Path("ep.srt").write_text(braidio.captions_for(script, timeline, max_chars=42))
 ```
 
 `braidio.captions` is part of the core (pure, no extra dependencies);
+For a production you will **reopen and re-edit** — swap a still, change a
+move, re-render — the picture track lives in the project graph instead: four
+`lacing` bodies (`still/v1`, `video-panel/v1`, `video-cut/v1`,
+`label-track/v1`) and three free transforms on the `commentary_weave` genre
+(`video_panels.plan`, `video_cut.render`, `video_cut.finish`). The episode
+persists its timeline, a panel pins its still to a span of the audio with an
+authored camera move, and a label edit re-runs the cheap text pass, not the
+frames. The `braidio-commentary-video` skill has the walkthrough.
+
 `braidio.video`’s dependencies are imported inside the functions that use them, so
 `import braidio.video` works on a bare install and the planners stay usable —
 `braidio.HAS_VIDEO` reports whether the render path is available.
@@ -1400,6 +1409,23 @@ breakdown gets the record for free.
 #### *property* duration *: [float](https://docs.python.org/3/builtins/functions.html#float)*
 
 Total timeline length (s) — the max beat end, accounting for overlaps.
+
+#### *classmethod* from_dict(d)
+
+Rebuild a breakdown from `to_dict()` output (the persisted form).
+
+`totals` and `duration` are derived, so they are recomputed rather
+than read back — the beats are the record.
+
+* **Return type:**
+  [`TimelineBreakdown`](_autosummary/braidio.timeline.html.md#braidio.timeline.TimelineBreakdown)
+
+```pycon
+>>> tl = build_timeline(kinds=["narration", "clip"], durations=[4.0, 2.0],
+...                     labels=["a", "b"], source_spans=[None, (1.0, 3.0)])
+>>> TimelineBreakdown.from_dict(tl.to_dict()) == tl
+True
+```
 
 #### shares()
 
@@ -3437,6 +3463,23 @@ breakdown gets the record for free.
 
 Total timeline length (s) — the max beat end, accounting for overlaps.
 
+#### *classmethod* from_dict(d)
+
+Rebuild a breakdown from `to_dict()` output (the persisted form).
+
+`totals` and `duration` are derived, so they are recomputed rather
+than read back — the beats are the record.
+
+* **Return type:**
+  [`TimelineBreakdown`](_autosummary/braidio.timeline.html.md#braidio.timeline.TimelineBreakdown)
+
+```pycon
+>>> tl = build_timeline(kinds=["narration", "clip"], durations=[4.0, 2.0],
+...                     labels=["a", "b"], source_spans=[None, (1.0, 3.0)])
+>>> TimelineBreakdown.from_dict(tl.to_dict()) == tl
+True
+```
+
 #### shares()
 
 Fraction of spoken+clip time per `kind` (sums to 1).
@@ -3979,20 +4022,18 @@ Return a copy with fields overridden (e.g. `cfg.with_(min_turn=1)`).
 
 # About this build
 
-This documentation was built on **2026-09-17 08:11 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/c8094d03ce3f5b5ae9ae79d49ce9de88da6d4618"><code>c8094d0</code></a> on branch <code>main</code>, for **braidio 0.0.48** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-19 22:06 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/58529fc515d0c9eab7ff4cb4248c24fbffaa2426"><code>58529fc</code></a> on branch <code>main</code>, for **braidio 0.0.49** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.48) is ahead of the latest release on PyPI (0.0.47): these docs describe unreleased code.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/c8094d03ce3f5b5ae9ae79d49ce9de88da6d4618"><code>c8094d03ce3f5b5ae9ae79d49ce9de88da6d4618</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/58529fc515d0c9eab7ff4cb4248c24fbffaa2426"><code>58529fc515d0c9eab7ff4cb4248c24fbffaa2426</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.0.48</code>                                                                                                                                       |
+| Tags at this commit | <code>0.0.49</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/braidio</code>                                                                                                        |
 
@@ -4001,9 +4042,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/braidio</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35198127173">35198127173</a>   |
+| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35472170288">35472170288</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>cc95b05d84985d9b87b9a1aa6191496aa585be8e</code> (in the history of the built commit) |
+| Event commit | <code>52285fe16d140d5896d4e2a0ba786096c87b07f0</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4028,13 +4069,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/braidio/0.0.47/">0.0.47</a>, older than the documented version (0.0.48).
+Latest release: <a href="https://pypi.org/project/braidio/0.0.49/">0.0.49</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/braidio && cd braidio
-git checkout c8094d03ce3f5b5ae9ae79d49ce9de88da6d4618
+git checkout 58529fc515d0c9eab7ff4cb4248c24fbffaa2426
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

@@ -502,6 +502,23 @@ breakdown gets the record for free.
 
 Total timeline length (s) — the max beat end, accounting for overlaps.
 
+#### *classmethod* from_dict(d)
+
+Rebuild a breakdown from `to_dict()` output (the persisted form).
+
+`totals` and `duration` are derived, so they are recomputed rather
+than read back — the beats are the record.
+
+* **Return type:**
+  [`TimelineBreakdown`](braidio.timeline.html.md#braidio.timeline.TimelineBreakdown)
+
+```pycon
+>>> tl = build_timeline(kinds=["narration", "clip"], durations=[4.0, 2.0],
+...                     labels=["a", "b"], source_spans=[None, (1.0, 3.0)])
+>>> TimelineBreakdown.from_dict(tl.to_dict()) == tl
+True
+```
+
 #### shares()
 
 Fraction of spoken+clip time per `kind` (sums to 1).

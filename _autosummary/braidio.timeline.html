@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=a72e4630"></script>
+    <script src="../_static/documentation_options.js?v=0356c229"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="braidio.textprep" href="braidio.textprep.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.48" />
+  <meta name="docsearch:version" content="0.0.49" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -484,6 +484,25 @@ breakdown gets the record for free.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="braidio.timeline.TimelineBreakdown.from_dict">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/timeline.html#TimelineBreakdown.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.timeline.TimelineBreakdown.from_dict" title="Link to this definition">#</a></dt>
+<dd><p>Rebuild a breakdown from <code class="xref py py-meth docutils literal notranslate"><span class="pre">to_dict()</span></code> output (the persisted form).</p>
+<p><code class="docutils literal notranslate"><span class="pre">totals</span></code> and <code class="docutils literal notranslate"><span class="pre">duration</span></code> are derived, so they are recomputed rather
+than read back — the beats are the record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#braidio.timeline.TimelineBreakdown" title="braidio.timeline.TimelineBreakdown"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimelineBreakdown</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tl</span> <span class="o">=</span> <span class="n">build_timeline</span><span class="p">(</span><span class="n">kinds</span><span class="o">=</span><span class="p">[</span><span class="s2">"narration"</span><span class="p">,</span> <span class="s2">"clip"</span><span class="p">],</span> <span class="n">durations</span><span class="o">=</span><span class="p">[</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span>
+<span class="gp">... </span>                    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">],</span> <span class="n">source_spans</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TimelineBreakdown</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">tl</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span> <span class="o">==</span> <span class="n">tl</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="braidio.timeline.TimelineBreakdown.shares">
 <span class="sig-name descname"><span class="pre">shares</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/timeline.html#TimelineBreakdown.shares"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.timeline.TimelineBreakdown.shares" title="Link to this definition">#</a></dt>
 <dd><p>Fraction of spoken+clip time per <code class="docutils literal notranslate"><span class="pre">kind</span></code> (sums to 1).</p>
@@ -628,6 +647,7 @@ a weave choice.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.timeline.BeatSpan"><code class="docutils literal notranslate"><span class="pre">BeatSpan</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.timeline.TimelineBreakdown"><code class="docutils literal notranslate"><span class="pre">TimelineBreakdown</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.timeline.TimelineBreakdown.duration"><code class="docutils literal notranslate"><span class="pre">TimelineBreakdown.duration</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.timeline.TimelineBreakdown.from_dict"><code class="docutils literal notranslate"><span class="pre">TimelineBreakdown.from_dict()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.timeline.TimelineBreakdown.shares"><code class="docutils literal notranslate"><span class="pre">TimelineBreakdown.shares()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.timeline.TimelineBreakdown.to_html"><code class="docutils literal notranslate"><span class="pre">TimelineBreakdown.to_html()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.timeline.TimelineBreakdown.totals"><code class="docutils literal notranslate"><span class="pre">TimelineBreakdown.totals()</span></code></a></li>
