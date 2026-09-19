@@ -450,7 +450,8 @@ def list_projects(email: str) -> list:
     braidio's half of ``nw.delivery.ProjectLister``. Rows are
     ``nw.delivery.ProjectSummary``, newest-modified first (the workspace
     already orders them). ``deliverable_count`` counts the project's
-    EPISODES — the one braidio population that is project-scoped; the flat
+    EPISODES only, by design — the audio is the production, a cut is a
+    delivery made from it (the studio counts cuts through the graph); the flat
     per-caller renders belong to no project and are the ``Lister``'s to
     show. ``0`` is the load-bearing answer: a production with a script and
     no weave yet must list as "no episode yet" rather than vanish.
@@ -559,8 +560,10 @@ def organise(
                     and _media_exists(renders, own)
                 ):
                     return own
-            # Episode ids + their assigned titles, across every project.
-            for pid, _t, episodes in _episode_dirs(email):
+            # Episode + cut ids and their assigned titles, across every
+            # project — the same population `resolve` answers from, or a
+            # title accepted here could resolve to two files (braidio#73).
+            for pid, _t, episodes, _kind in _media_dirs(email):
                 if not episodes.is_dir():
                     continue
                 for child in episodes.iterdir():

@@ -285,6 +285,19 @@ def test_a_commentary_cut_is_retrievable_and_listed_beside_the_episode(
     assert resolve(OWNER, "", motion.stem).meta["stage"] == "motion"
 
 
+def test_organise_refuses_a_title_a_cut_already_holds(tmp_path, monkeypatch):
+    """The collision scan covers the same population `resolve` answers from:
+    a title accepted for an episode while a cut holds it would resolve to
+    whichever directory is walked first."""
+    from braidio.downloads import organise
+
+    _cut(tmp_path, monkeypatch)
+    organise(OWNER, "braidio_test_02", CUT_ID, title="Same Name")
+    with pytest.raises(ValueError):
+        organise(OWNER, "braidio_test_02", EPISODE_ID, title="Same Name")
+    assert resolve(OWNER, "", "Same Name").artifact_id == CUT_ID
+
+
 OTHER_EPISODE_ID = "1111ffff-2222-3333-4444-555566667777"
 
 

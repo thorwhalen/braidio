@@ -443,8 +443,10 @@ Rules that fall out of the shape, each of which cost a real production:
   still swapped, a crop changed, the audio re-woven since it rendered) and
   fails an overlay collision (two equal-weight cards in one slot) at plan
   time. A clip contributes no caption — its sung text is not on the graph.
-- **A published cut refuses a still with no recorded licence** at render
-  plan time; a personal cut renders it and only a credits roll refuses.
+- **A published cut refuses a still with no recorded licence** — at both
+  `video_cut.render` and `video_cut.finish` plan time, against the episode's
+  profile as it stands now; a personal cut renders it and only a credits
+  roll refuses.
 
 ## Where this stops
 

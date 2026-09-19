@@ -201,11 +201,13 @@ def test_credit_line_names_the_work_not_the_editorial_subject_or_the_slot():
     from braidio.bodies import credit_line
 
     line = credit_line(_still(title="Beach Boys, Central Park"))
-    assert line.startswith("Beach Boys, Central Park — EliziR — cc-by-sa-2.0")
-    assert line.endswith("https://commons.wikimedia.org/wiki/File:x.jpg")
+    assert line == (
+        "Beach Boys, Central Park — EliziR — "
+        "https://commons.wikimedia.org/wiki/File:x.jpg — cc-by-sa-2.0"
+    )
     untitled = credit_line(_still())
     assert "not this concert" not in untitled and "central-park-1971" not in untitled
-    assert untitled.startswith("EliziR — cc-by-sa-2.0")
+    assert untitled.startswith("EliziR — https://")
 
 
 # --- panel: the vocabulary and the seed ------------------------------------------
@@ -215,10 +217,14 @@ def test_panel_move_must_be_in_the_vocabulary():
     from braidio.bodies import MOVES, VideoPanelBodyV1
 
     with pytest.raises(ValueError, match="not one of"):
-        VideoPanelBodyV1(still_id="s", move="zoom_wildly", seed=1, order=0, track_id="t")
+        VideoPanelBodyV1(
+            still_id="s", move="zoom_wildly", seed=1, order=0, track_id="t"
+        )
     for move in MOVES:
         assert (
-            VideoPanelBodyV1(still_id="s", move=move, seed=1, order=0, track_id="t").move
+            VideoPanelBodyV1(
+                still_id="s", move=move, seed=1, order=0, track_id="t"
+            ).move
             == move
         )
 

@@ -33,8 +33,13 @@ def test_format_rejects_a_typo_d_music_bed():
 
 def test_presets_well_formed():
     assert set(FORMATS) == {
-        "solo_explainer", "deep_dive", "interview", "interview_host_removed",
-        "panel", "debate", "documentary_vo",
+        "solo_explainer",
+        "deep_dive",
+        "interview",
+        "interview_host_removed",
+        "panel",
+        "debate",
+        "documentary_vo",
     }
     for fid, f in FORMATS.items():
         assert isinstance(f, Format) and f.id == fid
@@ -182,8 +187,11 @@ def test_format_render_method_delegates(monkeypatch):
     import braidio.formats as fmt_mod
 
     monkeypatch.setattr(
-        fmt_mod, "render_format",
-        lambda fmt, script, **kw: captured.update({"fmt": fmt, "script": script, **kw}) or "OK",
+        fmt_mod,
+        "render_format",
+        lambda fmt, script, **kw: (
+            captured.update({"fmt": fmt, "script": script, **kw}) or "OK"
+        ),
     )
     assert PANEL.render("S", source="SRC") == "OK"
     assert captured["fmt"] is PANEL and captured["script"] == "S"

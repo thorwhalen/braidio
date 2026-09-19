@@ -699,6 +699,20 @@ def test_finish_fails_an_overlay_collision_at_plan_time(
     assert patched_overlay == []  # nothing was rendered
 
 
+def test_a_fresh_cut_whose_file_is_gone_is_re_rendered(
+    project, episode, stills, panels, patched_render
+):
+    """The fresh-equivalent door, with no edit at all: a node is not a cut."""
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM
+    from braidio.transforms._common import url_to_path
+
+    first = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    url_to_path(first.body["url"]).unlink()
+    second = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    assert len(patched_render) == 2
+    assert url_to_path(second.body["url"]).exists()
+
+
 def test_a_cached_cut_whose_file_is_gone_is_not_adopted(
     project, episode, stills, panels, patched_render
 ):
@@ -727,6 +741,86 @@ def test_published_profile_refuses_an_unlicensed_still(
     _rewrite_in_place(project, episode, body={**episode.body, "profile": "published"})
     with pytest.raises(ValueError, match="published"):
         _plan(VIDEO_CUT_RENDER_TRANSFORM, project, *panels)
+
+
+def test_an_edited_track_is_still_the_track_a_re_plan_returns(project, episode, stills):
+    """Editing a panel's move must not make the next re-plan write a new
+    track and hide the edit behind 'the latest'."""
+    from braidio.transforms import VIDEO_PANELS_TRANSFORM, panels_for_episode
+
+    first = list(_run(VIDEO_PANELS_TRANSFORM, project, episode).annotations)
+    _rewrite_in_place(project, first[0], body={**first[0].body, "move": "drift_left"})
+    again = _run(VIDEO_PANELS_TRANSFORM, project, episode).annotations
+    assert [a.id for a in again] == [a.id for a in first]
+    assert panels_for_episode(project, episode.id)[0].body["move"] == "drift_left"
+
+
+def test_finish_stamps_and_gates_the_episodes_current_profile(
+    project, episode, stills, panels, patched_render, patched_overlay
+):
+    from braidio.transforms import (
+        VIDEO_CUT_FINISH_TRANSFORM,
+        VIDEO_CUT_RENDER_TRANSFORM,
+    )
+    from braidio.transforms._common import graph_index
+
+    motion = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    _rewrite_in_place(project, episode, body={**episode.body, "profile": "published"})
+    cut = _run(VIDEO_CUT_FINISH_TRANSFORM, project, motion).annotations[0]
+    assert cut.body["profile"] == "published"  # as the episode stands NOW
+    still = graph_index(project)[uuid.UUID(panels[0].body["still_id"])]
+    _rewrite_in_place(project, still, body={**still.body, "license": None})
+    with pytest.raises(ValueError, match="published"):
+        _plan(VIDEO_CUT_FINISH_TRANSFORM, project, motion)
+
+
+def test_a_stored_path_for_another_aspect_fails_the_render_plan(
+    project, episode, stills, panels
+):
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM
+
+    four_three = {
+        "version": 1,
+        "keyframes": [
+            {"t": 0.0, "rect": {"x": 0, "y": 0, "w": 1, "h": 1}},
+            {"t": 1.0, "rect": {"x": 0.1, "y": 0.1, "w": 0.8, "h": 0.8}},
+        ],
+        "interp": "linear",
+        "easing": "ease-in-out",
+        "output_aspect": 4 / 3,
+    }
+    edited = _rewrite_in_place(
+        project, panels[0], body={**panels[0].body, "path": four_three}
+    )
+    with pytest.raises(ValueError, match="aspect"):
+        _plan(VIDEO_CUT_RENDER_TRANSFORM, project, edited, *panels[1:])
+
+
+def test_finish_leaves_no_staging_file_where_the_lister_looks(
+    project, episode, stills, panels, patched_render, patched_overlay, monkeypatch
+):
+    """A crash mid-chain must not leave an mp4 directly in data/cuts."""
+    import tituli.video
+
+    from braidio.transforms import (
+        VIDEO_CUT_FINISH_TRANSFORM,
+        VIDEO_CUT_RENDER_TRANSFORM,
+    )
+
+    motion = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    _add_label_track(project, episode, start=0.0, end=4.0, kind="title", headline="T")
+
+    def _overlay_then_die(video, overlays, dst, **kw):
+        _write(dst, b"PARTIAL")
+        raise RuntimeError("ffmpeg died")
+
+    monkeypatch.setattr(tituli.video, "overlay", _overlay_then_die)
+    with pytest.raises(RuntimeError):
+        _run(VIDEO_CUT_FINISH_TRANSFORM, project, motion)
+    cuts = project.root / "data" / "cuts"
+    assert [p.name for p in cuts.iterdir() if p.suffix == ".mp4"] == [
+        Path(motion.body["url"]).name
+    ]
 
 
 def test_motion_key_names_the_move_resolver(

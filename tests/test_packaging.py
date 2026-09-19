@@ -15,7 +15,10 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ("braidio/data/skills/braidio/SKILL.md", "braidio/data/skills/braidio-commentary-video/SKILL.md")
+SKILLS = (
+    "braidio/data/skills/braidio/SKILL.md",
+    "braidio/data/skills/braidio-commentary-video/SKILL.md",
+)
 
 pytest.importorskip("build")
 
@@ -36,7 +39,9 @@ def test_skill_ships_in_wheel_built_from_sdist(tmp_path):
         tf.extractall(tmp_path / "src", filter="data")
     for skill in SKILLS:
         assert any(n.endswith(skill) for n in names), names
-    assert not any("/.claude/" in n for n in names), "the symlink bridge leaked into the sdist"
+    assert not any("/.claude/" in n for n in names), (
+        "the symlink bridge leaked into the sdist"
+    )
     (src_dir,) = (tmp_path / "src").iterdir()
     wheel = _build("wheel", src_dir, tmp_path / "wheel")
     with zipfile.ZipFile(wheel) as zf:

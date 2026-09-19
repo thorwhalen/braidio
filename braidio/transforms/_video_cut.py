@@ -83,6 +83,7 @@ from braidio.transforms._common import (
     TIER_STILL,
     TIER_VIDEO_CUT,
     TIER_VIDEO_PANEL,
+    adopt_output,
     cached_output,
     file_url,
     fresh_equivalent,
@@ -119,6 +120,17 @@ _KIND_SLOTS = {
 _LABEL_WEIGHT = 1
 #: Chars of a content digest used in a canvas / crop file name.
 _NAME_DIGEST_CHARS = 16
+#: JPEG quality a cropped still is re-encoded at (PIL's default 75 would put a
+#: lossy generation under prepare_still's q94 canvas).
+_CROP_JPEG_QUALITY = 96
+#: Bump when prepare_still's output changes for the same bytes and size
+#: (blur, darkening, resampling): canvases are cached by name in a shared
+#: workdir, and the motion key alone cannot see a canvas algorithm change.
+_CANVAS_VERSION = "1"
+#: Staging area for a finish's intermediates — a SUBdirectory, so a crash
+#: between stages leaves nothing the delivery lister (which walks only the
+#: files directly in data/cuts) would present as a cut.
+_STAGING_DIR = "_staging"
 
 
 # --- the move ---------------------------------------------------------------
@@ -127,14 +139,22 @@ _NAME_DIGEST_CHARS = 16
 def resolver_identity() -> str:
     """Which code frames a named move — part of the motion cache key.
 
-    ``"burns.resolve_move"`` when burns exports it, else ``"braidio.shim"``.
-    The two build different windows for six of the eight moves, so a cut
-    framed by one must not be served for a plan that would be framed by the
-    other (nw invariant 3: a behaviour change must reach the cache key).
+    ``"braidio.shim"`` when burns does not export ``resolve_move`` (the shim's
+    own behaviour is versioned by this Transform's ``impl_version``, which the
+    key already folds). Otherwise ``"burns.moves@<sha256 of burns/moves.py>"``
+    — the *behaviour*, not a name or a distribution version: a checkout ahead
+    of its metadata (this machine's reads ``0.0.9`` for a tree far past it) or
+    a revised framing landing under the same name must both move the key
+    (nw invariant 3), and only the source digest sees either.
     """
     import burns
 
-    return "burns.resolve_move" if hasattr(burns, "resolve_move") else "braidio.shim"
+    if not hasattr(burns, "resolve_move"):
+        return "braidio.shim"
+    from burns import moves
+
+    digest = hashlib.sha256(Path(moves.__file__).read_bytes()).hexdigest()
+    return f"burns.moves@{digest[:_NAME_DIGEST_CHARS]}"
 
 
 def resolve_move(move, *, image, aspect: float, zoom=1.18, focus=None, seed=0):
@@ -423,8 +443,15 @@ def _reverify(project, hit: Annotation) -> Annotation:
 
 
 def _reuse(project, skel: Annotation):
-    """The idempotent / compare-and-skip half every render Transform shares."""
+    """The idempotent / compare-and-skip half every render Transform shares.
+
+    Both doors check that the file is still there: a node — fresh or cached —
+    whose mp4 was deleted out of band is not a cut, it is a record of one,
+    and the next stage would fail on it.
+    """
     existing = fresh_equivalent(project, skel)
+    if existing is not None and not _hit_file_exists(existing):
+        existing = None
     if existing is None:
         hit = cached_output(project, TIER_VIDEO_CUT, skel.body["cache_key"])
         if hit is not None and _hit_file_exists(hit):
@@ -434,19 +461,7 @@ def _reuse(project, skel: Annotation):
             if same_parents and planned_value(hit) == planned_value(skel):
                 existing = _reverify(project, hit)
             else:
-                outputs = {
-                    k: hit.body[k]
-                    for k in (
-                        "artifact_id",
-                        "url",
-                        "duration_s",
-                        "width",
-                        "height",
-                        "fps",
-                    )
-                    if k in hit.body
-                }
-                existing = skel.model_copy(update={"body": {**skel.body, **outputs}})
+                existing = adopt_output(skel, hit)
                 project.graph.add_annotation(existing)
     if existing is None:
         return None
@@ -475,6 +490,28 @@ def _refuse_unlicensed_under_published(profile: str, stills) -> None:
             f"licence: {unlicensed}. Record `license` on each, or cut under "
             "'personal'."
         )
+
+
+#: Tolerance on a stored path's ``output_aspect`` against the cut's.
+_ASPECT_TOLERANCE = 1e-3
+
+
+def _check_stored_paths(panels, settings: dict) -> None:
+    """A stored ``path`` whose ``output_aspect`` contradicts the cut's fails
+    the PLAN: burns' resolver refuses it at render time, after every canvas
+    is prepared; the shim would silently cover-crop it. Neither is what an
+    author who hand-corrected a move for one delivery meant for another."""
+    w, h = settings["size"]
+    aspect = w / h
+    for panel in panels:
+        stored = panel.body.get("path") or {}
+        authored = stored.get("output_aspect")
+        if authored is not None and abs(float(authored) - aspect) > _ASPECT_TOLERANCE:
+            raise ValueError(
+                f"{RENDER_NAME}: panel {panel.id} stores a path authored for aspect "
+                f"{float(authored):.4f}; this cut is {w}x{h} ({aspect:.4f}). Re-author "
+                "the path for this delivery, or clear it and let the move resolve."
+            )
 
 
 def _motion_cache_key(transform, *, audio_id, settings, panels, stills) -> str:
@@ -519,7 +556,10 @@ def _crop_still(
             round((crop["x"] + crop["w"]) * w),
             round((crop["y"] + crop["h"]) * h),
         )
-        img.crop(box).save(dst)
+        encode = (
+            {"quality": _CROP_JPEG_QUALITY} if dst.suffix in (".jpg", ".jpeg") else {}
+        )
+        img.crop(box).save(dst, **encode)
     return dst
 
 
@@ -535,7 +575,7 @@ def _content_keyed_prepare(workdir: Path, size: tuple[int, int]):
 
     def prepare(src, _dst_ignored, *, size=size):
         digest = hashlib.sha256(Path(src).read_bytes()).hexdigest()[:_NAME_DIGEST_CHARS]
-        dst = workdir / f"canvas_{digest}_{size[0]}x{size[1]}.jpg"
+        dst = workdir / f"canvas_{digest}_{size[0]}x{size[1]}_v{_CANVAS_VERSION}.jpg"
         return prepare_still(src, dst, size=size)
 
     return prepare
@@ -571,6 +611,7 @@ class VideoCutRender(BaseTransform):
         _refuse_unlicensed_under_published(profile, stills)
 
         settings = _render_settings(params)
+        _check_stored_paths(panels, settings)
         cache_key = _motion_cache_key(
             self, audio_id=audio_id, settings=settings, panels=panels, stills=stills
         )
@@ -865,8 +906,9 @@ def _require_current_motion(motion: Annotation, panels, stills, index: dict) -> 
     ):
         raise ValueError(
             f"{FINISH_NAME}: motion cut {motion.id} is out of date — a panel, a "
-            "still's bytes or crop, or the episode audio changed since it was "
-            f"rendered. Re-run {RENDER_NAME} over the panels first."
+            "still's bytes or crop, the episode audio, or the move resolver "
+            f"(burns) changed since it was rendered. Re-run {RENDER_NAME} over the "
+            "panels first; with an unchanged burns that is a cache hit."
         )
 
 
@@ -907,10 +949,15 @@ class VideoCutFinish(BaseTransform):
             motion, panels, [stills[str(p.body["still_id"])] for p in panels], index
         )
         episode = require_tier(resolve_parents(motion, index), TIER_EPISODE_RENDER)
+        # The rights position is the episode's as it stands now, not as it was
+        # when the motion was cut: a production re-profiled to `published` since
+        # must be checked (and stamped) here too.
+        profile = str(episode.body.get("profile", Profile.PERSONAL.value))
+        _refuse_unlicensed_under_published(profile, stills.values())
         settings = _finish_settings(motion, params)
         _overlays(panels, stills, tracks)  # raises on an overlay collision, here
 
-        parts = [str(motion.body["artifact_id"]), _json(settings)]
+        parts = [str(motion.body["artifact_id"]), _json(settings), profile]
         for track in tracks:
             parts += [_json(track.body), _json(_interval_s(track))]
         for panel in panels:
@@ -945,7 +992,7 @@ class VideoCutFinish(BaseTransform):
             body=VideoCutBodyV1(
                 label=str(params.get("label", motion.body.get("label", "cut"))),
                 stage="delivered",
-                profile=str(motion.body["profile"]),
+                profile=profile,
                 audio_artifact_id=str(motion.body["audio_artifact_id"]),
                 panel_ids=tuple(motion.body.get("panel_ids", ())),
                 cache_key=cache_key,
@@ -989,72 +1036,31 @@ class VideoCutFinish(BaseTransform):
         fps = int(settings["fps"])
 
         cuts = _cuts_dir(project)
-        cuts.mkdir(parents=True, exist_ok=True)
-        motion_path = _local_path(motion, "motion cut")
-        current = motion_path
+        staging = cuts / _STAGING_DIR
+        staging.mkdir(parents=True, exist_ok=True)
         stages: list[Path] = []
-        extra: dict = {}
-
-        overlays = _overlays(panels, stills, tracks)
-        if overlays:
-            from tituli.video import overlay
-
-            staged = cuts / f"{skel.id}_labels.mp4"
-            overlay(
-                current,
-                overlays,
-                staged,
-                size=size,
-                delivery=settings["delivery"],
-                workdir=cuts / "_overlays",
-            )
-            current = staged
-            stages.append(staged)
-
-        if settings["captions"]:
-            srt = _captions_srt(project, episode, max_chars=settings["caption_chars"])
-            srt_path = cuts / f"{skel.id}.srt"
-            srt_path.write_text(srt, encoding="utf-8")
-            captions = media_artifact(
-                srt_path,
-                kind="text",
-                transform_name=self.name,
-                derived_from=skel.provenance.was_derived_from,
-                mime="application/x-subrip",
-            )
-            extra["captions_artifact_id"] = captions.asset_id
-            if settings["burn_captions"]:
-                from mixing.video import write_subtitles_in_video
-
-                staged = cuts / f"{skel.id}_captioned.mp4"
-                write_subtitles_in_video(str(current), str(srt_path), str(staged))
-                current = staged
-                stages.append(staged)
-
-        if settings["credits_s"] > 0:
-            staged = cuts / f"{skel.id}_credited.mp4"
-            _append_credits(
-                current,
-                _credit_lines(panels, stills),
-                staged,
+        try:
+            out_path, extra = _composite(
+                project,
+                skel,
+                stages,
+                cuts=cuts,
+                staging=staging,
+                motion_path=_local_path(motion, "motion cut"),
+                panels=panels,
+                stills=stills,
+                tracks=tracks,
+                episode=episode,
+                settings=settings,
                 size=size,
                 fps=fps,
-                hold_s=settings["credits_s"],
-                heading=settings["credits_heading"],
+                transform_name=self.name,
             )
-            current = staged
-            stages.append(staged)
-
-        out_path = cuts / f"{skel.id}.mp4"
-        if current == motion_path:
-            shutil.copyfile(
-                current, out_path
-            )  # nothing to composite: the motion IS the cut
-        else:
-            shutil.move(str(current), out_path)
-        for stage in stages:
-            if stage.exists() and stage != out_path:
-                stage.unlink()
+        finally:
+            # a crash mid-chain leaves nothing behind that could be listed as a cut
+            for stage in stages:
+                if stage.exists():
+                    stage.unlink()
 
         artifact = media_artifact(
             out_path,
@@ -1072,3 +1078,86 @@ class VideoCutFinish(BaseTransform):
             cost_usd_actual=0.0,
             cache_hit_savings_usd=0.0,
         )
+
+
+def _composite(
+    project,
+    skel: Annotation,
+    stages: list,
+    *,
+    cuts: Path,
+    staging: Path,
+    motion_path: Path,
+    panels,
+    stills: dict,
+    tracks,
+    episode: Annotation,
+    settings: dict,
+    size,
+    fps: int,
+    transform_name: str,
+) -> tuple[Path, dict]:
+    """The text pass, stage by stage, under ``staging``; returns
+    ``(out_path, extra body fields)``. Every intermediate is appended to
+    ``stages`` as it is made, so the caller can remove them whether or not
+    the chain finished."""
+    current = motion_path
+    extra: dict = {}
+    overlays = _overlays(panels, stills, tracks)
+    if overlays:
+        from tituli.video import overlay
+
+        staged = staging / f"{skel.id}_labels.mp4"
+        overlay(
+            current,
+            overlays,
+            staged,
+            size=size,
+            delivery=settings["delivery"],
+            workdir=staging / "_overlays",
+        )
+        current = staged
+        stages.append(staged)
+
+    if settings["captions"]:
+        srt = _captions_srt(project, episode, max_chars=settings["caption_chars"])
+        srt_path = cuts / f"{skel.id}.srt"
+        srt_path.write_text(srt, encoding="utf-8")
+        captions = media_artifact(
+            srt_path,
+            kind="text",
+            transform_name=transform_name,
+            derived_from=skel.provenance.was_derived_from,
+            mime="application/x-subrip",
+        )
+        extra["captions_artifact_id"] = captions.asset_id
+        if settings["burn_captions"]:
+            from mixing.video import write_subtitles_in_video
+
+            staged = staging / f"{skel.id}_captioned.mp4"
+            write_subtitles_in_video(str(current), str(srt_path), str(staged))
+            current = staged
+            stages.append(staged)
+
+    if settings["credits_s"] > 0:
+        staged = staging / f"{skel.id}_credited.mp4"
+        _append_credits(
+            current,
+            _credit_lines(panels, stills),
+            staged,
+            size=size,
+            fps=fps,
+            hold_s=settings["credits_s"],
+            heading=settings["credits_heading"],
+        )
+        current = staged
+        stages.append(staged)
+
+    out_path = cuts / f"{skel.id}.mp4"
+    if current == motion_path:
+        shutil.copyfile(
+            current, out_path
+        )  # nothing to composite: the motion IS the cut
+    else:
+        shutil.move(str(current), out_path)
+    return out_path, extra

@@ -206,7 +206,12 @@ class VideoPanelBodyV1(BaseModel):
     move: str = Field(DEFAULT_MOVE, description="One of burns' MOVES.")
     zoom: float = Field(DEFAULT_ZOOM, gt=0.0)
     focus: Optional[RectV1] = Field(
-        None, description="Override the saliency frame the move resolves on."
+        None,
+        description=(
+            "Override the saliency frame the move resolves on. Authored on the "
+            "picture AS SHOWN — the still after its crop — in normalized "
+            "coordinates of that image."
+        ),
     )
     path: Optional[dict[str, Any]] = Field(
         None,
@@ -328,7 +333,7 @@ def credit_line(still: StillBodyV1 | dict) -> str:
     >>> credit_line(dict(key="k", artifact_id="a", labelled=True, subject="Eliza",
     ...     author="Ralph Earl", license="public-domain",
     ...     source_page_url="https://commons.wikimedia.org/wiki/File:E.jpg"))
-    'Ralph Earl — public-domain — https://commons.wikimedia.org/wiki/File:E.jpg'
+    'Ralph Earl — https://commons.wikimedia.org/wiki/File:E.jpg — public-domain'
     >>> credit_line(dict(key="k", artifact_id="a", labelled=False))
     Traceback (most recent call last):
         ...
@@ -341,7 +346,7 @@ def credit_line(still: StillBodyV1 | dict) -> str:
             "no licence satisfies no attribution condition. Record `license` "
             "(and `license_url`) before this still can be credited."
         )
-    parts = [body.title, body.author, body.license, body.source_page_url]
+    parts = [body.title, body.author, body.source_page_url, body.license]
     return " — ".join(p.strip() for p in parts if p and p.strip())
 
 

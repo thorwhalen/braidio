@@ -35,12 +35,12 @@ the bytes is a new still with a new artifact id, then that patch.
 **A track is an identity.** Every panel a plan writes carries the same
 ``track_id``, minted once per plan run, so two plans over one episode stay
 apart: :func:`tracks_for_episode` groups them and :func:`panels_for_episode`
-returns the latest. ``execute`` is idempotent by *value* — when the latest
-track already says exactly what this plan says (same stills over the same
-spans with the same moves), it is returned and nothing is written; a plan
-that says something else (different picks, different bounds) writes a new
-track beside it, never over it, because panels are what the user edits
-*after* planning and a re-plan must not overwrite an edit. ``force=True``
+returns the latest. ``execute`` is idempotent by *authored value* — when the
+latest track already places the same stills over the same spans, it is
+returned and nothing is written, **even if its moves have since been
+edited** (the edit is the point of the track); a plan that says something
+else (different picks, different bounds) writes a new track beside it,
+never over it. ``force=True``
 writes a new track even when the value is the same. After a re-weave the new
 episode has no track yet, so the planner plans anew; carry choices forward
 with :func:`picks_from_panels` over the old track.
@@ -158,14 +158,22 @@ def panels_for_episode(
     return list(next(reversed(tracks.values()), []))
 
 
+#: The fields a plan AUTHORS on a panel. Everything else (move, zoom, focus,
+#: path) is what a person edits afterwards, and an edit must not turn the next
+#: re-plan into a new track that hides it behind "the latest".
+_AUTHORED_FIELDS = ("still_id", "beat_id", "order")
+
+
 def _track_value(panels) -> list:
-    """What a track *says*, track identity aside — the value two plans are
-    compared on: per panel its span and its body minus ``track_id``."""
+    """What a track *says* as planned — per panel its span and its authored
+    fields — the value two plans are compared on. A track whose motion has
+    since been edited still compares equal to the plan that made it, and is
+    returned rather than superseded."""
     out = []
     for p in panels:
         iv = p.reference.interval
-        body = {k: v for k, v in p.body.items() if k != "track_id"}
-        out.append((iv.start.value, iv.end.value, iv.end.rate, _json_value(body)))
+        authored = {k: p.body.get(k) for k in _AUTHORED_FIELDS}
+        out.append((iv.start.value, iv.end.value, iv.end.rate, _json_value(authored)))
     return out
 
 

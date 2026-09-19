@@ -881,7 +881,9 @@ def test_asset_reference_resolves_to_local_path():
         server, "upload_asset", {"data_b64": base64.b64encode(b"MEDIA").decode()}
     ).structured_content["itemId"]
 
-    ws = Workspace.for_email(OWNER)  # the resolver weave/render use for `source.asset_id`
+    ws = Workspace.for_email(
+        OWNER
+    )  # the resolver weave/render use for `source.asset_id`
     path = ws.asset_path(item_id)
     assert P(path).exists() and P(path).read_bytes() == b"MEDIA"
     with pytest.raises(FileNotFoundError):
@@ -1033,7 +1035,11 @@ def test_save_script_ingests_scene_break_beats():
             },
         },
     ).structured_content
-    assert [b["kind"] for b in out["beats"]] == ["narration", "scene_break", "narration"]
+    assert [b["kind"] for b in out["beats"]] == [
+        "narration",
+        "scene_break",
+        "narration",
+    ]
 
 
 @_NW
@@ -1127,7 +1133,10 @@ def test_weave_project_costs_the_profile_it_was_given(monkeypatch):
     episode = type(
         "Ann",
         (),
-        {"id": "9a23da78-0a3e-4acf-a557-48bd6e519038", "body": {"url": "file:///x.mp3"}},
+        {
+            "id": "9a23da78-0a3e-4acf-a557-48bd6e519038",
+            "body": {"url": "file:///x.mp3"},
+        },
     )()
 
     def _weave(proj, scr, **kw):
@@ -1213,9 +1222,7 @@ def test_save_script_refuses_bed_asset_under_music_bed_none_format(monkeypatch):
     import braidio.transforms as transforms
 
     called = []
-    monkeypatch.setattr(
-        transforms, "ingest_script", lambda *a, **kw: called.append(1)
-    )
+    monkeypatch.setattr(transforms, "ingest_script", lambda *a, **kw: called.append(1))
     server = _local_server(ledger={})
     _call(server, "create_project", {"project_id": "pf2", "title": "PF2"})
     bed_id = _call(
@@ -1252,9 +1259,7 @@ def test_weave_project_refuses_bed_asset_under_music_bed_none_format(monkeypatch
     import base64
 
     called = []
-    monkeypatch.setattr(
-        braidio, "weave_project", lambda *a, **kw: called.append(1)
-    )
+    monkeypatch.setattr(braidio, "weave_project", lambda *a, **kw: called.append(1))
     server = _local_server(ledger={})
     _call(server, "create_project", {"project_id": "wp2", "title": "WP2"})
     bed_id = _call(
@@ -1389,7 +1394,10 @@ def test_weave_project_reports_sting_applied_in_result(monkeypatch):
     episode = type(
         "Ann",
         (),
-        {"id": "9a23da78-0a3e-4acf-a557-48bd6e519038", "body": {"url": "file:///x.mp3"}},
+        {
+            "id": "9a23da78-0a3e-4acf-a557-48bd6e519038",
+            "body": {"url": "file:///x.mp3"},
+        },
     )()
     monkeypatch.setattr(braidio, "weave_project", lambda proj, scr, **kw: episode)
     server = _local_server(ledger={})
@@ -1428,7 +1436,9 @@ def test_download_audio_stores_asset_without_network(monkeypatch, tmp_path):
 
     import braidio.mcp._docs as _docs
 
-    monkeypatch.setattr(_docs, "_validate_target", lambda url: None)  # skip DNS/SSRF check
+    monkeypatch.setattr(
+        _docs, "_validate_target", lambda url: None
+    )  # skip DNS/SSRF check
 
     mp3 = tmp_path / "grabbed.mp3"
     mp3.write_bytes(b"ID3\x03fake-mp3-bytes")
@@ -1456,9 +1466,7 @@ def test_download_audio_stores_asset_without_network(monkeypatch, tmp_path):
     # stored content-addressed in the library (same shape as upload_asset) + listed
     assert out["_tag"] == "ContentRef"
     listed = _call(server, "list_assets", {}).structured_content["assets"]
-    assert any(
-        a.get("name") == "My Song" and a.get("kind") == "audio" for a in listed
-    )
+    assert any(a.get("name") == "My Song" and a.get("kind") == "audio" for a in listed)
 
 
 def test_download_audio_registered_free():
@@ -1498,8 +1506,11 @@ def test_commentary_weave_project_factory_creates_in_caller_workspace(tmp_path):
 
     assert nw.has_genre_project_factory("commentary_weave")
     info = nw.create_genre_project(
-        "commentary_weave", "owner@example.com", "myshow",
-        title="My Show", template="solo_explainer",
+        "commentary_weave",
+        "owner@example.com",
+        "myshow",
+        title="My Show",
+        template="solo_explainer",
     )
     assert info["project_id"] == "myshow"
     assert info["genre"] == "commentary_weave"
@@ -1519,7 +1530,9 @@ def test_register_tools_prefixes_and_excludes():
     )
     assert "braidio_download_audio" in registered
     assert "braidio_create_project" not in registered  # excluded (host owns create)
-    assert "braidio_describe_genre" not in registered  # excluded (host catalog covers it)
+    assert (
+        "braidio_describe_genre" not in registered
+    )  # excluded (host catalog covers it)
     assert all(n.startswith("braidio_") for n in registered)
 
 
