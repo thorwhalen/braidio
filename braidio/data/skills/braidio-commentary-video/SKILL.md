@@ -356,6 +356,98 @@ would lose.
 *argument*, not a cleared licence, and downloading granted nothing. Private is the
 correct setting, not a placeholder — say so rather than leaving it ambiguous.
 
+## The graph path — the picture track as data (the studio)
+
+Everything above is the one-shot script path: `Panel` objects in a Python
+list, rendered once. For a production a person will **reopen and re-edit** —
+swap a still, change a move, replace a take, re-render — the picture track
+lives in the project graph instead, as four `lacing` bodies on the
+`commentary_weave` genre (the commentary-studio plan, §3):
+
+| Body | What it is | The interval |
+|---|---|---|
+| `still/v1` | an image + its **rights** (the seven `illustration.RIGHTS_FIELDS`, same names) + its **editorial label** (`labelled`, `subject`) + an optional `crop` | none |
+| `video-panel/v1` | a still shown over a span, with an **authored** move (`move`, `zoom`, `focus`, `seed`, or an explicit `path`) | a `MediaRef` on the episode audio |
+| `video-cut/v1` | a rendered mp4 — `stage="motion"` (frames) or `"delivered"` (text composited) — with `panel_ids`, `audio_artifact_id`, `profile`, `published` | none |
+| `label-track/v1` | a timed card that is not per-still: `title` / `context` / `tag` / `note` | a `MediaRef` on the episode audio |
+
+Three transforms, all free, local CPU:
+
+```python
+import nw
+from nw import TransformInputs
+from braidio.transforms import (
+    VIDEO_PANELS_TRANSFORM,  # "video_panels.plan"  episode + stills -> panels
+    VIDEO_CUT_RENDER_TRANSFORM,  # "video_cut.render"   panels -> the motion mp4 (minutes)
+    VIDEO_CUT_FINISH_TRANSFORM,  # "video_cut.finish"   motion + labels -> the delivered mp4 (seconds)
+)
+
+plan = nw.get_transform(VIDEO_PANELS_TRANSFORM)
+panels = plan.execute(
+    project,
+    *plan.plan(
+        project,
+        TransformInputs(primary=(episode,)),
+        params={"picks": {"0003": ["eliza-earl"]}},
+    ),
+).annotations
+render = nw.get_transform(VIDEO_CUT_RENDER_TRANSFORM)
+motion = render.execute(
+    project, *render.plan(project, TransformInputs(primary=panels))
+).annotations[0]
+finish = nw.get_transform(VIDEO_CUT_FINISH_TRANSFORM)
+cut = finish.execute(
+    project,
+    *finish.plan(
+        project,
+        TransformInputs(primary=(motion,)),
+        params={"label": "v1", "credits_s": 11.0},
+    ),
+).annotations[0]
+```
+
+Rules that fall out of the shape, each of which cost a real production:
+
+- **Cuts land on the episode's persisted timeline.** `weave_to_episode` now
+  writes `EpisodeRenderBodyV1.timeline`; for a project woven before that,
+  `braidio.transforms.episode_timeline(project, episode)` reconstructs it
+  through the same layout the mixer used. Never eyeball times off a transcript.
+- **`still_id` is the still's annotation id, not its artifact id.** Changing
+  *which* picture is a patch to the panel; changing the *bytes* is a new still
+  with a new `artifact_id`, then that patch. Re-pointing an artifact record in
+  place stales nothing (the digest never covers bytes) and ships the wrong
+  picture silently.
+- **The label lives on the still, so a re-cut cannot drop it.** `labelled` is
+  required: `True` needs a `subject`; `False` means "this picture deliberately
+  names nobody" (tituli's `UNLABELLED`). A still with no decision is refused.
+- **The credit is composed from the parts** (`braidio.bodies.credit_line`),
+  never the provider's `attribution` string, and a still with no `license`
+  cannot be credited — `video_cut.finish` with `credits_s > 0` raises at plan
+  time rather than rolling a credit that names no licence.
+- **The move is intent, resolved against the image at render time**
+  (`burns.resolve_move`), and `seed` is minted from the beat, not the
+  ordinal — so reordering panels, re-weaving, or swapping a still keeps each
+  panel's move. A hand-corrected `path` (`BurnsPath.to_dict()`) overrides it.
+- **A label edit re-runs only the text pass.** The motion cut's `cache_key`
+  covers what reaches a pixel and nothing editorial; after a `subject` edit the
+  motion cut reads stale, re-plans to the same key, and is served from the
+  cache while `video_cut.finish` re-composites. A move edit re-renders.
+- **A track is an identity.** Every panel a plan writes shares a `track_id`.
+  Re-running `video_panels.plan` with the same picks returns the existing
+  track; different picks write a **new** track beside it (panels are what you
+  edit *after* planning, so a re-plan never overwrites an edit).
+  `panels_for_episode(project, episode.id)` is the latest track,
+  `tracks_for_episode` all of them. After a re-weave, carry choices forward
+  with `picks_from_panels(old_track, index)`.
+- **`video_cut.finish` refuses a motion cut whose frames would differ** (a
+  still swapped, a crop changed, the audio re-woven since it rendered) and
+  fails an overlay collision (two equal-weight cards in one slot) at plan
+  time. A clip contributes no caption — its sung text is not on the graph.
+- **A published cut refuses a still with no recorded licence** — at both
+  `video_cut.render` and `video_cut.finish` plan time, against the episode's
+  profile as it stands now; a personal cut renders it and only a credits
+  roll refuses.
+
 ## Where this stops
 
 braidio owns the cuts because only braidio knows where a beat ends; `burns` owns

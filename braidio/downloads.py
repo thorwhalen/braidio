@@ -220,36 +220,53 @@ def _deliverable(path: Path, email: str, project_id: str = "") -> Deliverable:
     )
 
 
+#: The per-project media directories the graph pipeline writes, by kind:
+#: ``episodes`` (``weave_to_episode``, audio) and ``cuts`` (``video_cut.render``
+#: / ``video_cut.finish``, the commentary video — a ``{id}_motion.mp4`` is the
+#: frames alone, a ``{id}.mp4`` the delivered cut). Both are load-bearing
+#: locations: the annotation bodies record these ``url``\ s.
+_PROJECT_MEDIA_KINDS: dict[str, tuple[str, str]] = {
+    "episode": ("data", "episodes"),
+    "cut": ("data", "cuts"),
+}
+
+
 def _episode_deliverable(
-    path: Path, project_id: str, project_title: str
+    path: Path, project_id: str, project_title: str, *, kind: str = "episode"
 ) -> Deliverable:
-    """A project episode as a Deliverable — id-keyed, so it reads differently.
+    """A project episode (or cut) as a Deliverable — id-keyed, so it reads differently.
 
     The stem is an annotation uuid nobody can say, so ``ref`` stays ``None``
     (``label`` falls back to the id) rather than pretending the uuid is a
     reference, and the human-facing fields borrow the project's title so a
     listing row and a Downloads-folder filename both say whose episode it is.
+    A cut additionally says which stage it is — ``motion`` (frames only) or
+    ``delivered`` — read off the file name the render transforms chose.
     """
     stat = path.stat()
+    meta = {"kind": kind}
+    if kind == "cut":
+        meta["stage"] = "motion" if path.stem.endswith("_motion") else "delivered"
     return _overlay(
         Deliverable(
             path=path,
             content_type=_CONTENT_TYPES[path.suffix.lower()],
-            filename=f"{project_id}-episode-{path.stem[:8]}{path.suffix}",
+            filename=f"{project_id}-{kind}-{path.stem[:8]}{path.suffix}",
             artifact_id=path.stem,
             project_id=project_id,
             genre=GENRE,
             ref=None,
-            title=f"{project_title} — episode",
+            title=f"{project_title} — {kind}",
             size_bytes=stat.st_size,
             created_at=stat.st_mtime,
-            meta={"kind": "episode"},
+            meta=meta,
         )
     )
 
 
 def _episode_dirs(email: str, project_id: "str | None" = None):
-    """``(project_id, title, episodes_dir)`` for each of the caller's projects.
+    """``(project_id, title, episodes_dir)`` for each of the caller's projects
+    — the audio walk; :func:`_media_dirs` is the same walk over every kind.
 
     ``project_id`` narrows the walk to that one project, by matching the
     ROWS this scan already yields rather than by building a path out of the
@@ -278,19 +295,35 @@ def _episode_dirs(email: str, project_id: "str | None" = None):
     ``weave_project`` cannot have written it without one (``open_project``
     requires it), so the state only arises from out-of-band damage.
     """
+    for pid, title, dirpath, _kind in _media_dirs(
+        email, project_id, kinds=("episode",)
+    ):
+        yield pid, title, dirpath
+
+
+def _media_dirs(
+    email: str,
+    project_id: "str | None" = None,
+    *,
+    kinds: "tuple[str, ...]" = tuple(_PROJECT_MEDIA_KINDS),
+):
+    """``(project_id, title, dir, kind)`` per project per media kind — the walk
+    :func:`_episode_dirs` documents, over :data:`_PROJECT_MEDIA_KINDS`. Every
+    directory passes the same containment check whatever its kind."""
     ws = _workspace(email)
     projects_root = ws.projects_dir.resolve()
     for row in ws.list_projects():
         pid = row["project_id"]
         if project_id and pid != project_id:
             continue
-        try:
-            episodes = ws.project_root(pid) / "data" / "episodes"
-            if not episodes.resolve().is_relative_to(projects_root):
+        for kind in kinds:
+            try:
+                dirpath = ws.project_root(pid).joinpath(*_PROJECT_MEDIA_KINDS[kind])
+                if not dirpath.resolve().is_relative_to(projects_root):
+                    continue
+            except (ValueError, OSError):
                 continue
-        except (ValueError, OSError):
-            continue
-        yield pid, row.get("title", pid), episodes
+            yield pid, row.get("title", pid), dirpath, kind
 
 
 def resolve(email: str, project_id: str, artifact_id: str) -> Deliverable:
@@ -328,11 +361,11 @@ def resolve(email: str, project_id: str, artifact_id: str) -> Deliverable:
     # project of the caller's is checked, not just ``project_id``: callers
     # guess that argument (nothing validates it against where the file lives),
     # so trusting it would refuse a claim for an episode that exists.
-    for pid, title, episodes in _episode_dirs(email):
+    for pid, title, dirpath, kind in _media_dirs(email):
         for ext in _CONTENT_TYPES:
-            candidate = episodes / f"{stem}{ext}"
-            if candidate.is_file() and candidate.resolve().parent == episodes.resolve():
-                return _episode_deliverable(candidate, pid, title)
+            candidate = dirpath / f"{stem}{ext}"
+            if candidate.is_file() and candidate.resolve().parent == dirpath.resolve():
+                return _episode_deliverable(candidate, pid, title, kind=kind)
 
     # Not an id — an organise-ASSIGNED title must resolve from the moment it
     # is accepted (the seam's accepted-title-resolves obligation). Matched on
@@ -348,14 +381,14 @@ def resolve(email: str, project_id: str, artifact_id: str) -> Deliverable:
             candidate = renders / f"{assigned}{ext}"
             if candidate.is_file() and candidate.resolve().parent == renders.resolve():
                 return _deliverable(candidate, email, project_id)
-    for pid, title, episodes in _episode_dirs(email):
-        assigned = _stem_for_assigned_title(episodes, want)
+    for pid, title, dirpath, kind in _media_dirs(email):
+        assigned = _stem_for_assigned_title(dirpath, want)
         if assigned is None:
             continue
         for ext in _CONTENT_TYPES:
-            candidate = episodes / f"{assigned}{ext}"
-            if candidate.is_file() and candidate.resolve().parent == episodes.resolve():
-                return _episode_deliverable(candidate, pid, title)
+            candidate = dirpath / f"{assigned}{ext}"
+            if candidate.is_file() and candidate.resolve().parent == dirpath.resolve():
+                return _episode_deliverable(candidate, pid, title, kind=kind)
 
     raise KeyError(f"no render named {name!r}")
 
@@ -398,13 +431,13 @@ def list_deliverables(email: str, project_id: str = None) -> "list[Deliverable]"
                     out.append(_deliverable(child, email))
                 except OSError:
                     continue
-    for pid, title, episodes in _episode_dirs(email, project_id):
-        if not episodes.is_dir():
+    for pid, title, dirpath, kind in _media_dirs(email, project_id):
+        if not dirpath.is_dir():
             continue
-        for child in sorted(episodes.iterdir()):
+        for child in sorted(dirpath.iterdir()):
             if child.is_file() and child.suffix.lower() in _CONTENT_TYPES:
                 try:
-                    out.append(_episode_deliverable(child, pid, title))
+                    out.append(_episode_deliverable(child, pid, title, kind=kind))
                 except OSError:
                     continue
     out.sort(key=lambda d: d.created_at or 0, reverse=True)
@@ -417,7 +450,8 @@ def list_projects(email: str) -> list:
     braidio's half of ``nw.delivery.ProjectLister``. Rows are
     ``nw.delivery.ProjectSummary``, newest-modified first (the workspace
     already orders them). ``deliverable_count`` counts the project's
-    EPISODES — the one braidio population that is project-scoped; the flat
+    EPISODES only, by design — the audio is the production, a cut is a
+    delivery made from it (the studio counts cuts through the graph); the flat
     per-caller renders belong to no project and are the ``Lister``'s to
     show. ``0`` is the load-bearing answer: a production with a script and
     no weave yet must list as "no episode yet" rather than vanish.
@@ -526,8 +560,10 @@ def organise(
                     and _media_exists(renders, own)
                 ):
                     return own
-            # Episode ids + their assigned titles, across every project.
-            for pid, _t, episodes in _episode_dirs(email):
+            # Episode + cut ids and their assigned titles, across every
+            # project — the same population `resolve` answers from, or a
+            # title accepted here could resolve to two files (braidio#73).
+            for pid, _t, episodes, _kind in _media_dirs(email):
                 if not episodes.is_dir():
                     continue
                 for child in episodes.iterdir():

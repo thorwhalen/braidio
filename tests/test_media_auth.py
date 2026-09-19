@@ -238,7 +238,9 @@ def test_missing_cookie_file_names_the_env_var_not_the_path(tmp_path, monkeypatc
 
 def test_expired_jar_is_detected_before_the_network(tmp_path, monkeypatch):
     monkeypatch.setenv("BRAIDIO_DATA_HOME", str(tmp_path))
-    monkeypatch.setenv(_media.COOKIES_FILE_ENV_VAR, str(_jar(tmp_path, time.time() - 3600)))
+    monkeypatch.setenv(
+        _media.COOKIES_FILE_ENV_VAR, str(_jar(tmp_path, time.time() - 3600))
+    )
 
     with pytest.raises(_media.SourceCredentialsRejected, match="expired"):
         _media.SourceCredentials.from_env().check()
@@ -260,5 +262,11 @@ def test_session_only_jar_is_not_called_expired(tmp_path):
 
 def test_httponly_prefixed_cookies_are_counted(tmp_path):
     # `#HttpOnly_` lines are real cookies wearing a comment-looking prefix.
-    assert _media._jar_is_expired(_jar(tmp_path, time.time() + 86400, httponly=True)) is False
-    assert _media._jar_is_expired(_jar(tmp_path, time.time() - 3600, httponly=True)) is True
+    assert (
+        _media._jar_is_expired(_jar(tmp_path, time.time() + 86400, httponly=True))
+        is False
+    )
+    assert (
+        _media._jar_is_expired(_jar(tmp_path, time.time() - 3600, httponly=True))
+        is True
+    )

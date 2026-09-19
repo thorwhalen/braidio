@@ -45,7 +45,17 @@ from braidio.transforms import (  # noqa: F401
     _dialogue,
     _segment,
     _episode,
+    _video_panels,
+    _video_cut,
 )
+from braidio.transforms._episode import episode_script, episode_timeline
+from braidio.transforms._video_panels import (
+    mint_seed,
+    panels_for_episode,
+    picks_from_panels,
+    tracks_for_episode,
+)
+from braidio.transforms._video_cut import path_for_panel, resolve_move
 
 # Registered transform names (the genre references these).
 VOICE_ASSIGNMENT_TRANSFORM = _voice.NAME
@@ -53,16 +63,33 @@ NARRATION_RENDER_TRANSFORM = _narration.NAME
 DIALOGUE_RENDER_TRANSFORM = _dialogue.NAME
 SEGMENT_EXTRACTION_TRANSFORM = _segment.NAME
 EPISODE_TRANSFORM = _episode.NAME
+# The picture track (commentary-studio plan §5): free planning, then two
+# local-CPU render passes — motion (minutes), then text onto the finished
+# motion (seconds) — so a label edit never re-renders a frame.
+VIDEO_PANELS_TRANSFORM = _video_panels.NAME
+VIDEO_CUT_RENDER_TRANSFORM = _video_cut.RENDER_NAME
+VIDEO_CUT_FINISH_TRANSFORM = _video_cut.FINISH_NAME
 
 __all__ = [
     "ingest_script",
     "IngestedScript",
     "weave_project",
+    "episode_timeline",
+    "episode_script",
+    "mint_seed",
+    "panels_for_episode",
+    "picks_from_panels",
+    "tracks_for_episode",
+    "path_for_panel",
+    "resolve_move",
     "VOICE_ASSIGNMENT_TRANSFORM",
     "NARRATION_RENDER_TRANSFORM",
     "DIALOGUE_RENDER_TRANSFORM",
     "SEGMENT_EXTRACTION_TRANSFORM",
     "EPISODE_TRANSFORM",
+    "VIDEO_PANELS_TRANSFORM",
+    "VIDEO_CUT_RENDER_TRANSFORM",
+    "VIDEO_CUT_FINISH_TRANSFORM",
 ]
 
 

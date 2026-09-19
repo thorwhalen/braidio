@@ -27,6 +27,11 @@ _NARRATION_RENDERS = Tier("narration-renders")
 _DIALOGUE_RENDERS = Tier("dialogue-renders")
 _SEGMENT_EXTRACTIONS = Tier("segment-extractions")
 _EPISODE_RENDERS = Tier("episode-renders")
+# Picture-track layers (the commentary-studio plan, §3).
+_STILLS = Tier("stills")
+_VIDEO_PANELS = Tier("video-panels")
+_VIDEO_CUTS = Tier("video-cuts")
+_LABEL_TRACKS = Tier("label-tracks")
 
 TIERS: tuple[Tier, ...] = (
     _COMMENTARY,
@@ -45,6 +50,10 @@ TIERS: tuple[Tier, ...] = (
     _DIALOGUE_RENDERS,
     _SEGMENT_EXTRACTIONS,
     _EPISODE_RENDERS,
+    _STILLS,
+    _VIDEO_PANELS,
+    _VIDEO_CUTS,
+    _LABEL_TRACKS,
 )
 """braidio's generic + render tiers."""
 

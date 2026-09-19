@@ -13,7 +13,8 @@ def _sample():
         placements=["sequential"] * 5,
         labels=["", "opening lines", "book-passage", "the line", ""],
         source_spans=[None, (4.9, 11.4), None, (53.7, 56.0), None],
-        clip_edge_overlap_s=0.5, narration_crossfade_s=0.1,
+        clip_edge_overlap_s=0.5,
+        narration_crossfade_s=0.1,
         title="Sample",
     )
 
@@ -29,8 +30,8 @@ def test_totals_and_shares_group_by_kind():
 def test_offsets_follow_the_weave_layout():
     tl = _sample()
     b = tl.beats
-    assert b[0].start == 0.0                      # first narration at 0
-    assert round(b[1].start, 2) == 29.5           # clip tucks 0.5s under the narration edge
+    assert b[0].start == 0.0  # first narration at 0
+    assert round(b[1].start, 2) == 29.5  # clip tucks 0.5s under the narration edge
     assert b[1].kind == "clip" and b[1].source_start == 4.9 and b[1].source_end == 11.4
     # end of each beat = start + duration
     assert b[2].end == round(b[2].start + 34.0, 3)

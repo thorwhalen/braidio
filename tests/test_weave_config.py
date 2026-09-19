@@ -11,7 +11,12 @@ from braidio.compose import _pool_from_config
 
 
 def test_presets_wellformed():
-    assert set(PRESETS) == {"single_narrator", "documentary_lyrics", "panel_4", "interview_many"}
+    assert set(PRESETS) == {
+        "single_narrator",
+        "documentary_lyrics",
+        "panel_4",
+        "interview_many",
+    }
     assert not SINGLE_NARRATOR.is_multivoice
     assert INTERVIEW_MANY.is_multivoice and len(INTERVIEW_MANY.voices) >= 8
 

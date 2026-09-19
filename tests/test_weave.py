@@ -7,8 +7,10 @@ from braidio.weave import TimelineItem, layout_placed, layout_starts
 
 def test_narration_only_butt_joins_with_crossfade():
     starts = layout_starts(
-        ["narration", "narration", "narration"], [2.0, 2.0, 2.0],
-        clip_edge_overlap_s=0.5, narration_crossfade_s=0.1,
+        ["narration", "narration", "narration"],
+        [2.0, 2.0, 2.0],
+        clip_edge_overlap_s=0.5,
+        narration_crossfade_s=0.1,
     )
     assert starts[0] == 0.0
     assert round(starts[1], 3) == 1.9
@@ -18,7 +20,9 @@ def test_narration_only_butt_joins_with_crossfade():
 def test_clip_overlaps_both_neighbours():
     kinds = ["narration", "clip", "narration"]
     durs = [3.0, 4.0, 3.0]
-    starts = layout_starts(kinds, durs, clip_edge_overlap_s=0.5, narration_crossfade_s=0.1)
+    starts = layout_starts(
+        kinds, durs, clip_edge_overlap_s=0.5, narration_crossfade_s=0.1
+    )
     assert round(starts[1], 3) == 2.5
     assert round(starts[2], 3) == 6.0
     total = starts[-1] + durs[-1]
@@ -26,7 +30,9 @@ def test_clip_overlaps_both_neighbours():
 
 
 def test_no_negative_starts():
-    assert layout_starts(["clip"], [2.0], clip_edge_overlap_s=0.5, narration_crossfade_s=0.1) == [0.0]
+    assert layout_starts(
+        ["clip"], [2.0], clip_edge_overlap_s=0.5, narration_crossfade_s=0.1
+    ) == [0.0]
 
 
 def test_timeline_item_shape():
@@ -56,6 +62,10 @@ def test_layout_starts_matches_all_sequential_layout_placed():
     durs = [3.0, 4.0, 3.0]
     a = layout_starts(kinds, durs, clip_edge_overlap_s=0.5, narration_crossfade_s=0.1)
     b = layout_placed(
-        kinds, durs, ["sequential"] * 3, clip_edge_overlap_s=0.5, narration_crossfade_s=0.1
+        kinds,
+        durs,
+        ["sequential"] * 3,
+        clip_edge_overlap_s=0.5,
+        narration_crossfade_s=0.1,
     )
     assert a == b

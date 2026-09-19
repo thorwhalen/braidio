@@ -24,7 +24,9 @@ def test_narrate_threads_api_key(tmp_path, monkeypatch):
 
     captured: dict = {}
 
-    def fake_text_to_speech(text, voice_id, *, api_key=None, return_cache_status=False, **kw):
+    def fake_text_to_speech(
+        text, voice_id, *, api_key=None, return_cache_status=False, **kw
+    ):
         captured["api_key"] = api_key
         audio = b"AUDIO"
         return (audio, False) if return_cache_status else audio
@@ -85,14 +87,19 @@ def test_render_multivoice_threads_api_key(tmp_path, monkeypatch):
 
     segments = ["Hello there.", "How are you.", "Fine thanks.", "Good good."]
     render_multivoice(
-        segments, POOL_4, out_path=tmp_path / "mv.mp3",
-        work_dir=tmp_path / "work", api_key=_KEY,
+        segments,
+        POOL_4,
+        out_path=tmp_path / "mv.mp3",
+        work_dir=tmp_path / "work",
+        api_key=_KEY,
     )
     assert seen and all(k == _KEY for k in seen)
 
     seen.clear()
     render_multivoice(
-        segments, POOL_4, out_path=tmp_path / "mv2.mp3",
+        segments,
+        POOL_4,
+        out_path=tmp_path / "mv2.mp3",
         work_dir=tmp_path / "work2",
     )
     assert seen and all(k is None for k in seen)  # omitted → None threaded down
@@ -120,7 +127,8 @@ def _patch_render_boundaries(monkeypatch, tmp_path):
     monkeypatch.setattr(render_mod, "render_dialogue", fake_render_dialogue)
     monkeypatch.setattr(render_mod, "_loudnorm", lambda src, dst, **kw: src)
     monkeypatch.setattr(
-        render_mod, "concatenate_audio",
+        render_mod,
+        "concatenate_audio",
         lambda *a, output, **kw: Path(output).write_bytes(b"x"),
     )
     return captured
@@ -132,9 +140,12 @@ def test_render_production_threads_api_key_narration(tmp_path, monkeypatch):
     script = Script(title="t", id_slug="1", beats=[Narration("Hello world.")])
 
     render_production(
-        script, source=object(), api_key=_KEY,
+        script,
+        source=object(),
+        api_key=_KEY,
         out_path=tmp_path / "out.mp3",
-        tts_dir=tmp_path / "tts", clips_dir=tmp_path / "clips",
+        tts_dir=tmp_path / "tts",
+        clips_dir=tmp_path / "clips",
         episodes_dir=tmp_path / "eps",
     )
     assert captured.get("narrate_api_key") == _KEY
@@ -142,9 +153,11 @@ def test_render_production_threads_api_key_narration(tmp_path, monkeypatch):
     # omitted → None threaded down (env fallback happens in mixing)
     captured.clear()
     render_production(
-        script, source=object(),
+        script,
+        source=object(),
         out_path=tmp_path / "out2.mp3",
-        tts_dir=tmp_path / "tts2", clips_dir=tmp_path / "clips2",
+        tts_dir=tmp_path / "tts2",
+        clips_dir=tmp_path / "clips2",
         episodes_dir=tmp_path / "eps2",
     )
     assert captured.get("narrate_api_key") is None
@@ -158,14 +171,18 @@ def test_render_production_threads_api_key_dialogue(tmp_path, monkeypatch):
     """
     captured = _patch_render_boundaries(monkeypatch, tmp_path)
     script = Script(
-        title="t", id_slug="1",
+        title="t",
+        id_slug="1",
         beats=[Dialogue(turns=(("A", "hi there"), ("B", "hey good to see you")))],
     )
 
     render_production(
-        script, source=object(), api_key=_KEY,
+        script,
+        source=object(),
+        api_key=_KEY,
         out_path=tmp_path / "out.mp3",
-        tts_dir=tmp_path / "tts", clips_dir=tmp_path / "clips",
+        tts_dir=tmp_path / "tts",
+        clips_dir=tmp_path / "clips",
         episodes_dir=tmp_path / "eps",
     )
     assert captured.get("dialogue_api_key") == _KEY

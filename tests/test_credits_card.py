@@ -35,8 +35,13 @@ def ink_rows(path) -> np.ndarray:
 class TestEverythingFitsInsideTheFrame:
     @pytest.mark.parametrize("count", [5, 20, 28, 43, 60])
     def test_no_line_is_drawn_past_the_bottom(self, tmp_path, count):
-        path = credits_card(roll(count), tmp_path / f"c{count}.jpg",
-                            heading="Images", footer="footer", size=CARD)
+        path = credits_card(
+            roll(count),
+            tmp_path / f"c{count}.jpg",
+            heading="Images",
+            footer="footer",
+            size=CARD,
+        )
         rows = ink_rows(path)
         # The last 20 rows must be clear — anything there has run off the edge.
         assert rows[-20:].sum() == 0
@@ -45,6 +50,7 @@ class TestEverythingFitsInsideTheFrame:
         """The regression: 43 lines used to render as 28."""
         few = ink_rows(credits_card(roll(8), tmp_path / "few.jpg", size=CARD))
         many = ink_rows(credits_card(roll(43), tmp_path / "many.jpg", size=CARD))
+
         # Count distinct text bands rather than pixels, which vary with type size.
         def bands(rows):
             return sum(1 for a, b in zip(rows, rows[1:]) if a == 0 and b > 0)
@@ -53,8 +59,13 @@ class TestEverythingFitsInsideTheFrame:
         assert bands(few) >= 8
 
     def test_the_footer_does_not_overlap_the_roll(self, tmp_path):
-        path = credits_card(roll(43), tmp_path / "c.jpg",
-                            heading="Images", footer="a footer line", size=CARD)
+        path = credits_card(
+            roll(43),
+            tmp_path / "c.jpg",
+            heading="Images",
+            footer="a footer line",
+            size=CARD,
+        )
         rows = ink_rows(path)
         # There must be a clear gap between the last credit and the footer.
         footer_top = 1080 - 96
@@ -87,7 +98,9 @@ class TestSmallRollsAreUnchanged:
         large = ink_rows(credits_card(roll(43), tmp_path / "b.jpg", size=CARD))
 
         def first_gap(rows):
-            starts = [i for i, (a, b) in enumerate(zip(rows, rows[1:])) if a == 0 and b > 0]
+            starts = [
+                i for i, (a, b) in enumerate(zip(rows, rows[1:])) if a == 0 and b > 0
+            ]
             return starts[2] - starts[1]
 
         assert first_gap(small) > first_gap(large)

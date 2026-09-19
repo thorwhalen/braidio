@@ -1,4 +1,4 @@
-"""Stability guard for the 17 body schemas braidio registers with lacing.
+"""Stability guard for the 21 body schemas braidio registers with lacing.
 
 These URIs are *on the wire*. The graph path (nw pipeline + the two deployed
 MCP connectors) reads and writes annotations carrying them, and real projects
@@ -30,11 +30,13 @@ Breaking and additive changes fail in different tests, with different advice:
   exists but isn't pinned, and tells you whether it is additive (optional,
   with a default) or breaking (required).
 
-None of braidio's 17 bodies nest another registered model inside them (no
-``$ref`` to a sibling schema, unlike e.g. artful's ``PanelBody``/``PanelImage``
-pair) — every field is a scalar, an enum, a homogeneous ``array``/``tuple``,
-or an open ``object`` — so there is exactly one pinned entry per body, no
-nested-model table.
+Two of the 21 bodies (``still/v1``, ``video-panel/v1``) nest one carrier
+model, ``RectV1`` (a normalized ``x``/``y``/``w``/``h`` region — the same keys
+as ``burns.Rect`` and a ``BurnsPath`` keyframe rect). It is not a registered
+body, so it has no URI, but its shape IS on the wire inside those two bodies,
+so it is pinned in ``PINNED_NESTED`` the way artful pins ``PanelImage``. Every
+other field is a scalar, an enum, a homogeneous ``array``/``tuple``, or an
+open ``object``.
 """
 
 from __future__ import annotations
@@ -53,6 +55,7 @@ from braidio.bodies import (
     DIALOGUE_RENDER_V1,
     EPISODE_RENDER_V1,
     EPISODE_V1,
+    LABEL_TRACK_V1,
     NARRATION_RENDER_V1,
     NARRATIVE_BEAT_V1,
     PRODUCTION_STRUCTURE_V1,
@@ -61,6 +64,9 @@ from braidio.bodies import (
     SEGMENT_EXTRACTION_V1,
     SOURCE_MEDIA_V1,
     SOURCE_V1,
+    STILL_V1,
+    VIDEO_CUT_V1,
+    VIDEO_PANEL_V1,
     VOICE_ASSIGNMENT_V1,
     WEAVE_CONFIG_V1,
     AudioClipBodyV1,
@@ -70,14 +76,19 @@ from braidio.bodies import (
     DialogueRenderBodyV1,
     EpisodeBodyV1,
     EpisodeRenderBodyV1,
+    LabelTrackBodyV1,
     NarrationRenderBodyV1,
     NarrativeBeatBodyV1,
     ProductionStructureBodyV1,
+    RectV1,
     RenderProfileBodyV1,
     SceneBreakBodyV1,
     SegmentExtractionBodyV1,
     SourceBodyV1,
     SourceMediaBodyV1,
+    StillBodyV1,
+    VideoCutBodyV1,
+    VideoPanelBodyV1,
     VoiceAssignmentBodyV1,
     WeaveConfigBodyV1,
 )
@@ -124,6 +135,10 @@ def test_body_schema_uris_are_pinned():
         "DIALOGUE_RENDER_V1": DIALOGUE_RENDER_V1,
         "SEGMENT_EXTRACTION_V1": SEGMENT_EXTRACTION_V1,
         "EPISODE_RENDER_V1": EPISODE_RENDER_V1,
+        "STILL_V1": STILL_V1,
+        "VIDEO_PANEL_V1": VIDEO_PANEL_V1,
+        "VIDEO_CUT_V1": VIDEO_CUT_V1,
+        "LABEL_TRACK_V1": LABEL_TRACK_V1,
     }
     assert actual == {
         "COMMENTARY_V1": "annot://schema/commentary/v1",
@@ -143,6 +158,10 @@ def test_body_schema_uris_are_pinned():
         "DIALOGUE_RENDER_V1": "annot://schema/dialogue-render/v1",
         "SEGMENT_EXTRACTION_V1": "annot://schema/segment-extraction/v1",
         "EPISODE_RENDER_V1": "annot://schema/episode-render/v1",
+        "STILL_V1": "annot://schema/still/v1",
+        "VIDEO_PANEL_V1": "annot://schema/video-panel/v1",
+        "VIDEO_CUT_V1": "annot://schema/video-cut/v1",
+        "LABEL_TRACK_V1": "annot://schema/label-track/v1",
     }, MIGRATION_RULE
 
 
@@ -165,7 +184,17 @@ OWNED: dict[str, type] = {
     DIALOGUE_RENDER_V1: DialogueRenderBodyV1,
     SEGMENT_EXTRACTION_V1: SegmentExtractionBodyV1,
     EPISODE_RENDER_V1: EpisodeRenderBodyV1,
+    STILL_V1: StillBodyV1,
+    VIDEO_PANEL_V1: VideoPanelBodyV1,
+    VIDEO_CUT_V1: VideoCutBodyV1,
+    LABEL_TRACK_V1: LabelTrackBodyV1,
 }
+
+#: Carrier models nested inside an owned body (no URI of their own, but on
+#: the wire all the same). Pinned by name; ``_nested_shapes`` reads them from
+#: the owning bodies' ``$defs`` so a carrier that stops being referenced is
+#: noticed too.
+NESTED: dict[str, type] = {"RectV1": RectV1}
 
 
 @pytest.mark.parametrize("uri", sorted(OWNED))
@@ -173,8 +202,8 @@ def test_uri_resolves_to_its_pinned_model(uri):
     assert get_body_schema(uri) is OWNED[uri], MIGRATION_RULE
 
 
-def test_braidio_owns_exactly_these_seventeen_body_schemas():
-    """An eighteenth braidio-owned schema must be pinned here too, or it ships
+def test_braidio_owns_exactly_these_twenty_one_body_schemas():
+    """A twenty-second braidio-owned schema must be pinned here too, or it ships
     unguarded. (Filtered to braidio's own models: the lacing registry is
     global and other packages register into it as well.)"""
     owned = {
@@ -329,6 +358,8 @@ PINNED: dict[str, dict] = {
             "artifact_id": "string|null = null",
             "cache_key": "string",
             "duration_s": "number = 0.0",
+            # additive (commentary-studio plan §3): an uploaded take vs TTS
+            "source": 'string = "tts"',
             "url": "string|null = null",
         },
     },
@@ -358,10 +389,108 @@ PINNED: dict[str, dict] = {
             "duration_s": "number = 0.0",
             "ordered_member_ids": "array<string>",
             "profile": "string",
+            # additive (commentary-studio plan §3): the persisted cut points
+            "timeline": "object<string,any>|null = null",
             "url": "string|null = null",
         },
     },
+    # --- the picture track (commentary-studio plan §3) ---
+    "StillBodyV1": {
+        "required": frozenset({"artifact_id", "key", "labelled"}),
+        "fields": {
+            "about": "string|null = null",
+            "artifact_id": "string",
+            "attribution": "string|null = null",
+            "author": "string|null = null",
+            "author_url": "string|null = null",
+            "cacheable": "boolean|null = null",
+            "crop": "RectV1|null = null",
+            "height": "integer(minimum=1)|null = null",
+            "key": "string",
+            "labelled": "boolean",
+            "license": "string|null = null",
+            "license_url": "string|null = null",
+            "note": "string|null = null",
+            "source_page_url": "string|null = null",
+            "subject": "string|null = null",
+            "title": "string|null = null",
+            "url": "string|null = null",
+            "width": "integer(minimum=1)|null = null",
+        },
+    },
+    "VideoPanelBodyV1": {
+        "required": frozenset({"order", "seed", "still_id", "track_id"}),
+        "fields": {
+            "beat_id": "string|null = null",
+            "focus": "RectV1|null = null",
+            "move": 'string = "auto"',
+            "order": "integer(minimum=0)",
+            "path": "object<string,any>|null = null",
+            "seed": "integer",
+            "still_id": "string",
+            "track_id": "string",
+            "zoom": "number(exclusiveMinimum=0.0) = 1.18",
+        },
+    },
+    "VideoCutBodyV1": {
+        "required": frozenset({"audio_artifact_id", "label", "profile", "stage"}),
+        "fields": {
+            "artifact_id": "string|null = null",
+            "audio_artifact_id": "string",
+            "cache_key": "string|null = null",
+            "captions_artifact_id": "string|null = null",
+            "duration_s": "number(minimum=0.0) = 0.0",
+            "fps": "integer(minimum=1)|null = null",
+            "height": "integer(minimum=1)|null = null",
+            "label": "string",
+            "panel_ids": "array<string>",
+            "profile": "string",
+            "published": "object<string,any>|null = null",
+            "settings": "object<string,any>",
+            "stage": "string",
+            "url": "string|null = null",
+            "width": "integer(minimum=1)|null = null",
+        },
+    },
+    "LabelTrackBodyV1": {
+        "required": frozenset({"kind"}),
+        "fields": {
+            "headline": "string|null = null",
+            "kind": "string",
+            "lines": "array<string>",
+            "slot": "string|null = null",
+            "weight": "integer(minimum=1) = 2",
+        },
+    },
 }
+
+#: The nested carriers' shapes — same rules, same advice.
+PINNED_NESTED: dict[str, dict] = {
+    "RectV1": {
+        "required": frozenset({"h", "w", "x", "y"}),
+        "fields": {
+            "h": "number(exclusiveMinimum=0.0, maximum=1.0)",
+            "w": "number(exclusiveMinimum=0.0, maximum=1.0)",
+            "x": "number(maximum=1.0, minimum=0.0)",
+            "y": "number(maximum=1.0, minimum=0.0)",
+        },
+    },
+}
+
+
+def test_every_nested_carrier_is_pinned_and_referenced():
+    """A nested model on the wire is pinned like a body; one no body references
+    any more is a stale pin (and a silent wire change if it was renamed)."""
+    assert set(PINNED_NESTED) == set(NESTED) == set(_nested_shapes()), MIGRATION_RULE
+
+
+@pytest.mark.parametrize("model_name", sorted(PINNED_NESTED))
+def test_nested_carrier_shape_is_unchanged(model_name):
+    actual = _nested_shapes()[model_name]
+    assert actual == PINNED_NESTED[model_name], (
+        f"{model_name} (nested in a body): a field was added, renamed, removed, "
+        f"retyped or re-constrained." + MIGRATION_RULE
+    )
 
 
 def test_every_owned_body_is_pinned():
@@ -446,12 +575,21 @@ PROSE_KEYS = frozenset({"title", "description"})
 
 def _actual_shapes() -> dict[str, dict]:
     """``{model name: {"required": frozenset(...), "fields": {name: shape}}}``
-    for the 17 owned bodies. None of them nests another registered model, so
-    there are no ``$defs`` to walk (unlike artful's nested carriers)."""
+    for the 21 owned bodies (top level only; nested carriers are
+    :func:`_nested_shapes`)."""
     return {
         js["title"]: _entry(js)
         for js in (m.model_json_schema() for m in OWNED.values())
     }
+
+
+def _nested_shapes() -> dict[str, dict]:
+    """The carriers the owned bodies reference through ``$defs``, by name."""
+    out: dict[str, dict] = {}
+    for m in OWNED.values():
+        for name, js in m.model_json_schema().get("$defs", {}).items():
+            out[name] = _entry(js)
+    return out
 
 
 def _entry(js: dict) -> dict:

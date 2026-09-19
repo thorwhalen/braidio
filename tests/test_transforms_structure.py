@@ -100,9 +100,7 @@ def project(tmp_path):
 @pytest.fixture
 def source(tmp_path):
     """A source resolving every reference to a 2s window of a 440 Hz tone."""
-    return FixedSource(
-        tone(tmp_path / "song.wav", 440, 8.0), start_s=1.0, end_s=3.0
-    )
+    return FixedSource(tone(tmp_path / "song.wav", 440, 8.0), start_s=1.0, end_s=3.0)
 
 
 def _members(project, episode) -> list[tuple[str, Path]]:
@@ -224,9 +222,9 @@ def test_a_declared_structure_without_assets_is_inert(
         source=source,
         structure=braidio.MusicStructure(scene_marker="sting", spotlight_clips=True),
     )
-    assert decode(
-        braidio.transforms._common.url_to_path(plain.body["url"])
-    ) == decode(braidio.transforms._common.url_to_path(declared.body["url"]))
+    assert decode(braidio.transforms._common.url_to_path(plain.body["url"])) == decode(
+        braidio.transforms._common.url_to_path(declared.body["url"])
+    )
 
 
 @needs_ffmpeg

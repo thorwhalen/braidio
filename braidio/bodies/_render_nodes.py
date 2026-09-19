@@ -27,6 +27,12 @@ DIALOGUE_RENDER_V1 = "annot://schema/dialogue-render/v1"
 SEGMENT_EXTRACTION_V1 = "annot://schema/segment-extraction/v1"
 EPISODE_RENDER_V1 = "annot://schema/episode-render/v1"
 
+#: ``NarrationRenderBodyV1.source`` values: a synthesised take, or a recording
+#: a person uploaded in its place.
+NARRATION_SOURCE_TTS = "tts"
+NARRATION_SOURCE_UPLOAD = "upload"
+NARRATION_SOURCES: tuple[str, ...] = (NARRATION_SOURCE_TTS, NARRATION_SOURCE_UPLOAD)
+
 
 class WeaveConfigBodyV1(BaseModel):
     """A frozen snapshot of every render choice (``WeaveConfig.to_dict()``)."""
@@ -192,6 +198,14 @@ class NarrationRenderBodyV1(BaseModel):
         None, description="file:// (or hosted) URL of the rendered audio."
     )
     duration_s: float = Field(0.0, description="Rendered duration, seconds.")
+    # Additive (default "tts") so every row written before it exists still
+    # loads and reads as the synthesised take it was. Without it an uploaded
+    # recording is indistinguishable from a synthesised one, and a UI cannot
+    # offer "put the robot back" (commentary-studio plan §3).
+    source: str = Field(
+        NARRATION_SOURCE_TTS,
+        description="Where the take came from: 'tts' | 'upload'.",
+    )
 
 
 class DialogueRenderBodyV1(BaseModel):
@@ -250,6 +264,15 @@ class EpisodeRenderBodyV1(BaseModel):
         None, description="file:// (or hosted) URL of the assembled episode audio."
     )
     duration_s: float = Field(0.0, description="Total duration, seconds.")
+    # Additive (default None). The graph path used to produce NO timeline —
+    # the cut points died with the process, which is why a picture track could
+    # not survive a reopen. Written by weave_to_episode going forward as
+    # ``TimelineBreakdown.to_dict()``; for a row written before this field
+    # existed, ``braidio.transforms.episode_timeline`` reconstructs it from
+    # ``ordered_member_ids`` + the members' durations (plan §3).
+    timeline: Optional[dict[str, Any]] = Field(
+        None, description="TimelineBreakdown.to_dict() of the assembled mix."
+    )
 
 
 RENDER_SCHEMAS: dict[str, type[BaseModel]] = {

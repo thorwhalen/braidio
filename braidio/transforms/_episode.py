@@ -34,6 +34,22 @@ reimplemented — over its clip members, and raises
 is about to stamp on them. A profile change is only correctly applied by
 re-ingesting the script.
 
+**The timeline is persisted** (commentary-studio plan §3). The graph path used
+to produce none — ``weave_timeline`` returns only a ``Path`` — so the cut
+points a picture track needs died with the process. ``execute`` now builds a
+:class:`~braidio.timeline.TimelineBreakdown` from the *same* members,
+durations and layout knobs it hands the mixer, and writes it into
+``EpisodeRenderBodyV1.timeline``. For a row written before that field existed,
+:func:`episode_timeline` reconstructs it through the same function from
+``ordered_member_ids`` + each member's duration — the two traps being that a
+``segment-extraction`` stores ``start_s``/``end_s`` of the *unpadded* window
+(the rendered clip is longer, by the weave-config's pads and its minimum
+length) and a ``scene-break`` carries no duration at all (its pause comes from
+``production-structure.structure["pause_s"]``, or its sting from the sting
+knobs). Both are answered by probing the member's rendered file where it
+still exists — the probe the renderer itself used — and by reproducing the
+renderer's arithmetic where it does not.
+
 This is the genre's ``projection_entrypoint``: the step that turns the graph
 into the delivered artifact.
 """
@@ -48,6 +64,7 @@ from nw import BaseTransform, TransformInputs, TransformResult, register_transfo
 from nw.transforms._provenance import derive_provenance
 
 from braidio.weave import TimelineItem
+from braidio.timeline import TimelineBreakdown, build_timeline
 from braidio.bodies._domain import SCENE_BREAK_V1
 from braidio.rights import (
     DEFAULT_PROFILE,
@@ -68,9 +85,13 @@ from braidio.bodies._render_nodes import (
 )
 from braidio.transforms._common import (
     TIER_AUDIO_CLIP,
+    TIER_NARRATIVE_BEAT,
+    TIER_DIALOGUE_BEAT,
     TIER_WEAVE_CONFIG,
     TIER_PRODUCTION_STRUCTURE,
     TIER_RENDER_PROFILE,
+    TIER_NARRATION_RENDER,
+    TIER_DIALOGUE_RENDER,
     TIER_SEGMENT_EXTRACTION,
     TIER_SCENE_BREAK,
     TIER_EPISODE_RENDER,
@@ -86,8 +107,13 @@ from braidio.transforms._common import (
     file_url,
     url_to_path,
 )
+from braidio.transforms._segment import _pads_fades
 
 NAME = "weave_to_episode.default"
+
+#: Timeline label of a narration beat: a snippet of its text (the fast path's
+#: convention in ``braidio.render``), so a span planner can see what is said.
+_LABEL_SNIPPET_CHARS = 48
 
 # Weave defaults, applied when the weave-config snapshot omits a knob. They
 # mirror braidio.weave.weave_timeline's own signature defaults.
@@ -118,6 +144,219 @@ def _structure_and_bed(node: Annotation | None):
     if body.get("bed_url"):
         bed = MusicBed(str(url_to_path(body["bed_url"])), **(body.get("bed") or {}))
     return MusicStructure(sting=sting, **(body.get("structure") or {})), bed
+
+
+def _layout_knobs(config: dict) -> tuple[float, float]:
+    """``(clip_edge_overlap_s, narration_crossfade_s)`` from a weave-config snapshot."""
+    return (
+        float(config.get("clip_edge_overlap_s", _DEFAULT_CLIP_EDGE_OVERLAP_S)),
+        float(config.get("crossfade_s", _DEFAULT_CROSSFADE_S)),
+    )
+
+
+def _member_role(member: Annotation, index: dict, *, structure):
+    """``(role, label, source_span)`` for one episode member — the timeline's
+    per-beat metadata, mirroring ``braidio.render``'s conventions exactly.
+
+    ``role`` is the aggregation kind (``clip`` / ``narration`` or the beat's
+    style / ``dialogue`` / ``sting`` / ``scene-break``); ``build_timeline``
+    lays every non-``clip`` role out as spoken, which is what the mixer does.
+    """
+    parents = resolve_parents(member, index)
+    if member.tier == TIER_SCENE_BREAK:
+        plays = structure.plays_sting_of(member.body.get("marker"))
+        return ("sting" if plays else "scene-break"), member.body.get("label", ""), None
+    if member.tier == TIER_SEGMENT_EXTRACTION:
+        clip = next((p for p in parents if p.tier == TIER_AUDIO_CLIP), None)
+        label = clip.body.get("label", "") if clip is not None else ""
+        span = (float(member.body["start_s"]), float(member.body["end_s"]))
+        return "clip", label, span
+    if member.tier == TIER_DIALOGUE_RENDER:
+        beat = next((p for p in parents if p.tier == TIER_DIALOGUE_BEAT), None)
+        label = (beat.body.get("label") if beat is not None else "") or "dialogue"
+        return "dialogue", label, None
+    beat = next((p for p in parents if p.tier == TIER_NARRATIVE_BEAT), None)
+    style = (beat.body.get("style") if beat is not None else None) or "narration"
+    text = (beat.body.get("text", "") if beat is not None else "") or ""
+    return style, text[:_LABEL_SNIPPET_CHARS], None
+
+
+def member_timeline(
+    members,
+    durations,
+    index: dict,
+    *,
+    config: dict,
+    structure,
+    profile: str,
+    title: str = "",
+) -> TimelineBreakdown:
+    """The episode timeline for ``members`` at ``durations`` — pure.
+
+    One function for both the render (``execute`` calls it with the durations
+    it probed for the mixer) and the reconstruction (:func:`episode_timeline`
+    calls it with durations recovered from the graph), so the two cannot
+    disagree on layout: both go through :func:`braidio.timeline.build_timeline`
+    and therefore the same ``layout_placed`` the mixer uses.
+    """
+    roles, labels, spans = [], [], []
+    for member in members:
+        role, label, span = _member_role(member, index, structure=structure)
+        roles.append(role)
+        labels.append(label)
+        spans.append(span)
+    edge_overlap_s, crossfade_s = _layout_knobs(config)
+    return build_timeline(
+        kinds=roles,
+        durations=[float(d) for d in durations],
+        labels=labels,
+        source_spans=spans,
+        clip_edge_overlap_s=edge_overlap_s,
+        narration_crossfade_s=crossfade_s,
+        title=title,
+        settings={
+            "weave": dict(config),
+            "profile": profile,
+            "resolved": {
+                "clip_edge_overlap_s": edge_overlap_s,
+                "crossfade_s": crossfade_s,
+            },
+        },
+    )
+
+
+def _member_duration(project, member: Annotation, *, config: dict, structure) -> float:
+    """A member's rendered duration, for a row that persisted no timeline.
+
+    The rendered file is the truth where it still exists (its probe is what
+    the mixer used); the fallback reproduces the renderer's own arithmetic —
+    ``extract_padded``'s pads and floor for a clip, the pause or the trimmed
+    sting plus its gap for a break, the body's ``duration_s`` for a spoken take.
+    """
+    import braidio
+
+    if member.tier == TIER_SCENE_BREAK:
+        rendered = project.root / "data" / "breaks" / f"{member.id}.mp3"
+        if rendered.exists():
+            return float(braidio.duration_s(rendered))
+        if structure.plays_sting_of(member.body.get("marker")):
+            sting = structure.sting
+            length = min(float(braidio.duration_s(sting.asset_path)), sting.max_len_s)
+            return length + sting.gap_after_s
+        return float(structure.pause_s)
+
+    url = member.body.get("url")
+    if url:
+        path = url_to_path(url)
+        if path.exists():
+            return float(braidio.duration_s(path))
+
+    if member.tier == TIER_SEGMENT_EXTRACTION:
+        (pre, post), _fades, min_len = _pads_fades(config)
+        start = max(0.0, float(member.body["start_s"]) - pre)
+        end = float(member.body["end_s"]) + post
+        if end - start < min_len:
+            end = start + min_len
+        return max(0.05, end - start)
+    return float(member.body.get("duration_s") or 0.0)
+
+
+def episode_timeline(project, episode: Annotation) -> TimelineBreakdown:
+    """The :class:`~braidio.timeline.TimelineBreakdown` of an ``episode-render``.
+
+    Persisted rows answer from ``body["timeline"]``. A row written before the
+    field existed is reconstructed through :func:`member_timeline` from its
+    ``ordered_member_ids`` and each member's recovered duration — the same
+    layout as the render, so a panel plan over a reconstructed timeline lands
+    on the same cut points the mixer used.
+    """
+    persisted = episode.body.get("timeline")
+    if persisted:
+        return TimelineBreakdown.from_dict(persisted)
+
+    index = graph_index(project)
+    parents = resolve_parents(episode, index)
+    cfg = next((p for p in parents if p.tier == TIER_WEAVE_CONFIG), None)
+    if cfg is None:
+        cfg = singleton(project, TIER_WEAVE_CONFIG)
+    config = cfg.body.get("config", {})
+    structure, _bed = _structure_and_bed(
+        next((p for p in parents if p.tier == TIER_PRODUCTION_STRUCTURE), None)
+    )
+    member_ids = [uuid.UUID(s) for s in episode.body.get("ordered_member_ids", ())]
+    members = [index[mid] for mid in member_ids if mid in index]
+    if len(members) != len(member_ids):
+        missing = [str(m) for m in member_ids if m not in index]
+        raise ValueError(
+            f"episode {episode.id}: cannot reconstruct its timeline — members "
+            f"{missing} are no longer in the graph. Re-weave the project instead."
+        )
+    durations = [
+        _member_duration(project, m, config=config, structure=structure)
+        for m in members
+    ]
+    return member_timeline(
+        members,
+        durations,
+        index,
+        config=config,
+        structure=structure,
+        profile=str(episode.body.get("profile", DEFAULT_PROFILE.value)),
+        title=_project_title(project),
+    )
+
+
+def _project_title(project) -> str:
+    try:
+        return str(getattr(project.spec, "title", "") or "")
+    except Exception:  # noqa: BLE001 — a title is decoration on a timeline
+        return ""
+
+
+def episode_script(project, episode: Annotation):
+    """The :class:`~braidio.script.Script` an ``episode-render`` was woven from,
+    rebuilt from its members in play order — one beat per member, so
+    ``script.beats[i]`` is the beat behind ``timeline.beats[i]``.
+
+    What the graph path needs where the fast path had the authored script in
+    hand: :func:`braidio.captions.cues_for` matches beats to timeline spans by
+    index. A segment member becomes an **empty** narration beat: the graph
+    stores a clip's *label* (``beat.label or beat.reference``), and a label
+    is not what is heard — captioning ``♪ hook ♪`` over a sung line would be
+    a claim the pictures do not support — so a clip contributes no cue. A
+    member whose authoring node is gone (a beat a re-ingest removed) is
+    likewise captioned as nothing rather than raising: captions are a
+    courtesy, the timeline is the record.
+    """
+    from braidio.script import Dialogue, Narration, SceneBreak, Script
+
+    index = graph_index(project)
+    beats = []
+    for sid in episode.body.get("ordered_member_ids", ()):
+        member = index.get(uuid.UUID(sid))
+        if member is None:
+            beats.append(Narration(text=""))
+            continue
+        parents = resolve_parents(member, index)
+        if member.tier == TIER_SCENE_BREAK:
+            beats.append(SceneBreak(label=member.body.get("label", "")))
+        elif member.tier == TIER_SEGMENT_EXTRACTION:
+            beats.append(Narration(text=""))  # the clip's text is not known here
+        elif member.tier == TIER_DIALOGUE_RENDER:
+            beat = next((p for p in parents if p.tier == TIER_DIALOGUE_BEAT), None)
+            turns = tuple(
+                (str(r), str(t))
+                for r, t in (beat.body.get("turns", ()) if beat else ())
+            )
+            beats.append(
+                Dialogue(
+                    turns=turns, label=(beat.body.get("label", "") if beat else "")
+                )
+            )
+        else:
+            beat = next((p for p in parents if p.tier == TIER_NARRATIVE_BEAT), None)
+            beats.append(Narration(text=(beat.body.get("text", "") if beat else "")))
+    return Script(title=_project_title(project), id_slug=str(episode.id), beats=beats)
 
 
 def _profile_value(node: Annotation | None) -> str:
@@ -284,17 +523,27 @@ class WeaveToEpisode(BaseTransform):
             for m in members
         ]
 
+        # The timeline is built from the SAME parts the mixer is about to lay
+        # out — probed the way weave_timeline probes them — and persisted on
+        # the episode, so the cut points survive the process (plan §3).
+        edge_overlap_s, crossfade_s = _layout_knobs(config)
+        timeline = member_timeline(
+            members,
+            [braidio.duration_s(it.path) for it in items],
+            index,
+            config=config,
+            structure=structure,
+            profile=str(skel.body["profile"]),
+            title=_project_title(project),
+        )
+
         out_path = project.root / "data" / "episodes" / f"{skel.id}.mp3"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         braidio.weave_timeline(
             items,
             out_path,
-            clip_edge_overlap_s=float(
-                config.get("clip_edge_overlap_s", _DEFAULT_CLIP_EDGE_OVERLAP_S)
-            ),
-            narration_crossfade_s=float(
-                config.get("crossfade_s", _DEFAULT_CROSSFADE_S)
-            ),
+            clip_edge_overlap_s=edge_overlap_s,
+            narration_crossfade_s=crossfade_s,
             target_lufs=target_lufs,
             true_peak=float(config.get("true_peak_dbtp", _DEFAULT_TRUE_PEAK)),
             sample_rate=int(config.get("sample_rate", _DEFAULT_SAMPLE_RATE)),
@@ -314,6 +563,7 @@ class WeaveToEpisode(BaseTransform):
                     "artifact_id": artifact.asset_id,
                     "url": file_url(out_path),
                     "duration_s": duration,
+                    "timeline": timeline.to_dict(),
                 }
             }
         )
