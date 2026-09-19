@@ -133,21 +133,45 @@ COMMENTARY_WEAVE: Genre = register_genre(
 )
 
 
-def _commentary_weave_project_factory(caller, project_id, *, title, template, params):
-    """Create a ``commentary_weave`` project in the CALLER's own braidio workspace.
+def _commentary_weave_project_factory(
+    caller, project_id, *, title, template, params, projects_dir=None
+):
+    """Create a ``commentary_weave`` project where the CALLER asks, else in braidio's.
 
-    The nw project-factory (thorwhalen/braidio#18) a host connector calls via
-    ``nw.create_genre_project`` so the unified reelee connector can create commentary
-    projects it doesn't natively host. Creates in the caller's per-user workspace
-    (``projects/{caller}/{project_id}/``) — the caller-space contract. ``Workspace`` is
-    imported **lazily** here so ``import braidio.genre`` stays fastmcp-free (a top-level
-    ``braidio.mcp.workspace`` import would pull fastmcp via ``braidio.mcp`` and flip
-    braidio's ``HAS_NW`` off). braidio's Format is applied at render time, so there is no
+    The nw project-factory (thorwhalen/braidio#18) a host calls via
+    ``nw.create_genre_project`` so a host can create commentary projects it doesn't
+    natively host. braidio's Format is applied at render time, so there is no
     initializer — the ``format_id`` rides in the returned info + ``create``'s envelope.
-    """
-    from braidio.mcp.workspace import Workspace
 
-    proj = Workspace.for_email(caller).create_project(project_id, title=title)
+    Two placements, and which one runs is the caller's decision, never this
+    factory's (nw#84 — *a genre project factory places a project where its caller
+    asks; it does not own the location*):
+
+    - ``projects_dir`` given — create at ``projects_dir/<project_id>``. This is the
+      path a host that will **serve** the project takes: reelee hands its own
+      per-caller projects dir, so the commentary project is a sibling of that
+      caller's other projects, its lister lists it and its project header can name
+      it. Under braidio's own data home it would be addressable by braidio's tools
+      and by nothing of the host's — two surfaces showing different projects under
+      the same name, which is the shape users read as data loss.
+    - ``projects_dir=None`` — the caller-space contract as before: braidio's own
+      per-user workspace at ``{braidio data home}/projects/{caller}/{project_id}/``.
+      This is what braidio's own MCP connector gets, and it is unchanged.
+
+    ``Workspace`` is imported **lazily** and only on the second path, so
+    ``import braidio.genre`` stays fastmcp-free (a top-level
+    ``braidio.mcp.workspace`` import would pull fastmcp via ``braidio.mcp`` and flip
+    braidio's ``HAS_NW`` off) — and so the host-placed create never needs the MCP
+    extra installed at all.
+    """
+    if projects_dir is not None:
+        from braidio.project import create_project_at
+
+        proj = create_project_at(projects_dir, project_id, title=title)
+    else:
+        from braidio.mcp.workspace import Workspace
+
+        proj = Workspace.for_email(caller).create_project(project_id, title=title)
     return {
         "project": proj,
         "project_id": project_id,
