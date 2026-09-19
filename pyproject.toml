@@ -120,6 +120,23 @@ nw-app = ["lacing", "nw>=0.0.51", "falaw"]
 #   older dol without it.
 # nw>=0.0.51: see the nw-app note above (the `secrets=` seam, braidio#58).
 mcp = ["fastmcp", "py2mcp>=0.1.9", "pypdf", "dol>=0.3.57", "lacing", "nw>=0.0.51", "falaw", "yb[download]>=0.1.7"]
+# The importer (`braidio.importing`): a finished commentary production ->
+# a real project graph. Needs the nw-app layer (it writes annotations) plus
+# `illustration` for licence normalization.
+#
+# illustration is NOT vendored and must not be: it owns the canonical mapping
+# from the four provider dialects (`CC BY 4.0`, `cc-by-sa-2.0`, `by-sa`, `pd`,
+# …) to a canonical code, and a second copy of that table in braidio is how a
+# licence gate silently starts dropping images. The importer uses it as a
+# GATE — an unrecognised code fails the import rather than being written — so
+# the dependency is load-bearing, not a convenience.
+#
+# illustration>=0.0.11: `illustration.licensing.normalize_license` +
+# `LICENSE_ALIASES`. Verified by reading the PUBLISHED 0.0.11 sdist, not the
+# changelog — the same wads caveat noted for nw and burns above (the version
+# bump lands in a commit AFTER the feature, so the git log reads one release
+# early).
+importing = ["illustration>=0.0.11", "lacing", "nw>=0.0.51", "falaw"]
 
 # Packaging. The two shipped skills live at braidio/data/skills/<name>/ with
 # relative symlinks from .claude/skills/. hatchling walks the tree with
@@ -214,8 +231,11 @@ project_name = ""
 # Install the `mcp` extra in CI so the MCP-server tests (fastmcp + py2mcp + the
 # nw-app) actually run — without this, tests/test_mcp.py and the nw-gated
 # tests/test_transforms.py + tests/test_nw_app.py are silently skipped.
+# `importing` rides along for the same reason: without `illustration` every
+# test in tests/test_importing.py skips itself, and a skipped licence gate is
+# exactly the thing nobody notices is not running.
 [tool.wads.ci.install]
-extras = "mcp"
+extras = "mcp,importing"
 
 [tool.wads.ci.commands]
 pre_test = []
