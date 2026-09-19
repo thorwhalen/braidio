@@ -413,12 +413,13 @@ PINNED: dict[str, dict] = {
             "note": "string|null = null",
             "source_page_url": "string|null = null",
             "subject": "string|null = null",
+            "title": "string|null = null",
             "url": "string|null = null",
             "width": "integer(minimum=1)|null = null",
         },
     },
     "VideoPanelBodyV1": {
-        "required": frozenset({"order", "seed", "still_id"}),
+        "required": frozenset({"order", "seed", "still_id", "track_id"}),
         "fields": {
             "beat_id": "string|null = null",
             "focus": "RectV1|null = null",
@@ -427,6 +428,7 @@ PINNED: dict[str, dict] = {
             "path": "object<string,any>|null = null",
             "seed": "integer",
             "still_id": "string",
+            "track_id": "string",
             "zoom": "number(exclusiveMinimum=0.0) = 1.18",
         },
     },

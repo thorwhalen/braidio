@@ -94,8 +94,9 @@ graph = ["lacing"]
 # makes it look like 0.0.12 (the same trap documented for nw#27 below).
 # tituli: the text pass (`video_cut.finish`) composites labels, cards and the
 # credits roll through it; burning captions in uses mixing (already a core dep).
-# burns.resolve_move (the named-move vocabulary) is on burns' main but not yet
-# in a release; braidio.transforms carries a shim that defers to it when present.
+# burns.resolve_move (the named-move vocabulary) is in review (thorwhalen/burns#20),
+# not in a release; braidio.transforms carries a shim that defers to it when present
+# and salts the motion cache key with which resolver ran.
 video = ["burns>=0.0.11", "pillow", "tituli>=0.0.4"]
 # nw>=0.0.29: `derive_provenance` takes the Transform instance rather than
 # (name, version) — it reads `name` and `impl_version` off it (nw#27). The break is

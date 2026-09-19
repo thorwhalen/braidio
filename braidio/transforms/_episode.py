@@ -320,14 +320,15 @@ def episode_script(project, episode: Annotation):
 
     What the graph path needs where the fast path had the authored script in
     hand: :func:`braidio.captions.cues_for` matches beats to timeline spans by
-    index. A segment member becomes a :class:`~braidio.script.SegmentBeat`
-    whose ``reference`` is the clip's *label* — the ingest stores the label
-    (``beat.label or beat.reference``), not the reference, so a labelled clip
-    is captioned by its label. A member whose authoring node is gone (a beat a
-    re-ingest removed) is captioned as empty narration rather than raising:
-    captions are a courtesy, the timeline is the record.
+    index. A segment member becomes an **empty** narration beat: the graph
+    stores a clip's *label* (``beat.label or beat.reference``), and a label
+    is not what is heard — captioning ``♪ hook ♪`` over a sung line would be
+    a claim the pictures do not support — so a clip contributes no cue. A
+    member whose authoring node is gone (a beat a re-ingest removed) is
+    likewise captioned as nothing rather than raising: captions are a
+    courtesy, the timeline is the record.
     """
-    from braidio.script import Dialogue, Narration, SceneBreak, Script, SegmentBeat
+    from braidio.script import Dialogue, Narration, SceneBreak, Script
 
     index = graph_index(project)
     beats = []
@@ -340,9 +341,7 @@ def episode_script(project, episode: Annotation):
         if member.tier == TIER_SCENE_BREAK:
             beats.append(SceneBreak(label=member.body.get("label", "")))
         elif member.tier == TIER_SEGMENT_EXTRACTION:
-            clip = next((p for p in parents if p.tier == TIER_AUDIO_CLIP), None)
-            label = (clip.body.get("label", "") if clip is not None else "") or ""
-            beats.append(SegmentBeat(reference=label, label=label))
+            beats.append(Narration(text=""))  # the clip's text is not known here
         elif member.tier == TIER_DIALOGUE_RENDER:
             beat = next((p for p in parents if p.tier == TIER_DIALOGUE_BEAT), None)
             turns = tuple(

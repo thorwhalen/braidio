@@ -375,19 +375,35 @@ Three transforms, all free, local CPU:
 
 ```python
 import nw
+from nw import TransformInputs
 from braidio.transforms import (
-    VIDEO_PANELS_TRANSFORM,      # "video_panels.plan"  episode + stills -> panels
+    VIDEO_PANELS_TRANSFORM,  # "video_panels.plan"  episode + stills -> panels
     VIDEO_CUT_RENDER_TRANSFORM,  # "video_cut.render"   panels -> the motion mp4 (minutes)
     VIDEO_CUT_FINISH_TRANSFORM,  # "video_cut.finish"   motion + labels -> the delivered mp4 (seconds)
 )
+
 plan = nw.get_transform(VIDEO_PANELS_TRANSFORM)
-panels = plan.execute(project, *plan.plan(project, TransformInputs(primary=(episode,)),
-                      params={"picks": {"0003": ["eliza-earl"]}})).annotations
+panels = plan.execute(
+    project,
+    *plan.plan(
+        project,
+        TransformInputs(primary=(episode,)),
+        params={"picks": {"0003": ["eliza-earl"]}},
+    ),
+).annotations
 render = nw.get_transform(VIDEO_CUT_RENDER_TRANSFORM)
-motion = render.execute(project, *render.plan(project, TransformInputs(primary=panels))).annotations[0]
+motion = render.execute(
+    project, *render.plan(project, TransformInputs(primary=panels))
+).annotations[0]
 finish = nw.get_transform(VIDEO_CUT_FINISH_TRANSFORM)
-cut = finish.execute(project, *finish.plan(project, TransformInputs(primary=(motion,)),
-                     params={"label": "v1", "credits_s": 11.0})).annotations[0]
+cut = finish.execute(
+    project,
+    *finish.plan(
+        project,
+        TransformInputs(primary=(motion,)),
+        params={"label": "v1", "credits_s": 11.0},
+    ),
+).annotations[0]
 ```
 
 Rules that fall out of the shape, each of which cost a real production:
@@ -416,10 +432,19 @@ Rules that fall out of the shape, each of which cost a real production:
   covers what reaches a pixel and nothing editorial; after a `subject` edit the
   motion cut reads stale, re-plans to the same key, and is served from the
   cache while `video_cut.finish` re-composites. A move edit re-renders.
-- **The planner is one-shot per episode.** Re-running `video_panels.plan` on
-  an episode that already has a track returns that track (panels are what you
-  edit *after* planning); `force=True` writes a fresh one. After a re-weave,
-  carry choices forward with `picks_from_panels(old_panels, index)`.
+- **A track is an identity.** Every panel a plan writes shares a `track_id`.
+  Re-running `video_panels.plan` with the same picks returns the existing
+  track; different picks write a **new** track beside it (panels are what you
+  edit *after* planning, so a re-plan never overwrites an edit).
+  `panels_for_episode(project, episode.id)` is the latest track,
+  `tracks_for_episode` all of them. After a re-weave, carry choices forward
+  with `picks_from_panels(old_track, index)`.
+- **`video_cut.finish` refuses a motion cut whose frames would differ** (a
+  still swapped, a crop changed, the audio re-woven since it rendered) and
+  fails an overlay collision (two equal-weight cards in one slot) at plan
+  time. A clip contributes no caption — its sung text is not on the graph.
+- **A published cut refuses a still with no recorded licence** at render
+  plan time; a personal cut renders it and only a credits roll refuses.
 
 ## Where this stops
 

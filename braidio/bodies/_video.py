@@ -131,6 +131,13 @@ class StillBodyV1(BaseModel):
     url: Optional[str] = Field(None, description="file:// (or hosted) URL.")
     width: Optional[int] = Field(None, ge=1)
     height: Optional[int] = Field(None, ge=1)
+    title: Optional[str] = Field(
+        None,
+        description=(
+            "The work's own title (TASL's T; illustration.ImageResult.title). "
+            "What a credit names — never the editorial subject."
+        ),
+    )
     # --- rights: named exactly as illustration.RIGHTS_FIELDS ---
     license: Optional[str] = Field(None, description="Licence code or name.")
     license_url: Optional[str] = Field(None)
@@ -213,6 +220,14 @@ class VideoPanelBodyV1(BaseModel):
         None, description="Zero-padded id of the beat this panel sits under."
     )
     order: int = Field(..., ge=0, description="Position in the track. Never a seed.")
+    track_id: str = Field(
+        ...,
+        description=(
+            "The track this panel belongs to — minted once per plan run and "
+            "shared by every panel it wrote. A cut lists panels; a track is "
+            "how two plans over one episode stay apart."
+        ),
+    )
 
     @model_validator(mode="after")
     def _move_in_vocabulary(self) -> "VideoPanelBodyV1":
@@ -295,18 +310,25 @@ class LabelTrackBodyV1(BaseModel):
 
 
 def credit_line(still: StillBodyV1 | dict) -> str:
-    """The credit for ``still``, composed from its rights fields.
+    """The credit for ``still``, composed from its rights fields — TASL order.
 
-    A provider's ``attribution`` can come back as a bare author with no licence
+    Title (the work's own, never the editorial ``subject`` or the slot ``key``
+    — a caveat like "not this concert" is a label, not what the picture is
+    called), Author, Source (the page the bytes came from), Licence. A
+    provider's ``attribution`` can come back as a bare author with no licence
     named while ``license`` / ``license_url`` on the same hit are correct, so
     rendering it as documented ships ``"EliziR"`` as the whole credit for a
-    CC BY-SA image. This builds the line from the parts and **raises** when no
-    licence is recorded: a credit that names no licence satisfies nothing.
+    CC BY-SA image. This builds the line from the parts and **raises** when
+    no licence is recorded: a credit that names no licence satisfies nothing.
 
     >>> credit_line(dict(key="k", artifact_id="a", labelled=False,
-    ...     subject="Eliza Hamilton by Ralph Earl", author="Ralph Earl",
+    ...     title="Portrait of Eliza Hamilton", author="Ralph Earl",
     ...     license="public-domain"))
-    'Eliza Hamilton by Ralph Earl — Ralph Earl — public-domain'
+    'Portrait of Eliza Hamilton — Ralph Earl — public-domain'
+    >>> credit_line(dict(key="k", artifact_id="a", labelled=True, subject="Eliza",
+    ...     author="Ralph Earl", license="public-domain",
+    ...     source_page_url="https://commons.wikimedia.org/wiki/File:E.jpg"))
+    'Ralph Earl — public-domain — https://commons.wikimedia.org/wiki/File:E.jpg'
     >>> credit_line(dict(key="k", artifact_id="a", labelled=False))
     Traceback (most recent call last):
         ...
@@ -319,7 +341,7 @@ def credit_line(still: StillBodyV1 | dict) -> str:
             "no licence satisfies no attribution condition. Record `license` "
             "(and `license_url`) before this still can be credited."
         )
-    parts = [body.subject or body.key, body.author, body.license]
+    parts = [body.title, body.author, body.license, body.source_page_url]
     return " — ".join(p.strip() for p in parts if p and p.strip())
 
 

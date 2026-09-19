@@ -11,9 +11,9 @@ picture.
   episode audio → a ``video-cut/v1`` at ``stage="motion"``: one
   ``burns.ken_burns_film`` pass over the prepared canvases, muxed under the
   episode audio. Its ``cache_key`` covers everything that reaches a pixel —
-  the audio, the frame geometry, and per panel the still's *bytes*, its crop,
-  its span and its move — and **nothing editorial**: a still's ``subject``,
-  ``labelled`` or rights are not in it, so a label edit is a free re-run.
+  the audio, the frame geometry, which resolver framed the moves, and per
+  panel the still's *bytes*, its crop, its span and its move — and **nothing
+  editorial**: a still's ``subject``, ``labelled`` or rights are not in it.
 - ``video_cut.finish`` — a motion cut + the label tracks + the stills'
   editorial decisions → a ``video-cut/v1`` at ``stage="delivered"``: tituli
   labels and cards composited in one ffmpeg pass, an SRT sidecar from the
@@ -21,19 +21,35 @@ picture.
   appended when asked for. Its ``cache_key`` covers the motion cut's bytes and
   everything the text pass reads.
 
-Both follow the ``segment_extraction.ffmpeg`` pattern exactly: a zero-call
+Both follow the ``segment_extraction.ffmpeg`` pattern: a zero-call
 ``falaw.Plan`` plus a skeleton carrying its own ``cache_key`` through
 ``nw.transforms.cache_key``, ``fresh_equivalent`` for the idempotent re-run,
-``cached_output`` + ``adopt_output`` for the compare-and-skip.
+``cached_output`` for the compare-and-skip — with one refinement the audio
+tiers do not need. A still's editorial fields live on the same node as its
+bytes, so a caption typo stales the motion cut through nw's transitive
+verdict even though its key (and its frames) are unchanged. :func:`_reuse`
+answers that case by **re-verifying the existing cut in place** — re-recording
+its trace under its own id — rather than writing a duplicate node per typo;
+the cut list does not grow, and the verdict clears. A hit whose file has
+been deleted is never adopted: the product is the file.
 
 **The camera move is resolved at render time, against the image**, by
 ``burns.resolve_move`` — a panel stores an *intent* (``move``, ``zoom``,
 ``focus``, ``seed``), not a path pinned to one image's pixels, so swapping the
 still re-frames the move. A stored ``path`` (``BurnsPath.to_dict()``) is the
-explicit override for a hand-corrected move. Until burns ships
-``resolve_move`` this module carries :func:`resolve_move`, a thin shim that
-defers to burns' the moment it exists and otherwise builds the same eight
-moves from burns' existing primitives — see the note on it.
+explicit override for a hand-corrected move. burns' ``resolve_move`` is in
+review (thorwhalen/burns#20) and not in a release, so :func:`resolve_move`
+here is a shim that defers to burns' when present and otherwise builds the
+same eight moves from burns' shipped primitives. **The two do not frame
+identically**, so *which one ran* is part of the motion cache key
+(:func:`resolver_identity`): the day burns ships the name, every motion cut
+re-renders under the new framing instead of being served with one the panel
+body no longer describes.
+
+Concurrency: ``execute`` is synchronous and carries no in-flight receipt.
+Two enqueued renders of one plan both render; the job layer that enqueues
+them (reelee's, plan §9) owns that idempotency, as it does for every
+Transform.
 """
 
 from __future__ import annotations
@@ -60,19 +76,20 @@ from braidio.bodies._video import (
     VideoCutBodyV1,
     credit_line,
 )
+from braidio.rights import Profile
 from braidio.transforms._common import (
     TIER_EPISODE_RENDER,
     TIER_LABEL_TRACK,
     TIER_STILL,
     TIER_VIDEO_CUT,
     TIER_VIDEO_PANEL,
-    adopt_output,
     cached_output,
     file_url,
     fresh_equivalent,
     graph_index,
     media_artifact,
     node_ref,
+    planned_value,
     resolve_parents,
     require_tier,
     safe_duration,
@@ -100,25 +117,37 @@ _KIND_SLOTS = {
 }
 #: Weight of a per-still label — lighter than any card (whose default is 2).
 _LABEL_WEIGHT = 1
+#: Chars of a content digest used in a canvas / crop file name.
+_NAME_DIGEST_CHARS = 16
 
 
 # --- the move ---------------------------------------------------------------
 
 
+def resolver_identity() -> str:
+    """Which code frames a named move — part of the motion cache key.
+
+    ``"burns.resolve_move"`` when burns exports it, else ``"braidio.shim"``.
+    The two build different windows for six of the eight moves, so a cut
+    framed by one must not be served for a plan that would be framed by the
+    other (nw invariant 3: a behaviour change must reach the cache key).
+    """
+    import burns
+
+    return "burns.resolve_move" if hasattr(burns, "resolve_move") else "braidio.shim"
+
+
 def resolve_move(move, *, image, aspect: float, zoom=1.18, focus=None, seed=0):
     """A ``BurnsPath`` for an authored ``move`` over ``image``.
 
-    **Shim over burns' own.** The signature is burns' (plan §4):
-    ``resolve_move(move, *, image, aspect, zoom, focus, seed) -> BurnsPath``,
-    where ``move`` is a name from ``MOVES`` **or** an explicit ``BurnsPath`` /
-    its ``to_dict()`` payload (the two front doors on one path), ``focus`` is
-    a normalized ``(x, y, w, h)`` tuple overriding the saliency frame, and
-    ``seed`` chooses what ``"auto"`` becomes and nothing else. When burns
-    exports the name this delegates to it unconditionally; until it is on a
-    released burns, the fallback below builds the same vocabulary from burns'
-    shipped primitives (``content_aware_path_for`` for the pushes,
-    ``ken_burns_path`` for the horizontal drifts, hand-built windows for the
-    vertical ones and the hold).
+    burns' signature: ``resolve_move(move, *, image, aspect, zoom, focus,
+    seed) -> BurnsPath``, where ``move`` is a name from ``MOVES`` **or** an
+    explicit ``BurnsPath`` / its ``to_dict()`` payload (the two front doors
+    on one path), ``focus`` is a normalized ``(x, y, w, h)`` tuple overriding
+    the saliency frame, and ``seed`` chooses what ``"auto"`` becomes and
+    nothing else. Delegates to burns' when it exports the name; the fallback
+    is for a released burns that does not yet (see the module docstring on
+    why the choice is in the cache key).
     """
     import burns
 
@@ -132,7 +161,7 @@ def resolve_move(move, *, image, aspect: float, zoom=1.18, focus=None, seed=0):
 
 
 def _fallback_resolve_move(move, *, image, aspect, zoom, focus, seed):
-    from burns import BurnsPath, Rect, content_aware_path, ken_burns_path
+    from burns import BurnsPath, Rect, content_aware_path
     from burns.content import content_aware_path_for, salient_box
     from PIL import Image
 
@@ -166,28 +195,55 @@ def _fallback_resolve_move(move, *, image, aspect, zoom, focus, seed):
             zoom=zoom,
             mode=mode,
         )
-    if move in ("drift_left", "drift_right"):
-        # ken_burns_path drifts right on odd indices, left on even.
-        index = 1 if move == "drift_right" else 2
-        return ken_burns_path(index, style="drift", output_aspect=aspect)
-    # vertical drift: a constant-zoom window sliding up or down through the image
+    # a drift: a constant-zoom window sliding through the image along one
+    # axis, centred on the keep-region on the other — honouring zoom and focus
     subject = box if box is not None else salient_box(str(image))
-    cx = (subject[0] + subject[2]) / 2.0
+    axis, sign = {
+        "drift_left": ("x", -1.0),
+        "drift_right": ("x", +1.0),
+        "drift_up": ("y", -1.0),
+        "drift_down": ("y", +1.0),
+    }[move]
     z = max(1.05, float(zoom))
-    w, h = 1.0 / z, 1.0 / z
-    travel = min(0.5 * (1.0 - h), 0.08)
-    ys = (
-        (0.5 - travel, 0.5 + travel)
-        if move == "drift_down"
-        else (0.5 + travel, 0.5 - travel)
-    )
-    x = min(max(cx - w / 2.0, 0.0), 1.0 - w)
-    start = Rect(x, min(max(ys[0] - h / 2.0, 0.0), 1.0 - h), w, h)
-    end = Rect(x, min(max(ys[1] - h / 2.0, 0.0), 1.0 - h), w, h)
+    w = h = 1.0 / z
+    cx, cy = (subject[0] + subject[2]) / 2.0, (subject[1] + subject[3]) / 2.0
+    travel = min(0.5 * (1.0 - w), 0.08)
+
+    def clamp(v, size):
+        return min(max(v - size / 2.0, 0.0), 1.0 - size)
+
+    if axis == "x":
+        ys = clamp(cy, h)
+        start = Rect(clamp(0.5 - sign * travel, w), ys, w, h)
+        end = Rect(clamp(0.5 + sign * travel, w), ys, w, h)
+    else:
+        xs = clamp(cx, w)
+        start = Rect(xs, clamp(0.5 - sign * travel, h), w, h)
+        end = Rect(xs, clamp(0.5 + sign * travel, h), w, h)
     return BurnsPath.from_start_end(start, end, output_aspect=aspect)
 
 
-def path_for_panel(panel_body: dict, *, image, aspect: float):
+def focus_on_canvas(focus, *, image_size, canvas_size):
+    """A focus rect authored on the image, in the prepared canvas's coordinates.
+
+    :func:`braidio.video.prepare_still` letterboxes the still onto a blurred
+    fill at frame size, so a normalized rect on the image is not the same
+    rect on the canvas whenever the aspects differ. The move is resolved on
+    the canvas (that is what burns samples), so the focus travels with it.
+
+    >>> focus_on_canvas((0.0, 0.0, 1.0, 1.0), image_size=(100, 100), canvas_size=(200, 100))
+    (0.25, 0.0, 0.5, 1.0)
+    """
+    iw, ih = image_size
+    cw, ch = canvas_size
+    contain = min(cw / iw, ch / ih)
+    fw, fh = iw * contain, ih * contain
+    ox, oy = (cw - fw) / 2.0, (ch - fh) / 2.0
+    x, y, w, h = (float(v) for v in focus)
+    return ((ox + x * fw) / cw, (oy + y * fh) / ch, w * fw / cw, h * fh / ch)
+
+
+def path_for_panel(panel_body: dict, *, image, aspect: float, image_size=None):
     """The ``BurnsPath`` a panel body asks for over ``image``.
 
     One code path, two front doors: a stored ``path`` (a hand-corrected
@@ -195,7 +251,9 @@ def path_for_panel(panel_body: dict, *, image, aspect: float):
     as authored; otherwise the named ``move`` resolves against the image with
     the panel's ``zoom`` / ``focus`` / ``seed``. A stored path that names no
     ``output_aspect`` takes the cut's, so a path authored before the delivery
-    size was chosen still fills the frame.
+    size was chosen still fills the frame. ``image_size`` is the size of the
+    *still* the focus was authored on, when ``image`` is a prepared canvas of
+    a different aspect (see :func:`focus_on_canvas`).
     """
     stored = panel_body.get("path")
     if stored:
@@ -205,14 +263,22 @@ def path_for_panel(panel_body: dict, *, image, aspect: float):
     else:
         move = str(panel_body.get("move", "auto"))
     focus = panel_body.get("focus")
+    if focus is not None:
+        focus = (focus["x"], focus["y"], focus["w"], focus["h"])
+        if image_size is not None:
+            from PIL import Image
+
+            with Image.open(image) as img:
+                canvas_size = img.size
+            focus = focus_on_canvas(
+                focus, image_size=image_size, canvas_size=canvas_size
+            )
     return resolve_move(
         move,
         image=image,
         aspect=aspect,
         zoom=float(panel_body.get("zoom", 1.18)),
-        focus=None
-        if focus is None
-        else (focus["x"], focus["y"], focus["w"], focus["h"]),
+        focus=focus,
         seed=int(panel_body.get("seed", 0)),
     )
 
@@ -330,14 +396,58 @@ def _complete(skel: Annotation, artifact, out_path: Path, **extra) -> Annotation
     )
 
 
+def _hit_file_exists(hit: Annotation) -> bool:
+    url = hit.body.get("url")
+    return bool(url) and url_to_path(url).exists()
+
+
+def _reverify(project, hit: Annotation) -> Annotation:
+    """Re-record ``hit``'s verifying trace under its own id.
+
+    The early-cutoff case done by hand: a parent's digest moved (a still's
+    caption), the plan re-derived to the same value, so the existing node is
+    the current one — it only needs its trace refreshed, not a twin.
+    """
+    from lacing import RationalTime
+
+    refreshed = hit.model_copy(
+        update={
+            "provenance": hit.provenance.model_copy(
+                update={"generated_at_time": RationalTime.now()}
+            )
+        }
+    )
+    project.graph.remove_annotation(hit.id)
+    project.graph.add_annotation(refreshed)
+    return refreshed
+
+
 def _reuse(project, skel: Annotation):
     """The idempotent / compare-and-skip half every render Transform shares."""
     existing = fresh_equivalent(project, skel)
     if existing is None:
         hit = cached_output(project, TIER_VIDEO_CUT, skel.body["cache_key"])
-        if hit is not None:
-            existing = adopt_output(skel, hit)
-            project.graph.add_annotation(existing)
+        if hit is not None and _hit_file_exists(hit):
+            same_parents = set(hit.provenance.was_derived_from) == set(
+                skel.provenance.was_derived_from
+            )
+            if same_parents and planned_value(hit) == planned_value(skel):
+                existing = _reverify(project, hit)
+            else:
+                outputs = {
+                    k: hit.body[k]
+                    for k in (
+                        "artifact_id",
+                        "url",
+                        "duration_s",
+                        "width",
+                        "height",
+                        "fps",
+                    )
+                    if k in hit.body
+                }
+                existing = skel.model_copy(update={"body": {**skel.body, **outputs}})
+                project.graph.add_annotation(existing)
     if existing is None:
         return None
     return TransformResult(annotations=(existing,), artifacts=(), cost_usd_actual=0.0)
@@ -346,14 +456,57 @@ def _reuse(project, skel: Annotation):
 # --- video_cut.render -------------------------------------------------------
 
 
-def _crop_still(src: Path, crop: dict | None, workdir: Path) -> Path:
-    """``src`` cropped to ``crop`` (a RectV1 dump), cached by content + crop."""
+def _render_settings(params: dict) -> dict:
+    size = [int(v) for v in params.get("size", DEFAULT_SIZE)]
+    return {"size": size, "fps": int(params.get("fps", DEFAULT_FPS))}
+
+
+def _refuse_unlicensed_under_published(profile: str, stills) -> None:
+    """A published cut may not carry a still whose licence is unrecorded
+    (plan §10: the rights position is surfaced, never assumed)."""
+    if profile != Profile.PUBLISHED.value:
+        return
+    unlicensed = sorted(
+        str(s.body["key"]) for s in stills if not (s.body.get("license") or "").strip()
+    )
+    if unlicensed:
+        raise ValueError(
+            f"video cut: profile 'published' refuses stills with no recorded "
+            f"licence: {unlicensed}. Record `license` on each, or cut under "
+            "'personal'."
+        )
+
+
+def _motion_cache_key(transform, *, audio_id, settings, panels, stills) -> str:
+    from nw.transforms import cache_key as transform_cache_key
+
+    parts = [str(audio_id), _json(settings), resolver_identity()]
+    for panel, still in zip(panels, stills):
+        start, end = _interval_s(panel)
+        parts += [
+            str(still.body["artifact_id"]),
+            _json(still.body.get("crop")),
+            f"{start:.3f}",
+            f"{end:.3f}",
+            str(panel.body.get("move")),
+            str(panel.body.get("zoom")),
+            _json(panel.body.get("focus")),
+            _json(panel.body.get("path")),
+            str(panel.body.get("seed")),
+        ]
+    return transform_cache_key(transform, "video-cut-motion", *parts)
+
+
+def _crop_still(
+    src: Path, crop: dict | None, workdir: Path, *, artifact_id: str
+) -> Path:
+    """``src`` cropped to ``crop`` (a RectV1 dump), cached by bytes + crop."""
     if not crop:
         return src
     from PIL import Image
 
-    tag = hashlib.sha256(f"{src.resolve()}|{_json(crop)}".encode()).hexdigest()[:16]
-    dst = workdir / f"crop_{tag}.jpg"
+    tag = hashlib.sha256(f"{artifact_id}|{_json(crop)}".encode()).hexdigest()
+    dst = workdir / f"crop_{tag[:_NAME_DIGEST_CHARS]}{src.suffix.lower() or '.png'}"
     if dst.exists():
         return dst
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -366,8 +519,26 @@ def _crop_still(src: Path, crop: dict | None, workdir: Path) -> Path:
             round((crop["x"] + crop["w"]) * w),
             round((crop["y"] + crop["h"]) * h),
         )
-        img.crop(box).save(dst, quality=96)
+        img.crop(box).save(dst)
     return dst
+
+
+def _content_keyed_prepare(workdir: Path, size: tuple[int, int]):
+    """A ``prepare=`` for :func:`braidio.video.render_video` that names each
+    canvas by the source's **bytes** and the frame size — never by its
+    ordinal or its filename stem. ``render_video``'s default naming
+    (``{i:03d}_{stem}.jpg``) plus ``prepare_still``'s existing-file shortcut
+    would otherwise serve a stale canvas for a swapped still with the same
+    stem, or a landscape canvas to a vertical cut.
+    """
+    from braidio.video import prepare_still
+
+    def prepare(src, _dst_ignored, *, size=size):
+        digest = hashlib.sha256(Path(src).read_bytes()).hexdigest()[:_NAME_DIGEST_CHARS]
+        dst = workdir / f"canvas_{digest}_{size[0]}x{size[1]}.jpg"
+        return prepare_still(src, dst, size=size)
+
+    return prepare
 
 
 @register_transform(RENDER_NAME)
@@ -382,8 +553,6 @@ class VideoCutRender(BaseTransform):
     def plan(
         self, project, inputs: TransformInputs, *, params=None
     ) -> tuple[Plan, tuple[Annotation, ...]]:
-        from nw.transforms import cache_key as transform_cache_key
-
         params = dict(params or {})
         panels = _ordered_panels(
             [a for a in inputs.primary if a.tier == TIER_VIDEO_PANEL]
@@ -398,25 +567,13 @@ class VideoCutRender(BaseTransform):
                 f"{RENDER_NAME}: episode {episode.id} has no rendered audio"
             )
         stills = [_still_of(p, index) for p in panels]
+        profile = str(episode.body.get("profile", Profile.PERSONAL.value))
+        _refuse_unlicensed_under_published(profile, stills)
 
-        size = tuple(int(v) for v in params.get("size", DEFAULT_SIZE))
-        fps = int(params.get("fps", DEFAULT_FPS))
-        parts = [str(audio_id), _json(size), str(fps)]
-        for panel, still in zip(panels, stills):
-            start, end = _interval_s(panel)
-            parts += [
-                str(still.body["artifact_id"]),
-                _json(still.body.get("crop")),
-                f"{start:.3f}",
-                f"{end:.3f}",
-                str(panel.body.get("move")),
-                str(panel.body.get("zoom")),
-                _json(panel.body.get("focus")),
-                _json(panel.body.get("path")),
-                str(panel.body.get("seed")),
-            ]
-        cache_key = transform_cache_key(self, "video-cut-motion", *parts)
-
+        settings = _render_settings(params)
+        cache_key = _motion_cache_key(
+            self, audio_id=audio_id, settings=settings, panels=panels, stills=stills
+        )
         unique_stills = list({s.id: s for s in stills}.values())
         full = TransformInputs(
             primary=tuple(panels),
@@ -429,11 +586,11 @@ class VideoCutRender(BaseTransform):
             body=VideoCutBodyV1(
                 label=str(params.get("label", "motion")),
                 stage="motion",
-                profile=str(episode.body.get("profile", "personal")),
+                profile=profile,
                 audio_artifact_id=str(audio_id),
                 panel_ids=tuple(str(p.id) for p in panels),
                 cache_key=cache_key,
-                settings={"size": list(size), "fps": fps},
+                settings=settings,
             ).model_dump(mode="json"),
             body_schema_uri=VIDEO_CUT_V1,
             provenance=derive_provenance(self, full, attributed_to="agent:braidio"),
@@ -467,20 +624,25 @@ class VideoCutRender(BaseTransform):
 
         workdir = _cuts_dir(project) / "_frames"
         video_panels = []
-        bodies_by_still: dict[str, dict] = {}
+        image_sizes: list[tuple[int, int] | None] = []
         for panel in panels:
             still = _still_of(panel, index)
             src = _crop_still(
-                _local_path(still, "still"), still.body.get("crop"), workdir
+                _local_path(still, "still"),
+                still.body.get("crop"),
+                workdir,
+                artifact_id=str(still.body["artifact_id"]),
             )
             start, end = _interval_s(panel)
             video_panels.append(
                 video.Panel(start, end, str(src), zoom=float(panel.body["zoom"]))
             )
-            bodies_by_still[str(src)] = panel.body
+            image_sizes.append(_image_size(src) if panel.body.get("focus") else None)
 
         def path_for(canvas, i, panel):
-            return path_for_panel(panels[i].body, image=canvas, aspect=aspect)
+            return path_for_panel(
+                panels[i].body, image=canvas, aspect=aspect, image_size=image_sizes[i]
+            )
 
         out_path = _cuts_dir(project) / f"{skel.id}_motion.mp4"
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -491,6 +653,7 @@ class VideoCutRender(BaseTransform):
             size=size,
             fps=fps,
             workdir=workdir,
+            prepare=_content_keyed_prepare(workdir, size),
             path_for=path_for,
         )
         artifact = media_artifact(
@@ -509,6 +672,13 @@ class VideoCutRender(BaseTransform):
             cost_usd_actual=0.0,
             cache_hit_savings_usd=0.0,
         )
+
+
+def _image_size(path: Path) -> tuple[int, int]:
+    from PIL import Image
+
+    with Image.open(path) as img:
+        return img.size
 
 
 # --- video_cut.finish -------------------------------------------------------
@@ -540,7 +710,7 @@ def _captions_srt(project, episode: Annotation, *, max_chars: int) -> str:
 def _card_payload(body: dict) -> tuple[dict, str]:
     """``(tituli payload, slot)`` for a label-track body."""
     kind = str(body["kind"])
-    lines = [str(l) for l in body.get("lines", ())]
+    lines = [str(line) for line in body.get("lines", ())]
     headline = body.get("headline") or (lines[0] if lines else "")
     rest = lines if body.get("headline") else lines[1:]
     if kind == "title":
@@ -553,7 +723,12 @@ def _card_payload(body: dict) -> tuple[dict, str]:
 
 
 def _overlays(panels, stills_by_id: dict, label_tracks):
-    """The resolved tituli overlays for a finish: cards, then per-still labels."""
+    """The resolved tituli overlays for a finish: cards, then per-still labels.
+
+    Pure, and run at **plan** time too: tituli's ``resolve`` raises on two
+    equal-weight overlays contending for one slot (an authoring error), and
+    that must fail the plan, not the render after it.
+    """
     from tituli import UNLABELLED, Label, Span, TimedOverlay, resolve, schedule_labels
 
     cards = []
@@ -629,36 +804,70 @@ def _append_credits(
     roll = dst.with_name(dst.stem + "_credits.mp4")
     frames_to_video(frames(), roll, size=size, fps=fps)
     pad = per_card * len(cards) / fps
-    subprocess.run(
-        [
-            ffmpeg_path(),
-            "-y",
-            "-loglevel",
-            "error",
-            "-i",
-            str(film),
-            "-i",
-            str(roll),
-            "-filter_complex",
-            f"[0:a]apad=pad_dur={pad:.3f}[a];[0:v][1:v]concat=n=2:v=1:a=0[v]",
-            "-map",
-            "[v]",
-            "-map",
-            "[a]",
-            "-c:v",
-            "libx264",
-            "-pix_fmt",
-            "yuv420p",
-            "-c:a",
-            "aac",
-            "-shortest",
-            str(dst),
-        ],
-        check=True,
-        capture_output=True,
-    )
-    roll.unlink(missing_ok=True)
+    try:
+        subprocess.run(
+            [
+                ffmpeg_path(),
+                "-y",
+                "-loglevel",
+                "error",
+                "-i",
+                str(film),
+                "-i",
+                str(roll),
+                "-filter_complex",
+                f"[0:a]apad=pad_dur={pad:.3f}[a];[0:v][1:v]concat=n=2:v=1:a=0[v]",
+                "-map",
+                "[v]",
+                "-map",
+                "[a]",
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                "-c:a",
+                "aac",
+                "-shortest",
+                str(dst),
+            ],
+            check=True,
+            capture_output=True,
+        )
+    finally:
+        roll.unlink(missing_ok=True)
     return dst
+
+
+def _require_current_motion(motion: Annotation, panels, stills, index: dict) -> None:
+    """Refuse a motion cut whose frames would differ if rendered now.
+
+    ``finish`` reads the panels by id from the *current* graph; a panel whose
+    still was swapped since the motion was rendered would get the new still's
+    label composited over the old still's frames. The check is the motion
+    key itself, re-derived from the current panels and stills — which is
+    exactly "would the pixels differ" and nothing editorial, so a caption
+    edit still passes (that is the edit this pass exists for).
+    """
+    episode = require_tier(resolve_parents(motion, index), TIER_EPISODE_RENDER)
+    expected = _motion_cache_key(
+        VideoCutRender(),
+        audio_id=motion.body["audio_artifact_id"],
+        settings={
+            "size": list(motion.body["settings"]["size"]),
+            "fps": int(motion.body["settings"]["fps"]),
+        },
+        panels=panels,
+        stills=stills,
+    )
+    if (
+        motion.body.get("cache_key") != expected
+        or episode.body.get("artifact_id") != (motion.body["audio_artifact_id"])
+    ):
+        raise ValueError(
+            f"{FINISH_NAME}: motion cut {motion.id} is out of date — a panel, a "
+            "still's bytes or crop, or the episode audio changed since it was "
+            f"rendered. Re-run {RENDER_NAME} over the panels first."
+        )
 
 
 @register_transform(FINISH_NAME)
@@ -694,8 +903,12 @@ class VideoCutFinish(BaseTransform):
         index = graph_index(project)
         panels = _panels_from_ids(motion.body["panel_ids"], index)
         stills = {str(p.body["still_id"]): _still_of(p, index) for p in panels}
+        _require_current_motion(
+            motion, panels, [stills[str(p.body["still_id"])] for p in panels], index
+        )
         episode = require_tier(resolve_parents(motion, index), TIER_EPISODE_RENDER)
         settings = _finish_settings(motion, params)
+        _overlays(panels, stills, tracks)  # raises on an overlay collision, here
 
         parts = [str(motion.body["artifact_id"]), _json(settings)]
         for track in tracks:
@@ -777,7 +990,8 @@ class VideoCutFinish(BaseTransform):
 
         cuts = _cuts_dir(project)
         cuts.mkdir(parents=True, exist_ok=True)
-        current = _local_path(motion, "motion cut")
+        motion_path = _local_path(motion, "motion cut")
+        current = motion_path
         stages: list[Path] = []
         extra: dict = {}
 
@@ -832,7 +1046,7 @@ class VideoCutFinish(BaseTransform):
             stages.append(staged)
 
         out_path = cuts / f"{skel.id}.mp4"
-        if current == _local_path(motion, "motion cut"):
+        if current == motion_path:
             shutil.copyfile(
                 current, out_path
             )  # nothing to composite: the motion IS the cut

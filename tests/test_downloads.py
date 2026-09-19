@@ -27,8 +27,15 @@ OWNER = "owner@example.com"
 OTHER = "someone-else@example.com"
 
 
-def _render(tmp_path, monkeypatch, *, email=OWNER, name="Why the Sky Looks Blue",
-            ext=".mp3", data=b"ID3-audio-bytes"):
+def _render(
+    tmp_path,
+    monkeypatch,
+    *,
+    email=OWNER,
+    name="Why the Sky Looks Blue",
+    ext=".mp3",
+    data=b"ID3-audio-bytes",
+):
     monkeypatch.setenv("BRAIDIO_DATA_HOME", str(tmp_path))
     from braidio.mcp.workspace import Workspace
 
@@ -68,17 +75,22 @@ def test_the_reference_is_the_title_because_braidio_already_has_one(
     assert got.label == "Why the Sky Looks Blue"
 
 
-def test_the_extension_is_optional_because_a_human_will_omit_it(
-    tmp_path, monkeypatch
-):
+def test_the_extension_is_optional_because_a_human_will_omit_it(tmp_path, monkeypatch):
     _render(tmp_path, monkeypatch)
     with_ext = resolve(OWNER, "", "Why the Sky Looks Blue.mp3")
     without = resolve(OWNER, "", "Why the Sky Looks Blue")
     assert with_ext.path == without.path
 
 
-@pytest.mark.parametrize("ext,ctype", [(".mp3", "audio/mpeg"), (".wav", "audio/wav"),
-                                       (".m4a", "audio/mp4"), (".mp4", "video/mp4")])
+@pytest.mark.parametrize(
+    "ext,ctype",
+    [
+        (".mp3", "audio/mpeg"),
+        (".wav", "audio/wav"),
+        (".m4a", "audio/mp4"),
+        (".mp4", "video/mp4"),
+    ],
+)
 def test_every_extension_a_render_may_carry_is_servable(
     tmp_path, monkeypatch, ext, ctype
 ):
@@ -163,8 +175,16 @@ def test_listing_skips_non_media_without_dropping_the_rest(tmp_path, monkeypatch
 EPISODE_ID = "9a23da78-0a3e-4acf-a557-48bd6e519038"
 
 
-def _episode(tmp_path, monkeypatch, *, email=OWNER, project_id="braidio_test_02",
-             title="Sky Colours", episode_id=EPISODE_ID, data=b"episode-bytes"):
+def _episode(
+    tmp_path,
+    monkeypatch,
+    *,
+    email=OWNER,
+    project_id="braidio_test_02",
+    title="Sky Colours",
+    episode_id=EPISODE_ID,
+    data=b"episode-bytes",
+):
     """An episode exactly where ``weave_project``'s pipeline writes one:
     ``{project}/data/episodes/{annotation_id}.mp3`` (braidio#32)."""
     import json
@@ -221,6 +241,48 @@ def test_episodes_appear_in_the_listing_beside_flat_renders(tmp_path, monkeypatc
     assert ep.label == EPISODE_ID
     assert ep.title == "Sky Colours — episode"
     assert ep.filename.startswith("braidio_test_02-episode-")
+
+
+CUT_ID = "c0ffee00-1111-4222-8333-444455556666"
+
+
+def _cut(
+    tmp_path,
+    monkeypatch,
+    *,
+    project_id="braidio_test_02",
+    title="Sky Colours",
+    cut_id=CUT_ID,
+    stage="delivered",
+):
+    """A commentary cut exactly where ``video_cut.render`` / ``.finish`` write
+    one: ``{project}/data/cuts/{annotation_id}[_motion].mp4``."""
+    _episode(tmp_path, monkeypatch, project_id=project_id, title=title)
+    from braidio.mcp.workspace import Workspace
+
+    cuts = Workspace.for_email(OWNER).project_root(project_id) / "data" / "cuts"
+    cuts.mkdir(parents=True, exist_ok=True)
+    stem = cut_id if stage == "delivered" else f"{cut_id}_motion"
+    path = cuts / f"{stem}.mp4"
+    path.write_bytes(b"cut-bytes")
+    return path
+
+
+def test_a_commentary_cut_is_retrievable_and_listed_beside_the_episode(
+    tmp_path, monkeypatch
+):
+    """The picture track's product lands in ``data/cuts/``; a producer nothing
+    lists is the reelee#322 class (a paying caller's render reaching him as
+    nothing). Both halves — resolve and list — must know the directory."""
+    path = _cut(tmp_path, monkeypatch)
+    got = resolve(OWNER, "braidio_test_02", CUT_ID)
+    assert got.path == path and got.content_type == "video/mp4"
+    assert got.meta == {"kind": "cut", "stage": "delivered"}
+    assert got.title == "Sky Colours — cut"
+    by_id = {d.artifact_id: d for d in list_deliverables(OWNER, "braidio_test_02")}
+    assert set(by_id) == {EPISODE_ID, CUT_ID}
+    motion = _cut(tmp_path, monkeypatch, stage="motion")
+    assert resolve(OWNER, "", motion.stem).meta["stage"] == "motion"
 
 
 OTHER_EPISODE_ID = "1111ffff-2222-3333-4444-555566667777"
@@ -360,9 +422,7 @@ def test_a_project_scoped_listing_cannot_reach_another_callers_project(
     assert list_deliverables(OWNER, "braidio_test_02") != []
 
 
-def test_narrowing_does_not_bypass_the_symlink_containment_check(
-    tmp_path, monkeypatch
-):
+def test_narrowing_does_not_bypass_the_symlink_containment_check(tmp_path, monkeypatch):
     """The containment check lives in the walk, so it applies to a NARROWED
     walk too — naming the symlinked project explicitly must not be the door
     that the unscoped listing already refuses."""
@@ -442,8 +502,7 @@ def test_episode_lookup_refuses_traversal_and_symlinks(tmp_path, monkeypatch):
     from braidio.mcp.workspace import Workspace
 
     episodes = (
-        Workspace.for_email(OWNER).project_root("braidio_test_02")
-        / "data" / "episodes"
+        Workspace.for_email(OWNER).project_root("braidio_test_02") / "data" / "episodes"
     )
     (episodes / "planted.mp3").symlink_to(secret)
     with pytest.raises(KeyError):
@@ -569,7 +628,7 @@ def test_a_project_with_no_episode_yet_is_findable_at_zero(tmp_path, monkeypatch
 def test_episodes_are_counted_and_flat_renders_are_not(tmp_path, monkeypatch):
     """Episodes are the project-scoped population; the flat per-caller
     renders belong to no project and are the Lister's to show."""
-    _episode(tmp_path, monkeypatch)          # braidio_test_02 gets 1 episode
+    _episode(tmp_path, monkeypatch)  # braidio_test_02 gets 1 episode
     _render(tmp_path, monkeypatch, name="Flat One")  # belongs to no project
     from braidio.downloads import list_projects
 
@@ -578,9 +637,7 @@ def test_episodes_are_counted_and_flat_renders_are_not(tmp_path, monkeypatch):
     assert rows[0].deliverable_count == 1
 
 
-def test_listing_is_blind_to_other_callers_and_never_mints_dirs(
-    tmp_path, monkeypatch
-):
+def test_listing_is_blind_to_other_callers_and_never_mints_dirs(tmp_path, monkeypatch):
     _episode(tmp_path, monkeypatch, email=OTHER)
     from braidio.downloads import list_projects
     from braidio.mcp.workspace import Workspace
@@ -601,8 +658,12 @@ def test_an_accepted_title_mirrors_into_ref_and_resolves(tmp_path, monkeypatch):
 
     path = _render(tmp_path, monkeypatch, name="Why the Sky Looks Blue")
     got = organise(
-        OWNER, "", "Why the Sky Looks Blue",
-        title="Sky Final", tags=["keeper"], note="the good one",
+        OWNER,
+        "",
+        "Why the Sky Looks Blue",
+        title="Sky Final",
+        tags=["keeper"],
+        note="the good one",
     )
     assert got.artifact_id == "Why the Sky Looks Blue"  # identity untouched
     assert got.ref == "Sky Final"  # the mirror rule
@@ -632,9 +693,7 @@ def test_an_episode_can_finally_be_named(tmp_path, monkeypatch):
     assert got.path.name == f"{EPISODE_ID}.mp3"
 
 
-def test_collisions_are_refused_across_the_whole_resolvable_set(
-    tmp_path, monkeypatch
-):
+def test_collisions_are_refused_across_the_whole_resolvable_set(tmp_path, monkeypatch):
     from braidio.downloads import organise
 
     _render(tmp_path, monkeypatch, name="First")
@@ -781,9 +840,7 @@ def test_a_new_render_cannot_take_over_an_assigned_title(tmp_path, monkeypatch):
     assert ws.render_path("Something Else").name == "Something Else.mp3"
 
 
-def test_an_orphaned_sidecar_neither_resolves_nor_blocks_reuse(
-    tmp_path, monkeypatch
-):
+def test_an_orphaned_sidecar_neither_resolves_nor_blocks_reuse(tmp_path, monkeypatch):
     from braidio.downloads import organise
 
     path = _render(tmp_path, monkeypatch, name="Gone")

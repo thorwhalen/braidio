@@ -53,6 +53,7 @@ from braidio.transforms._video_panels import (
     mint_seed,
     panels_for_episode,
     picks_from_panels,
+    tracks_for_episode,
 )
 from braidio.transforms._video_cut import path_for_panel, resolve_move
 
@@ -78,6 +79,7 @@ __all__ = [
     "mint_seed",
     "panels_for_episode",
     "picks_from_panels",
+    "tracks_for_episode",
     "path_for_panel",
     "resolve_move",
     "VOICE_ASSIGNMENT_TRANSFORM",

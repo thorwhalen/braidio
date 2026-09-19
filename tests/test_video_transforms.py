@@ -335,18 +335,56 @@ def test_panels_plan_honours_picks_and_refuses_an_unknown_key(project, episode, 
         )
 
 
-def test_panels_plan_is_idempotent_per_episode(project, episode, stills):
+def test_panels_plan_is_idempotent_by_value_and_a_track_is_an_identity(
+    project, episode, stills
+):
     import nw
 
-    from braidio.transforms import VIDEO_PANELS_TRANSFORM
+    from braidio.transforms import (
+        VIDEO_PANELS_TRANSFORM,
+        panels_for_episode,
+        picks_from_panels,
+        tracks_for_episode,
+    )
+    from braidio.transforms._common import graph_index
 
     first = _run(VIDEO_PANELS_TRANSFORM, project, episode).annotations
     second = _run(VIDEO_PANELS_TRANSFORM, project, episode).annotations
     assert [a.id for a in first] == [a.id for a in second]
+    assert len({a.body["track_id"] for a in first}) == 1
     assert len(nw.annotations_at_tier(project.root, "video-panels")) == len(first)
+
+    # a plan that says something else (different picks) is NOT the same track:
+    # it is written beside the first, never over it, and becomes the latest
+    beat = first[0].body["beat_id"]
+    other = (
+        "c" if picks_from_panels(first, graph_index(project))[beat][0] != "c" else "b"
+    )
+    third = _run(
+        VIDEO_PANELS_TRANSFORM, project, episode, params={"picks": {beat: [other]}}
+    ).annotations
+    assert {a.id for a in third}.isdisjoint({a.id for a in first})
+    assert len(tracks_for_episode(project, episode.id)) == 2
+    latest = panels_for_episode(project, episode.id)
+    assert [a.id for a in latest] == [a.id for a in third]
+    assert [a.body["order"] for a in latest] == list(range(len(third)))
+    # a named track is retrievable whole, and picks read from ONE track
+    assert [
+        a.id
+        for a in panels_for_episode(
+            project, episode.id, track_id=first[0].body["track_id"]
+        )
+    ] == [a.id for a in first]
+    assert all(
+        len(v) <= 2 for v in picks_from_panels(latest, graph_index(project)).values()
+    )
+
+    # force writes a new track even for the same value
     forced = _run(VIDEO_PANELS_TRANSFORM, project, episode, force=True).annotations
-    assert {a.id for a in forced}.isdisjoint({a.id for a in first})
-    assert len(nw.annotations_at_tier(project.root, "video-panels")) == 2 * len(first)
+    assert {a.id for a in forced}.isdisjoint(
+        {a.id for a in first} | {a.id for a in third}
+    )
+    assert len(tracks_for_episode(project, episode.id)) == 3
 
 
 # --- video_cut.render ----------------------------------------------------------------
@@ -432,13 +470,24 @@ def test_a_label_edit_is_served_from_the_motion_cache_not_re_rendered(
     still = graph_index(project)[uuid.UUID(panels[0].body["still_id"])]
     _rewrite_in_place(project, still, body={**still.body, "subject": "Renamed"})
     panels = [graph_index(project)[p.id] for p in panels]
+    import nw
+
+    stale_before = {
+        v.annotation.id for v in nw.stale_verdicts_all(project.root) if v.is_stale
+    }
+    assert first.id in stale_before  # nw's transitive verdict: the still's digest moved
     second = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
-    # the still changed under it, so the old cut is stale and a NEW node is
-    # written — but with the same bytes, adopted from the cache: no render
+    # the plan re-derives to the same key, so the existing cut is RE-VERIFIED
+    # under its own id — no render, no twin node, and the verdict clears
     assert len(patched_render) == 1
+    assert second.id == first.id
     assert second.body["artifact_id"] == first.body["artifact_id"]
-    assert second.id != first.id
-    # whereas an unchanged re-run is the same node (idempotent)
+    assert len(nw.annotations_at_tier(project.root, "video-cuts")) == 1
+    stale_after = {
+        v.annotation.id for v in nw.stale_verdicts_all(project.root) if v.is_stale
+    }
+    assert first.id not in stale_after
+    # and an unchanged re-run is the same node (idempotent)
     third = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
     assert third.id == second.id and len(patched_render) == 1
 
@@ -609,6 +658,163 @@ def test_every_move_resolves_to_a_burns_path(tmp_path):
         ),
         BurnsPath,
     )
+
+
+def test_finish_refuses_a_motion_cut_whose_frames_would_differ(
+    project, episode, stills, panels, patched_render, patched_overlay
+):
+    """A still swap after the motion was rendered: finish must not composite
+    the new still's label over the old still's frames."""
+    from braidio.transforms import (
+        VIDEO_CUT_FINISH_TRANSFORM,
+        VIDEO_CUT_RENDER_TRANSFORM,
+    )
+
+    motion = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    other = next(s for s in stills if s.id != uuid.UUID(panels[0].body["still_id"]))
+    _rewrite_in_place(
+        project, panels[0], body={**panels[0].body, "still_id": str(other.id)}
+    )
+    with pytest.raises(ValueError, match="out of date"):
+        _plan(VIDEO_CUT_FINISH_TRANSFORM, project, motion)
+
+
+def test_finish_fails_an_overlay_collision_at_plan_time(
+    project, episode, stills, panels, patched_render, patched_overlay
+):
+    from braidio.transforms import (
+        VIDEO_CUT_FINISH_TRANSFORM,
+        VIDEO_CUT_RENDER_TRANSFORM,
+    )
+
+    motion = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    _add_label_track(
+        project, episode, start=0.0, end=6.0, kind="context", headline="A", lines=["x"]
+    )
+    _add_label_track(
+        project, episode, start=3.0, end=9.0, kind="context", headline="B", lines=["y"]
+    )
+    with pytest.raises(ValueError, match="collide"):
+        _plan(VIDEO_CUT_FINISH_TRANSFORM, project, motion)
+    assert patched_overlay == []  # nothing was rendered
+
+
+def test_a_cached_cut_whose_file_is_gone_is_not_adopted(
+    project, episode, stills, panels, patched_render
+):
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM
+    from braidio.transforms._common import graph_index, url_to_path
+
+    first = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    url_to_path(first.body["url"]).unlink()
+    still = graph_index(project)[uuid.UUID(panels[0].body["still_id"])]
+    _rewrite_in_place(project, still, body={**still.body, "subject": "Renamed"})
+    panels = [graph_index(project)[p.id] for p in panels]
+    second = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    assert len(patched_render) == 2  # re-rendered: the product is the file
+    assert url_to_path(second.body["url"]).exists()
+
+
+def test_published_profile_refuses_an_unlicensed_still(
+    project, episode, tmp_path, stills, patched_render
+):
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM, VIDEO_PANELS_TRANSFORM
+
+    add_still(project, _png(tmp_path / "u.png"), key="u", labelled=False, license=None)
+    panels = list(
+        _run(VIDEO_PANELS_TRANSFORM, project, episode, force=True).annotations
+    )
+    _rewrite_in_place(project, episode, body={**episode.body, "profile": "published"})
+    with pytest.raises(ValueError, match="published"):
+        _plan(VIDEO_CUT_RENDER_TRANSFORM, project, *panels)
+
+
+def test_motion_key_names_the_move_resolver(
+    project, episode, stills, panels, monkeypatch
+):
+    """burns' resolve_move and the shim frame six of eight moves differently,
+    so which one ran is part of the key: the day burns ships the name, cuts
+    re-render rather than being served under a framing the panel no longer
+    describes."""
+    import braidio.transforms._video_cut as vc
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM
+
+    key0 = _plan(VIDEO_CUT_RENDER_TRANSFORM, project, *panels)[1][0].body["cache_key"]
+    monkeypatch.setattr(vc, "resolver_identity", lambda: "somebody.else")
+    key1 = _plan(VIDEO_CUT_RENDER_TRANSFORM, project, *panels)[1][0].body["cache_key"]
+    assert key1 != key0
+
+
+def test_canvases_are_keyed_on_bytes_and_size_never_ordinal_or_stem(
+    project, episode, tmp_path, monkeypatch
+):
+    """Two stills with one filename stem at the same ordinal, and one project
+    cut at two sizes: the prepared canvas must follow the bytes and the
+    frame, or a swapped still ships the old picture and a vertical cut reuses
+    a landscape canvas (both reproduced by the adversarial review)."""
+    pytest.importorskip("burns")
+    import burns
+    from PIL import Image
+
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM, VIDEO_PANELS_TRANSFORM
+
+    captured: list[list] = []
+
+    def _film(triples, *, saveas, fps, audio_path=None, **kw):
+        captured.append(list(triples))
+        return _write(saveas, b"FILM")
+
+    monkeypatch.setattr(burns, "ken_burns_film", _film)
+    red = add_still(
+        project,
+        _png(tmp_path / "a" / "portrait.png", size=(64, 96), color=(220, 30, 30)),
+        key="red",
+        labelled=False,
+    )
+    blue = add_still(
+        project,
+        _png(tmp_path / "b" / "portrait.png", size=(64, 96), color=(30, 30, 220)),
+        key="blue",
+        labelled=False,
+    )
+    panels = list(
+        _run(
+            VIDEO_PANELS_TRANSFORM,
+            project,
+            episode,
+            params={"picks": {p: ["red"] for p in {"0000", "0001", "0003"}}},
+        ).annotations
+    )
+    small = {"size": (96, 54), "fps": 6}
+    _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels, params=small)
+    # swap the first panel to the same-stem blue still and render again
+    panels[0] = _rewrite_in_place(
+        project, panels[0], body={**panels[0].body, "still_id": str(blue.id)}
+    )
+    _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels, params=small)
+    canvas_red, canvas_blue = captured[0][0][0], captured[1][0][0]
+    assert canvas_red != canvas_blue
+    with Image.open(canvas_blue) as im:
+        assert im.getpixel((48, 27))[2] > 150  # the blue still, not a stale red canvas
+    # a vertical cut of the same panels does not reuse the landscape canvas
+    _run(
+        VIDEO_CUT_RENDER_TRANSFORM,
+        project,
+        *panels,
+        params={"size": (54, 96), "fps": 6},
+    )
+    with Image.open(captured[2][0][0]) as im:
+        assert im.size == (54, 96)
+
+
+def test_clips_emit_no_caption(project, episode):
+    """A clip's text is not known on the graph (only its label is stored),
+    so it contributes no cue — a caption is a claim about what is heard."""
+    from braidio.transforms._video_cut import _captions_srt
+
+    srt = _captions_srt(project, episode, max_chars=42)
+    assert "♪" not in srt and "♪ hook ♪" not in srt
+    assert "Opening line" in srt and "Closing thought" in srt
 
 
 # --- the genre -----------------------------------------------------------------------

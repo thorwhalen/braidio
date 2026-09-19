@@ -32,12 +32,18 @@ the text pass re-runs — which is the split earning itself. Swapping the
 picture is a patch to ``still_id`` (the panel's own digest moves); replacing
 the bytes is a new still with a new artifact id, then that patch.
 
-**One track per episode.** ``execute`` returns the panels already derived
-from this episode when there are any (the planner is idempotent per episode —
-panels are what the user edits *after* planning, and a re-plan must not
-double the track or overwrite an edit); ``force=True`` writes a fresh track
-beside the old one. After a re-weave the new episode has no track yet, so the
-planner plans anew; carry choices forward with :func:`picks_from_panels`.
+**A track is an identity.** Every panel a plan writes carries the same
+``track_id``, minted once per plan run, so two plans over one episode stay
+apart: :func:`tracks_for_episode` groups them and :func:`panels_for_episode`
+returns the latest. ``execute`` is idempotent by *value* — when the latest
+track already says exactly what this plan says (same stills over the same
+spans with the same moves), it is returned and nothing is written; a plan
+that says something else (different picks, different bounds) writes a new
+track beside it, never over it, because panels are what the user edits
+*after* planning and a re-plan must not overwrite an edit. ``force=True``
+writes a new track even when the value is the same. After a re-weave the new
+episode has no track yet, so the planner plans anew; carry choices forward
+with :func:`picks_from_panels` over the old track.
 """
 
 from __future__ import annotations
@@ -122,16 +128,51 @@ def picks_from_panels(panels, index: dict) -> dict[str, list[str]]:
     return picks
 
 
-def panels_for_episode(project, episode_id) -> list[Annotation]:
-    """The panel track derived from ``episode_id``, in ``order``."""
+def tracks_for_episode(project, episode_id) -> dict[str, list[Annotation]]:
+    """``{track_id: panels in order}`` for every track planned over ``episode_id``,
+    oldest track first."""
     import nw
 
-    hits = [
-        a
-        for a in nw.annotations_at_tier(project.root, TIER_VIDEO_PANEL)
-        if episode_id in a.provenance.was_derived_from
-    ]
-    return sorted(hits, key=lambda a: int(a.body.get("order", 0)))
+    by_track: dict[str, list[Annotation]] = {}
+    for a in nw.annotations_at_tier(project.root, TIER_VIDEO_PANEL):
+        if episode_id in a.provenance.was_derived_from:
+            by_track.setdefault(str(a.body.get("track_id", "")), []).append(a)
+    ordered = sorted(
+        by_track.items(),
+        key=lambda kv: min(p.provenance.generated_at_time.to_seconds() for p in kv[1]),
+    )
+    return {
+        tid: sorted(panels, key=lambda a: int(a.body.get("order", 0)))
+        for tid, panels in ordered
+    }
+
+
+def panels_for_episode(
+    project, episode_id, *, track_id: str | None = None
+) -> list[Annotation]:
+    """One panel track over ``episode_id``, in ``order``: ``track_id``'s, or
+    the latest planned when none is named. ``[]`` when there is none."""
+    tracks = tracks_for_episode(project, episode_id)
+    if track_id is not None:
+        return list(tracks.get(track_id, []))
+    return list(next(reversed(tracks.values()), []))
+
+
+def _track_value(panels) -> list:
+    """What a track *says*, track identity aside — the value two plans are
+    compared on: per panel its span and its body minus ``track_id``."""
+    out = []
+    for p in panels:
+        iv = p.reference.interval
+        body = {k: v for k, v in p.body.items() if k != "track_id"}
+        out.append((iv.start.value, iv.end.value, iv.end.rate, _json_value(body)))
+    return out
+
+
+def _json_value(body: dict) -> str:
+    import json
+
+    return json.dumps(body, sort_keys=True, default=str)
 
 
 def _beat_ids(episode: Annotation, index: dict) -> list[str | None]:
@@ -231,6 +272,7 @@ class VideoPanelsPlan(BaseTransform):
         )
         move = str(params.get("move", DEFAULT_MOVE))
         zoom = float(params.get("zoom", DEFAULT_ZOOM))
+        track_id = str(uuid.uuid4())
 
         skeletons = []
         within_beat: dict[str | None, int] = {}
@@ -256,6 +298,7 @@ class VideoPanelsPlan(BaseTransform):
                         seed=mint_seed(beat_id, k),
                         beat_id=beat_id,
                         order=order,
+                        track_id=track_id,
                     ).model_dump(mode="json"),
                     body_schema_uri=VIDEO_PANEL_V1,
                     provenance=derive_provenance(
@@ -279,7 +322,7 @@ class VideoPanelsPlan(BaseTransform):
         episode_id = skeleton[0].provenance.was_derived_from[0]
         if use_cache and not force:
             existing = panels_for_episode(project, episode_id)
-            if existing:
+            if existing and _track_value(existing) == _track_value(skeleton):
                 return TransformResult(
                     annotations=tuple(existing), artifacts=(), cost_usd_actual=0.0
                 )

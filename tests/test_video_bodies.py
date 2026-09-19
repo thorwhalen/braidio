@@ -57,6 +57,7 @@ def _still(**overrides) -> dict:
                 seed=1234567,
                 beat_id="0003",
                 order=2,
+                track_id="t1",
             ),
         ),
         (
@@ -193,6 +194,20 @@ def test_credit_line_is_composed_from_the_parts_never_the_attribution_string():
         credit_line(_still(license=None))
 
 
+def test_credit_line_names_the_work_not_the_editorial_subject_or_the_slot():
+    """TASL: the credit's T is the work's title. The editorial ``subject``
+    ("… — not this concert") is a label, and ``key`` is a slot name; neither
+    belongs in an end roll."""
+    from braidio.bodies import credit_line
+
+    line = credit_line(_still(title="Beach Boys, Central Park"))
+    assert line.startswith("Beach Boys, Central Park — EliziR — cc-by-sa-2.0")
+    assert line.endswith("https://commons.wikimedia.org/wiki/File:x.jpg")
+    untitled = credit_line(_still())
+    assert "not this concert" not in untitled and "central-park-1971" not in untitled
+    assert untitled.startswith("EliziR — cc-by-sa-2.0")
+
+
 # --- panel: the vocabulary and the seed ------------------------------------------
 
 
@@ -200,9 +215,12 @@ def test_panel_move_must_be_in_the_vocabulary():
     from braidio.bodies import MOVES, VideoPanelBodyV1
 
     with pytest.raises(ValueError, match="not one of"):
-        VideoPanelBodyV1(still_id="s", move="zoom_wildly", seed=1, order=0)
+        VideoPanelBodyV1(still_id="s", move="zoom_wildly", seed=1, order=0, track_id="t")
     for move in MOVES:
-        assert VideoPanelBodyV1(still_id="s", move=move, seed=1, order=0).move == move
+        assert (
+            VideoPanelBodyV1(still_id="s", move=move, seed=1, order=0, track_id="t").move
+            == move
+        )
 
 
 def test_move_vocabulary_matches_burns_when_burns_ships_it():
@@ -218,9 +236,11 @@ def test_panel_seed_and_order_are_required_and_distinct():
     from braidio.bodies import VideoPanelBodyV1
 
     with pytest.raises(ValueError):
-        VideoPanelBodyV1(still_id="s", order=0)  # no seed: nothing to vary on
+        VideoPanelBodyV1(still_id="s", order=0, track_id="t")  # no seed
     with pytest.raises(ValueError):
-        VideoPanelBodyV1(still_id="s", seed=5)  # no order: nowhere in the track
+        VideoPanelBodyV1(still_id="s", seed=5, track_id="t")  # no order
+    with pytest.raises(ValueError):
+        VideoPanelBodyV1(still_id="s", seed=5, order=0)  # no track: no identity
 
 
 def test_still_id_is_an_annotation_id_not_an_artifact_id():
