@@ -38,6 +38,10 @@ TIER_NARRATION_RENDER = "narration-renders"
 TIER_DIALOGUE_RENDER = "dialogue-renders"
 TIER_SEGMENT_EXTRACTION = "segment-extractions"
 TIER_EPISODE_RENDER = "episode-renders"
+TIER_STILL = "stills"
+TIER_VIDEO_PANEL = "video-panels"
+TIER_VIDEO_CUT = "video-cuts"
+TIER_LABEL_TRACK = "label-tracks"
 
 #: Rate for the (incidental) NodeRef intervals on non-media nodes.
 _RATE = 1000
@@ -111,7 +115,21 @@ BEAT_ID_WIDTH = 4
 #: the value its plan decided. Two render nodes with the same planned value
 #: and the same parents are the same decision; whether one already carries
 #: an artifact is the completion question, asked separately.
-RENDER_OUTPUT_KEYS = frozenset({"artifact_id", "url", "duration_s"})
+RENDER_OUTPUT_KEYS = frozenset(
+    {
+        "artifact_id",
+        "url",
+        "duration_s",
+        # the episode's persisted timeline (plan §3) and a video cut's probed
+        # geometry + its captions sidecar — all outputs, none of them decided
+        # by the plan.
+        "timeline",
+        "width",
+        "height",
+        "fps",
+        "captions_artifact_id",
+    }
+)
 
 
 def beat_id(index: int) -> str:
@@ -362,6 +380,34 @@ def cached_output(project, tier: str, cache_key: str):
     return transform_cached_output(project.root, tier, cache_key)
 
 
+def media_artifact(
+    path: str | Path,
+    *,
+    kind: str,
+    transform_name: str,
+    derived_from,
+    duration_s: float | None = None,
+    cost_usd: float | None = None,
+    mime: str | None = None,
+) -> Artifact:
+    """A content-addressed ``lacing.Artifact`` for a file a Transform produced.
+
+    ``cost_usd`` is the cost to produce this file (``None`` = unpriced, never a
+    fake ``0.0``); for TTS it is a rate ESTIMATE from
+    :func:`braidio.cost.tts_cost_usd` (see that module + thorwhalen/braidio#8).
+    """
+    return Artifact.from_path(
+        Path(path),
+        kind=kind,
+        was_generated_by=f"transform:{transform_name}",
+        was_attributed_to="agent:braidio",
+        was_derived_from=tuple(str(x) for x in derived_from),
+        duration_s=duration_s,
+        cost_usd=cost_usd,
+        mime=mime,
+    )
+
+
 def audio_artifact(
     path: str | Path,
     *,
@@ -370,18 +416,12 @@ def audio_artifact(
     duration_s: float | None = None,
     cost_usd: float | None = None,
 ) -> Artifact:
-    """A content-addressed ``lacing.Artifact`` for a produced audio file.
-
-    ``cost_usd`` is the cost to produce this file (``None`` = unpriced, never a
-    fake ``0.0``); for TTS it is a rate ESTIMATE from
-    :func:`braidio.cost.tts_cost_usd` (see that module + thorwhalen/braidio#8).
-    """
-    return Artifact.from_path(
-        Path(path),
+    """:func:`media_artifact` for audio — the name every audio Transform uses."""
+    return media_artifact(
+        path,
         kind="audio",
-        was_generated_by=f"transform:{transform_name}",
-        was_attributed_to="agent:braidio",
-        was_derived_from=tuple(str(x) for x in derived_from),
+        transform_name=transform_name,
+        derived_from=derived_from,
         duration_s=duration_s,
         cost_usd=cost_usd,
     )

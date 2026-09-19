@@ -36,6 +36,11 @@ EXPECTED_SCHEMA_URIS = frozenset(
         "annot://schema/dialogue-render/v1",
         "annot://schema/segment-extraction/v1",
         "annot://schema/episode-render/v1",
+        # the picture track (commentary-studio plan §3)
+        "annot://schema/still/v1",
+        "annot://schema/video-panel/v1",
+        "annot://schema/video-cut/v1",
+        "annot://schema/label-track/v1",
     }
 )
 

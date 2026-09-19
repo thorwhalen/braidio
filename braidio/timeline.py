@@ -139,6 +139,37 @@ class TimelineBreakdown:
             ],
         }
 
+    @classmethod
+    def from_dict(cls, d: Mapping[str, Any]) -> "TimelineBreakdown":
+        """Rebuild a breakdown from :meth:`to_dict` output (the persisted form).
+
+        ``totals`` and ``duration`` are derived, so they are recomputed rather
+        than read back — the beats are the record.
+
+        >>> tl = build_timeline(kinds=["narration", "clip"], durations=[4.0, 2.0],
+        ...                     labels=["a", "b"], source_spans=[None, (1.0, 3.0)])
+        >>> TimelineBreakdown.from_dict(tl.to_dict()) == tl
+        True
+        """
+        beats = tuple(
+            BeatSpan(
+                index=int(b["index"]),
+                kind=str(b["kind"]),
+                label=str(b.get("label", "")),
+                source_start=(b["source"][0] if b.get("source") else None),
+                source_end=(b["source"][1] if b.get("source") else None),
+                duration=float(b["duration"]),
+                start=float(b["start"]),
+            )
+            for b in d.get("beats", ())
+        )
+        settings = d.get("settings")
+        return cls(
+            beats,
+            title=str(d.get("title", "")),
+            settings=dict(settings) if settings is not None else None,
+        )
+
     def to_html(self, title: str | None = None, subtitle: str = "") -> str:
         """A self-contained HTML view: totals bar, walking-order timeline, table."""
         return _render_html(

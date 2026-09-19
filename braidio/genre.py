@@ -39,12 +39,21 @@ from braidio.bodies._render_nodes import (
     SEGMENT_EXTRACTION_V1,
     EPISODE_RENDER_V1,
 )
+from braidio.bodies._video import (
+    STILL_V1,
+    VIDEO_PANEL_V1,
+    VIDEO_CUT_V1,
+    LABEL_TRACK_V1,
+)
 from braidio.transforms import (
     VOICE_ASSIGNMENT_TRANSFORM,
     NARRATION_RENDER_TRANSFORM,
     DIALOGUE_RENDER_TRANSFORM,
     SEGMENT_EXTRACTION_TRANSFORM,
     EPISODE_TRANSFORM,
+    VIDEO_PANELS_TRANSFORM,
+    VIDEO_CUT_RENDER_TRANSFORM,
+    VIDEO_CUT_FINISH_TRANSFORM,
 )
 
 COMMENTARY_WEAVE_SLUG = "commentary_weave"
@@ -56,7 +65,9 @@ COMMENTARY_WEAVE: Genre = register_genre(
         description=(
             "Weave narration with extracted source segments into an audio "
             "episode: take sources, cut them into segments, and weave them "
-            "(with narration) into a produced audio artifact."
+            "(with narration) into a produced audio artifact — and, as a "
+            "delivery of that episode, a commentary video: a picture track of "
+            "stills with authored camera moves, cut to the narration."
         ),
         body_schema_uris=(
             NARRATIVE_BEAT_V1,
@@ -72,6 +83,12 @@ COMMENTARY_WEAVE: Genre = register_genre(
             DIALOGUE_RENDER_V1,
             SEGMENT_EXTRACTION_V1,
             EPISODE_RENDER_V1,
+            # The picture track (commentary-studio plan §3): a video is a
+            # delivery of the same production, so it lives in the same genre.
+            STILL_V1,
+            VIDEO_PANEL_V1,
+            VIDEO_CUT_V1,
+            LABEL_TRACK_V1,
         ),
         transform_names=(
             VOICE_ASSIGNMENT_TRANSFORM,
@@ -79,21 +96,30 @@ COMMENTARY_WEAVE: Genre = register_genre(
             DIALOGUE_RENDER_TRANSFORM,
             SEGMENT_EXTRACTION_TRANSFORM,
             EPISODE_TRANSFORM,
+            VIDEO_PANELS_TRANSFORM,
+            VIDEO_CUT_RENDER_TRANSFORM,
+            VIDEO_CUT_FINISH_TRANSFORM,
         ),
+        # The episode is still the projection entrypoint: the audio is the
+        # production; a cut is a delivery made from it (plan §0, "Genre").
         projection_entrypoint=EPISODE_TRANSFORM,
-        # Early / API-unstable (braidio 0.0.x). Audio-only v1; audiovisual is a
-        # follow-up. See thorwhalen/reelee#227, braidio#6.
+        # Early / API-unstable (braidio 0.0.x). Audio was v1; the video delivery
+        # (still/video-panel/video-cut/label-track + the three video_* transforms)
+        # landed with the commentary-studio plan. See thorwhalen/reelee#227, braidio#6.
         status="experimental",
-        # Intake answers this audio genre covers, and the cost-gate discriminator
-        # (braidio's only spend is per-character ElevenLabs TTS — see braidio.cost).
-        intake_kinds=("podcast", "audio-essay", "commentary"),
+        # Intake answers this genre covers — audio, and the video delivery of it
+        # — and the cost-gate discriminator: braidio's only *spend* is
+        # per-character ElevenLabs TTS (see braidio.cost); the video passes are
+        # local CPU, free but minutes long.
+        intake_kinds=("podcast", "audio-essay", "commentary", "commentary-video"),
         cost_profile="tts",
         # "Start from scratch" → the simplest format (one presenter over exhibits).
         defaults={"format_id": "solo_explainer"},
         # The 7 braidio Formats as Templates ("subgenres"). params carries the
         # Format id; braidio resolves it back to a Format at render time. Only the
         # user-facing id/name/summary cross into nw — render internals stay in
-        # braidio.formats.
+        # braidio.formats. A video is a DELIVERY, orthogonal to format, so it
+        # adds no template: every format can be cut to a picture track.
         templates=tuple(
             Template(
                 slug=fmt.id,

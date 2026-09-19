@@ -47,8 +47,31 @@ from braidio.bodies._render_nodes import (  # noqa: F401  (import registers)
     SegmentExtractionBodyV1,
     EpisodeRenderBodyV1,
     RENDER_SCHEMAS,
+    NARRATION_SOURCE_TTS,
+    NARRATION_SOURCE_UPLOAD,
+    NARRATION_SOURCES,
+)
+from braidio.bodies._video import (  # noqa: F401  (import registers)
+    STILL_V1,
+    VIDEO_PANEL_V1,
+    VIDEO_CUT_V1,
+    LABEL_TRACK_V1,
+    RectV1,
+    StillBodyV1,
+    VideoPanelBodyV1,
+    VideoCutBodyV1,
+    LabelTrackBodyV1,
+    VIDEO_SCHEMAS,
+    MOVES,
+    DEFAULT_MOVE,
+    DEFAULT_ZOOM,
+    CUT_STAGES,
+    CUT_PROFILES,
+    LABEL_KINDS,
+    RIGHTS_FIELDS,
+    credit_line,
 )
 from braidio.bodies._tiers import TIERS, register_tiers  # noqa: F401
 
-# All schema URIs braidio registers (domain + render).
-SCHEMA_URIS: dict = {**DOMAIN_SCHEMAS, **RENDER_SCHEMAS}
+# All schema URIs braidio registers (domain + render + picture track).
+SCHEMA_URIS: dict = {**DOMAIN_SCHEMAS, **RENDER_SCHEMAS, **VIDEO_SCHEMAS}
