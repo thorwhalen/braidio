@@ -1257,6 +1257,7 @@ whole-span file. Falls back to a plain concat feel when
 | [`defaults`](braidio.defaults.html.md#module-braidio.defaults)         | User-overridable, persisted defaults for how braidio renders a voice.                                      |
 | [`delivery`](braidio.delivery.html.md#module-braidio.delivery)         | Narration *delivery* presets — model + voice settings (issue #10, expressiveness).                         |
 | [`formats`](braidio.formats.html.md#module-braidio.formats)           | Ready-made **format templates** — high-quality presets under standard names.                               |
+| [`importing`](braidio.importing.html.md#module-braidio.importing)       | Bring a finished commentary production into a braidio project graph.                                       |
 | [`kinds`](braidio.kinds.html.md#module-braidio.kinds)               | Production kinds braidio defines.                                                                          |
 | [`multivoice`](braidio.multivoice.html.md#module-braidio.multivoice)     | Multi-voice narration: cycle a pool of voices across segments (issue #10).                                 |
 | [`music`](braidio.music.html.md#module-braidio.music)               | Music bed — an instrumental underscore laid under the whole production, ducked.                            |

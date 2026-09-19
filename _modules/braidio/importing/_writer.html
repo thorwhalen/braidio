@@ -1,0 +1,1709 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="alternate" type="text/markdown" href="_writer.html.md">
+<link rel="describedby" href="../../../llms.txt" type="text/markdown">
+    <title>braidio.importing._writer &#8212; braidio</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/epythet.css?v=47c21ad2" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../../../_static/documentation_options.js?v=e072a57b"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=fd10adb8"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/braidio/importing/_writer';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.50" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">braidio</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../ai-agents.html">
+    For AI agents
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/thorwhalen/braidio" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../ai-agents.html">
+    For AI agents
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/thorwhalen/braidio" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../braidio.html" class="nav-link">braidio</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">braidio.importing._writer</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for braidio.importing._writer</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Write a normalized production manifest into a real braidio project graph.</span>
+
+<span class="sd">The verb is :func:`import_production`. It takes a</span>
+<span class="sd">:class:`~braidio.importing._manifest.ProductionManifest` and a destination</span>
+<span class="sd">project root and writes the stills, the episode audio (one node per distinct</span>
+<span class="sd">mix — Two Silences renders a different mix per cut), the panel track for each</span>
+<span class="sd">cut, the editorial cards, and the cut records with their ``published`` links.</span>
+
+<span class="sd">**Idempotent by construction.** Every annotation id is a UUIDv5 of the</span>
+<span class="sd">production slug plus a stable key, so a second run addresses the same nodes</span>
+<span class="sd">rather than writing a second track beside the first. A node whose value is</span>
+<span class="sd">unchanged is *left alone* rather than rewritten, because rewriting moves</span>
+<span class="sd">``generated_at_time`` and would stale a rendered cut for no reason.</span>
+
+<span class="sd">Four rules this module enforces rather than documents, each of which was a</span>
+<span class="sd">measured defect in the three finished productions:</span>
+
+<span class="sd">1. **Every imported panel is ``push_in``.** The source encodes a ``push`` /</span>
+<span class="sd">   ``drift`` alternation, and it was a **no-op**: ``drift`` reached burns as</span>
+<span class="sd">   ``mode="auto"``, whose only use of the index was ``push = index % 2 == 1``,</span>
+<span class="sd">   and every project set style by the same ordinal it passed as the index — so</span>
+<span class="sd">   both halves landed on push-in and all 265 panels of all three films push in</span>
+<span class="sd">   (thorwhalen/braidio#72). Writing ``auto`` today would hand that panel to</span>
+<span class="sd">   ``burns.choose_move``, which picks from a weighted pool and yields a real</span>
+<span class="sd">   directional drift about 40% of the time: a substantially different film,</span>
+<span class="sd">   arrived at by an import that believed it was being faithful. The</span>
+<span class="sd">   never-realised intent is recorded as :data:`MOVE_IMPORT_NOTE` on the project</span>
+<span class="sd">   and on every cut, so drift can be introduced **deliberately** later.</span>
+<span class="sd">2. **The library's zoom default is asserted, not trusted.** 178 Two Silences</span>
+<span class="sd">   panels carry a zoom that was never recorded in data — it was</span>
+<span class="sd">   ``braidio.video.Panel``'s dataclass default, read off the source. If that</span>
+<span class="sd">   default has moved, the extracted number is already wrong and this is the</span>
+<span class="sd">   last place anyone would look, so :func:`assert_recorded_zoom_default` fails</span>
+<span class="sd">   the import loudly.</span>
+<span class="sd">3. **Every licence is normalized through ``illustration``, and an unknown one</span>
+<span class="sd">   fails.** All 15 spellings across the three productions resolve to ``by`` /</span>
+<span class="sd">   ``by-sa`` / ``cc0`` / ``pdm``, so a failure means something genuinely new</span>
+<span class="sd">   rather than a gap in the table. The *recorded* spelling is what gets</span>
+<span class="sd">   written — a credit reading "CC BY-SA 4.0" is the useful one — normalization</span>
+<span class="sd">   is the gate, not the value.</span>
+<span class="sd">4. **A context card is written with ``weight &gt;= 2``.** ``video_cut.finish``</span>
+<span class="sd">   refuses an overlay collision at plan time, and a weight-1 card over a</span>
+<span class="sd">   labelled still is one, so a weight-1 context card would make the cut</span>
+<span class="sd">   unrenderable at the point where it is least obvious why.</span>
+
+<span class="sd">What it deliberately does **not** do: mark anything publishable the source did</span>
+<span class="sd">not (every cut keeps its recorded profile, and the rights finding is carried as</span>
+<span class="sd">project-level data), invent a beat it cannot witness, or copy the shipped mp4s</span>
+<span class="sd">into the project — those are the *evidence* a re-render is checked against, not</span>
+<span class="sd">an input to one, and they are large.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.importing._manifest</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CutRecord</span><span class="p">,</span>
+    <span class="n">LabelRecord</span><span class="p">,</span>
+    <span class="n">ProductionManifest</span><span class="p">,</span>
+    <span class="n">StillRecord</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1">#: Namespace for every id this importer mints. Fixed forever: change it and a</span>
+<span class="c1">#: re-import stops addressing the nodes the last one wrote, which is precisely</span>
+<span class="c1">#: the "two tracks instead of one" failure idempotency exists to prevent.</span>
+<span class="n">IMPORT_NAMESPACE</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="s2">"6b1f8c7e-4a2d-5e93-9c11-b7a0d2e4f501"</span><span class="p">)</span>
+
+<span class="c1">#: The move every imported panel gets. See rule 1 in the module docstring.</span>
+<span class="n">IMPORTED_MOVE</span> <span class="o">=</span> <span class="s2">"push_in"</span>
+
+<span class="c1">#: braidio.video.Panel's zoom default as it stood when the three productions</span>
+<span class="c1">#: were extracted. Asserted at import; see rule 2.</span>
+<span class="n">RECORDED_PANEL_ZOOM_DEFAULT</span> <span class="o">=</span> <span class="mf">1.18</span>
+
+<span class="n">MOVE_IMPORT_NOTE</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"Every panel imported as push_in. The source alternated push/drift by "</span>
+    <span class="s2">"ordinal, but the alternation was a no-op on the render path: drift "</span>
+    <span class="s2">"reached burns as mode='auto', whose only use of the index was "</span>
+    <span class="s2">"push = (index % 2 == 1), and the same ordinal drove both — so all panels "</span>
+    <span class="s2">"pushed in. See thorwhalen/braidio#72. burns.choose_move now picks from a "</span>
+    <span class="s2">"weighted pool, so writing 'auto' would invent a drift the film never had. "</span>
+    <span class="s2">"The intent to vary the motion is recorded here and is now expressible "</span>
+    <span class="s2">"deliberately, per panel, through the move vocabulary."</span>
+<span class="p">)</span>
+
+<span class="c1">#: Rights positions that are NOT a licence to publish. The importer never</span>
+<span class="c1">#: promotes a cut; the position is carried so a surface can show it.</span>
+<span class="n">_NON_PUBLIC_POSITIONS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"private"</span><span class="p">,</span> <span class="s2">"unlisted"</span><span class="p">})</span>
+
+<span class="n">_UNSAFE_IN_FILENAME</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^A-Za-z0-9._-]+"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ImportError_">
+<a class="viewcode-back" href="../../../_autosummary/braidio.importing.html#braidio.importing.ImportError_">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ImportError_</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Raised when a manifest cannot be imported faithfully."""</span></div>
+
+
+
+<div class="viewcode-block" id="ImportReport">
+<a class="viewcode-back" href="../../../_autosummary/braidio.importing.html#braidio.importing.ImportReport">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ImportReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What one import did, and what it could not settle.</span>
+
+<span class="sd">    Returned rather than logged, so a CLI, a test and a future MCP tool all</span>
+<span class="sd">    read the same answer.</span>
+<span class="sd">    """</span>
+
+    <span class="n">production</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">project_root</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">rights_position</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">stills_written</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">stills_unchanged</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">episodes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">panels_by_cut</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">labels_by_cut</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">cuts_written</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">published_links</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1">#: Stills with no ``title`` — they credit WITHOUT one, silently, so the</span>
+    <span class="c1">#: count is surfaced rather than left to be discovered in a credit roll.</span>
+    <span class="n">untitled_stills</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1">#: Stills whose ``attribution`` names no licence: rendering it verbatim</span>
+    <span class="c1">#: would fail the licence condition. ``credit_line`` composes instead.</span>
+    <span class="n">bare_attributions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">license_codes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">beat_ids_renumbered</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">media_copied</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">gaps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">panels_total</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">panels_by_cut</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+<div class="viewcode-block" id="ImportReport.to_dict">
+<a class="viewcode-back" href="../../../_autosummary/braidio.importing.html#braidio.importing.ImportReport.to_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""A JSON-able summary (what the CLI's ``--json`` prints)."""</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"production"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">production</span><span class="p">,</span>
+            <span class="s2">"project_root"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_root</span><span class="p">),</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="s2">"rights_position"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rights_position</span><span class="p">,</span>
+            <span class="s2">"stills_written"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">stills_written</span><span class="p">,</span>
+            <span class="s2">"stills_unchanged"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">stills_unchanged</span><span class="p">,</span>
+            <span class="s2">"episodes"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">episodes</span><span class="p">,</span>
+            <span class="s2">"panels_by_cut"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">panels_by_cut</span><span class="p">),</span>
+            <span class="s2">"panels_total"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">panels_total</span><span class="p">,</span>
+            <span class="s2">"labels_by_cut"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_by_cut</span><span class="p">),</span>
+            <span class="s2">"cuts_written"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cuts_written</span><span class="p">),</span>
+            <span class="s2">"published_links"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">published_links</span><span class="p">),</span>
+            <span class="s2">"untitled_stills"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">untitled_stills</span><span class="p">),</span>
+            <span class="s2">"bare_attributions"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bare_attributions</span><span class="p">),</span>
+            <span class="s2">"license_codes"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">license_codes</span><span class="p">),</span>
+            <span class="s2">"beat_ids_renumbered"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">beat_ids_renumbered</span><span class="p">,</span>
+            <span class="s2">"media_copied"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">media_copied</span><span class="p">,</span>
+            <span class="s2">"gaps"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gaps</span><span class="p">),</span>
+            <span class="s2">"notes"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">notes</span><span class="p">),</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<span class="c1"># --- the four enforced rules ------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="assert_recorded_zoom_default">
+<a class="viewcode-back" href="../../../_autosummary/braidio.importing.html#braidio.importing.assert_recorded_zoom_default">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assert_recorded_zoom_default</span><span class="p">(</span><span class="n">expected</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">RECORDED_PANEL_ZOOM_DEFAULT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Fail unless ``braidio.video.Panel``'s zoom default is still ``expected``.</span>
+
+<span class="sd">    The one failure that is invisible afterwards. 178 Two Silences panels carry</span>
+<span class="sd">    a zoom nothing recorded — it was this default, read off the library at</span>
+<span class="sd">    extraction time. 1.18 against 1.14 is near-invisible on one panel and</span>
+<span class="sd">    diverges over ten minutes.</span>
+
+<span class="sd">    &gt;&gt;&gt; assert_recorded_zoom_default()</span>
+<span class="sd">    &gt;&gt;&gt; assert_recorded_zoom_default(1.14)</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">    braidio.importing._writer.ImportError_: braidio.video.Panel.zoom is 1.18...</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.video</span><span class="w"> </span><span class="kn">import</span> <span class="n">Panel</span>
+
+    <span class="n">actual</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">fields</span><span class="p">(</span><span class="n">Panel</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"zoom"</span><span class="p">)</span><span class="o">.</span><span class="n">default</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">actual</span><span class="p">)</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">expected</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mf">1e-9</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"braidio.video.Panel.zoom is </span><span class="si">{</span><span class="n">actual</span><span class="si">!r}</span><span class="s2">, not the </span><span class="si">{</span><span class="n">expected</span><span class="si">!r}</span><span class="s2"> the "</span>
+            <span class="s2">"extraction read off it. Panels whose zoom was never recorded in "</span>
+            <span class="s2">"data took this default, so the manifest's zoom is now wrong and "</span>
+            <span class="s2">"nothing downstream would notice. Re-extract against the current "</span>
+            <span class="s2">"library, or pass the default that was in force."</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="normalized_licenses">
+<a class="viewcode-back" href="../../../_autosummary/braidio.importing.html#braidio.importing.normalized_licenses">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalized_licenses</span><span class="p">(</span><span class="n">stills</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">StillRecord</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``{still key: canonical code}``, raising on anything unrecognised.</span>
+
+<span class="sd">    The gate, not the value: what gets written into the still body is the</span>
+<span class="sd">    *recorded* spelling, because "CC BY-SA 4.0" is what a credit should read</span>
+<span class="sd">    and "by-sa" is not. An unrecognised code survives ``normalize_license``</span>
+<span class="sd">    unchanged and would therefore silently fail a downstream allowlist with no</span>
+<span class="sd">    error at all — which is why an unknown fails here instead.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">illustration.licensing</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalize_license</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pragma: no cover - environment-dependent</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="s2">"importing a production needs `illustration` for licence "</span>
+            <span class="s2">"normalization (pip install 'braidio[importing]'). It is the SSOT "</span>
+            <span class="s2">"for the four provider dialects; a second copy of that table here "</span>
+            <span class="s2">"is how a licence gate silently starts dropping images."</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"by"</span><span class="p">,</span> <span class="s2">"by-sa"</span><span class="p">,</span> <span class="s2">"by-nc"</span><span class="p">,</span> <span class="s2">"by-nd"</span><span class="p">,</span> <span class="s2">"by-nc-sa"</span><span class="p">,</span> <span class="s2">"by-nc-nd"</span><span class="p">,</span> <span class="s2">"cc0"</span><span class="p">,</span> <span class="s2">"pdm"</span><span class="p">}</span>
+    <span class="n">codes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">unknown</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">still</span> <span class="ow">in</span> <span class="n">stills</span><span class="p">:</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="p">(</span><span class="n">still</span><span class="o">.</span><span class="n">license</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">normalize_license</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+        <span class="n">codes</span><span class="p">[</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">code</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">known</span><span class="p">:</span>
+            <span class="n">unknown</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">raw</span><span class="si">!r}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">code</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="s2">"licence codes illustration.licensing.normalize_license does not "</span>
+            <span class="s2">"recognise:</span><span class="se">\n</span><span class="s2">  "</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">  "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">All 15 spellings across "</span>
+            <span class="s2">"the three finished productions resolve cleanly, so this is a "</span>
+            <span class="s2">"genuinely new code rather than a gap in the table. Add it to "</span>
+            <span class="s2">"illustration's LICENSE_ALIASES (a deliberate decision, never a "</span>
+            <span class="s2">"convenience) before importing."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">codes</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_card_weights</span><span class="p">(</span><span class="n">cut</span><span class="p">:</span> <span class="n">CutRecord</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Refuse a context card too light to survive ``video_cut.finish``."""</span>
+    <span class="n">light</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">label</span><span class="o">.</span><span class="n">start</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">s (weight </span><span class="si">{</span><span class="n">label</span><span class="o">.</span><span class="n">weight</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">cut</span><span class="o">.</span><span class="n">labels</span>
+        <span class="k">if</span> <span class="n">label</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"context"</span><span class="p">,</span> <span class="s2">"note"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">label</span><span class="o">.</span><span class="n">weight</span> <span class="o">&lt;</span> <span class="mi">2</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">light</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"cut </span><span class="si">{</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="si">!r}</span><span class="s2">: context cards need weight &gt;= 2, got "</span>
+            <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">light</span><span class="p">)</span>
+            <span class="o">+</span> <span class="s2">". video_cut.finish resolves overlays at PLAN time and a "</span>
+            <span class="s2">"weight-1 card over a labelled still is a collision, so the cut "</span>
+            <span class="s2">"would be refused before a frame is rendered."</span>
+        <span class="p">)</span>
+
+
+<span class="c1"># --- graph plumbing ---------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_mint</span><span class="p">(</span><span class="n">production</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A stable annotation id for ``production`` and a key. See idempotency."""</span>
+    <span class="k">return</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid5</span><span class="p">(</span><span class="n">IMPORT_NAMESPACE</span><span class="p">,</span> <span class="s2">"/"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">production</span><span class="p">,</span> <span class="o">*</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">parts</span><span class="p">)]))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_provenance</span><span class="p">(</span><span class="n">derived_from</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="p">()):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lacing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Provenance</span><span class="p">,</span> <span class="n">RationalTime</span>
+
+    <span class="k">return</span> <span class="n">Provenance</span><span class="p">(</span>
+        <span class="n">was_generated_by</span><span class="o">=</span><span class="s2">"braidio:import_production"</span><span class="p">,</span>
+        <span class="n">was_attributed_to</span><span class="o">=</span><span class="s2">"agent:braidio"</span><span class="p">,</span>
+        <span class="n">was_derived_from</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">derived_from</span><span class="p">),</span>
+        <span class="n">generated_at_time</span><span class="o">=</span><span class="n">RationalTime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span>
+        <span class="n">activity</span><span class="o">=</span><span class="s2">"import"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_identity</span><span class="p">(</span><span class="n">ann</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Everything about ``ann`` a re-import would be rewriting, as one string.</span>
+
+<span class="sd">    Deliberately excludes ``provenance.generated_at_time`` — that moves on</span>
+<span class="sd">    every run by definition, and comparing it would make every re-import a</span>
+<span class="sd">    rewrite, which stales every rendered cut downstream for no reason.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"tier"</span><span class="p">:</span> <span class="n">ann</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+            <span class="s2">"body"</span><span class="p">:</span> <span class="n">ann</span><span class="o">.</span><span class="n">body</span><span class="p">,</span>
+            <span class="s2">"schema"</span><span class="p">:</span> <span class="n">ann</span><span class="o">.</span><span class="n">body_schema_uri</span><span class="p">,</span>
+            <span class="s2">"reference"</span><span class="p">:</span> <span class="n">ann</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
+            <span class="s2">"parents"</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ann</span><span class="o">.</span><span class="n">provenance</span><span class="o">.</span><span class="n">was_derived_from</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_upsert</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">ann</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write ``ann`` unless an identical node already sits under its id.</span>
+
+<span class="sd">    Returns True when the graph changed. Replacement is remove-then-add: the</span>
+<span class="sd">    store enforces id uniqueness, and a removal takes the annotation's</span>
+<span class="sd">    verifying traces with it (nw#36) so no inert sidecar is left behind.</span>
+<span class="sd">    """</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ann</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_identity</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span> <span class="o">==</span> <span class="n">_identity</span><span class="p">(</span><span class="n">ann</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">project</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">remove_annotation</span><span class="p">(</span><span class="n">ann</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_annotation</span><span class="p">(</span><span class="n">ann</span><span class="p">)</span>
+    <span class="n">index</span><span class="p">[</span><span class="n">ann</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">ann</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_node_ref</span><span class="p">(</span><span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ann_id</span><span class="p">:</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A **deterministic** :class:`lacing.NodeRef` for a non-media node.</span>
+
+<span class="sd">    braidio's own ``transforms._common.node_ref`` mints a fresh uuid into the</span>
+<span class="sd">    ``scene_path`` on every call, which is right for a Transform (each run is a</span>
+<span class="sd">    new node) and wrong for an import: the reference would differ on every run,</span>
+<span class="sd">    so :func:`_identity` would never compare equal and a re-import would</span>
+<span class="sd">    rewrite every still, episode and cut — moving ``generated_at_time`` and</span>
+<span class="sd">    staling rendered cuts for no reason at all. Keying the path on the node's</span>
+<span class="sd">    own (already deterministic) id makes a no-op re-import a genuine no-op.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lacing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NodeRef</span><span class="p">,</span> <span class="n">TimeInterval</span>
+
+    <span class="k">return</span> <span class="n">NodeRef</span><span class="p">(</span>
+        <span class="n">scene_path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tier</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">ann_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">interval</span><span class="o">=</span><span class="n">TimeInterval</span><span class="o">.</span><span class="n">from_seconds</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mi">1000</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_media_ref</span><span class="p">(</span><span class="n">asset_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lacing</span><span class="w"> </span><span class="kn">import</span> <span class="n">MediaRef</span><span class="p">,</span> <span class="n">RationalTime</span><span class="p">,</span> <span class="n">TimeInterval</span>
+
+    <span class="n">rate</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="k">return</span> <span class="n">MediaRef</span><span class="p">(</span>
+        <span class="n">asset_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">asset_id</span><span class="p">),</span>
+        <span class="n">interval</span><span class="o">=</span><span class="n">TimeInterval</span><span class="p">(</span>
+            <span class="n">RationalTime</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">start</span> <span class="o">*</span> <span class="n">rate</span><span class="p">)),</span> <span class="n">rate</span><span class="p">),</span>
+            <span class="n">RationalTime</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">end</span> <span class="o">*</span> <span class="n">rate</span><span class="p">)),</span> <span class="n">rate</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_artifact_for</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mime</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">duration_s</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lacing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Artifact</span>
+
+    <span class="k">return</span> <span class="n">Artifact</span><span class="o">.</span><span class="n">from_path</span><span class="p">(</span>
+        <span class="n">path</span><span class="p">,</span>
+        <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span>
+        <span class="n">was_generated_by</span><span class="o">=</span><span class="s2">"braidio:import_production"</span><span class="p">,</span>
+        <span class="n">was_attributed_to</span><span class="o">=</span><span class="s2">"agent:braidio"</span><span class="p">,</span>
+        <span class="n">duration_s</span><span class="o">=</span><span class="n">duration_s</span><span class="p">,</span>
+        <span class="n">mime</span><span class="o">=</span><span class="n">mime</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_safe_name</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``'acoustic-guitar#1'`` -&gt; ``'acoustic-guitar_1'``.</span>
+
+<span class="sd">    &gt;&gt;&gt; _safe_name("acoustic-guitar#1")</span>
+<span class="sd">    'acoustic-guitar_1'</span>
+<span class="sd">    &gt;&gt;&gt; _safe_name("central-park-decay#3")</span>
+<span class="sd">    'central-park-decay_3'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_UNSAFE_IN_FILENAME</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"_"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rect_from_ltrb</span><span class="p">(</span><span class="n">box</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""A fractional ``(left, top, right, bottom)`` crop as a ``RectV1`` mapping.</span>
+
+<span class="sd">    The one geometry conversion in this importer, and it is load-bearing. Both</span>
+<span class="sd">    productions that crop record LTRB (``l, t, r, b = CROPS[slot]``; Hamilton's</span>
+<span class="sd">    "a fractional (left, top, right, bottom) box"), while ``RectV1`` — and</span>
+<span class="sd">    ``braidio.transforms._video_cut._crop_still``, which applies it — is</span>
+<span class="sd">    ``(x, y, w, h)``. Passing the tuple through unchanged mis-frames every</span>
+<span class="sd">    cropped still, and ``RectV1``'s unit-square check catches only the one crop</span>
+<span class="sd">    whose left+right happens to exceed 1: nine of the ten here would be</span>
+<span class="sd">    silently wrong.</span>
+
+<span class="sd">    &gt;&gt;&gt; _rect_from_ltrb((0.0, 0.0, 1.0, 0.88))</span>
+<span class="sd">    {'x': 0.0, 'y': 0.0, 'w': 1.0, 'h': 0.88}</span>
+<span class="sd">    &gt;&gt;&gt; _rect_from_ltrb((0.05, 0.33, 0.96, 0.95))['w']</span>
+<span class="sd">    0.91</span>
+<span class="sd">    &gt;&gt;&gt; _rect_from_ltrb(None) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; _rect_from_ltrb((0.9, 0.0, 0.1, 1.0))</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">    braidio.importing._writer.ImportError_: crop (0.9, 0.0, 0.1, 1.0) is not...</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">box</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">box</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">left</span> <span class="o">&lt;</span> <span class="n">right</span> <span class="o">&lt;=</span> <span class="mf">1.0</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">top</span> <span class="o">&lt;</span> <span class="n">bottom</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"crop </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">box</span><span class="p">)</span><span class="si">!r}</span><span class="s2"> is not a fractional (left, top, right, "</span>
+            <span class="s2">"bottom) box inside the unit square. The manifest records LTRB; "</span>
+            <span class="s2">"if this is really (x, y, w, h) the extractor and the importer "</span>
+            <span class="s2">"have drifted, and a wrong crop is invisible after the render."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"x"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+        <span class="s2">"y"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">top</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+        <span class="s2">"w"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">right</span> <span class="o">-</span> <span class="n">left</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+        <span class="s2">"h"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">bottom</span> <span class="o">-</span> <span class="n">top</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_beat_id</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``'beat:12'`` -&gt; ``'0012'``; anything else passes through unchanged.</span>
+
+<span class="sd">    The extraction recorded the *timeline member index* a panel sat under.</span>
+<span class="sd">    braidio spells that identity zero-padded (``BEAT_ID_WIDTH``), and</span>
+<span class="sd">    ``picks_from_panels`` keys a re-plan's pick map on it — so leaving</span>
+<span class="sd">    ``'beat:12'`` in place would make a later re-plan silently ignore every</span>
+<span class="sd">    pick and fall back to cycling the pool, i.e. a different set of pictures</span>
+<span class="sd">    with nothing raised. Converting is the assumption that timeline member</span>
+<span class="sd">    index == script position, which holds for a script nothing filtered.</span>
+
+<span class="sd">    &gt;&gt;&gt; _beat_id("beat:12"), _beat_id("beat:0"), _beat_id(None), _beat_id("0007")</span>
+<span class="sd">    ('0012', '0000', None, '0007')</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">raw</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"beat:"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">text</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">[</span><span class="mi">5</span><span class="p">:])</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="n">text</span>
+
+
+<span class="c1"># --- the verb ---------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="import_production">
+<a class="viewcode-back" href="../../../_autosummary/braidio.importing.html#braidio.importing.import_production">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">import_production</span><span class="p">(</span>
+    <span class="n">manifest</span><span class="p">:</span> <span class="n">ProductionManifest</span><span class="p">,</span>
+    <span class="n">project_root</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">source_root</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">copy_media</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImportReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write ``manifest`` into a braidio project at ``project_root``.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        manifest: the normalized production (see ``load_manifest``).</span>
+<span class="sd">        project_root: where the project lives. Created if absent; an existing</span>
+<span class="sd">            project is updated in place, which is what makes a re-run one</span>
+<span class="sd">            project rather than two.</span>
+<span class="sd">        source_root: the folder ``manifest.source_dir`` is relative to. The</span>
+<span class="sd">            manifest never stores an absolute path (one committed production</span>
+<span class="sd">            manifest did, in a shared repo — only basenames come forward), so</span>
+<span class="sd">            the caller supplies the root.</span>
+<span class="sd">        copy_media: copy the stills and the episode audio into the project, so</span>
+<span class="sd">            it is self-contained and a fork can hardlink it. The shipped cut</span>
+<span class="sd">            mp4s are always referenced in place: they are the evidence a</span>
+<span class="sd">            re-render is compared against, not an input to one.</span>
+<span class="sd">        dry_run: validate everything — files present, licences known, card</span>
+<span class="sd">            weights sufficient, zoom default unmoved — and write nothing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        an :class:`ImportReport`.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">nw</span>  <span class="c1"># noqa: F401  (import registers the tiers/transforms)</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.bodies._render_nodes</span><span class="w"> </span><span class="kn">import</span> <span class="n">EPISODE_RENDER_V1</span><span class="p">,</span> <span class="n">RENDER_PROFILE_V1</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.bodies._video</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">LABEL_TRACK_V1</span><span class="p">,</span>
+        <span class="n">STILL_V1</span><span class="p">,</span>
+        <span class="n">VIDEO_CUT_V1</span><span class="p">,</span>
+        <span class="n">VIDEO_PANEL_V1</span><span class="p">,</span>
+        <span class="n">LabelTrackBodyV1</span><span class="p">,</span>
+        <span class="n">StillBodyV1</span><span class="p">,</span>
+        <span class="n">VideoCutBodyV1</span><span class="p">,</span>
+        <span class="n">VideoPanelBodyV1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.bodies._render_nodes</span><span class="w"> </span><span class="kn">import</span> <span class="n">EpisodeRenderBodyV1</span><span class="p">,</span> <span class="n">RenderProfileBodyV1</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.rights</span><span class="w"> </span><span class="kn">import</span> <span class="n">PUBLISHABLE_CLIP_RIGHTS</span><span class="p">,</span> <span class="n">Profile</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.transforms._common</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">TIER_EPISODE_RENDER</span><span class="p">,</span>
+        <span class="n">TIER_LABEL_TRACK</span><span class="p">,</span>
+        <span class="n">TIER_RENDER_PROFILE</span><span class="p">,</span>
+        <span class="n">TIER_STILL</span><span class="p">,</span>
+        <span class="n">TIER_VIDEO_CUT</span><span class="p">,</span>
+        <span class="n">TIER_VIDEO_PANEL</span><span class="p">,</span>
+        <span class="n">file_url</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lacing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotation</span>
+
+    <span class="c1"># --- rule 2: the library default the extraction depended on -------------</span>
+    <span class="n">assert_recorded_zoom_default</span><span class="p">()</span>
+
+    <span class="n">source_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">source_root</span> <span class="ow">or</span> <span class="s2">"."</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">src</span> <span class="o">=</span> <span class="n">source_root</span> <span class="o">/</span> <span class="n">manifest</span><span class="o">.</span><span class="n">source_dir</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">src</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"source folder </span><span class="si">{</span><span class="n">src</span><span class="si">}</span><span class="s2"> does not exist. The manifest records "</span>
+            <span class="sa">f</span><span class="s2">"source_dir=</span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">source_dir</span><span class="si">!r}</span><span class="s2">; pass source_root= the folder "</span>
+            <span class="s2">"it is relative to."</span>
+        <span class="p">)</span>
+
+    <span class="n">report</span> <span class="o">=</span> <span class="n">ImportReport</span><span class="p">(</span>
+        <span class="n">production</span><span class="o">=</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span>
+        <span class="n">project_root</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">project_root</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">(),</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">manifest</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">rights_position</span><span class="o">=</span><span class="n">manifest</span><span class="o">.</span><span class="n">rights</span><span class="o">.</span><span class="n">position</span><span class="p">,</span>
+        <span class="n">gaps</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">gaps</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MOVE_IMPORT_NOTE</span><span class="p">)</span>
+
+    <span class="c1"># --- rule 3: licences, and rule 4: card weights -------------------------</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">license_codes</span> <span class="o">=</span> <span class="n">normalized_licenses</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">stills</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">cuts</span><span class="p">:</span>
+        <span class="n">_check_card_weights</span><span class="p">(</span><span class="n">cut</span><span class="p">)</span>
+
+    <span class="c1"># Never promote what the source did not.</span>
+    <span class="k">if</span> <span class="n">manifest</span><span class="o">.</span><span class="n">rights</span><span class="o">.</span><span class="n">position</span> <span class="ow">in</span> <span class="n">_NON_PUBLIC_POSITIONS</span><span class="p">:</span>
+        <span class="n">public</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">cuts</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">profile</span> <span class="o">==</span> <span class="n">Profile</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="o">.</span><span class="n">value</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">public</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="si">}</span><span class="s2">: rights position is "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">rights</span><span class="o">.</span><span class="n">position</span><span class="si">!r}</span><span class="s2"> but cuts </span><span class="si">{</span><span class="n">public</span><span class="si">}</span><span class="s2"> declare the "</span>
+                <span class="s2">"'published' profile. The importer never promotes a cut."</span>
+            <span class="p">)</span>
+
+    <span class="c1"># --- resolve every file before writing anything -------------------------</span>
+    <span class="n">still_paths</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">key</span><span class="p">:</span> <span class="n">src</span> <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">path</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">stills</span><span class="p">}</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">still_paths</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2"> still files are not on disk: </span><span class="si">{</span><span class="n">missing</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+            <span class="o">+</span> <span class="p">(</span><span class="s2">""</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">8</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">" (+</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">8</span><span class="si">}</span><span class="s2"> more)"</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">used_keys</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="o">.</span><span class="n">still_key</span> <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">cuts</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">cut</span><span class="o">.</span><span class="n">panels</span><span class="p">}</span>
+    <span class="n">unknown_keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">used_keys</span> <span class="o">-</span> <span class="n">manifest</span><span class="o">.</span><span class="n">still_keys</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">unknown_keys</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"panels name stills the manifest does not hold: </span><span class="si">{</span><span class="n">unknown_keys</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">audio_paths</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">cuts</span><span class="p">:</span>
+        <span class="n">audio_paths</span><span class="p">[</span><span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">src</span> <span class="o">/</span> <span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span>
+    <span class="n">audio_paths</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+        <span class="n">manifest</span><span class="o">.</span><span class="n">episode_audio</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">src</span> <span class="o">/</span> <span class="n">manifest</span><span class="o">.</span><span class="n">episode_audio</span><span class="o">.</span><span class="n">path</span>
+    <span class="p">)</span>
+    <span class="n">missing_audio</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">audio_paths</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">is_file</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">missing_audio</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span><span class="sa">f</span><span class="s2">"episode audio not on disk: </span><span class="si">{</span><span class="n">missing_audio</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">report</span><span class="o">.</span><span class="n">untitled_stills</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">key</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">stills</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">bare_attributions</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">key</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">stills</span>
+        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">attribution</span>
+        <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">license</span>
+        <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">license</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">attribution</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="s2">"creativecommons"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">attribution</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="ow">and</span> <span class="s2">"public domain"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">attribution</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"dry run: validated, nothing written"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span>
+
+    <span class="c1"># --- the project --------------------------------------------------------</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">project_root</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">"project.json"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">project</span> <span class="o">=</span> <span class="n">Project</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">project</span> <span class="o">=</span> <span class="n">Project</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">manifest</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">update_spec</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">manifest</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">notes</span><span class="o">=</span><span class="n">_project_notes</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">report</span><span class="p">))</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">nw</span><span class="o">.</span><span class="n">iter_all_annotations</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">root</span><span class="p">)}</span>
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">_common_profile</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span>
+
+    <span class="c1"># --- the rights position, as structured graph data ----------------------</span>
+    <span class="n">_upsert</span><span class="p">(</span>
+        <span class="n">project</span><span class="p">,</span>
+        <span class="n">Annotation</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"render-profile"</span><span class="p">),</span>
+            <span class="n">tier</span><span class="o">=</span><span class="n">TIER_RENDER_PROFILE</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">_node_ref</span><span class="p">(</span>
+                <span class="n">TIER_RENDER_PROFILE</span><span class="p">,</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"render-profile"</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">body</span><span class="o">=</span><span class="n">RenderProfileBodyV1</span><span class="p">(</span>
+                <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span>
+                <span class="n">publishable_clip_rights</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">PUBLISHABLE_CLIP_RIGHTS</span><span class="p">)),</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
+            <span class="n">body_schema_uri</span><span class="o">=</span><span class="n">RENDER_PROFILE_V1</span><span class="p">,</span>
+            <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">(),</span>
+        <span class="p">),</span>
+        <span class="n">index</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># --- the stills ---------------------------------------------------------</span>
+    <span class="n">still_ids</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">still</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">stills</span><span class="p">:</span>
+        <span class="n">dest</span> <span class="o">=</span> <span class="n">still_paths</span><span class="p">[</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">copy_media</span><span class="p">:</span>
+            <span class="n">dest</span> <span class="o">=</span> <span class="n">_copy_into</span><span class="p">(</span>
+                <span class="n">still_paths</span><span class="p">[</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">],</span>
+                <span class="n">root</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"stills"</span><span class="p">,</span>
+                <span class="n">_safe_name</span><span class="p">(</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">)</span> <span class="o">+</span> <span class="n">still_paths</span><span class="p">[</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">suffix</span><span class="p">,</span>
+                <span class="n">report</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">artifact</span> <span class="o">=</span> <span class="n">_artifact_for</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"image"</span><span class="p">)</span>
+        <span class="n">ann_id</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"still"</span><span class="p">,</span> <span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">still_ids</span><span class="p">[</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ann_id</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">StillBodyV1</span><span class="p">(</span>
+            <span class="n">key</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">,</span>
+            <span class="n">artifact_id</span><span class="o">=</span><span class="n">artifact</span><span class="o">.</span><span class="n">asset_id</span><span class="p">,</span>
+            <span class="n">url</span><span class="o">=</span><span class="n">file_url</span><span class="p">(</span><span class="n">dest</span><span class="p">),</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="n">license</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">license</span><span class="p">,</span>
+            <span class="n">license_url</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">license_url</span><span class="p">,</span>
+            <span class="n">attribution</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">attribution</span><span class="p">,</span>
+            <span class="n">source_page_url</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">source_page_url</span><span class="p">,</span>
+            <span class="n">author</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">author</span><span class="p">,</span>
+            <span class="n">author_url</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">author_url</span><span class="p">,</span>
+            <span class="n">cacheable</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">cacheable</span><span class="p">,</span>
+            <span class="n">labelled</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">labelled</span><span class="p">,</span>
+            <span class="n">subject</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">subject</span><span class="p">,</span>
+            <span class="n">about</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">about</span><span class="p">,</span>
+            <span class="n">crop</span><span class="o">=</span><span class="n">_rect_from_ltrb</span><span class="p">(</span><span class="n">still</span><span class="o">.</span><span class="n">crop</span><span class="p">),</span>
+            <span class="n">note</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">note</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">written</span> <span class="o">=</span> <span class="n">_upsert</span><span class="p">(</span>
+            <span class="n">project</span><span class="p">,</span>
+            <span class="n">Annotation</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">ann_id</span><span class="p">,</span>
+                <span class="n">tier</span><span class="o">=</span><span class="n">TIER_STILL</span><span class="p">,</span>
+                <span class="n">reference</span><span class="o">=</span><span class="n">_node_ref</span><span class="p">(</span><span class="n">TIER_STILL</span><span class="p">,</span> <span class="n">ann_id</span><span class="p">),</span>
+                <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
+                <span class="n">body_schema_uri</span><span class="o">=</span><span class="n">STILL_V1</span><span class="p">,</span>
+                <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">(),</span>
+            <span class="p">),</span>
+            <span class="n">index</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">written</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">stills_written</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">stills_unchanged</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># --- the episode audio: one node per distinct mix -----------------------</span>
+    <span class="n">episode_ids</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">episode_assets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">durations</span> <span class="o">=</span> <span class="p">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">episode_audio</span><span class="o">.</span><span class="n">path</span><span class="p">:</span> <span class="n">manifest</span><span class="o">.</span><span class="n">episode_audio</span><span class="o">.</span><span class="n">duration_s</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">cuts</span><span class="p">:</span>
+        <span class="n">durations</span><span class="p">[</span><span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">duration_s</span>
+    <span class="k">for</span> <span class="n">rel</span><span class="p">,</span> <span class="n">srcfile</span> <span class="ow">in</span> <span class="n">audio_paths</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">dest</span> <span class="o">=</span> <span class="n">srcfile</span>
+        <span class="k">if</span> <span class="n">copy_media</span><span class="p">:</span>
+            <span class="n">dest</span> <span class="o">=</span> <span class="n">_copy_into</span><span class="p">(</span>
+                <span class="n">srcfile</span><span class="p">,</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"episodes"</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">report</span>
+            <span class="p">)</span>
+        <span class="n">artifact</span> <span class="o">=</span> <span class="n">_artifact_for</span><span class="p">(</span>
+            <span class="n">dest</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"audio"</span><span class="p">,</span> <span class="n">mime</span><span class="o">=</span><span class="s2">"audio/mpeg"</span><span class="p">,</span> <span class="n">duration_s</span><span class="o">=</span><span class="n">durations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">ann_id</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"episode"</span><span class="p">,</span> <span class="n">rel</span><span class="p">)</span>
+        <span class="n">episode_ids</span><span class="p">[</span><span class="n">rel</span><span class="p">]</span> <span class="o">=</span> <span class="n">ann_id</span>
+        <span class="n">episode_assets</span><span class="p">[</span><span class="n">rel</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact</span><span class="o">.</span><span class="n">asset_id</span>
+        <span class="n">_upsert</span><span class="p">(</span>
+            <span class="n">project</span><span class="p">,</span>
+            <span class="n">Annotation</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">ann_id</span><span class="p">,</span>
+                <span class="n">tier</span><span class="o">=</span><span class="n">TIER_EPISODE_RENDER</span><span class="p">,</span>
+                <span class="n">reference</span><span class="o">=</span><span class="n">_node_ref</span><span class="p">(</span><span class="n">TIER_EPISODE_RENDER</span><span class="p">,</span> <span class="n">ann_id</span><span class="p">),</span>
+                <span class="n">body</span><span class="o">=</span><span class="n">EpisodeRenderBodyV1</span><span class="p">(</span>
+                    <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span>
+                    <span class="n">ordered_member_ids</span><span class="o">=</span><span class="p">(),</span>
+                    <span class="n">artifact_id</span><span class="o">=</span><span class="n">artifact</span><span class="o">.</span><span class="n">asset_id</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">file_url</span><span class="p">(</span><span class="n">dest</span><span class="p">),</span>
+                    <span class="n">duration_s</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">durations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">),</span>
+                    <span class="n">timeline</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
+                <span class="n">body_schema_uri</span><span class="o">=</span><span class="n">EPISODE_RENDER_V1</span><span class="p">,</span>
+                <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">(),</span>
+            <span class="p">),</span>
+            <span class="n">index</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">episodes</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># --- per cut: panels, cards, the cut records ----------------------------</span>
+    <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">cuts</span><span class="p">:</span>
+        <span class="n">episode_id</span> <span class="o">=</span> <span class="n">episode_ids</span><span class="p">[</span><span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span><span class="p">]</span>
+        <span class="n">audio_asset</span> <span class="o">=</span> <span class="n">episode_assets</span><span class="p">[</span><span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span><span class="p">]</span>
+        <span class="n">track_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"track"</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">))</span>
+
+        <span class="n">panel_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">panel</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">panels</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">order</span><span class="p">):</span>
+            <span class="n">beat</span> <span class="o">=</span> <span class="n">_beat_id</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">beat_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">beat</span> <span class="o">!=</span> <span class="n">panel</span><span class="o">.</span><span class="n">beat_id</span><span class="p">:</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">beat_ids_renumbered</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">pid</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"panel"</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">panel</span><span class="o">.</span><span class="n">order</span><span class="p">)</span>
+            <span class="n">panel_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+            <span class="n">_upsert</span><span class="p">(</span>
+                <span class="n">project</span><span class="p">,</span>
+                <span class="n">Annotation</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="n">pid</span><span class="p">,</span>
+                    <span class="n">tier</span><span class="o">=</span><span class="n">TIER_VIDEO_PANEL</span><span class="p">,</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="n">_media_ref</span><span class="p">(</span><span class="n">audio_asset</span><span class="p">,</span> <span class="n">panel</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">panel</span><span class="o">.</span><span class="n">end</span><span class="p">),</span>
+                    <span class="n">body</span><span class="o">=</span><span class="n">VideoPanelBodyV1</span><span class="p">(</span>
+                        <span class="n">still_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">still_ids</span><span class="p">[</span><span class="n">panel</span><span class="o">.</span><span class="n">still_key</span><span class="p">]),</span>
+                        <span class="c1"># rule 1 — reality, not the never-realised intent</span>
+                        <span class="n">move</span><span class="o">=</span><span class="n">IMPORTED_MOVE</span><span class="p">,</span>
+                        <span class="n">zoom</span><span class="o">=</span><span class="n">panel</span><span class="o">.</span><span class="n">zoom</span><span class="p">,</span>
+                        <span class="n">focus</span><span class="o">=</span><span class="n">panel</span><span class="o">.</span><span class="n">focus</span><span class="p">,</span>
+                        <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="c1"># kept as provenance of the source ordinal; nothing</span>
+                        <span class="c1"># reads it, because nothing is 'auto'</span>
+                        <span class="n">seed</span><span class="o">=</span><span class="n">panel</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+                        <span class="n">beat_id</span><span class="o">=</span><span class="n">beat</span><span class="p">,</span>
+                        <span class="n">order</span><span class="o">=</span><span class="n">panel</span><span class="o">.</span><span class="n">order</span><span class="p">,</span>
+                        <span class="n">track_id</span><span class="o">=</span><span class="n">track_id</span><span class="p">,</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
+                    <span class="n">body_schema_uri</span><span class="o">=</span><span class="n">VIDEO_PANEL_V1</span><span class="p">,</span>
+                    <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">([</span><span class="n">episode_id</span><span class="p">]),</span>
+                <span class="p">),</span>
+                <span class="n">index</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">panels_by_cut</span><span class="p">[</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">panel_ids</span><span class="p">)</span>
+
+        <span class="n">label_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">start</span><span class="p">)):</span>
+            <span class="n">lid</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">label_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lid</span><span class="p">)</span>
+            <span class="n">_upsert</span><span class="p">(</span>
+                <span class="n">project</span><span class="p">,</span>
+                <span class="n">Annotation</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="n">lid</span><span class="p">,</span>
+                    <span class="n">tier</span><span class="o">=</span><span class="n">TIER_LABEL_TRACK</span><span class="p">,</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="n">_media_ref</span><span class="p">(</span><span class="n">audio_asset</span><span class="p">,</span> <span class="n">label</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">label</span><span class="o">.</span><span class="n">end</span><span class="p">),</span>
+                    <span class="n">body</span><span class="o">=</span><span class="n">LabelTrackBodyV1</span><span class="p">(</span>
+                        <span class="n">kind</span><span class="o">=</span><span class="n">label</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span>
+                        <span class="n">lines</span><span class="o">=</span><span class="n">label</span><span class="o">.</span><span class="n">lines</span><span class="p">,</span>
+                        <span class="n">headline</span><span class="o">=</span><span class="n">label</span><span class="o">.</span><span class="n">headline</span><span class="p">,</span>
+                        <span class="n">weight</span><span class="o">=</span><span class="n">label</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span>
+                        <span class="n">slot</span><span class="o">=</span><span class="n">label</span><span class="o">.</span><span class="n">slot</span><span class="p">,</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
+                    <span class="n">body_schema_uri</span><span class="o">=</span><span class="n">LABEL_TRACK_V1</span><span class="p">,</span>
+                    <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">([</span><span class="n">episode_id</span><span class="p">]),</span>
+                <span class="p">),</span>
+                <span class="n">index</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">labels_by_cut</span><span class="p">[</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_ids</span><span class="p">)</span>
+
+        <span class="n">still_parents</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">still_ids</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">still_key</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">cut</span><span class="o">.</span><span class="n">panels</span><span class="p">},</span> <span class="n">key</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">_cut_settings</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">cut</span><span class="p">)</span>
+
+        <span class="n">motion_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">cut</span><span class="o">.</span><span class="n">motion_artifact</span><span class="p">:</span>
+            <span class="n">motion_file</span> <span class="o">=</span> <span class="n">src</span> <span class="o">/</span> <span class="n">cut</span><span class="o">.</span><span class="n">motion_artifact</span>
+            <span class="k">if</span> <span class="n">motion_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+                <span class="n">motion_id</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"cut"</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="s2">"motion"</span><span class="p">)</span>
+                <span class="n">motion_art</span> <span class="o">=</span> <span class="n">_artifact_for</span><span class="p">(</span>
+                    <span class="n">motion_file</span><span class="p">,</span>
+                    <span class="n">kind</span><span class="o">=</span><span class="s2">"video"</span><span class="p">,</span>
+                    <span class="n">mime</span><span class="o">=</span><span class="s2">"video/mp4"</span><span class="p">,</span>
+                    <span class="n">duration_s</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">duration_s</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">_upsert</span><span class="p">(</span>
+                    <span class="n">project</span><span class="p">,</span>
+                    <span class="n">Annotation</span><span class="p">(</span>
+                        <span class="nb">id</span><span class="o">=</span><span class="n">motion_id</span><span class="p">,</span>
+                        <span class="n">tier</span><span class="o">=</span><span class="n">TIER_VIDEO_CUT</span><span class="p">,</span>
+                        <span class="n">reference</span><span class="o">=</span><span class="n">_node_ref</span><span class="p">(</span><span class="n">TIER_VIDEO_CUT</span><span class="p">,</span> <span class="n">motion_id</span><span class="p">),</span>
+                        <span class="n">body</span><span class="o">=</span><span class="n">VideoCutBodyV1</span><span class="p">(</span>
+                            <span class="n">label</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                            <span class="n">stage</span><span class="o">=</span><span class="s2">"motion"</span><span class="p">,</span>
+                            <span class="n">profile</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">profile</span><span class="p">,</span>
+                            <span class="n">audio_artifact_id</span><span class="o">=</span><span class="n">audio_asset</span><span class="p">,</span>
+                            <span class="n">panel_ids</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">panel_ids</span><span class="p">),</span>
+                            <span class="c1"># None: braidio did not render this, so there is no</span>
+                            <span class="c1"># key that describes its pixels, and a cache lookup</span>
+                            <span class="c1"># must never answer with it.</span>
+                            <span class="n">cache_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">artifact_id</span><span class="o">=</span><span class="n">motion_art</span><span class="o">.</span><span class="n">asset_id</span><span class="p">,</span>
+                            <span class="n">url</span><span class="o">=</span><span class="n">file_url</span><span class="p">(</span><span class="n">motion_file</span><span class="p">),</span>
+                            <span class="n">duration_s</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">duration_s</span><span class="p">,</span>
+                            <span class="n">width</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
+                            <span class="n">height</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
+                            <span class="n">fps</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span>
+                            <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
+                        <span class="n">body_schema_uri</span><span class="o">=</span><span class="n">VIDEO_CUT_V1</span><span class="p">,</span>
+                        <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">(</span>
+                            <span class="p">[</span><span class="o">*</span><span class="n">panel_ids</span><span class="p">,</span> <span class="o">*</span><span class="n">still_parents</span><span class="p">,</span> <span class="n">episode_id</span><span class="p">]</span>
+                        <span class="p">),</span>
+                    <span class="p">),</span>
+                    <span class="n">index</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">cuts_written</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> (motion)"</span><span class="p">)</span>
+
+        <span class="n">delivered_id</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"cut"</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="s2">"delivered"</span><span class="p">)</span>
+        <span class="n">delivered_file</span> <span class="o">=</span> <span class="n">src</span> <span class="o">/</span> <span class="n">cut</span><span class="o">.</span><span class="n">artifact</span>
+        <span class="n">captions_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">cut</span><span class="o">.</span><span class="n">captions</span> <span class="ow">and</span> <span class="p">(</span><span class="n">src</span> <span class="o">/</span> <span class="n">cut</span><span class="o">.</span><span class="n">captions</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="n">captions_id</span> <span class="o">=</span> <span class="n">_artifact_for</span><span class="p">(</span>
+                <span class="n">src</span> <span class="o">/</span> <span class="n">cut</span><span class="o">.</span><span class="n">captions</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"text"</span><span class="p">,</span> <span class="n">mime</span><span class="o">=</span><span class="s2">"application/x-subrip"</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">asset_id</span>
+        <span class="n">delivered_art</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_artifact_for</span><span class="p">(</span>
+                <span class="n">delivered_file</span><span class="p">,</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s2">"video"</span><span class="p">,</span>
+                <span class="n">mime</span><span class="o">=</span><span class="s2">"video/mp4"</span><span class="p">,</span>
+                <span class="n">duration_s</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">duration_s</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">delivered_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="o">*</span><span class="p">([</span><span class="n">motion_id</span><span class="p">]</span> <span class="k">if</span> <span class="n">motion_id</span> <span class="k">else</span> <span class="p">[]),</span>
+            <span class="o">*</span><span class="n">label_ids</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">panel_ids</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">still_parents</span><span class="p">,</span>
+            <span class="n">episode_id</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">_upsert</span><span class="p">(</span>
+            <span class="n">project</span><span class="p">,</span>
+            <span class="n">Annotation</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">delivered_id</span><span class="p">,</span>
+                <span class="n">tier</span><span class="o">=</span><span class="n">TIER_VIDEO_CUT</span><span class="p">,</span>
+                <span class="n">reference</span><span class="o">=</span><span class="n">_node_ref</span><span class="p">(</span><span class="n">TIER_VIDEO_CUT</span><span class="p">,</span> <span class="n">delivered_id</span><span class="p">),</span>
+                <span class="n">body</span><span class="o">=</span><span class="n">VideoCutBodyV1</span><span class="p">(</span>
+                    <span class="n">label</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                    <span class="n">stage</span><span class="o">=</span><span class="s2">"delivered"</span><span class="p">,</span>
+                    <span class="n">profile</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">profile</span><span class="p">,</span>
+                    <span class="n">audio_artifact_id</span><span class="o">=</span><span class="n">audio_asset</span><span class="p">,</span>
+                    <span class="n">panel_ids</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">panel_ids</span><span class="p">),</span>
+                    <span class="n">cache_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">artifact_id</span><span class="o">=</span><span class="n">delivered_art</span><span class="o">.</span><span class="n">asset_id</span> <span class="k">if</span> <span class="n">delivered_art</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">file_url</span><span class="p">(</span><span class="n">delivered_file</span><span class="p">)</span> <span class="k">if</span> <span class="n">delivered_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">duration_s</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">duration_s</span><span class="p">,</span>
+                    <span class="n">width</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
+                    <span class="n">height</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
+                    <span class="n">fps</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span>
+                    <span class="n">captions_artifact_id</span><span class="o">=</span><span class="n">captions_id</span><span class="p">,</span>
+                    <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span>
+                    <span class="n">published</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">published</span><span class="p">,</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
+                <span class="n">body_schema_uri</span><span class="o">=</span><span class="n">VIDEO_CUT_V1</span><span class="p">,</span>
+                <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">(</span><span class="n">parents</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">index</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">cuts_written</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2"> (delivered)"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cut</span><span class="o">.</span><span class="n">published</span> <span class="ow">and</span> <span class="n">cut</span><span class="o">.</span><span class="n">published</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">):</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">published_links</span><span class="p">[</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">published</span><span class="p">[</span><span class="s2">"url"</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">report</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_common_profile</span><span class="p">(</span><span class="n">manifest</span><span class="p">:</span> <span class="n">ProductionManifest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The profile every cut agrees on (the episode's rights projection)."""</span>
+    <span class="n">profiles</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">profile</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">cuts</span><span class="p">}</span> <span class="ow">or</span> <span class="p">{</span><span class="s2">"personal"</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">profiles</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="si">}</span><span class="s2">: cuts declare more than one profile "</span>
+            <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">profiles</span><span class="p">)</span><span class="si">}</span><span class="s2">); an episode has one rights projection."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">profiles</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cut_settings</span><span class="p">(</span><span class="n">manifest</span><span class="p">:</span> <span class="n">ProductionManifest</span><span class="p">,</span> <span class="n">cut</span><span class="p">:</span> <span class="n">CutRecord</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The cut's recorded settings, plus what a surface needs beside it.</span>
+
+<span class="sd">    ``size`` and ``fps`` are what ``video_cut.render`` reads, so they are</span>
+<span class="sd">    normalized here rather than left to whatever the source happened to spell.</span>
+<span class="sd">    ``rights`` rides along because plan §10 asks for the position to be shown</span>
+<span class="sd">    *next to the cut*, and ``import`` records that these panels' motion is a</span>
+<span class="sd">    recovered fact rather than an authored choice.</span>
+<span class="sd">    """</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cut</span><span class="o">.</span><span class="n">width</span> <span class="ow">and</span> <span class="n">cut</span><span class="o">.</span><span class="n">height</span><span class="p">:</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s2">"size"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">width</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">height</span><span class="p">)]</span>
+    <span class="n">settings</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"size"</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"size"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">()))</span>
+    <span class="k">if</span> <span class="n">cut</span><span class="o">.</span><span class="n">fps</span><span class="p">:</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s2">"fps"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">fps</span><span class="p">)</span>
+    <span class="n">settings</span><span class="p">[</span><span class="s2">"rights"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"position"</span><span class="p">:</span> <span class="n">manifest</span><span class="o">.</span><span class="n">rights</span><span class="o">.</span><span class="n">position</span><span class="p">,</span>
+        <span class="s2">"why"</span><span class="p">:</span> <span class="n">manifest</span><span class="o">.</span><span class="n">rights</span><span class="o">.</span><span class="n">why</span><span class="p">,</span>
+        <span class="s2">"measured"</span><span class="p">:</span> <span class="n">manifest</span><span class="o">.</span><span class="n">rights</span><span class="o">.</span><span class="n">measured</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">settings</span><span class="p">[</span><span class="s2">"import"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"source"</span><span class="p">:</span> <span class="n">manifest</span><span class="o">.</span><span class="n">source_dir</span><span class="p">,</span>
+        <span class="s2">"move_note"</span><span class="p">:</span> <span class="n">MOVE_IMPORT_NOTE</span><span class="p">,</span>
+        <span class="s2">"audio"</span><span class="p">:</span> <span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">settings</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_project_notes</span><span class="p">(</span><span class="n">manifest</span><span class="p">:</span> <span class="n">ProductionManifest</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">ImportReport</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The project-level rights position and import caveats, as readable text."""</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2"> — imported from </span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">source_dir</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"RIGHTS: </span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">rights</span><span class="o">.</span><span class="n">position</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+        <span class="n">manifest</span><span class="o">.</span><span class="n">rights</span><span class="o">.</span><span class="n">why</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">manifest</span><span class="o">.</span><span class="n">rights</span><span class="o">.</span><span class="n">measured</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Measured: </span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">rights</span><span class="o">.</span><span class="n">measured</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"IMPORT NOTE:"</span><span class="p">,</span> <span class="n">MOVE_IMPORT_NOTE</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">manifest</span><span class="o">.</span><span class="n">gaps</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"WHAT THE ARCHAEOLOGY COULD NOT SETTLE:"</span><span class="p">]</span>
+        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">g</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">gaps</span><span class="p">]</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_copy_into</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">ImportReport</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Copy ``src`` to ``folder/name`` unless identical bytes are already there."""</span>
+    <span class="n">folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">dest</span> <span class="o">=</span> <span class="n">folder</span> <span class="o">/</span> <span class="n">name</span>
+    <span class="k">if</span> <span class="n">dest</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">dest</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dest</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">media_copied</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">dest</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-> built 2026-09-19 22:06 UTC from 58529fc (main) · braidio 0.0.49. Details: build_info.json
+> built 2026-09-19 22:58 UTC from 4824111 (main) · braidio 0.0.50. Details: build_info.json
 
 # index.html.md
 
@@ -205,6 +205,20 @@ move, re-render — the picture track lives in the project graph instead: four
 persists its timeline, a panel pins its still to a span of the audio with an
 authored camera move, and a label edit re-runs the cheap text pass, not the
 frames. The `braidio-commentary-video` skill has the walkthrough.
+
+### Where a commentary project lives
+
+A `commentary_weave` project is created by braidio’s registered `nw` project
+factory, and **where it lands is the caller’s decision, not braidio’s** (nw#84).
+Called with no placement — braidio’s own connector — it goes in braidio’s per-user
+workspace under `BRAIDIO_DATA_HOME`, exactly as before. Called with a
+`projects_dir`, it is created there instead, which is how a *host* that will serve
+the project (reelee) puts it beside that caller’s other projects rather than under
+braidio’s data home, where the host’s router and lister would never find it.
+
+`braidio.project.create_project_at(projects_dir, project_id)` is the host-placed
+create on its own. It is deliberately outside `braidio.mcp`, so placing a project
+never pulls the `[mcp]` extra.
 
 `braidio.video`’s dependencies are imported inside the functions that use them, so
 `import braidio.video` works on a bare install and the planners stay usable —
@@ -2165,6 +2179,7 @@ whole-span file. Falls back to a plain concat feel when
 | [`defaults`](_autosummary/braidio.defaults.html.md#module-braidio.defaults)         | User-overridable, persisted defaults for how braidio renders a voice.                                      |
 | [`delivery`](_autosummary/braidio.delivery.html.md#module-braidio.delivery)         | Narration *delivery* presets — model + voice settings (issue #10, expressiveness).                         |
 | [`formats`](_autosummary/braidio.formats.html.md#module-braidio.formats)           | Ready-made **format templates** — high-quality presets under standard names.                               |
+| [`importing`](_autosummary/braidio.importing.html.md#module-braidio.importing)       | Bring a finished commentary production into a braidio project graph.                                       |
 | [`kinds`](_autosummary/braidio.kinds.html.md#module-braidio.kinds)               | Production kinds braidio defines.                                                                          |
 | [`multivoice`](_autosummary/braidio.multivoice.html.md#module-braidio.multivoice)     | Multi-voice narration: cycle a pool of voices across segments (issue #10).                                 |
 | [`music`](_autosummary/braidio.music.html.md#module-braidio.music)               | Music bed — an instrumental underscore laid under the whole production, ducked.                            |
@@ -2181,6 +2196,248 @@ whole-span file. Falls back to a plain concat feel when
 | [`video`](_autosummary/braidio.video.html.md#module-braidio.video)               | Turn a rendered production into a Ken Burns film over still images.                                        |
 | [`weave`](_autosummary/braidio.weave.html.md#module-braidio.weave)               | Weave narration + audio clips on a timeline (#21) — the reusable mix engine.                               |
 | [`weave_config`](_autosummary/braidio.weave_config.html.md#module-braidio.weave_config) | WeaveConfig — every editing choice for weaving narration + segments (#20).                                 |
+
+
+# _autosummary/braidio.importing.html.md
+
+# braidio.importing
+
+Bring a finished commentary production into a braidio project graph.
+
+Three commentary videos were made before the picture track was data: \*Actually
+Romantic\*, *Two Silences* and Hamilton’s *Burn*. Each recorded its pictures a
+different way — hand-authored absolute seconds in a python module, a derived
+`<stem>-panels.json`, and, for the hardest, no driver at all. This package
+turns them into real projects: stills with their rights and their editorial
+labels, the episode audio, the panel track for each cut, the editorial cards,
+and the cut records with their `published` links.
+
+Two entry points, and the split is the point:
+
+- `load_manifest()` reads a \*\*normalized
+  manifest\*\* — the shared target every production is extracted into, so each
+  production keeps exactly one entry point (its extractor) and the importer
+  has exactly one input shape.
+- `import_production()` writes one into a
+  project, **idempotently**: run it twice and you have one project with one
+  track per cut, not two.
+  ```pycon
+  >>> from braidio.importing import assert_recorded_zoom_default
+  >>> assert_recorded_zoom_default()   # the library default the data leans on
+  ```
+
+The CLI door is `python -m braidio.importing`:
+
+```default
+python -m braidio.importing MANIFEST.json ~/projects/two-silences \
+    --source-root ~/src --dry-run
+```
+
+Read `braidio/importing/_writer.py`’s docstring before changing anything:
+it carries the four rules this importer enforces rather than documents, each
+of which was a measured defect in one of the three productions — most sharply
+that \*\*every imported panel is `push_in``**, because the source's push/drift
+alternation was a no-op and writing ``auto` today would invent a drift the
+films never had (thorwhalen/braidio#72).
+
+### Functions
+
+| [`load_manifest`](_autosummary/braidio.importing.html.md#braidio.importing.load_manifest)(path)                           | Read and validate a manifest JSON file.                               |
+|------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| [`import_production`](_autosummary/braidio.importing.html.md#braidio.importing.import_production)(manifest, project_root, \*) | Write `manifest` into a braidio project at `project_root`.            |
+| [`assert_recorded_zoom_default`](_autosummary/braidio.importing.html.md#braidio.importing.assert_recorded_zoom_default)([expected])      | Fail unless `braidio.video.Panel`'s zoom default is still `expected`. |
+| [`normalized_licenses`](_autosummary/braidio.importing.html.md#braidio.importing.normalized_licenses)(stills)                   | `{still key: canonical code}`, raising on anything unrecognised.      |
+
+### Classes
+
+| [`ProductionManifest`](_autosummary/braidio.importing.html.md#braidio.importing.ProductionManifest)(\*\*data)                | A finished production, normalized — the importer's only input shape.    |
+|----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| [`RightsPosition`](_autosummary/braidio.importing.html.md#braidio.importing.RightsPosition)(\*\*data)                    | A production's rights finding, argued rather than assumed (plan §10).   |
+| [`StillRecord`](_autosummary/braidio.importing.html.md#braidio.importing.StillRecord)(\*\*data)                       | One image with its rights and its editorial label — the still/v1 input. |
+| [`PanelRecord`](_autosummary/braidio.importing.html.md#braidio.importing.PanelRecord)(\*\*data)                       | A still over a span of one cut's episode audio.                         |
+| [`LabelRecord`](_autosummary/braidio.importing.html.md#braidio.importing.LabelRecord)(\*\*data)                       | A timed editorial card that is not per-still (title, context, tag).     |
+| [`CutRecord`](_autosummary/braidio.importing.html.md#braidio.importing.CutRecord)(\*\*data)                         | One finished rendering, with the panels and cards it was made from.     |
+| [`ImportReport`](_autosummary/braidio.importing.html.md#braidio.importing.ImportReport)(production, project_root, ...) | What one import did, and what it could not settle.                      |
+
+### Exceptions
+
+| [`ImportError_`](_autosummary/braidio.importing.html.md#braidio.importing.ImportError_)   | Raised when a manifest cannot be imported faithfully.   |
+|-----------------------------------------------------------------|---------------------------------------------------------|
+
+### *class* braidio.importing.CutRecord(\*\*data)
+
+Bases: `BaseModel`
+
+One finished rendering, with the panels and cards it was made from.
+
+#### model_config *: [ClassVar](https://docs.python.org/3/library/typing.html#typing.ClassVar)[ConfigDict]* *= {'extra': 'forbid', 'frozen': True}*
+
+Configuration for the model, should be a dictionary conforming to [`ConfigDict`][pydantic.config.ConfigDict].
+
+### *exception* braidio.importing.ImportError_
+
+Bases: [`Exception`](https://docs.python.org/3/builtins/exceptions.html#Exception)
+
+Raised when a manifest cannot be imported faithfully.
+
+### *class* braidio.importing.ImportReport(production, project_root, title, rights_position, stills_written=0, stills_unchanged=0, episodes=0, panels_by_cut=<factory>, labels_by_cut=<factory>, cuts_written=<factory>, published_links=<factory>, untitled_stills=<factory>, bare_attributions=<factory>, license_codes=<factory>, beat_ids_renumbered=0, media_copied=0, gaps=<factory>, notes=<factory>)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+What one import did, and what it could not settle.
+
+Returned rather than logged, so a CLI, a test and a future MCP tool all
+read the same answer.
+
+#### bare_attributions *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
+
+rendering it verbatim
+would fail the licence condition. `credit_line` composes instead.
+
+* **Type:**
+  Stills whose `attribution` names no licence
+
+#### to_dict()
+
+A JSON-able summary (what the CLI’s `--json` prints).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+
+#### untitled_stills *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
+
+Stills with no `title` — they credit WITHOUT one, silently, so the
+count is surfaced rather than left to be discovered in a credit roll.
+
+### *class* braidio.importing.LabelRecord(\*\*data)
+
+Bases: `BaseModel`
+
+A timed editorial card that is not per-still (title, context, tag).
+
+#### model_config *: [ClassVar](https://docs.python.org/3/library/typing.html#typing.ClassVar)[ConfigDict]* *= {'extra': 'forbid', 'frozen': True}*
+
+Configuration for the model, should be a dictionary conforming to [`ConfigDict`][pydantic.config.ConfigDict].
+
+### *class* braidio.importing.PanelRecord(\*\*data)
+
+Bases: `BaseModel`
+
+A still over a span of one cut’s episode audio.
+
+#### model_config *: [ClassVar](https://docs.python.org/3/library/typing.html#typing.ClassVar)[ConfigDict]* *= {'extra': 'forbid', 'frozen': True}*
+
+Configuration for the model, should be a dictionary conforming to [`ConfigDict`][pydantic.config.ConfigDict].
+
+### *class* braidio.importing.ProductionManifest(\*\*data)
+
+Bases: `BaseModel`
+
+A finished production, normalized — the importer’s only input shape.
+
+#### model_config *: [ClassVar](https://docs.python.org/3/library/typing.html#typing.ClassVar)[ConfigDict]* *= {'extra': 'forbid', 'frozen': True}*
+
+Configuration for the model, should be a dictionary conforming to [`ConfigDict`][pydantic.config.ConfigDict].
+
+### *class* braidio.importing.RightsPosition(\*\*data)
+
+Bases: `BaseModel`
+
+A production’s rights finding, argued rather than assumed (plan §10).
+
+#### model_config *: [ClassVar](https://docs.python.org/3/library/typing.html#typing.ClassVar)[ConfigDict]* *= {'extra': 'forbid', 'frozen': True}*
+
+Configuration for the model, should be a dictionary conforming to [`ConfigDict`][pydantic.config.ConfigDict].
+
+### *class* braidio.importing.StillRecord(\*\*data)
+
+Bases: `BaseModel`
+
+One image with its rights and its editorial label — the still/v1 input.
+
+#### model_config *: [ClassVar](https://docs.python.org/3/library/typing.html#typing.ClassVar)[ConfigDict]* *= {'extra': 'forbid', 'frozen': True}*
+
+Configuration for the model, should be a dictionary conforming to [`ConfigDict`][pydantic.config.ConfigDict].
+
+### braidio.importing.assert_recorded_zoom_default(expected=1.18)
+
+Fail unless `braidio.video.Panel`’s zoom default is still `expected`.
+
+The one failure that is invisible afterwards. 178 Two Silences panels carry
+a zoom nothing recorded — it was this default, read off the library at
+extraction time. 1.18 against 1.14 is near-invisible on one panel and
+diverges over ten minutes.
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+```pycon
+>>> assert_recorded_zoom_default()
+>>> assert_recorded_zoom_default(1.14)
+Traceback (most recent call last):
+    ...
+braidio.importing._writer.ImportError_: braidio.video.Panel.zoom is 1.18...
+```
+
+### braidio.importing.import_production(manifest, project_root, , source_root=None, copy_media=True, dry_run=False)
+
+Write `manifest` into a braidio project at `project_root`.
+
+* **Parameters:**
+  * **manifest** ([`ProductionManifest`](_autosummary/braidio.importing.html.md#braidio.importing.ProductionManifest)) – the normalized production (see `load_manifest`).
+  * **project_root** – where the project lives. Created if absent; an existing
+    project is updated in place, which is what makes a re-run one
+    project rather than two.
+  * **source_root** – the folder `manifest.source_dir` is relative to. The
+    manifest never stores an absolute path (one committed production
+    manifest did, in a shared repo — only basenames come forward), so
+    the caller supplies the root.
+  * **copy_media** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – copy the stills and the episode audio into the project, so
+    it is self-contained and a fork can hardlink it. The shipped cut
+    mp4s are always referenced in place: they are the evidence a
+    re-render is compared against, not an input to one.
+  * **dry_run** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – validate everything — files present, licences known, card
+    weights sufficient, zoom default unmoved — and write nothing.
+* **Return type:**
+  [`ImportReport`](_autosummary/braidio.importing.html.md#braidio.importing.ImportReport)
+* **Returns:**
+  an [`ImportReport`](_autosummary/braidio.importing.html.md#braidio.importing.ImportReport).
+
+### braidio.importing.load_manifest(path)
+
+Read and validate a manifest JSON file.
+
+* **Return type:**
+  [`ProductionManifest`](_autosummary/braidio.importing.html.md#braidio.importing.ProductionManifest)
+
+```pycon
+>>> import json, tempfile, pathlib
+>>> doc = dict(
+...     production="demo", title="Demo", source_dir="demo",
+...     rights=dict(position="private", why="test"),
+...     episode_audio=dict(path="ep.mp3", duration_s=1.0),
+...     stills=[dict(key="a", path="a.jpg", labelled=False)],
+...     cuts=[],
+... )
+>>> with tempfile.TemporaryDirectory() as d:
+...     p = pathlib.Path(d, "m.json"); _ = p.write_text(json.dumps(doc))
+...     m = load_manifest(p)
+>>> m.production, len(m.stills), m.rights.position
+('demo', 1, 'private')
+```
+
+### braidio.importing.normalized_licenses(stills)
+
+`{still key: canonical code}`, raising on anything unrecognised.
+
+The gate, not the value: what gets written into the still body is the
+*recorded* spelling, because “CC BY-SA 4.0” is what a credit should read
+and “by-sa” is not. An unrecognised code survives `normalize_license`
+unchanged and would therefore silently fail a downstream allowlist with no
+error at all — which is why an unknown fails here instead.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 
 # _autosummary/braidio.kinds.html.md
@@ -4022,18 +4279,20 @@ Return a copy with fields overridden (e.g. `cfg.with_(min_turn=1)`).
 
 # About this build
 
-This documentation was built on **2026-09-19 22:06 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/58529fc515d0c9eab7ff4cb4248c24fbffaa2426"><code>58529fc</code></a> on branch <code>main</code>, for **braidio 0.0.49** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-19 22:58 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/48241113c09da0f7775eaf271071e4e9a37ae9d1"><code>4824111</code></a> on branch <code>main</code>, for **braidio 0.0.50** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.0.50) is behind the latest release on PyPI (0.0.51): `pip install braidio` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/58529fc515d0c9eab7ff4cb4248c24fbffaa2426"><code>58529fc515d0c9eab7ff4cb4248c24fbffaa2426</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/48241113c09da0f7775eaf271071e4e9a37ae9d1"><code>48241113c09da0f7775eaf271071e4e9a37ae9d1</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.0.49</code>                                                                                                                                       |
+| Tags at this commit | <code>0.0.50</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/braidio</code>                                                                                                        |
 
@@ -4042,9 +4301,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/braidio</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35472170288">35472170288</a>   |
+| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35474650885">35474650885</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>52285fe16d140d5896d4e2a0ba786096c87b07f0</code> (in the history of the built commit) |
+| Event commit | <code>57f209d34218a17e68cb0d38fbd526c6405c6e64</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4069,13 +4328,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/braidio/0.0.49/">0.0.49</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/braidio/0.0.51/">0.0.51</a>, newer than the documented version (0.0.50).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/braidio && cd braidio
-git checkout 58529fc515d0c9eab7ff4cb4248c24fbffaa2426
+git checkout 48241113c09da0f7775eaf271071e4e9a37ae9d1
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

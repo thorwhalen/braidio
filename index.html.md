@@ -202,6 +202,20 @@ persists its timeline, a panel pins its still to a span of the audio with an
 authored camera move, and a label edit re-runs the cheap text pass, not the
 frames. The `braidio-commentary-video` skill has the walkthrough.
 
+### Where a commentary project lives
+
+A `commentary_weave` project is created by braidio’s registered `nw` project
+factory, and **where it lands is the caller’s decision, not braidio’s** (nw#84).
+Called with no placement — braidio’s own connector — it goes in braidio’s per-user
+workspace under `BRAIDIO_DATA_HOME`, exactly as before. Called with a
+`projects_dir`, it is created there instead, which is how a *host* that will serve
+the project (reelee) puts it beside that caller’s other projects rather than under
+braidio’s data home, where the host’s router and lister would never find it.
+
+`braidio.project.create_project_at(projects_dir, project_id)` is the host-placed
+create on its own. It is deliberately outside `braidio.mcp`, so placing a project
+never pulls the `[mcp]` extra.
+
 `braidio.video`’s dependencies are imported inside the functions that use them, so
 `import braidio.video` works on a bare install and the planners stay usable —
 `braidio.HAS_VIDEO` reports whether the render path is available.

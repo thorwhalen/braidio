@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=0356c229"></script>
+    <script src="_static/documentation_options.js?v=e072a57b"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="next" title="API reference" href="api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.49" />
+  <meta name="docsearch:version" content="0.0.50" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -596,9 +596,22 @@ move, re-render — the picture track lives in the project graph instead: four
 persists its timeline, a panel pins its still to a span of the audio with an
 authored camera move, and a label edit re-runs the cheap text pass, not the
 frames. The <code class="docutils literal notranslate"><span class="pre">braidio-commentary-video</span></code> skill has the walkthrough.</p>
+<section id="where-a-commentary-project-lives">
+<h3>Where a commentary project lives<a class="headerlink" href="#where-a-commentary-project-lives" title="Link to this heading">#</a></h3>
+<p>A <code class="docutils literal notranslate"><span class="pre">commentary_weave</span></code> project is created by braidio’s registered <code class="docutils literal notranslate"><span class="pre">nw</span></code> project
+factory, and <strong>where it lands is the caller’s decision, not braidio’s</strong> (nw#84).
+Called with no placement — braidio’s own connector — it goes in braidio’s per-user
+workspace under <code class="docutils literal notranslate"><span class="pre">BRAIDIO_DATA_HOME</span></code>, exactly as before. Called with a
+<code class="docutils literal notranslate"><span class="pre">projects_dir</span></code>, it is created there instead, which is how a <em>host</em> that will serve
+the project (reelee) puts it beside that caller’s other projects rather than under
+braidio’s data home, where the host’s router and lister would never find it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">braidio.project.create_project_at(projects_dir,</span> <span class="pre">project_id)</span></code> is the host-placed
+create on its own. It is deliberately outside <code class="docutils literal notranslate"><span class="pre">braidio.mcp</span></code>, so placing a project
+never pulls the <code class="docutils literal notranslate"><span class="pre">[mcp]</span></code> extra.</p>
 <p><code class="docutils literal notranslate"><span class="pre">braidio.video</span></code>’s dependencies are imported inside the functions that use them, so
 <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">braidio.video</span></code> works on a bare install and the planners stay usable —
 <code class="docutils literal notranslate"><span class="pre">braidio.HAS_VIDEO</span></code> reports whether the render path is available.</p>
+</section>
 </section>
 <section id="agent-skills">
 <h2>Agent skills<a class="headerlink" href="#agent-skills" title="Link to this heading">#</a></h2>
@@ -650,7 +663,7 @@ everything else.</p>
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-19 22:06 UTC from <a href="https://github.com/thorwhalen/braidio/commit/58529fc515d0c9eab7ff4cb4248c24fbffaa2426">58529fc</a> (main) · braidio 0.0.49 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-19 22:58 UTC from <a href="https://github.com/thorwhalen/braidio/commit/48241113c09da0f7775eaf271071e4e9a37ae9d1">4824111</a> (main) · braidio 0.0.50 · <a href="about-this-build.html">about this build</a></p>
 
                 </article>
               
@@ -696,7 +709,10 @@ everything else.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-deliberately-does-not-do">What it deliberately does <em>not</em> do</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#video-a-commentary-episode-you-can-watch">Video: a commentary episode you can watch</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#video-a-commentary-episode-you-can-watch">Video: a commentary episode you can watch</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-a-commentary-project-lives">Where a commentary project lives</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#agent-skills">Agent skills</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ecosystem">Ecosystem</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install">Install</a></li>

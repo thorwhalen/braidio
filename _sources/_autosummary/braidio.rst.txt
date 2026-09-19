@@ -115,6 +115,7 @@
    downloads
    formats
    genre
+   importing
    kinds
    mcp
    multivoice
