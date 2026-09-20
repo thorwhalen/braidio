@@ -195,6 +195,22 @@ landed together with the nw/connector updates that depend on it. Adding an
 is how `AudioClipBodyV1.spotlight` and the `scene-break/v1` /
 `production-structure/v1` / `render-profile/v1` bodies themselves arrived.
 
+**"Additive" means forward-compatible, NOT backward-compatible — and the
+deploy order follows from that.** An *old body* loads on a *new build*: that
+is what the default is for, and it is what the additive test asserts. The
+other direction does not hold. Every body here is `extra="forbid"`, and the
+read path does not validate (`lacing.schema.validate` is not called when an
+annotation is loaded), so a new field rides along invisibly until something
+constructs the model from the stored dict — `credit_line(annotation.body)` is
+the live example, and it **raises** on a field it does not know. Measured: an
+`extra="forbid"` model without `license_label` rejects a still body written by
+this build.
+
+So **deploy the new build before importing or writing with it**, exactly as
+the lacing `.annot` migration note says for the same reason: the failure shows
+up not at open but at the first place a body becomes a model, which is
+somewhere downstream and far from the change.
+
 `tests/test_body_schema_stability.py` pins all 17 URIs and every field's
 serialized shape (name, JSON type, required/optional, default), and fails
 additive vs. breaking changes in separate tests with different advice. It is

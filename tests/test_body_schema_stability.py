@@ -653,3 +653,49 @@ def _with_extras(base: str, extras: dict) -> str:
         f"{k}={json.dumps(v, sort_keys=True)}" for k, v in sorted(extras.items())
     )
     return f"{base}({tail})"
+
+
+def test_additive_means_forward_compatible_not_backward_compatible():
+    """The direction the additive rule does NOT cover, stated executably.
+
+    An old body on a new build loads — that is what a default is for, and
+    :func:`test_new_fields_are_additive_and_pinned` is about that direction.
+    A **new body on an old build** does not, because every body here is
+    ``extra="forbid"``. The read path does not validate, so the field rides
+    along invisibly until something constructs the model from the stored dict
+    (``credit_line(annotation.body)`` is the live example), and then it raises
+    somewhere far from the change.
+
+    The consequence is a deploy ORDER — new build first, then import or write
+    with it — and it is the same reasoning as the ``.annot`` migration note.
+    This test exists so that property is recorded as a fact rather than
+    rediscovered at a credits roll.
+    """
+    from pydantic import ValidationError
+
+    for model in (StillBodyV1, SegmentExtractionBodyV1, NarrationRenderBodyV1):
+        assert model.model_config.get("extra") == "forbid", model.__name__
+        required = {name for name, f in model.model_fields.items() if f.is_required()}
+        body = {name: _placeholder(model, name) for name in required}
+        # a body from a FUTURE build carries a field this one does not know
+        with pytest.raises(ValidationError):
+            model.model_validate({**body, "a_field_from_a_later_build": 1})
+        # and the same body without it is fine, so the refusal is the extra
+        # key and not the placeholder values
+        model.model_validate(body)
+
+
+def _placeholder(model, name):
+    """A minimal valid value for a required field, by its JSON type."""
+    prop = model.model_json_schema()["properties"][name]
+    kind = prop.get("type") or next(
+        (a.get("type") for a in prop.get("anyOf", []) if a.get("type")), "string"
+    )
+    return {
+        "string": "x",
+        "boolean": False,
+        "number": 0.0,
+        "integer": 0,
+        "array": [],
+        "object": {},
+    }[kind]
