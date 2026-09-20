@@ -137,6 +137,69 @@ def _doc(**overrides):
                         "order": 1,
                     },
                 ],
+                # The rendered episode's members, in play order — one of each
+                # role the importer has to tell apart. Index 3 is the shape
+                # that breaks a naive kind-list: the renderer writes a
+                # narration beat's delivery STYLE into `kind`, so "archive" is
+                # narration in an archival register, not a clip.
+                "beats": [
+                    {
+                        "index": 0,
+                        "kind": "narration",
+                        "label": "The first thing that gets said, truncat",
+                        "text": "The first thing that gets said, truncated in the label.",
+                        "start": 0.0,
+                        "end": 8.0,
+                        "take": {
+                            "path": "takes/part00.mp3",
+                            "duration_s": 8.2,
+                            "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+                            "model_id": "eleven_v3",
+                        },
+                    },
+                    {
+                        "index": 1,
+                        "kind": "clip",
+                        "label": "the hook",
+                        "source": [30.0, 40.0],
+                        "start": 8.0,
+                        "end": 12.0,
+                        "take": {"path": "takes/part01.mp3", "duration_s": 4.0},
+                    },
+                    {
+                        "index": 2,
+                        "kind": "scene-break",
+                        "start": 12.0,
+                        "end": 13.0,
+                        "marker": "sting",
+                    },
+                    {
+                        "index": 3,
+                        "kind": "archive",
+                        "label": "Second thing.",
+                        "text": "Second thing.",
+                        "start": 13.0,
+                        "end": 20.0,
+                        "take": {"path": "takes/part03.mp3", "duration_s": 6.9},
+                    },
+                ],
+                "timeline": {
+                    "title": "A Demo Production",
+                    "duration": 20.0,
+                    "totals": {"narration": 15.0, "clip": 4.0},
+                    "settings": {"profile": "personal"},
+                    "beats": [
+                        {
+                            "index": 0,
+                            "kind": "narration",
+                            "label": "The first thing that gets said, truncat",
+                            "source": None,
+                            "duration": 8.0,
+                            "start": 0.0,
+                            "end": 8.0,
+                        }
+                    ],
+                },
                 "labels": [
                     {
                         "kind": "title",
@@ -169,20 +232,33 @@ def source(tmp_path):
     """A source folder with the files the manifest names (bytes are arbitrary)."""
     d = tmp_path / "src" / "demo"
     d.mkdir(parents=True)
+    (d / "takes").mkdir()
     for name, blob in (
         ("ep.mp3", b"fake-audio-bytes"),
         ("one.jpg", b"fake-image-one"),
         ("two.jpg", b"fake-image-two"),
         ("out.mp4", b"fake-video"),
         ("motion.mp4", b"fake-motion-video"),
+        ("takes/part00.mp3", b"fake-take-zero"),
+        ("takes/part01.mp3", b"fake-take-one"),
+        ("takes/part03.mp3", b"fake-take-three"),
     ):
         (d / name).write_bytes(blob)
     return tmp_path / "src"
 
 
+def _cuts_with(**changes):
+    """The fixture's single cut, with `changes` applied — for a one-field probe."""
+    cut = dict(_doc()["cuts"][0])
+    cut.update(changes)
+    return [cut]
+
+
 def _manifest(tmp_path, **overrides):
     from braidio.importing import load_manifest
 
+    tmp_path = Path(tmp_path)
+    tmp_path.mkdir(parents=True, exist_ok=True)
     p = tmp_path / "manifest.json"
     p.write_text(json.dumps(_doc(**overrides)))
     return load_manifest(p)
@@ -294,15 +370,53 @@ def test_an_unrecognised_licence_is_refused(tmp_path, source):
 
 
 @needs_illustration
-def test_the_recorded_spelling_is_kept_not_the_canonical_code(tmp_path, source):
-    """Normalization is the GATE, not the value: a credit reading 'CC BY-SA
-    4.0' is the useful one and 'by-sa' is not."""
+def test_the_stored_licence_is_the_canonical_code_not_the_spelling(tmp_path, source):
+    """The STORED code is canonical, because that is the one a gate compares.
+
+    A **negative control** for the version this replaced, which stored the
+    provider's spelling on the grounds that a credit reading "by-sa" is
+    useless. That was true and the conclusion was wrong: an unrecognised
+    spelling survives ``normalize_license`` unchanged, so a published-profile
+    gate comparing "CC BY-SA 4.0" against "by-sa" matches **nothing** and
+    reports no error at all — fewer hits, no signal. The spelling is not lost;
+    it moves to ``license_label``, and the next test proves the credit still
+    reads it.
+    """
     from braidio.transforms._common import TIER_STILL
 
     report = _run(tmp_path, source)
     stills = {s.body["key"]: s for s in _annotations(tmp_path / "project", TIER_STILL)}
-    assert stills["one#1"].body["license"] == "CC BY-SA 4.0"
+    body = stills["one#1"].body
+    assert body["license"] == "by-sa"
+    assert body["license_label"] == "CC BY-SA 4.0"
     assert report.license_codes["one#1"] == "by-sa"
+    # cc0 normalizes from a different spelling on the second still
+    assert stills["two#2"].body["license"] == "cc0"
+    assert stills["two#2"].body["license_label"] == "CC0"
+
+
+@needs_illustration
+def test_every_stored_licence_survives_an_allowlist_that_uses_the_canon(
+    tmp_path, source
+):
+    """The point of storing the code: ``illustration``'s own gate matches.
+
+    This is the test that would have caught the defect. It runs the stored
+    bodies through ``license_allowlist`` — the real gate, not a re-derived
+    one — and asserts both stills survive. Against the previous behaviour
+    (raw spellings stored) it returns an empty list while raising nothing,
+    which is exactly how the bug stayed invisible.
+    """
+    from illustration.licensing import normalize_license
+    from braidio.transforms._common import TIER_STILL
+
+    _run(tmp_path, source)
+    stored = [s.body["license"] for s in _annotations(tmp_path / "project", TIER_STILL)]
+    assert stored, "no stills imported"
+    # The gate normalizes both sides; a stored value that is ALREADY canonical
+    # is a fixed point, which is the property that makes the comparison work.
+    assert all(normalize_license(code) == code for code in stored), stored
+    assert set(stored) <= {"by", "by-sa", "cc0", "pdm"}, stored
 
 
 @needs_illustration
@@ -601,7 +715,1082 @@ def test_media_is_copied_into_the_project_so_it_is_self_contained(tmp_path, sour
 def test_no_copy_media_references_the_source_in_place(tmp_path, source):
     from braidio.transforms._common import TIER_STILL, url_to_path
 
-    report = _run(tmp_path, source, copy_media=False)
+    report = _run(
+        tmp_path,
+        source,
+        copy_media=False,
+        materialize_cuts="none",
+        register_artifacts=False,
+    )
     assert report.media_copied == 0
+    assert report.bytes_copied == 0
     still = _annotations(tmp_path / "project", TIER_STILL)[0]
     assert source.resolve() in url_to_path(still.body["url"]).parents
+
+    # `copy_media` and `materialize_cuts` are INDEPENDENT knobs: the first
+    # governs the stills, the mix and the takes, the second the rendered
+    # films. Declining the first does not decline the second.
+    with_cuts = _run(
+        tmp_path / "cuts", source, copy_media=False, register_artifacts=False
+    )
+    assert with_cuts.media_copied == 1, "the delivered cut still comes in"
+
+
+# --- gap 1: the narration is addressable ------------------------------------
+
+
+@needs_illustration
+def test_a_narration_segment_is_a_thing_you_can_point_at_and_play(tmp_path, source):
+    """The headline. Before this, the only audio node an imported production
+    had was the finished mix, so 'replace this narration' had no referent."""
+    from braidio.transforms._common import (
+        TIER_NARRATION_RENDER,
+        TIER_NARRATIVE_BEAT,
+        url_to_path,
+    )
+
+    report = _run(tmp_path, source)
+    beats = _annotations(tmp_path / "project", TIER_NARRATIVE_BEAT)
+    takes = _annotations(tmp_path / "project", TIER_NARRATION_RENDER)
+    assert len(beats) == 2, "two narration beats (index 0 and the archive one)"
+    assert len(takes) == 2
+    for take in takes:
+        # pointable
+        assert take.body["artifact_id"], "a take with no artifact is not playable"
+        # playable
+        path = url_to_path(take.body["url"])
+        assert path.is_file() and path.stat().st_size > 0
+        # and known to be synthesized, which is what makes a replacement
+        # distinguishable from the thing it replaced
+        assert take.body["source"] == "tts"
+        assert take.body["duration_s"] > 0
+    # a "take" is a NARRATION take; the clip beat has audio too but it is
+    # an extraction, not something anyone re-records
+    assert report.takes_by_cut == {"v1": 2}, report.takes_by_cut
+    assert report.beats_by_cut == {"v1": 4}, report.beats_by_cut
+    texts = sorted(b.body["text"] for b in beats)
+    assert texts[0] == "Second thing."
+    assert texts[1].startswith("The first thing that gets said, truncated")
+
+
+@needs_illustration
+def test_the_take_derives_from_the_beat_so_words_and_recording_are_linked(
+    tmp_path, source
+):
+    """Editing the words has to reach the recording. That edge is the feature."""
+    from braidio.transforms._common import TIER_NARRATION_RENDER, TIER_NARRATIVE_BEAT
+
+    _run(tmp_path, source)
+    beat_ids = {b.id for b in _annotations(tmp_path / "project", TIER_NARRATIVE_BEAT)}
+    for take in _annotations(tmp_path / "project", TIER_NARRATION_RENDER):
+        parents = set(take.provenance.was_derived_from)
+        assert parents & beat_ids, (
+            "a take with no beat parent is an orphan recording: editing the "
+            "narration would leave it reading fresh"
+        )
+
+
+@needs_illustration
+def test_an_archive_beat_is_narration_in_a_style_not_a_clip(tmp_path, source):
+    """**Negative control.** The renderer writes a narration beat's delivery
+    STYLE into the timeline's ``kind``, so a kind-list that matches only
+    ``"narration"`` files Two Silences' nine ``archive`` beats as something
+    else — or drops them, which silently shortens the play order."""
+    from braidio.transforms._common import TIER_NARRATIVE_BEAT
+
+    _run(tmp_path, source)
+    beats = {
+        b.body["beat_id"]: b.body
+        for b in _annotations(tmp_path / "project", TIER_NARRATIVE_BEAT)
+    }
+    assert "0003" in beats, "the archive beat must be narration"
+    assert beats["0003"]["style"] == "archive", "and must keep its style"
+    assert beats["0000"]["style"] is None, "plain narration carries no style"
+
+
+@needs_illustration
+def test_a_clip_is_never_imported_as_a_replaceable_narration_take(tmp_path, source):
+    """A clip mis-filed as narration becomes a segment a surface offers to
+    re-synthesize — and on these productions that clip is a commercial
+    master. The contradiction is refused, not resolved."""
+    from braidio.importing import ImportError_
+    from braidio.transforms._common import TIER_SEGMENT_EXTRACTION
+
+    _run(tmp_path, source)
+    segs = _annotations(tmp_path / "project", TIER_SEGMENT_EXTRACTION)
+    assert len(segs) == 1
+    assert (segs[0].body["start_s"], segs[0].body["end_s"]) == (30.0, 40.0)
+
+    # the dangerous shape: a source span under a narration kind
+    beats = [dict(b) for b in _doc()["cuts"][0]["beats"]]
+    beats[1]["kind"] = "narration"
+    second = tmp_path / "second"
+    with pytest.raises(ImportError_, match="reads as narration"):
+        _run(second, source, overrides={"cuts": _cuts_with(beats=beats)})
+
+
+@needs_illustration
+def test_the_episode_names_every_member_in_play_order(tmp_path, source):
+    """``ordered_member_ids`` is the play order; a list missing a member is
+    not one. Four beats in, four members out, in index order."""
+    from braidio.transforms._common import (
+        TIER_EPISODE_RENDER,
+        TIER_NARRATION_RENDER,
+        TIER_SCENE_BREAK,
+        TIER_SEGMENT_EXTRACTION,
+    )
+
+    _run(tmp_path, source)
+    root = tmp_path / "project"
+    episode = _annotations(root, TIER_EPISODE_RENDER)[0]
+    members = episode.body["ordered_member_ids"]
+    assert len(members) == 4, members
+
+    takes = {str(a.id) for a in _annotations(root, TIER_NARRATION_RENDER)}
+    segs = {str(a.id) for a in _annotations(root, TIER_SEGMENT_EXTRACTION)}
+    breaks = {str(a.id) for a in _annotations(root, TIER_SCENE_BREAK)}
+    assert members[0] in takes
+    assert members[1] in segs
+    assert members[2] in breaks
+    assert members[3] in takes
+    # and the episode derives from them, which is what makes a replaced take
+    # read as stale downstream instead of as a change nothing notices
+    assert set(episode.provenance.was_derived_from) == {
+        __import__("uuid").UUID(m) for m in members
+    }
+
+
+@needs_illustration
+def test_replacing_a_take_stales_the_panels_that_were_cut_against_it(tmp_path, source):
+    """What replacing a narration segment actually COSTS, asserted rather
+    than asserted-in-prose: the panels are downstream of the take, so a
+    replacement is a re-weave of the cut, not an in-place edit."""
+    import nw
+    from braidio.transforms._common import TIER_NARRATION_RENDER, TIER_VIDEO_PANEL
+
+    _run(tmp_path, source)
+    root = tmp_path / "project"
+    take = _annotations(root, TIER_NARRATION_RENDER)[0]
+    panels = {a.id for a in _annotations(root, TIER_VIDEO_PANEL)}
+    reachable = {a.id for a in nw.descendants_of(root, take.id)}
+    assert panels <= reachable, (
+        "every panel must be downstream of the narration take; if it is not, "
+        "a surface could offer the replacement as a cheap edit"
+    )
+
+
+@needs_illustration
+def test_a_beat_with_no_surviving_text_imports_empty_and_is_counted(tmp_path, source):
+    """**Negative control.** The tempting fallback is the timeline's
+    48-character snippet, which is a truncation a re-synthesis would speak as
+    though it were the script. Empty is the honest record, and the count is
+    where the loss is visible."""
+    from braidio.transforms._common import TIER_NARRATIVE_BEAT
+
+    doc = _doc()
+    doc["cuts"][0]["beats"][0].pop("text")
+    report = _run(tmp_path, source, overrides=doc)
+    beats = {
+        b.body["beat_id"]: b.body
+        for b in _annotations(tmp_path / "project", TIER_NARRATIVE_BEAT)
+    }
+    assert beats["0000"]["text"] == ""
+    assert "The first thing" not in beats["0000"]["text"]
+    assert report.beats_without_text == ["v1/0"]
+
+
+@needs_illustration
+def test_an_imported_take_can_never_be_served_from_a_render_cache(tmp_path, source):
+    """``cached_output`` scans a tier for a matching ``cache_key``. A computed
+    key is a 64-char SHA-256 digest, so an imported one must not be able to
+    look like one — else a later render adopts a shipped take as its output."""
+    import re
+
+    from braidio.importing import IMPORTED_CACHE_KEY_PREFIX
+    from braidio.transforms._common import (
+        TIER_NARRATION_RENDER,
+        TIER_SEGMENT_EXTRACTION,
+    )
+
+    _run(tmp_path, source)
+    root = tmp_path / "project"
+    keys = [
+        a.body["cache_key"]
+        for a in _annotations(root, TIER_NARRATION_RENDER)
+        + _annotations(root, TIER_SEGMENT_EXTRACTION)
+    ]
+    assert keys
+    for key in keys:
+        assert key.startswith(IMPORTED_CACHE_KEY_PREFIX)
+        assert not re.fullmatch(r"[0-9a-f]{64}", key), key
+
+
+@needs_illustration
+def test_the_render_s_own_timeline_reaches_the_episode(tmp_path, source):
+    """``episode_timeline`` prefers a persisted breakdown and RECONSTRUCTS
+    otherwise — and an imported episode has no weave-config to reconstruct
+    from, so without this the panels are cut against an empty timeline."""
+    from braidio.transforms import episode_timeline
+    from braidio.transforms._common import TIER_EPISODE_RENDER
+    from braidio.project import Project
+
+    _run(tmp_path, source)
+    root = tmp_path / "project"
+    episode = _annotations(root, TIER_EPISODE_RENDER)[0]
+    assert episode.body["timeline"], "the render's own record must be carried"
+    breakdown = episode_timeline(Project(root), episode)
+    assert breakdown.beats, "a reconstructed-from-nothing timeline is empty"
+    assert breakdown.title == "A Demo Production"
+
+
+# --- gap 2: a fresh import is retrievable -----------------------------------
+
+
+@needs_illustration
+def test_every_imported_artifact_is_registered_and_its_bytes_are_there(
+    tmp_path, source
+):
+    """The gap this closes: the graph named every artifact by content id and
+    nothing registered it, so every id 404'd. A row without a blob behind it
+    is worse than no row — the host's route has already promised a 200."""
+    from braidio.importing._catalog import blobs_dir, iter_rows, registered_ids
+    from braidio.transforms._common import (
+        TIER_SEGMENT_EXTRACTION,
+        TIER_VIDEO_CUT,
+    )
+
+    _run(tmp_path, source)
+    root = tmp_path / "project"
+    registered = registered_ids(root)
+    assert registered, "nothing registered at all"
+
+    # Derived from the GRAPH, not from a hand-written tier list. The first
+    # version listed four tiers and forgot `segment-extractions`, so guarding
+    # the clip registrations left the whole suite green while every commercial
+    # -master excerpt went unregistered. A census that enumerates what to count
+    # cannot notice what it forgot.
+    import nw
+
+    wanted = set()
+    for ann in nw.iter_all_annotations(root):
+        aid = ann.body.get("artifact_id")
+        if not aid:
+            continue
+        if ann.tier == TIER_VIDEO_CUT and ann.body.get("stage") != "delivered":
+            continue  # motion passes are deliberately out — see their own test
+        wanted.add(aid)
+    assert len(wanted) >= 7, wanted
+    tiers = {a.tier for a in nw.iter_all_annotations(root) if a.body.get("artifact_id")}
+    assert TIER_SEGMENT_EXTRACTION in tiers, "clips must be in the census"
+
+    missing = sorted(wanted - registered)
+    assert not missing, (
+        f"{len(missing)} artifact ids the graph names and no row answers"
+    )
+
+    for row in iter_rows(root):
+        blob = blobs_dir(root) / row["content_hash"]
+        assert blob.is_file(), f"row {row['id']} has no bytes behind it"
+
+
+@needs_illustration
+def test_the_catalog_id_is_the_id_the_graph_already_recorded(tmp_path, source):
+    """**Negative control.** The host mints opaque ids for what it ingests
+    itself; registering under one of those yields a populated catalog that
+    answers nothing the project actually asks for, and every census passes."""
+    from braidio.importing._catalog import iter_rows
+
+    _run(tmp_path, source)
+    for row in iter_rows(tmp_path / "project"):
+        assert row["id"] == row["content_hash"], row["id"]
+        assert len(row["id"]) == 64 and not row["id"].startswith("art-")
+
+
+@needs_illustration
+def test_a_catalog_row_never_carries_a_file_url(tmp_path, source):
+    """A row registered by hand with a ``file://`` URL reached an ``<img
+    src>`` and put the owner's home directory into the page's DOM. The row's
+    url is the host's own route, which is also the only one a consumer on
+    another machine can follow."""
+    from braidio.importing._catalog import iter_rows
+
+    _run(tmp_path, source)
+    rows = list(iter_rows(tmp_path / "project"))
+    assert rows
+    for row in rows:
+        assert row["url"] == f"/api/artifacts/{row['id']}/bytes"
+        assert "file:" not in json.dumps(row)
+        assert str(Path.home()) not in json.dumps(row)
+
+
+@needs_illustration
+def test_blobs_are_hardlinked_so_registering_costs_no_disk(tmp_path, source):
+    """Not merely cheap — *correct*: the filename is the digest, so a shared
+    inode can only ever be rewritten with identical bytes."""
+    from braidio.importing._catalog import blobs_dir
+    from braidio.transforms._common import TIER_STILL, url_to_path
+
+    _run(tmp_path, source)
+    root = tmp_path / "project"
+    still = _annotations(root, TIER_STILL)[0]
+    media = url_to_path(still.body["url"])
+    blob = blobs_dir(root) / still.body["artifact_id"]
+    assert blob.stat().st_ino == media.stat().st_ino, "blob must share the inode"
+    assert blob.stat().st_nlink >= 2
+
+
+@needs_illustration
+def test_a_cross_device_blob_store_refuses_rather_than_copying(
+    tmp_path, source, monkeypatch
+):
+    """A silent copy here is the whole production a second time. EXDEV is a
+    refusal, and only an explicit opt-in turns it into a copy."""
+    import os
+
+    from braidio.importing import CrossDeviceCatalog
+
+    real_link = os.link
+
+    def _exdev(src, dst, *a, **kw):
+        if "artifacts" in str(dst):  # only the blob store, not media placement
+            raise OSError(18, "Invalid cross-device link")
+        return real_link(src, dst, *a, **kw)
+
+    monkeypatch.setattr(os, "link", _exdev)
+    with pytest.raises(CrossDeviceCatalog, match="allow_cross_device_copy"):
+        _run(tmp_path, source)
+
+    report = _run(tmp_path / "b", source, allow_cross_device_copy=True)
+    assert report.catalog.cross_device is True
+    assert report.catalog.blobs_copied > 0
+    assert report.catalog.bytes_copied > 0
+
+
+@needs_illustration
+def test_registration_can_be_declined_and_says_what_that_costs(tmp_path, source):
+    from braidio.importing._catalog import registered_ids
+
+    report = _run(tmp_path, source, register_artifacts=False)
+    assert registered_ids(tmp_path / "project") == frozenset()
+    assert report.catalog.unregistered, "declining must be reported, not silent"
+
+
+@needs_illustration
+def test_an_srt_is_reported_unregistered_rather_than_coerced(tmp_path, source):
+    """The catalog holds image/video/audio/json. Coercing an .srt into one of
+    them makes the host's ``Literal`` reject the row at READ time, which
+    breaks the whole catalog to serve one file it cannot serve anyway."""
+    doc = _doc()
+    (source / "demo" / "cc.srt").write_bytes(b"1\n00:00:00,000 --> 00:00:01,000\nhi\n")
+    report = _run(tmp_path, source, overrides={"cuts": _cuts_with(captions="cc.srt")})
+    reasons = " ".join(r for _, r in report.catalog.unregistered)
+    assert "text" in reasons, report.catalog.unregistered
+
+
+# --- gap 2b: the finished cuts are watchable, not just readable -------------
+
+
+@needs_illustration
+def test_the_delivered_cut_comes_into_the_project_and_is_retrievable(tmp_path, source):
+    """The seeding blocker: a cut left at its source path is a film a reader
+    "can read and cannot watch", and on the server that path does not exist
+    at all."""
+    from braidio.importing._catalog import registered_ids
+    from braidio.transforms._common import TIER_VIDEO_CUT, url_to_path
+
+    _run(tmp_path, source)
+    root = (tmp_path / "project").resolve()
+    delivered = [
+        a for a in _annotations(root, TIER_VIDEO_CUT) if a.body["stage"] == "delivered"
+    ]
+    assert delivered
+    for cut in delivered:
+        path = url_to_path(cut.body["url"])
+        assert root in path.parents, "the delivered cut must live in the project"
+        assert path.parent.name == "cuts", "where braidio.downloads looks for it"
+        # named the way video_cut.render names one, so the deliverable lister
+        # reads the right stage off it
+        assert path.stem == str(cut.id)
+        assert cut.body["artifact_id"] in registered_ids(root)
+
+
+@needs_illustration
+def test_the_motion_pass_stays_out_by_default_and_the_report_says_so(tmp_path, source):
+    """A motion pass is a resumable intermediate, not a deliverable, and
+    carrying every one roughly doubles the weight. Excluded by default —
+    and *reported*, because an unretrievable artifact is one a caller will
+    ask for and not get."""
+    from braidio.importing._catalog import registered_ids
+    from braidio.transforms._common import TIER_VIDEO_CUT
+
+    report = _run(tmp_path, source)
+    root = tmp_path / "project"
+    motion = [
+        a for a in _annotations(root, TIER_VIDEO_CUT) if a.body["stage"] == "motion"
+    ]
+    assert motion, "the motion node is still recorded"
+    assert motion[0].body["artifact_id"] not in registered_ids(root)
+    assert any("motion" in reason for _, reason in report.catalog.unregistered)
+
+    full = _run(tmp_path / "all", source, materialize_cuts="all")
+    root2 = tmp_path / "all" / "project"
+    motion2 = [
+        a for a in _annotations(root2, TIER_VIDEO_CUT) if a.body["stage"] == "motion"
+    ]
+    assert motion2[0].body["artifact_id"] in registered_ids(root2)
+    assert full.catalog.rows_written > report.catalog.rows_written
+
+
+@needs_illustration
+def test_materialize_cuts_none_restores_the_old_behaviour_and_names_the_cost(
+    tmp_path, source
+):
+    from braidio.transforms._common import TIER_VIDEO_CUT, url_to_path
+
+    report = _run(tmp_path, source, materialize_cuts="none")
+    root = (tmp_path / "project").resolve()
+    delivered = [
+        a for a in _annotations(root, TIER_VIDEO_CUT) if a.body["stage"] == "delivered"
+    ]
+    assert source.resolve() in url_to_path(delivered[0].body["url"]).parents
+    assert any(
+        "no surface can serve it" in reason for _, reason in report.catalog.unregistered
+    )
+
+
+def _host_model():
+    """The host's own artifact record, when the host is importable.
+
+    braidio cannot depend on it — the dependency runs the other way — so this
+    is the only check that can actually catch drift in the wire contract, and
+    it is a dev-machine check by nature. CI pins the field list instead
+    (``test_the_catalog_row_declares_every_field_the_host_requires``).
+    """
+    try:
+        from reelee.artifacts import Artifact
+    except Exception:  # pragma: no cover - environment-dependent
+        return None
+    return Artifact
+
+
+@needs_illustration
+@pytest.mark.skipif(_host_model() is None, reason="reelee (the host) not importable")
+def test_a_row_braidio_writes_loads_through_the_hosts_own_model(tmp_path, source):
+    """The wire contract, checked against the authority rather than a copy.
+
+    The host validates ``extra="forbid"``, so an omitted field and an added
+    one are both fatal, and neither is visible from inside braidio.
+    """
+    from braidio.importing._catalog import iter_rows
+
+    Artifact = _host_model()
+    _run(tmp_path, source)
+    rows = list(iter_rows(tmp_path / "project"))
+    assert rows
+    for row in rows:
+        record = Artifact.model_validate(row)
+        assert record.id == record.content_hash
+        assert record.url.startswith("/api/artifacts/")
+
+
+def test_the_catalog_row_emits_exactly_the_fields_it_declares():
+    """The builder and its declared field list agree.
+
+    Note what this does NOT do, because its old name claimed otherwise: it
+    compares braidio against braidio, so it cannot detect drift in the host's
+    model. Only ``test_a_row_braidio_writes_loads_through_the_hosts_own_model``
+    can, and that needs the host importable. What this one buys is that
+    changing the emitted shape has to be a deliberate two-place edit rather
+    than a silent consequence of editing the builder — and, in particular,
+    that ``filename`` stays OUT: it is the newest field in the host's model,
+    and emitting it makes every row unreadable by an older host, whole
+    catalog at a time.
+    """
+    from braidio.importing._catalog import CatalogRow
+
+    assert CatalogRow.FIELDS == (
+        "id",
+        "kind",
+        "url",
+        "width",
+        "height",
+        "duration_seconds",
+        "cost_usd",
+        "provenance",
+        "content_hash",
+    )
+    assert CatalogRow.PROVENANCE_FIELDS == (
+        "source",
+        "model",
+        "request_id",
+        "prompt",
+        "generated_at",
+        "triggered_by",
+    )
+    assert "filename" not in CatalogRow.PROVENANCE_FIELDS, (
+        "the host gained `filename` one day before this module was written; "
+        "emitting it fails an older host's whole index, not one row"
+    )
+    row = CatalogRow.build("ab" * 32, kind="image", generated_at="2026-01-01T00:00:00Z")
+    assert tuple(sorted(row)) == tuple(sorted(CatalogRow.FIELDS))
+    assert tuple(sorted(row["provenance"])) == tuple(
+        sorted(CatalogRow.PROVENANCE_FIELDS)
+    )
+
+
+def test_the_catalog_digest_is_the_one_lacing_computes():
+    """The id is a lacing ``asset_id``. If these two ever disagree, every row
+    is registered under an id the graph does not use."""
+    import tempfile
+
+    from lacing.artifact import hash_file as lacing_hash
+
+    from braidio.importing._catalog import hash_file
+
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d, "x.bin")
+        p.write_bytes(b"some bytes" * 1000)
+        assert hash_file(p) == lacing_hash(p)
+
+
+# --- the manifest's own stale gap text --------------------------------------
+
+
+@needs_illustration
+def test_a_manifest_still_claiming_drift_to_auto_is_corrected_in_the_report(
+    tmp_path, source
+):
+    """A reading hazard, not a behavioural one — the importer writes
+    ``push_in`` regardless. But a gap note that contradicts the code is how a
+    later reader re-derives the wrong answer with the manifest in hand."""
+    report = _run(
+        tmp_path,
+        source,
+        overrides={"gaps": ["MOVE ENCODING. push -> push_in; drift -> auto."]},
+    )
+    assert any("CORRECTION" in g and "braidio#72" in g for g in report.gaps)
+
+    clean = _run(
+        tmp_path / "clean", source, overrides={"gaps": ["nothing about motion"]}
+    )
+    assert not any("CORRECTION" in g for g in clean.gaps)
+
+
+@needs_illustration
+def test_a_clip_with_no_recorded_source_span_says_so_rather_than_inventing_one(
+    tmp_path, source
+):
+    """**Negative control.** ``start_s``/``end_s`` are required floats with no
+    null, so the tempting fallback is ``(0.0, duration)`` — which reads exactly
+    like a real cut from the head of the source. That is a false claim about
+    where third-party material came from, and it is the last kind of claim
+    worth guessing at. One production's driver never persisted the spans.
+    """
+    from braidio.transforms._common import TIER_SEGMENT_EXTRACTION
+
+    beats = [dict(b) for b in _doc()["cuts"][0]["beats"]]
+    beats[1].pop("source")
+    report = _run(tmp_path, source, overrides={"cuts": _cuts_with(beats=beats)})
+    seg = _annotations(tmp_path / "project", TIER_SEGMENT_EXTRACTION)[0]
+    assert seg.body["source_span_recorded"] is False
+    assert (seg.body["start_s"], seg.body["end_s"]) == (0.0, 0.0), (
+        "an unknown span must not be dressed up as a cut from the head of the source"
+    )
+    assert report.segments_without_source == ["v1/1"]
+
+    # and the recorded case still records
+    kept = _run(tmp_path / "kept", source)
+    seg2 = _annotations(tmp_path / "kept" / "project", TIER_SEGMENT_EXTRACTION)[0]
+    assert seg2.body["source_span_recorded"] is True
+    assert (seg2.body["start_s"], seg2.body["end_s"]) == (30.0, 40.0)
+
+
+@needs_illustration
+def test_a_no_op_reimport_does_not_churn_the_catalog_either(
+    tmp_path, source, monkeypatch
+):
+    """The catalog's version of ``test_a_no_op_reimport_rewrites_nothing``.
+
+    ``generated_at`` is when the artifact was FIRST registered; comparing it
+    makes every re-import rewrite every row, and the row's mtime stops meaning
+    anything.
+    """
+    from braidio.importing._catalog import catalog_dir
+
+    first = _run(tmp_path, source)
+    assert first.catalog.rows_written > 0
+    stamps = {
+        p.name: p.read_text() for p in catalog_dir(tmp_path / "project").glob("*.json")
+    }
+    # The clock MUST move between the runs, or this test passes against an
+    # implementation that compares `generated_at` — both imports land in the
+    # same second and the rows are byte-equal by accident. That is the
+    # difference between a guard and a coincidence.
+    from braidio.importing import _writer
+
+    monkeypatch.setattr(_writer, "_utc_now_iso", lambda: "2099-12-31T23:59:59Z")
+    second = _run(tmp_path, source)
+    assert second.catalog.rows_written == 0
+    assert second.catalog.rows_unchanged == first.catalog.rows_written
+    assert second.catalog.blobs_linked == 0
+    assert second.catalog.blobs_present == first.catalog.blobs_linked
+    after = {
+        p.name: p.read_text() for p in catalog_dir(tmp_path / "project").glob("*.json")
+    }
+    assert after == stamps, "a re-import must not rewrite a single row"
+
+
+@needs_illustration
+def test_no_row_is_written_when_the_blob_could_not_be_placed(
+    tmp_path, source, monkeypatch
+):
+    """The ordering IS the correctness argument.
+
+    The host's route looks the row up first and streams from the blob second,
+    so a row with no bytes behind it is not a 404 — it is a 500 from inside a
+    response that has already promised a 200. Writing the row last means a
+    failure leaves nothing, which is the recoverable direction.
+    """
+    import os
+
+    from braidio.importing._catalog import catalog_dir
+
+    real_link = os.link
+
+    def _no_space(src, dst, *a, **kw):
+        if "artifacts" in str(dst):
+            raise OSError(28, "No space left on device")
+        return real_link(src, dst, *a, **kw)
+
+    monkeypatch.setattr(os, "link", _no_space)
+    # ENOSPC is not in the linkable-refusal allow-list, so it propagates —
+    # it is a real failure, not a filesystem that cannot link.
+    with pytest.raises(OSError, match="No space left"):
+        _run(tmp_path, source)
+    rows = list(catalog_dir(tmp_path / "project").glob("*.json"))
+    assert rows == [], "a row was written for bytes that never landed"
+
+
+@needs_illustration
+def test_an_object_store_backend_refuses_rather_than_registering_into_the_void(
+    tmp_path, source, monkeypatch
+):
+    """The one failure this module could not survive quietly.
+
+    Everything else here fails loudly. Writing a perfectly correct catalog
+    next to a project whose host resolves artifacts out of S3 produces an
+    import that reports complete success and a project where every id still
+    404s — this module's own defect, reintroduced one layer up.
+    """
+    from braidio.importing import CatalogBackendMismatch
+
+    monkeypatch.setenv("REELEE_ARTIFACT_BACKEND", "aws")
+    with pytest.raises(CatalogBackendMismatch, match="register_artifacts=False"):
+        _run(tmp_path, source)
+    assert not (tmp_path / "project").exists(), (
+        "it must refuse before writing a node, not half-way through"
+    )
+    # the deliberate opt-out still works
+    report = _run(tmp_path, source, register_artifacts=False)
+    assert report.catalog.unregistered
+    # and an unset / fs backend is unaffected
+    monkeypatch.delenv("REELEE_ARTIFACT_BACKEND")
+    assert _run(tmp_path / "fs", source).catalog.rows_written > 0
+
+
+@needs_illustration
+def test_two_mixes_with_one_file_name_are_refused_not_overwritten(tmp_path, source):
+    """**Negative control** for a silent corruption.
+
+    Each episode node's artifact is hashed from the destination *after* its
+    own placement, so on a name clash the second node is correct and the
+    first ends up pointing at the second's audio — with nothing raised, and
+    every count in the report right.
+    """
+    from braidio.importing import ImportError_
+
+    (source / "demo" / "other").mkdir(parents=True, exist_ok=True)
+    (source / "demo" / "other" / "ep.mp3").write_bytes(b"a completely different mix")
+    cut_a = dict(_doc()["cuts"][0])
+    cut_b = dict(cut_a)
+    cut_b["label"] = "v2"
+    cut_b["audio"] = {"path": "other/ep.mp3", "duration_s": 20.0}
+    with pytest.raises(ImportError_, match="share a file name"):
+        _run(tmp_path, source, overrides={"cuts": [cut_a, cut_b]})
+
+
+def test_registering_under_a_non_digest_id_is_refused_here_not_at_the_host():
+    """The host validates `content_hash` as 64 lowercase hex. A row written
+    under anything else is accepted by this module and refused when the host
+    reads it back — a failure surfacing nowhere near its cause."""
+    from braidio.importing._catalog import CatalogReport, register_artifact
+
+    with pytest.raises(ValueError, match="64-character lowercase hex"):
+        register_artifact(
+            "/tmp/nowhere",
+            "/tmp/nowhere/x.jpg",
+            artifact_id="art-image-Ky3z",
+            kind="image",
+            generated_at="2026-01-01T00:00:00Z",
+            report=CatalogReport(),
+        )
+    with pytest.raises(ValueError, match="64-character lowercase hex"):
+        register_artifact(
+            "/tmp/nowhere",
+            "/tmp/nowhere/x.jpg",
+            artifact_id="AB" * 32,  # uppercase: the host refuses it
+            kind="image",
+            generated_at="2026-01-01T00:00:00Z",
+            report=CatalogReport(),
+        )
+
+
+@needs_illustration
+def test_two_cuts_on_one_mix_with_different_words_are_refused(tmp_path, source):
+    """**Negative control** for a guard that was checking the wrong thing.
+
+    Member ids are ``_mint(production, role, mix, index)`` — a pure function
+    of position — so two cuts with the same indices and roles mint identical
+    id tuples however different their words and take files are. The first
+    version of this guard compared those tuples, which passes exactly when it
+    should refuse: the second cut silently overwrote the first's beat bodies
+    and its take file, and the report said both were written.
+    """
+    from braidio.importing import ImportError_
+
+    (source / "demo" / "takes" / "other00.mp3").write_bytes(b"a different take")
+    a = dict(_doc()["cuts"][0])
+    b = dict(a)
+    b["label"] = "v2"
+    beats = [dict(x) for x in a["beats"]]
+    beats[0] = {**beats[0], "text": "Completely different words."}
+    beats[0]["take"] = {**beats[0]["take"], "path": "takes/other00.mp3"}
+    b["beats"] = beats
+    with pytest.raises(ImportError_, match="describe different beats"):
+        _run(tmp_path, source, overrides={"cuts": [a, b]})
+
+    # two cuts that genuinely agree are still fine — the guard must not just
+    # refuse every shared mix
+    same = dict(a)
+    same["label"] = "v2"
+    report = _run(tmp_path / "ok", source, overrides={"cuts": [a, same]})
+    assert report.beats_by_cut == {"v1": 4, "v2": 4}
+
+
+@needs_illustration
+def test_a_production_with_no_persisted_timeline_can_still_plan_its_panels(
+    tmp_path, source
+):
+    """**Negative control.** ``episode_timeline`` reads a persisted breakdown
+    or RECONSTRUCTS — and the reconstruction needs a weave-config an imported
+    project does not have, so it does not degrade, it RAISES, taking panel
+    planning and cut rendering with it. One of the three real productions
+    records its timeline in its own shape and carried none.
+    """
+    from braidio.project import Project
+    from braidio.transforms import episode_timeline
+    from braidio.transforms._common import TIER_EPISODE_RENDER
+
+    cut = _cuts_with()[0]
+    cut.pop("timeline")  # beats, but no timeline of its own
+    _run(tmp_path, source, overrides={"cuts": [cut]})
+    root = tmp_path / "project"
+    episode = _annotations(root, TIER_EPISODE_RENDER)[0]
+    assert episode.body["timeline"], "one must be built from the beats"
+    breakdown = episode_timeline(Project(root), episode)  # must not raise
+    assert len(breakdown.beats) == 4
+    assert breakdown.duration == 20.0
+    # settings are NOT invented
+    assert episode.body["timeline"]["settings"] is None
+
+
+@needs_illustration
+def test_a_refusal_leaves_no_project_behind(tmp_path, source, monkeypatch):
+    """All or nothing. Several refusals fire AFTER the first node is written —
+    an unlinkable blob is the live case — and a CLI printing "import refused"
+    over a tree holding a project.json, one annotation and some media is worse
+    than either outcome alone: the refusal says nothing happened and the tree
+    says otherwise, and the next run re-imports into a project nobody meant to
+    create."""
+    import os
+
+    from braidio.importing import CrossDeviceCatalog
+
+    real_link = os.link
+
+    def _exdev(src, dst, *a, **kw):
+        if "artifacts" in str(dst):
+            raise OSError(18, "Invalid cross-device link")
+        return real_link(src, dst, *a, **kw)
+
+    monkeypatch.setattr(os, "link", _exdev)
+    with pytest.raises(CrossDeviceCatalog):
+        _run(tmp_path, source)
+    assert not (tmp_path / "project").exists(), (
+        "a refusal must not leave a half-written project"
+    )
+
+
+@needs_illustration
+def test_a_failed_reimport_leaves_an_existing_project_alone(
+    tmp_path, source, monkeypatch
+):
+    """The other half of all-or-nothing, and the dangerous one: rollback must
+    never delete a project this call did not create."""
+    import os
+
+    from braidio.importing import CrossDeviceCatalog
+
+    _run(tmp_path, source)
+    root = tmp_path / "project"
+    before = sorted(p.name for p in root.iterdir())
+    assert before
+
+    real_link = os.link
+
+    def _exdev(src, dst, *a, **kw):
+        if "artifacts" in str(dst):
+            raise OSError(18, "Invalid cross-device link")
+        return real_link(src, dst, *a, **kw)
+
+    # force the blob work to happen again so the failure can fire
+    import shutil as _sh
+
+    _sh.rmtree(root / ".reelee")
+    monkeypatch.setattr(os, "link", _exdev)
+    with pytest.raises(CrossDeviceCatalog):
+        _run(tmp_path, source)
+    assert root.exists(), "a failed RE-import must not delete the project"
+    assert sorted(p.name for p in root.iterdir()) == before
+
+
+@needs_illustration
+def test_the_project_owns_its_bytes_rather_than_linking_to_the_source(tmp_path, source):
+    """**Negative control** for the inode the blob-store test cannot see.
+
+    The blob is linked from the project's media, so comparing those two
+    inodes is green whether the media arrived by copy or by link. What the
+    media must NOT share is an inode with the SOURCE: these sources are
+    shared working trees, and a link makes an in-place rewrite upstream
+    rewrite the project's copy and the blob under a digest name that no
+    longer describes it.
+    """
+    from braidio.importing._catalog import blobs_dir
+    from braidio.transforms._common import TIER_STILL, url_to_path
+
+    _run(tmp_path, source)
+    root = tmp_path / "project"
+    still = _annotations(root, TIER_STILL)[0]
+    media = url_to_path(still.body["url"])
+    origin = source / "demo" / "one.jpg"
+    assert media.read_bytes() == origin.read_bytes()
+    assert media.stat().st_ino != origin.stat().st_ino, (
+        "the project must own its bytes, not share an inode with a shared source tree"
+    )
+    # ...while the blob still costs nothing
+    blob = blobs_dir(root) / still.body["artifact_id"]
+    assert blob.stat().st_ino == media.stat().st_ino
+
+
+@needs_illustration
+def test_a_changed_source_of_the_same_length_is_not_mistaken_for_unchanged(
+    tmp_path, source
+):
+    """**Negative control.** A size-only check makes "a re-import is a no-op"
+    unfalsifiable: it cannot tell "nothing changed" from "the change was
+    invisible to the check"."""
+    from braidio.transforms._common import TIER_STILL, url_to_path
+    import os
+    import time
+
+    _run(tmp_path, source)
+    media = url_to_path(_annotations(tmp_path / "project", TIER_STILL)[0].body["url"])
+    origin = source / "demo" / "one.jpg"
+    replacement = b"XXXX-image-one"  # same length, different bytes
+    assert len(replacement) == len(origin.read_bytes())
+    origin.write_bytes(replacement)
+    os.utime(origin, (time.time() + 10, time.time() + 10))
+
+    report = _run(tmp_path, source)
+    assert report.media_copied > 0, "the changed source must be brought in again"
+    assert media.read_bytes() == replacement
+
+
+@needs_illustration
+def test_non_contiguous_beat_indices_are_refused(tmp_path, source):
+    """A member's POSITION in ``ordered_member_ids`` is matched against a
+    timeline beat's INDEX downstream (``braidio.captions.cues_for``), so a gap
+    silently shifts every cue after it onto the wrong beat. Real data is
+    contiguous everywhere; nothing validated it."""
+    from braidio.importing import ImportError_
+
+    beats = [dict(b) for b in _doc()["cuts"][0]["beats"]]
+    beats[3] = {**beats[3], "index": 7}  # a gap
+    with pytest.raises(ImportError_, match="not 0.."):
+        _run(tmp_path, source, overrides={"cuts": _cuts_with(beats=beats)})
+
+
+# --- what a rollback may NEVER do -------------------------------------------
+#
+# The rollback added above is the most dangerous code in this module: it calls
+# `shutil.rmtree` on a caller-supplied path. The three tests below are the
+# reason its condition is "this directory did not exist when we started" and
+# not the far more natural "there is no project.json here, so it is not a
+# project yet". Under that second test, a manifest with one missing still file
+# deletes every one of these.
+
+
+@needs_illustration
+def test_a_refusal_never_deletes_a_directory_it_did_not_create(tmp_path, source):
+    """**Negative control.** The caller named a directory; that is not consent
+    to destroy it. Most refusals here are ordinary validation that used to
+    write nothing at all."""
+    from braidio.importing import ImportError_
+
+    target = tmp_path / "project"
+    target.mkdir()
+    (target / "IMPORTANT.md").write_text("a year of notes")
+    (target / "sub").mkdir()
+    (target / "sub" / "thesis.pdf").write_bytes(b"%PDF-")
+
+    (source / "demo" / "one.jpg").unlink()  # one missing still: pure validation
+    with pytest.raises(ImportError_, match="not on disk"):
+        _run(tmp_path, source)
+
+    assert (target / "IMPORTANT.md").read_text() == "a year of notes"
+    assert (target / "sub" / "thesis.pdf").exists()
+
+
+@needs_illustration
+def test_dry_run_never_deletes_the_directory_it_was_pointed_at(tmp_path, source):
+    """``--dry-run``'s whole contract is "validate everything and write
+    nothing". Deleting the directory is the opposite of nothing — and dry-run
+    is the mode a careful person uses to check they typed the path right."""
+    from braidio.importing import ImportError_
+
+    target = tmp_path / "project"
+    target.mkdir()
+    (target / "keep.txt").write_text("keep me")
+    (source / "demo" / "one.jpg").unlink()
+    with pytest.raises(ImportError_, match="not on disk"):
+        _run(tmp_path, source, dry_run=True)
+    assert (target / "keep.txt").read_text() == "keep me"
+
+
+@needs_illustration
+def test_a_refusal_never_deletes_the_source_production(tmp_path, source):
+    """The source root and the project root are separate arguments, so this is
+    one typo away — and the sources are the irreplaceable half of the whole
+    exercise."""
+    from braidio.importing import import_production, load_manifest
+
+    before = sorted(p.name for p in (source / "demo").iterdir())
+    assert len(before) > 5
+    (source / "demo" / "one.jpg").unlink()
+    with pytest.raises(Exception):
+        # the project root typed as the source folder
+        import_production(_manifest(tmp_path), source / "demo", source_root=source)
+    assert (source / "demo").exists(), "the source production must survive"
+    assert (source / "demo" / "ep.mp3").exists()
+
+
+@needs_illustration
+def test_a_reimport_never_writes_new_bytes_through_an_existing_blob(tmp_path, source):
+    """**Negative control**, and the sharpest one here.
+
+    After a registration, ``blobs/<sha256>`` is a hardlink to the project's
+    media file. ``shutil.copy2`` opens its destination for writing rather than
+    replacing it, so copying a changed source over that file writes the new
+    bytes THROUGH the blob — its contents change under a digest name that no
+    longer describes them, and the host answers 200 with the wrong picture
+    under the old id. The trigger is the ordinary case: a better scan arrives
+    and the production is re-imported.
+    """
+    import hashlib
+    import os
+    import time
+
+    from braidio.importing._catalog import blobs_dir
+
+    _run(tmp_path, source)
+    root = tmp_path / "project"
+
+    origin = source / "demo" / "one.jpg"
+    origin.write_bytes(b"a-completely-different-photograph")
+    os.utime(origin, (time.time() + 10, time.time() + 10))
+    _run(tmp_path, source)
+
+    bad = []
+    for blob in blobs_dir(root).iterdir():
+        digest = hashlib.sha256(blob.read_bytes()).hexdigest()
+        if digest != blob.name:
+            bad.append((blob.name, digest))
+    assert not bad, (
+        "every blob's bytes must hash to its own name; these do not, so the "
+        f"catalog serves the wrong content under a live id: {bad}"
+    )
+
+
+@needs_illustration
+def test_not_copying_the_media_may_not_be_combined_with_registering_it(
+    tmp_path, source
+):
+    """**Negative control** for Defect 8 reaching the blob store by a flag.
+
+    With ``copy_media=False`` the path handed to the catalog IS the source
+    file, so the blob store hardlinks a shared working tree into the project:
+    source, media and blob become one inode, and an in-place rewrite upstream
+    changes the blob's bytes under a digest name that no longer describes
+    them. `_place_into`'s docstring is where that rule is stated — and the one
+    path that violated it was the path that never calls `_place_into`.
+    """
+    from braidio.importing import ImportError_
+
+    with pytest.raises(ImportError_, match="cannot be combined"):
+        _run(tmp_path, source, copy_media=False)
+
+    # each alone is fine
+    _run(tmp_path / "a", source, copy_media=False, register_artifacts=False)
+    _run(tmp_path / "b", source)
+
+
+@needs_illustration
+def test_an_interrupt_rolls_back_like_any_other_failure(tmp_path, source, monkeypatch):
+    """``except Exception`` would miss this, and a Ctrl-C half-way through a
+    1 GB import is the interruption a person is most likely to perform — so
+    it is the one most likely to leave the half-written project."""
+    from braidio.importing import _writer
+
+    real = _writer._place_into
+    calls = {"n": 0}
+
+    def _boom(*a, **kw):
+        calls["n"] += 1
+        if calls["n"] > 2:
+            raise KeyboardInterrupt
+        return real(*a, **kw)
+
+    monkeypatch.setattr(_writer, "_place_into", _boom)
+    with pytest.raises(KeyboardInterrupt):
+        _run(tmp_path, source)
+    assert not (tmp_path / "project").exists(), (
+        "an interrupt must roll back a project this call created"
+    )
+
+
+@needs_illustration
+def test_the_burnt_in_attribution_shows_the_spelling_not_the_code(tmp_path, source):
+    """The SECOND place a licence reaches a viewer, and the one burnt into the
+    picture. A doctest alone guarded this; the regression it covers changed 78
+    of the 82 labelled stills across the three real productions, so it earns a
+    test that runs against a real imported body."""
+    from braidio.transforms._video_cut import _short_attribution
+    from braidio.transforms._common import TIER_STILL
+
+    _run(tmp_path, source)
+    stills = {
+        s.body["key"]: s.body for s in _annotations(tmp_path / "project", TIER_STILL)
+    }
+    line = _short_attribution(stills["one#1"])
+    assert line == "EliziR · CC BY-SA 4.0", line
+    assert "by-sa" not in line, "a lower third reading 'by-sa' credits nobody"

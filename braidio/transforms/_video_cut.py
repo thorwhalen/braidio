@@ -804,7 +804,27 @@ def _overlays(panels, stills_by_id: dict, label_tracks):
 
 
 def _short_attribution(body: dict) -> str:
-    parts = [body.get("author"), body.get("license")]
+    """The lower third's credit — author and licence, as a person reads them.
+
+    The SECOND place a licence reaches a viewer, and the one that is burnt into
+    the picture. ``license`` is the canonical code a gate compares (``by-sa``,
+    ``pdm``); ``license_label`` is the spelling (``CC BY-SA 4.0``, ``pd``), and
+    it is the spelling that belongs on screen — "by" is not a licence
+    identifier and satisfies no attribution condition. Falls back to the code
+    when no label was recorded, because a terse credit beats none.
+
+    Measured when this was wrong: 78 of the 82 labelled stills across the three
+    finished productions changed, e.g. ``'iHeartRadioCA · CC BY 3.0'`` became
+    ``'iHeartRadioCA · by'``.
+
+    >>> _short_attribution({"author": "EliziR", "license": "by-sa",
+    ...                     "license_label": "CC BY-SA 4.0"})
+    'EliziR · CC BY-SA 4.0'
+    >>> _short_attribution({"author": "Ralph Earl", "license": "pdm"})
+    'Ralph Earl · pdm'
+    """
+    shown = (body.get("license_label") or "").strip() or body.get("license")
+    parts = [body.get("author"), shown]
     return " · ".join(str(p).strip() for p in parts if p and str(p).strip())
 
 

@@ -145,6 +145,73 @@ class LabelRecord(BaseModel):
     slot: Optional[str] = None
 
 
+class TakeRecord(BaseModel):
+    """The audio a listener actually hears for one beat — the recording.
+
+    A *take* is the replaceable unit. ``source`` is why the field exists at
+    all: an imported take is ``"tts"`` (a machine said it), and the only other
+    value is ``"upload"`` (a person recorded it). Without the distinction a
+    replacement is indistinguishable from the thing it replaced, and "put the
+    robot back" is not a question anything can answer.
+    """
+
+    model_config = {"frozen": True, "extra": "forbid"}
+
+    path: str = Field(..., description="Relative to source_dir; never absolute.")
+    duration_s: Optional[float] = Field(None, ge=0.0)
+    voice_id: Optional[str] = None
+    model_id: Optional[str] = None
+    source: str = Field(
+        "tts",
+        description="'tts' | 'upload'. Every imported take is 'tts'.",
+    )
+
+
+class BeatRecord(BaseModel):
+    """One member of a rendered episode — the unit a panel is cut against.
+
+    This is the *render's own* beat, read off the persisted timeline
+    (``TimelineBreakdown.to_dict()``), not the authored script's. The two
+    agree in order but not necessarily in count: a rights profile can drop a
+    beat before it is rendered, and it is the rendered sequence the panels and
+    cards were timed against.
+
+    ``text`` is the **full** narration, recovered from the authored script.
+    The timeline's own ``label`` is a 48-character snippet, which is enough to
+    *match* a script beat to a rendered one and not enough to edit. A beat
+    whose script did not survive carries ``text=None`` and is still
+    addressable and playable — just not re-synthesizable without retyping it,
+    which is the honest state rather than a guess.
+    """
+
+    model_config = {"frozen": True, "extra": "forbid"}
+
+    index: int = Field(..., ge=0, description="Position in the rendered episode.")
+    kind: str = Field(
+        ...,
+        description=(
+            "'narration' (or a delivery style standing in for it), 'clip', "
+            "'archive', 'scene-break', 'sting', 'dialogue'."
+        ),
+    )
+    label: str = Field("", description="The timeline's snippet — display only.")
+    text: Optional[str] = Field(
+        None, description="Full narration text, when the script survives."
+    )
+    start: float = Field(..., ge=0.0, description="Start in the rendered mix.")
+    end: float = Field(..., ge=0.0)
+    # The clip's span in its SOURCE media, which is a different timebase from
+    # (start, end) — those are positions in the mix. A clip carries both; a
+    # narration beat carries only the latter.
+    source: Optional[tuple[float, float]] = None
+    marker: Optional[str] = Field(
+        None, description="scene-break only: 'sting' | 'none'."
+    )
+    take: Optional[TakeRecord] = Field(
+        None, description="The rendered audio for this beat, when it survives."
+    )
+
+
 class CutRecord(BaseModel):
     """One finished rendering, with the panels and cards it was made from."""
 
@@ -166,6 +233,21 @@ class CutRecord(BaseModel):
     published: Optional[dict[str, Any]] = None
     panels: tuple[PanelRecord, ...] = ()
     labels: tuple[LabelRecord, ...] = ()
+    # Additive (default empty / None), so a manifest written before the
+    # narration layer existed still validates and simply imports a picture
+    # track with an undecomposed mix — which is exactly what it records.
+    beats: tuple[BeatRecord, ...] = Field(
+        default_factory=tuple,
+        description="The rendered episode's members, in play order.",
+    )
+    timeline: Optional[dict[str, Any]] = Field(
+        None,
+        description=(
+            "The render's own TimelineBreakdown.to_dict(), carried verbatim "
+            "onto the episode node. `beats` is this file's normalized view of "
+            "it; this is the record the renderer wrote."
+        ),
+    )
 
 
 class ProductionManifest(BaseModel):

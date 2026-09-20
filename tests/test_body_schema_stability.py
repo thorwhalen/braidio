@@ -378,6 +378,10 @@ PINNED: dict[str, dict] = {
             "artifact_id": "string|null = null",
             "cache_key": "string",
             "end_s": "number",
+            # additive: start_s/end_s are required floats with no null, so a
+            # clip whose source span was never persisted needs a bool to say
+            # so rather than an invented (0.0, duration).
+            "source_span_recorded": "boolean = true",
             "start_s": "number",
             "url": "string|null = null",
         },
@@ -409,6 +413,7 @@ PINNED: dict[str, dict] = {
             "key": "string",
             "labelled": "boolean",
             "license": "string|null = null",
+            "license_label": "string|null = null",
             "license_url": "string|null = null",
             "note": "string|null = null",
             "source_page_url": "string|null = null",
@@ -648,3 +653,49 @@ def _with_extras(base: str, extras: dict) -> str:
         f"{k}={json.dumps(v, sort_keys=True)}" for k, v in sorted(extras.items())
     )
     return f"{base}({tail})"
+
+
+def test_additive_means_forward_compatible_not_backward_compatible():
+    """The direction the additive rule does NOT cover, stated executably.
+
+    An old body on a new build loads — that is what a default is for, and
+    :func:`test_new_fields_are_additive_and_pinned` is about that direction.
+    A **new body on an old build** does not, because every body here is
+    ``extra="forbid"``. The read path does not validate, so the field rides
+    along invisibly until something constructs the model from the stored dict
+    (``credit_line(annotation.body)`` is the live example), and then it raises
+    somewhere far from the change.
+
+    The consequence is a deploy ORDER — new build first, then import or write
+    with it — and it is the same reasoning as the ``.annot`` migration note.
+    This test exists so that property is recorded as a fact rather than
+    rediscovered at a credits roll.
+    """
+    from pydantic import ValidationError
+
+    for model in (StillBodyV1, SegmentExtractionBodyV1, NarrationRenderBodyV1):
+        assert model.model_config.get("extra") == "forbid", model.__name__
+        required = {name for name, f in model.model_fields.items() if f.is_required()}
+        body = {name: _placeholder(model, name) for name in required}
+        # a body from a FUTURE build carries a field this one does not know
+        with pytest.raises(ValidationError):
+            model.model_validate({**body, "a_field_from_a_later_build": 1})
+        # and the same body without it is fine, so the refusal is the extra
+        # key and not the placeholder values
+        model.model_validate(body)
+
+
+def _placeholder(model, name):
+    """A minimal valid value for a required field, by its JSON type."""
+    prop = model.model_json_schema()["properties"][name]
+    kind = prop.get("type") or next(
+        (a.get("type") for a in prop.get("anyOf", []) if a.get("type")), "string"
+    )
+    return {
+        "string": "x",
+        "boolean": False,
+        "number": 0.0,
+        "integer": 0,
+        "array": [],
+        "object": {},
+    }[kind]
