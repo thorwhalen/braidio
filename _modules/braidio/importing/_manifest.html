@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../../_static/documentation_options.js?v=440a2162"></script>
+    <script src="../../../_static/documentation_options.js?v=73f2ab08"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -410,7 +410,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.51" />
+  <meta name="docsearch:version" content="0.0.52" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -873,6 +873,79 @@ window.runMermaid = runMermaid;</script>
 
 
 
+<div class="viewcode-block" id="TakeRecord">
+<a class="viewcode-back" href="../../../_autosummary/braidio.importing.html#braidio.importing.TakeRecord">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TakeRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The audio a listener actually hears for one beat — the recording.</span>
+
+<span class="sd">    A *take* is the replaceable unit. ``source`` is why the field exists at</span>
+<span class="sd">    all: an imported take is ``"tts"`` (a machine said it), and the only other</span>
+<span class="sd">    value is ``"upload"`` (a person recorded it). Without the distinction a</span>
+<span class="sd">    replacement is indistinguishable from the thing it replaced, and "put the</span>
+<span class="sd">    robot back" is not a question anything can answer.</span>
+<span class="sd">    """</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"frozen"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"extra"</span><span class="p">:</span> <span class="s2">"forbid"</span><span class="p">}</span>
+
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Relative to source_dir; never absolute."</span><span class="p">)</span>
+    <span class="n">duration_s</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">voice_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">model_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="s2">"tts"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"'tts' | 'upload'. Every imported take is 'tts'."</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="BeatRecord">
+<a class="viewcode-back" href="../../../_autosummary/braidio.importing.html#braidio.importing.BeatRecord">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BeatRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""One member of a rendered episode — the unit a panel is cut against.</span>
+
+<span class="sd">    This is the *render's own* beat, read off the persisted timeline</span>
+<span class="sd">    (``TimelineBreakdown.to_dict()``), not the authored script's. The two</span>
+<span class="sd">    agree in order but not necessarily in count: a rights profile can drop a</span>
+<span class="sd">    beat before it is rendered, and it is the rendered sequence the panels and</span>
+<span class="sd">    cards were timed against.</span>
+
+<span class="sd">    ``text`` is the **full** narration, recovered from the authored script.</span>
+<span class="sd">    The timeline's own ``label`` is a 48-character snippet, which is enough to</span>
+<span class="sd">    *match* a script beat to a rendered one and not enough to edit. A beat</span>
+<span class="sd">    whose script did not survive carries ``text=None`` and is still</span>
+<span class="sd">    addressable and playable — just not re-synthesizable without retyping it,</span>
+<span class="sd">    which is the honest state rather than a guess.</span>
+<span class="sd">    """</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"frozen"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"extra"</span><span class="p">:</span> <span class="s2">"forbid"</span><span class="p">}</span>
+
+    <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Position in the rendered episode."</span><span class="p">)</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"'narration' (or a delivery style standing in for it), 'clip', "</span>
+            <span class="s2">"'archive', 'scene-break', 'sting', 'dialogue'."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"The timeline's snippet — display only."</span><span class="p">)</span>
+    <span class="n">text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Full narration text, when the script survives."</span>
+    <span class="p">)</span>
+    <span class="n">start</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Start in the rendered mix."</span><span class="p">)</span>
+    <span class="n">end</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="c1"># The clip's span in its SOURCE media, which is a different timebase from</span>
+    <span class="c1"># (start, end) — those are positions in the mix. A clip carries both; a</span>
+    <span class="c1"># narration beat carries only the latter.</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">marker</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"scene-break only: 'sting' | 'none'."</span>
+    <span class="p">)</span>
+    <span class="n">take</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TakeRecord</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"The rendered audio for this beat, when it survives."</span>
+    <span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="CutRecord">
 <a class="viewcode-back" href="../../../_autosummary/braidio.importing.html#braidio.importing.CutRecord">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CutRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -895,7 +968,22 @@ window.runMermaid = runMermaid;</script>
     <span class="n">settings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
     <span class="n">published</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">panels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">PanelRecord</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-    <span class="n">labels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LabelRecord</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span></div>
+    <span class="n">labels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LabelRecord</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="c1"># Additive (default empty / None), so a manifest written before the</span>
+    <span class="c1"># narration layer existed still validates and simply imports a picture</span>
+    <span class="c1"># track with an undecomposed mix — which is exactly what it records.</span>
+    <span class="n">beats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">BeatRecord</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">tuple</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"The rendered episode's members, in play order."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">timeline</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"The render's own TimelineBreakdown.to_dict(), carried verbatim "</span>
+            <span class="s2">"onto the episode node. `beats` is this file's normalized view of "</span>
+            <span class="s2">"it; this is the record the renderer wrote."</span>
+        <span class="p">),</span>
+    <span class="p">)</span></div>
 
 
 

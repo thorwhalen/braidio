@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../../../_static/documentation_options.js?v=440a2162"></script>
+    <script src="../../../_static/documentation_options.js?v=73f2ab08"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -410,7 +410,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.51" />
+  <meta name="docsearch:version" content="0.0.52" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -748,27 +748,60 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">   default has moved, the extracted number is already wrong and this is the</span>
 <span class="sd">   last place anyone would look, so :func:`assert_recorded_zoom_default` fails</span>
 <span class="sd">   the import loudly.</span>
-<span class="sd">3. **Every licence is normalized through ``illustration``, and an unknown one</span>
-<span class="sd">   fails.** All 15 spellings across the three productions resolve to ``by`` /</span>
-<span class="sd">   ``by-sa`` / ``cc0`` / ``pdm``, so a failure means something genuinely new</span>
-<span class="sd">   rather than a gap in the table. The *recorded* spelling is what gets</span>
-<span class="sd">   written — a credit reading "CC BY-SA 4.0" is the useful one — normalization</span>
-<span class="sd">   is the gate, not the value.</span>
+<span class="sd">3. **Every licence is stored as its canonical code, and an unknown one fails.**</span>
+<span class="sd">   All 15 spellings across the three productions resolve to ``by`` / ``by-sa``</span>
+<span class="sd">   / ``cc0`` / ``pdm`` through ``illustration.licensing.normalize_license``, so</span>
+<span class="sd">   a failure means something genuinely new rather than a gap in the table.</span>
+<span class="sd">   ``StillBodyV1.license`` gets the **code**, because that is what a gate</span>
+<span class="sd">   compares and an unrecognised spelling survives normalization unchanged and</span>
+<span class="sd">   therefore fails a published-profile check *silently* — fewer hits, no error.</span>
+<span class="sd">   The human spelling is not discarded: it goes to ``license_label``, which</span>
+<span class="sd">   ``credit_line`` prefers, so a credit still reads "CC BY-SA 4.0" while a gate</span>
+<span class="sd">   still reads ``by-sa`` (thorwhalen/illustration#24).</span>
 <span class="sd">4. **A context card is written with ``weight &gt;= 2``.** ``video_cut.finish``</span>
 <span class="sd">   refuses an overlay collision at plan time, and a weight-1 card over a</span>
 <span class="sd">   labelled still is one, so a weight-1 context card would make the cut</span>
 <span class="sd">   unrenderable at the point where it is least obvious why.</span>
+<span class="sd">5. **Every registered artifact's catalog row carries the host's route, never a</span>
+<span class="sd">   ``file://`` path.** An imported artifact that is not registered is a 404 on</span>
+<span class="sd">   every surface (see :mod:`braidio.importing._catalog`), and one registered</span>
+<span class="sd">   with a local path puts the importing machine's home directory into a served</span>
+<span class="sd">   record. Registration is on by default; a cross-device destination refuses</span>
+<span class="sd">   rather than silently copying the production a second time.</span>
+<span class="sd">6. **A rendered take's ``cache_key`` cannot be mistaken for a computed one.**</span>
+<span class="sd">   Every imported take carries a key prefixed :data:`IMPORTED_CACHE_KEY_PREFIX`,</span>
+<span class="sd">   which no ``nw.transforms.cache_key`` digest can ever equal — the same</span>
+<span class="sd">   bargain as a cut's ``cache_key=None``. braidio did not render these, so</span>
+<span class="sd">   nothing may serve one as though it had.</span>
+
+<span class="sd">**The delivered cut comes into the project; the motion pass does not.** The</span>
+<span class="sd">plan's original line — cuts "referenced in place, not copied", to fit the</span>
+<span class="sd">server's disk — is superseded, because a reference to a path outside the</span>
+<span class="sd">project is not retrievable through *any* surface, and on the server that path</span>
+<span class="sd">does not exist at all. The result was three finished films a reader could read</span>
+<span class="sd">and could not watch. So ``materialize_cuts`` defaults to ``"delivered"``: every</span>
+<span class="sd">cut record's delivered mp4 is brought in and registered, and *every* cut counts</span>
+<span class="sd">— one production's four cuts are four different edits, not four versions of</span>
+<span class="sd">one, and they are the point of that production. The **motion** pass stays out</span>
+<span class="sd">by default: it is the text-free intermediate a re-render can resume from,</span>
+<span class="sd">evidence rather than a deliverable, and carrying it roughly doubles the weight.</span>
+<span class="sd">Measured, delivered-only across the three productions is about 1.1 GB, which</span>
+<span class="sd">fits; ``"all"`` adds the motion passes and ``"none"`` restores the old</span>
+<span class="sd">reference-in-place behaviour and *says* in the report that those cuts are</span>
+<span class="sd">unretrievable.</span>
 
 <span class="sd">What it deliberately does **not** do: mark anything publishable the source did</span>
 <span class="sd">not (every cut keeps its recorded profile, and the rights finding is carried as</span>
-<span class="sd">project-level data), invent a beat it cannot witness, or copy the shipped mp4s</span>
-<span class="sd">into the project — those are the *evidence* a re-render is checked against, not</span>
-<span class="sd">an input to one, and they are large.</span>
+<span class="sd">project-level data), or invent a beat it cannot witness — a beat whose authored</span>
+<span class="sd">text did not survive is imported with an **empty** ``text`` and counted, never</span>
+<span class="sd">with the timeline's 48-character snippet, which a re-synthesis would cheerfully</span>
+<span class="sd">speak.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
@@ -776,7 +809,17 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.importing._catalog</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CatalogBackendMismatch</span><span class="p">,</span>  <span class="c1"># noqa: F401  (re-exported: callers catch it)</span>
+    <span class="n">CatalogReport</span><span class="p">,</span>
+    <span class="n">assert_local_backend</span><span class="p">,</span>
+    <span class="n">_link_or_copy</span><span class="p">,</span>
+    <span class="n">CrossDeviceCatalog</span><span class="p">,</span>  <span class="c1"># noqa: F401  (re-exported: callers catch it)</span>
+    <span class="n">hash_file</span><span class="p">,</span>
+    <span class="n">register_artifact</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.importing._manifest</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BeatRecord</span><span class="p">,</span>
     <span class="n">CutRecord</span><span class="p">,</span>
     <span class="n">LabelRecord</span><span class="p">,</span>
     <span class="n">ProductionManifest</span><span class="p">,</span>
@@ -809,6 +852,50 @@ window.runMermaid = runMermaid;</script>
 <span class="c1">#: Rights positions that are NOT a licence to publish. The importer never</span>
 <span class="c1">#: promotes a cut; the position is carried so a surface can show it.</span>
 <span class="n">_NON_PUBLIC_POSITIONS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"private"</span><span class="p">,</span> <span class="s2">"unlisted"</span><span class="p">})</span>
+
+<span class="c1">#: Prefix on every imported take's / extraction's ``cache_key``. A computed key</span>
+<span class="c1">#: is a 64-character SHA-256 digest (``nw.transforms.cache_key``), so a key</span>
+<span class="c1">#: carrying this prefix can never equal one — which is the point: braidio did</span>
+<span class="c1">#: not render these, and ``cached_output`` scans a tier for a key match. A</span>
+<span class="c1">#: colliding key would let a later render adopt a shipped take as its own</span>
+<span class="c1">#: output, which is the audio equivalent of serving a shipped mp4 from a cache.</span>
+<span class="n">IMPORTED_CACHE_KEY_PREFIX</span> <span class="o">=</span> <span class="s2">"imported:"</span>
+
+<span class="c1">#: What ``materialize_cuts`` accepts. See the module docstring for the argument</span>
+<span class="c1">#: behind the default — briefly: a delivered cut is the deliverable and every</span>
+<span class="c1">#: one of them counts, a motion pass is a resumable intermediate.</span>
+<span class="n">_MATERIALIZE_CHOICES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"delivered"</span><span class="p">,</span> <span class="s2">"all"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">})</span>
+
+<span class="c1">#: Timeline beat kinds that are **spoken narration**. The renderer writes the</span>
+<span class="c1">#: delivery *style* in place of ``"narration"`` when a beat declared one</span>
+<span class="c1">#: (``_member_role``), so this cannot be a single literal — anything that is</span>
+<span class="c1">#: not a clip, a break or a dialogue is narration, and an unknown kind is</span>
+<span class="c1">#: refused rather than guessed (see :func:`_beat_role`).</span>
+<span class="c1">#: ``"archive"`` is deliberately NOT here. It looks like a clip and is not:</span>
+<span class="c1">#: Two Silences' nine archive beats are narration in an archival register —</span>
+<span class="c1">#: they carry no ``source`` span and their labels are the spoken text. Filing</span>
+<span class="c1">#: them as clips loses nine replaceable segments per production and writes</span>
+<span class="c1">#: nine segment-extractions whose ``(start_s, end_s)`` are invented.</span>
+<span class="n">_CLIP_KINDS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"clip"</span><span class="p">,</span> <span class="s2">"segment"</span><span class="p">})</span>
+<span class="n">_BREAK_KINDS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"scene-break"</span><span class="p">,</span> <span class="s2">"sting"</span><span class="p">,</span> <span class="s2">"scene_break"</span><span class="p">})</span>
+<span class="n">_DIALOGUE_KINDS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"dialogue"</span><span class="p">})</span>
+<span class="n">_NARRATION_KINDS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"narration"</span><span class="p">})</span>
+
+<span class="c1">#: The whole reason a take is addressable, stated where the code is. Replacing</span>
+<span class="c1">#: one is NOT a cheap in-place edit: see :data:`NARRATION_REPLACEMENT_NOTE`.</span>
+<span class="n">NARRATION_REPLACEMENT_NOTE</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"Replacing a narration take requires a RE-WEAVE of the episode, not an "</span>
+    <span class="s2">"in-place swap. Every panel and card is pinned to the mix by a MediaRef "</span>
+    <span class="s2">"whose asset_id is the content hash of the mix's bytes and whose interval "</span>
+    <span class="s2">"is an offset into it, so a new take changes the mix's bytes (new hash, "</span>
+    <span class="s2">"every reference dangling) and its own duration (every later beat, panel "</span>
+    <span class="s2">"and card shifts). The graph says so: each cut's episode node derives from "</span>
+    <span class="s2">"its members, and every panel derives from that episode, so replacing one "</span>
+    <span class="s2">"take reads as stale through the whole picture track. What the import buys "</span>
+    <span class="s2">"is that the segment is now a thing you can point at, play and replace at "</span>
+    <span class="s2">"all — the re-weave is the cost of using it, and a surface must quote it "</span>
+    <span class="s2">"as a re-render of the cut rather than as an edit."</span>
+<span class="p">)</span>
 
 <span class="n">_UNSAFE_IN_FILENAME</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^A-Za-z0-9._-]+"</span><span class="p">)</span>
 
@@ -849,13 +936,37 @@ window.runMermaid = runMermaid;</script>
     <span class="n">bare_attributions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">license_codes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
     <span class="n">beat_ids_renumbered</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1">#: Media files copied into the project, and the bytes that cost. The</span>
+    <span class="c1">#: project owns its bytes rather than linking to a shared source tree —</span>
+    <span class="c1">#: see :func:`_place_into` for why the link is the wrong trade here.</span>
     <span class="n">media_copied</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">bytes_copied</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1">#: Members written per cut, by tier-ish role: narration / clip / break.</span>
+    <span class="n">beats_by_cut</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1">#: Playable narration takes written per cut.</span>
+    <span class="n">takes_by_cut</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="c1">#: ``"&lt;cut&gt;/&lt;index&gt;"`` for every narration beat whose authored text did</span>
+    <span class="c1">#: not survive. Imported with an EMPTY text, never the snippet — so the</span>
+    <span class="c1">#: count is the only place the loss is visible. See the module docstring.</span>
+    <span class="n">beats_without_text</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1">#: Takes named by the manifest whose audio file is not on disk.</span>
+    <span class="n">takes_missing</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="c1">#: ``"&lt;cut&gt;/&lt;index&gt;"`` for every clip whose span in the SOURCE recording</span>
+    <span class="c1">#: was never persisted. Written with ``source_span_recorded=False`` rather</span>
+    <span class="c1">#: than an invented ``(0.0, duration)``, which would be a false claim</span>
+    <span class="c1">#: about where third-party material was cut from.</span>
+    <span class="n">segments_without_source</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">catalog</span><span class="p">:</span> <span class="n">CatalogReport</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">CatalogReport</span><span class="p">)</span>
     <span class="n">gaps</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">notes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">panels_total</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">panels_by_cut</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">takes_total</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">takes_by_cut</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
 <div class="viewcode-block" id="ImportReport.to_dict">
 <a class="viewcode-back" href="../../../_autosummary/braidio.importing.html#braidio.importing.ImportReport.to_dict">[docs]</a>
@@ -879,6 +990,14 @@ window.runMermaid = runMermaid;</script>
             <span class="s2">"license_codes"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">license_codes</span><span class="p">),</span>
             <span class="s2">"beat_ids_renumbered"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">beat_ids_renumbered</span><span class="p">,</span>
             <span class="s2">"media_copied"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">media_copied</span><span class="p">,</span>
+            <span class="s2">"bytes_copied"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bytes_copied</span><span class="p">,</span>
+            <span class="s2">"beats_by_cut"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beats_by_cut</span><span class="p">),</span>
+            <span class="s2">"takes_by_cut"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">takes_by_cut</span><span class="p">),</span>
+            <span class="s2">"takes_total"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">takes_total</span><span class="p">,</span>
+            <span class="s2">"beats_without_text"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beats_without_text</span><span class="p">),</span>
+            <span class="s2">"takes_missing"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">takes_missing</span><span class="p">),</span>
+            <span class="s2">"segments_without_source"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segments_without_source</span><span class="p">),</span>
+            <span class="s2">"catalog"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">catalog</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
             <span class="s2">"gaps"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gaps</span><span class="p">),</span>
             <span class="s2">"notes"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">notes</span><span class="p">),</span>
         <span class="p">}</span></div>
@@ -1159,6 +1278,124 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="n">text</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_beat_role</span><span class="p">(</span><span class="n">beat</span><span class="p">:</span> <span class="n">BeatRecord</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Which kind of node a timeline beat becomes: narration / clip / break.</span>
+
+<span class="sd">    The renderer records a narration beat's **delivery style** in the timeline's</span>
+<span class="sd">    ``kind`` field in place of ``"narration"`` (``_member_role``), so this</span>
+<span class="sd">    cannot be a lookup against one literal: Two Silences' ``"archive"`` beats</span>
+<span class="sd">    are narration in an archival register, not clips. Anything that is not a</span>
+<span class="sd">    clip, a break or a dialogue is therefore narration, and the style is</span>
+<span class="sd">    carried onto the beat body so a re-weave reproduces it.</span>
+
+<span class="sd">    The one contradiction that is refused rather than resolved: a beat that</span>
+<span class="sd">    reads as narration while carrying a ``source`` span into another recording.</span>
+<span class="sd">    A clip mis-imported as narration becomes a segment the studio offers to</span>
+<span class="sd">    re-synthesize and replace — and on these productions that clip is a</span>
+<span class="sd">    commercial master. Getting this wrong silently is how a rights posture</span>
+<span class="sd">    becomes a rights incident.</span>
+
+<span class="sd">    &gt;&gt;&gt; from braidio.importing._manifest import BeatRecord</span>
+<span class="sd">    &gt;&gt;&gt; b = lambda **kw: BeatRecord(index=0, start=0.0, end=1.0, **kw)</span>
+<span class="sd">    &gt;&gt;&gt; _beat_role(b(kind="narration")), _beat_role(b(kind="archive"))</span>
+<span class="sd">    ('narration', 'narration')</span>
+<span class="sd">    &gt;&gt;&gt; _beat_role(b(kind="clip", source=(1.0, 2.0))), _beat_role(b(kind="scene-break"))</span>
+<span class="sd">    ('clip', 'break')</span>
+<span class="sd">    &gt;&gt;&gt; _beat_role(b(kind="narration", source=(1.0, 2.0)))</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">    braidio.importing._writer.ImportError_: beat 0 reads as narration...</span>
+<span class="sd">    """</span>
+    <span class="n">kind</span> <span class="o">=</span> <span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">kind</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">_CLIP_KINDS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"clip"</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">_BREAK_KINDS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"break"</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">_DIALOGUE_KINDS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"beat </span><span class="si">{</span><span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2"> is a dialogue exchange, which this importer "</span>
+            <span class="s2">"does not carry: a dialogue-render derives from a dialogue-cast "</span>
+            <span class="s2">"recording which voice speaks each role, and none of the three "</span>
+            <span class="s2">"finished productions has one to read. Importing it without the "</span>
+            <span class="s2">"cast would write a render node whose only parent is missing."</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">beat</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"beat </span><span class="si">{</span><span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2"> reads as narration (kind </span><span class="si">{</span><span class="n">kind</span><span class="si">!r}</span><span class="s2">) but carries "</span>
+            <span class="sa">f</span><span class="s2">"a source span </span><span class="si">{</span><span class="n">beat</span><span class="o">.</span><span class="n">source</span><span class="si">!r}</span><span class="s2"> into another recording. A clip "</span>
+            <span class="s2">"imported as narration becomes a segment a surface offers to "</span>
+            <span class="s2">"re-synthesize — and on these productions that is a commercial "</span>
+            <span class="s2">"master. Declare the kind, or drop the span."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"narration"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_beat_style</span><span class="p">(</span><span class="n">beat</span><span class="p">:</span> <span class="n">BeatRecord</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The delivery style a narration beat's timeline ``kind`` stands in for.</span>
+
+<span class="sd">    &gt;&gt;&gt; from braidio.importing._manifest import BeatRecord</span>
+<span class="sd">    &gt;&gt;&gt; _beat_style(BeatRecord(index=0, kind="archive", start=0.0, end=1.0))</span>
+<span class="sd">    'archive'</span>
+<span class="sd">    &gt;&gt;&gt; _beat_style(BeatRecord(index=0, kind="narration", start=0.0, end=1.0)) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">kind</span> <span class="o">=</span> <span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">kind</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">_NARRATION_KINDS</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">kind</span> <span class="k">else</span> <span class="n">kind</span>
+
+
+<span class="c1">#: What a manifest's own ``gaps`` prose says about the move mapping, and what</span>
+<span class="c1">#: superseded it. The extraction concluded ``drift -&gt; auto`` and that reasoning</span>
+<span class="c1">#: was void before the importer shipped (``burns.choose_move`` became a</span>
+<span class="c1">#: weighted pool, so ``auto`` is a real drift ~40% of the time). The importer</span>
+<span class="c1">#: writes ``push_in`` regardless, so this is a READING hazard rather than a</span>
+<span class="c1">#: behavioural one — but a gap note that contradicts the code is exactly how a</span>
+<span class="c1">#: later reader re-derives the wrong answer with the manifest in hand.</span>
+<span class="n">_SUPERSEDED_GAP_MARKERS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"drift -&gt; auto"</span><span class="p">,</span> <span class="s2">"drift is mapped to auto"</span><span class="p">,</span> <span class="s2">"-&gt; auto"</span><span class="p">)</span>
+
+<span class="n">_GAP_CORRECTION</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"CORRECTION, applied by the importer: this manifest's own `gaps` text "</span>
+    <span class="s2">"still describes the superseded move mapping (drift -&gt; auto). It is void. "</span>
+    <span class="s2">"burns.choose_move is a weighted pool, so 'auto' resolves to a real "</span>
+    <span class="s2">"directional drift about 40</span><span class="si">% o</span><span class="s2">f the time against a source in which every "</span>
+    <span class="s2">"panel pushed in. Every panel was imported as push_in — read the code, not "</span>
+    <span class="s2">"that note. See thorwhalen/braidio#72."</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stale_gap_corrections</span><span class="p">(</span><span class="n">manifest</span><span class="p">:</span> <span class="n">ProductionManifest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Correct, in the report, any gap note that still asserts ``drift -&gt; auto``.</span>
+
+<span class="sd">    &gt;&gt;&gt; from braidio.importing._manifest import ProductionManifest</span>
+<span class="sd">    &gt;&gt;&gt; m = ProductionManifest.model_validate(dict(</span>
+<span class="sd">    ...     production="p", title="P", source_dir="p",</span>
+<span class="sd">    ...     rights=dict(position="private", why="w"),</span>
+<span class="sd">    ...     episode_audio=dict(path="e.mp3", duration_s=1.0),</span>
+<span class="sd">    ...     stills=[], cuts=[], gaps=["MOVE ENCODING. push -&gt; push_in; drift -&gt; auto."]))</span>
+<span class="sd">    &gt;&gt;&gt; len(_stale_gap_corrections(m))</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; m2 = m.model_copy(update={"gaps": ("nothing about moves",)})</span>
+<span class="sd">    &gt;&gt;&gt; _stale_gap_corrections(m2)</span>
+<span class="sd">    []</span>
+<span class="sd">    """</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">gaps</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">marker</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">for</span> <span class="n">marker</span> <span class="ow">in</span> <span class="n">_SUPERSEDED_GAP_MARKERS</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_GAP_CORRECTION</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_imported_cache_key</span><span class="p">(</span><span class="n">production</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">audio_rel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A take's cache key — unmistakable for a computed one. See rule 6.</span>
+
+<span class="sd">    Keyed on the **mix**, not the cut, for the same reason the node ids are:</span>
+<span class="sd">    a beat is a member of an episode, and two cuts made against one mix share</span>
+<span class="sd">    its decomposition rather than each owning a copy of it.</span>
+
+<span class="sd">    &gt;&gt;&gt; _imported_cache_key("two-silences", "data/episodes/two-silences.mp3", 3)</span>
+<span class="sd">    'imported:two-silences:data/episodes/two-silences.mp3:0003'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">IMPORTED_CACHE_KEY_PREFIX</span><span class="si">}{</span><span class="n">production</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">audio_rel</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">index</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">"</span>
+
+
 <span class="c1"># --- the verb ---------------------------------------------------------------</span>
 
 
@@ -1171,8 +1408,34 @@ window.runMermaid = runMermaid;</script>
     <span class="n">source_root</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">copy_media</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">register_artifacts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">materialize_cuts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"delivered"</span><span class="p">,</span>
+    <span class="n">allow_cross_device_copy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImportReport</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Write ``manifest`` into a braidio project at ``project_root``.</span>
+
+<span class="sd">    **All or nothing — when the path did not already exist.** That qualifier</span>
+<span class="sd">    is the whole of the guarantee, and it is deliberately not stronger. A</span>
+<span class="sd">    refusal that fires after the first node is written (an unlinkable blob is</span>
+<span class="sd">    the live case) would otherwise leave a CLI printing "import refused" over</span>
+<span class="sd">    a directory holding a ``project.json``, a graph with one annotation and</span>
+<span class="sd">    some media — the refusal saying nothing happened and the tree saying</span>
+<span class="sd">    otherwise. So a project **this call created** is removed entirely.</span>
+
+<span class="sd">    What is NOT promised, because promising it would mean deleting directories</span>
+<span class="sd">    we did not create:</span>
+
+<span class="sd">    - ``mkdir -p`` the path first — which is how people prepare one — and the</span>
+<span class="sd">      rollback does not fire, so a refusal can leave exactly that half-written</span>
+<span class="sd">      state. Measured.</span>
+<span class="sd">    - A failed **re-import leaves an existing project partially updated**, not</span>
+<span class="sd">      as it was found: annotations written before the failure keep their new</span>
+<span class="sd">      values. A reader who retries expecting a clean slate is wrong. The price</span>
+<span class="sd">      of never deleting somebody's project is that a failed run can leave it</span>
+<span class="sd">      half-changed; re-running the import is how it converges.</span>
+<span class="sd">    - Empty parent directories this call created are left behind. Removing</span>
+<span class="sd">      directories because we also made them is the first step back down the</span>
+<span class="sd">      road that produced the bug this guard exists for.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        manifest: the normalized production (see ``load_manifest``).</span>
@@ -1183,16 +1446,82 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            manifest never stores an absolute path (one committed production</span>
 <span class="sd">            manifest did, in a shared repo — only basenames come forward), so</span>
 <span class="sd">            the caller supplies the root.</span>
-<span class="sd">        copy_media: copy the stills and the episode audio into the project, so</span>
-<span class="sd">            it is self-contained and a fork can hardlink it. The shipped cut</span>
-<span class="sd">            mp4s are always referenced in place: they are the evidence a</span>
-<span class="sd">            re-render is compared against, not an input to one.</span>
+<span class="sd">        copy_media: bring the stills, the episode audio and the narration</span>
+<span class="sd">            takes into the project, so it is self-contained and survives being</span>
+<span class="sd">            moved to a server. See :func:`_place_into` for why this is a copy</span>
+<span class="sd">            and the blob store's link is not.</span>
 <span class="sd">        dry_run: validate everything — files present, licences known, card</span>
-<span class="sd">            weights sufficient, zoom default unmoved — and write nothing.</span>
+<span class="sd">            weights sufficient, zoom default unmoved, beat kinds coherent —</span>
+<span class="sd">            and write nothing.</span>
+<span class="sd">        register_artifacts: register every artifact in the project's delivery</span>
+<span class="sd">            catalog, so ``GET /api/artifacts/{id}/bytes`` answers instead of</span>
+<span class="sd">            404ing. On by default: an unregistered artifact is a file the</span>
+<span class="sd">            graph names and no surface can hand over.</span>
+<span class="sd">        materialize_cuts: which rendered cuts come into the project —</span>
+<span class="sd">            ``"delivered"`` (default; every cut's delivered mp4), ``"all"``</span>
+<span class="sd">            (also the text-free motion passes), or ``"none"`` (reference them</span>
+<span class="sd">            where they are, which means no surface can serve them; reported).</span>
+<span class="sd">        allow_cross_device_copy: permit a real byte copy when the project's</span>
+<span class="sd">            blob store is not on the media's filesystem. Off by default,</span>
+<span class="sd">            because the copy is silent, is the whole production again, and is</span>
+<span class="sd">            rarely what the caller meant.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        an :class:`ImportReport`.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ImportError_: the manifest cannot be imported faithfully.</span>
+<span class="sd">        CatalogBackendMismatch: the host reads artifacts from an object store.</span>
+<span class="sd">        CrossDeviceCatalog: blobs cannot be linked and no copy was authorized.</span>
 <span class="sd">    """</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">project_root</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="c1"># The ONLY safe licence to delete recursively is "this directory did not</span>
+    <span class="c1"># exist when we started", because then everything in it is ours. The</span>
+    <span class="c1"># tempting test — "there is no project.json here, so it is not a project</span>
+    <span class="c1"># yet" — reads a caller-supplied path as consent to destroy it, and the</span>
+    <span class="c1"># refusals that reach this handler are mostly ORDINARY VALIDATION (a</span>
+    <span class="c1"># missing still, an unknown licence, a light context card, a bad crop, a</span>
+    <span class="c1"># duplicate beat index), none of which used to write anything. Under that</span>
+    <span class="c1"># test a manifest with one missing file deletes: a pre-existing directory</span>
+    <span class="c1"># and its subtree; the directory a **--dry-run** was pointed at, whose</span>
+    <span class="c1"># whole contract is to write nothing; and — one argument's typo away, since</span>
+    <span class="c1"># the source root and the project root are separate arguments — the</span>
+    <span class="c1"># irreplaceable source production itself. No gate here can tell a fresh</span>
+    <span class="c1"># path from a wrong one, so the wrong one must survive.</span>
+    <span class="n">existed</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_import_into_project</span><span class="p">(</span>
+            <span class="n">manifest</span><span class="p">,</span>
+            <span class="n">root</span><span class="p">,</span>
+            <span class="n">source_root</span><span class="o">=</span><span class="n">source_root</span><span class="p">,</span>
+            <span class="n">copy_media</span><span class="o">=</span><span class="n">copy_media</span><span class="p">,</span>
+            <span class="n">dry_run</span><span class="o">=</span><span class="n">dry_run</span><span class="p">,</span>
+            <span class="n">register_artifacts</span><span class="o">=</span><span class="n">register_artifacts</span><span class="p">,</span>
+            <span class="n">materialize_cuts</span><span class="o">=</span><span class="n">materialize_cuts</span><span class="p">,</span>
+            <span class="n">allow_cross_device_copy</span><span class="o">=</span><span class="n">allow_cross_device_copy</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
+        <span class="c1"># BaseException, not Exception: a Ctrl-C half-way through a 1 GB import</span>
+        <span class="c1"># leaves exactly the half-written project this exists to prevent, and</span>
+        <span class="c1"># it is the interruption a person is most likely to perform.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">existed</span> <span class="ow">and</span> <span class="n">root</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">raise</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_import_into_project</span><span class="p">(</span>
+    <span class="n">manifest</span><span class="p">:</span> <span class="n">ProductionManifest</span><span class="p">,</span>
+    <span class="n">project_root</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">source_root</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">copy_media</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">register_artifacts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">materialize_cuts</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"delivered"</span><span class="p">,</span>
+    <span class="n">allow_cross_device_copy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImportReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write the manifest. See :func:`import_production` — this is its body."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">nw</span>  <span class="c1"># noqa: F401  (import registers the tiers/transforms)</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.bodies._render_nodes</span><span class="w"> </span><span class="kn">import</span> <span class="n">EPISODE_RENDER_V1</span><span class="p">,</span> <span class="n">RENDER_PROFILE_V1</span>
@@ -1206,7 +1535,11 @@ window.runMermaid = runMermaid;</script>
         <span class="n">VideoCutBodyV1</span><span class="p">,</span>
         <span class="n">VideoPanelBodyV1</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.bodies._render_nodes</span><span class="w"> </span><span class="kn">import</span> <span class="n">EpisodeRenderBodyV1</span><span class="p">,</span> <span class="n">RenderProfileBodyV1</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.bodies._render_nodes</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">NARRATION_SOURCE_TTS</span><span class="p">,</span>
+        <span class="n">EpisodeRenderBodyV1</span><span class="p">,</span>
+        <span class="n">RenderProfileBodyV1</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.rights</span><span class="w"> </span><span class="kn">import</span> <span class="n">PUBLISHABLE_CLIP_RIGHTS</span><span class="p">,</span> <span class="n">Profile</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.transforms._common</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -1222,6 +1555,32 @@ window.runMermaid = runMermaid;</script>
 
     <span class="c1"># --- rule 2: the library default the extraction depended on -------------</span>
     <span class="n">assert_recorded_zoom_default</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">register_artifacts</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">copy_media</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="s2">"copy_media=False cannot be combined with register_artifacts=True. "</span>
+            <span class="s2">"With no copy, the path handed to the catalog IS the source file, "</span>
+            <span class="s2">"so the blob store hardlinks a shared working tree into the "</span>
+            <span class="s2">"project: source, media and blob become one inode, and an "</span>
+            <span class="s2">"in-place rewrite upstream changes the blob's bytes under a "</span>
+            <span class="s2">"digest name that no longer describes them. A catalog whose blobs "</span>
+            <span class="s2">"live in somebody else's tree is not a deliverable project. Take "</span>
+            <span class="s2">"the copy, or pass register_artifacts=False and accept that "</span>
+            <span class="s2">"nothing is retrievable."</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">materialize_cuts</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_MATERIALIZE_CHOICES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"materialize_cuts=</span><span class="si">{</span><span class="n">materialize_cuts</span><span class="si">!r}</span><span class="s2"> is not one of "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_MATERIALIZE_CHOICES</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Up front, beside the other refusals and BEFORE the project exists, so a</span>
+    <span class="c1"># --dry-run reports it and a real run leaves nothing half-written. A</span>
+    <span class="c1"># catalog the host will not read is the one failure this module cannot</span>
+    <span class="c1"># survive quietly.</span>
+    <span class="k">if</span> <span class="n">register_artifacts</span><span class="p">:</span>
+        <span class="n">assert_local_backend</span><span class="p">()</span>
 
     <span class="n">source_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">source_root</span> <span class="ow">or</span> <span class="s2">"."</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
     <span class="n">src</span> <span class="o">=</span> <span class="n">source_root</span> <span class="o">/</span> <span class="n">manifest</span><span class="o">.</span><span class="n">source_dir</span>
@@ -1240,6 +1599,8 @@ window.runMermaid = runMermaid;</script>
         <span class="n">gaps</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">gaps</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="n">report</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MOVE_IMPORT_NOTE</span><span class="p">)</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">NARRATION_REPLACEMENT_NOTE</span><span class="p">)</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">gaps</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_stale_gap_corrections</span><span class="p">(</span><span class="n">manifest</span><span class="p">))</span>
 
     <span class="c1"># --- rule 3: licences, and rule 4: card weights -------------------------</span>
     <span class="n">report</span><span class="o">.</span><span class="n">license_codes</span> <span class="o">=</span> <span class="n">normalized_licenses</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">stills</span><span class="p">)</span>
@@ -1283,6 +1644,75 @@ window.runMermaid = runMermaid;</script>
     <span class="k">if</span> <span class="n">missing_audio</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span><span class="sa">f</span><span class="s2">"episode audio not on disk: </span><span class="si">{</span><span class="n">missing_audio</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
+    <span class="c1"># Two mixes at different source paths but the same BASENAME would be</span>
+    <span class="c1"># placed at one destination, and the second placement would overwrite the</span>
+    <span class="c1"># first — silently, because each episode node's artifact is hashed from</span>
+    <span class="c1"># the destination *after* its own placement, so the second node is right</span>
+    <span class="c1"># and the first ends up pointing at the second's bytes. The productions</span>
+    <span class="c1"># here all differ, so this refuses rather than renaming: a conditional</span>
+    <span class="c1"># name is its own trap (adding a third mix would rename the first two).</span>
+    <span class="n">by_basename</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">audio_paths</span><span class="p">:</span>
+        <span class="n">by_basename</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span>
+    <span class="n">clashes</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">rels</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">rels</span> <span class="ow">in</span> <span class="n">by_basename</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rels</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">clashes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+            <span class="s2">"two mixes share a file name and would overwrite each other in the "</span>
+            <span class="sa">f</span><span class="s2">"project: </span><span class="si">{</span><span class="n">clashes</span><span class="si">}</span><span class="s2">. One episode would end up pointing at the "</span>
+            <span class="s2">"other's audio, with nothing raised. Give them distinct names."</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Beat kinds are classified BEFORE anything is written, so a clip carrying</span>
+    <span class="c1"># a narration kind (or a dialogue we cannot carry) refuses the import</span>
+    <span class="c1"># rather than half-writing a picture track.</span>
+    <span class="n">take_paths</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">cuts</span><span class="p">:</span>
+        <span class="n">seen_index</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">beat</span> <span class="ow">in</span> <span class="n">cut</span><span class="o">.</span><span class="n">beats</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">beat</span><span class="o">.</span><span class="n">index</span> <span class="ow">in</span> <span class="n">seen_index</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"cut </span><span class="si">{</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="si">!r}</span><span class="s2">: two beats share index </span><span class="si">{</span><span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">. "</span>
+                    <span class="s2">"The index is the member's identity and its position in "</span>
+                    <span class="s2">"the episode's play order; a duplicate makes "</span>
+                    <span class="s2">"ordered_member_ids a list that is not the order."</span>
+                <span class="p">)</span>
+            <span class="n">seen_index</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">_beat_role</span><span class="p">(</span><span class="n">beat</span><span class="p">)</span>  <span class="c1"># raises on a contradiction or a dialogue</span>
+            <span class="k">if</span> <span class="n">beat</span><span class="o">.</span><span class="n">take</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="n">src</span> <span class="o">/</span> <span class="n">beat</span><span class="o">.</span><span class="n">take</span><span class="o">.</span><span class="n">path</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+                    <span class="n">report</span><span class="o">.</span><span class="n">takes_missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">take_paths</span><span class="p">[(</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span> <span class="o">=</span> <span class="n">f</span>
+            <span class="k">if</span> <span class="n">beat</span><span class="o">.</span><span class="n">take</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">beat</span><span class="o">.</span><span class="n">take</span><span class="o">.</span><span class="n">source</span> <span class="o">!=</span> <span class="n">NARRATION_SOURCE_TTS</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"cut </span><span class="si">{</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> beat </span><span class="si">{</span><span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">: take source "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">beat</span><span class="o">.</span><span class="n">take</span><span class="o">.</span><span class="n">source</span><span class="si">!r}</span><span class="s2">. An imported take is always 'tts' — "</span>
+                    <span class="s2">"it is what the production synthesized. 'upload' is what a "</span>
+                    <span class="s2">"person's own recording becomes when they replace one, and "</span>
+                    <span class="s2">"claiming it here erases the distinction the field exists "</span>
+                    <span class="s2">"for."</span>
+                <span class="p">)</span>
+
+    <span class="c1"># A member's POSITION in ordered_member_ids is matched against a timeline</span>
+    <span class="c1"># beat's INDEX downstream (braidio.captions.cues_for), so the two must</span>
+    <span class="c1"># agree — which they only do when the indices are contiguous from zero. A</span>
+    <span class="c1"># gap shifts every cue after it onto the wrong beat, silently. Real data is</span>
+    <span class="c1"># contiguous everywhere; nothing checked it.</span>
+    <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">cuts</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cut</span><span class="o">.</span><span class="n">beats</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">cut</span><span class="o">.</span><span class="n">beats</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">indices</span> <span class="o">!=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">))):</span>
+            <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"cut </span><span class="si">{</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="si">!r}</span><span class="s2">: beat indices are </span><span class="si">{</span><span class="n">indices</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">, not "</span>
+                <span class="sa">f</span><span class="s2">"0..</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">. A member's position in "</span>
+                <span class="s2">"ordered_member_ids is matched against a timeline beat's "</span>
+                <span class="s2">"index downstream, so a gap silently shifts every cue after "</span>
+                <span class="s2">"it onto the wrong beat. Renumber, or carry the skipped "</span>
+                <span class="s2">"members."</span>
+            <span class="p">)</span>
+
     <span class="n">report</span><span class="o">.</span><span class="n">untitled_stills</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">key</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">stills</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
     <span class="n">report</span><span class="o">.</span><span class="n">bare_attributions</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
         <span class="n">s</span><span class="o">.</span><span class="n">key</span>
@@ -1310,6 +1740,40 @@ window.runMermaid = runMermaid;</script>
     <span class="n">index</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">nw</span><span class="o">.</span><span class="n">iter_all_annotations</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">root</span><span class="p">)}</span>
     <span class="n">profile</span> <span class="o">=</span> <span class="n">_common_profile</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span>
 
+    <span class="c1"># One timestamp for the whole import, so a re-import produces byte-identical</span>
+    <span class="c1"># rows and the catalog stops churning after the first run.</span>
+    <span class="n">stamped_at</span> <span class="o">=</span> <span class="n">_utc_now_iso</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register</span><span class="p">(</span>
+        <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="n">artifact_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">width</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">height</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">duration_s</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Make one artifact retrievable, if this import was asked to."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">register_artifacts</span><span class="p">:</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">catalog</span><span class="o">.</span><span class="n">unregistered</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="s2">"register_artifacts=False"</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">register_artifact</span><span class="p">(</span>
+            <span class="n">root</span><span class="p">,</span>
+            <span class="n">path</span><span class="p">,</span>
+            <span class="n">artifact_id</span><span class="o">=</span><span class="n">artifact_id</span><span class="p">,</span>
+            <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span>
+            <span class="n">generated_at</span><span class="o">=</span><span class="n">stamped_at</span><span class="p">,</span>
+            <span class="n">report</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">catalog</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
+            <span class="n">duration_s</span><span class="o">=</span><span class="n">duration_s</span><span class="p">,</span>
+            <span class="c1"># The host's own `upload_artifact` puts its `note` into</span>
+            <span class="c1"># `prompt`, so a human-readable note is that field's established</span>
+            <span class="c1"># use for something no model generated — not a claim that one did.</span>
+            <span class="n">note</span><span class="o">=</span><span class="sa">f</span><span class="s2">"imported from </span><span class="si">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">allow_cross_device_copy</span><span class="o">=</span><span class="n">allow_cross_device_copy</span><span class="p">,</span>
+        <span class="p">)</span>
+
     <span class="c1"># --- the rights position, as structured graph data ----------------------</span>
     <span class="n">_upsert</span><span class="p">(</span>
         <span class="n">project</span><span class="p">,</span>
@@ -1334,13 +1798,20 @@ window.runMermaid = runMermaid;</script>
     <span class="k">for</span> <span class="n">still</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">stills</span><span class="p">:</span>
         <span class="n">dest</span> <span class="o">=</span> <span class="n">still_paths</span><span class="p">[</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">copy_media</span><span class="p">:</span>
-            <span class="n">dest</span> <span class="o">=</span> <span class="n">_copy_into</span><span class="p">(</span>
+            <span class="n">dest</span> <span class="o">=</span> <span class="n">_place_into</span><span class="p">(</span>
                 <span class="n">still_paths</span><span class="p">[</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">],</span>
                 <span class="n">root</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"stills"</span><span class="p">,</span>
                 <span class="n">_safe_name</span><span class="p">(</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">)</span> <span class="o">+</span> <span class="n">still_paths</span><span class="p">[</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">suffix</span><span class="p">,</span>
                 <span class="n">report</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="n">artifact</span> <span class="o">=</span> <span class="n">_artifact_for</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"image"</span><span class="p">)</span>
+        <span class="n">_register</span><span class="p">(</span>
+            <span class="n">dest</span><span class="p">,</span>
+            <span class="n">artifact</span><span class="o">.</span><span class="n">asset_id</span><span class="p">,</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">"image"</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">ann_id</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"still"</span><span class="p">,</span> <span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
         <span class="n">still_ids</span><span class="p">[</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ann_id</span>
         <span class="n">body</span> <span class="o">=</span> <span class="n">StillBodyV1</span><span class="p">(</span>
@@ -1350,7 +1821,11 @@ window.runMermaid = runMermaid;</script>
             <span class="n">width</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
             <span class="n">height</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
             <span class="n">title</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
-            <span class="n">license</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">license</span><span class="p">,</span>
+            <span class="c1"># rule 3: the CODE is what a gate compares; the spelling a credit</span>
+            <span class="c1"># reads rides beside it. `license_codes` is keyed only on stills</span>
+            <span class="c1"># that recorded one, so an unlicensed still keeps its None.</span>
+            <span class="n">license</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">license_codes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">still</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">still</span><span class="o">.</span><span class="n">license</span><span class="p">),</span>
+            <span class="n">license_label</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">license</span><span class="p">,</span>
             <span class="n">license_url</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">license_url</span><span class="p">,</span>
             <span class="n">attribution</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">attribution</span><span class="p">,</span>
             <span class="n">source_page_url</span><span class="o">=</span><span class="n">still</span><span class="o">.</span><span class="n">source_page_url</span><span class="p">,</span>
@@ -1380,24 +1855,74 @@ window.runMermaid = runMermaid;</script>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">report</span><span class="o">.</span><span class="n">stills_unchanged</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="c1"># --- the episode audio: one node per distinct mix -----------------------</span>
+    <span class="c1"># --- the episode audio: resolve the mixes, WITHOUT writing them yet -----</span>
+    <span class="c1"># The episode node carries its members and derives from them, so it cannot</span>
+    <span class="c1"># be written until each cut's beats have been. Resolving the files here</span>
+    <span class="c1"># keeps the ids deterministic and available to everything below.</span>
     <span class="n">episode_ids</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">episode_assets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">episode_dests</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">durations</span> <span class="o">=</span> <span class="p">{</span><span class="n">manifest</span><span class="o">.</span><span class="n">episode_audio</span><span class="o">.</span><span class="n">path</span><span class="p">:</span> <span class="n">manifest</span><span class="o">.</span><span class="n">episode_audio</span><span class="o">.</span><span class="n">duration_s</span><span class="p">}</span>
     <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">cuts</span><span class="p">:</span>
         <span class="n">durations</span><span class="p">[</span><span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">duration_s</span>
     <span class="k">for</span> <span class="n">rel</span><span class="p">,</span> <span class="n">srcfile</span> <span class="ow">in</span> <span class="n">audio_paths</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">dest</span> <span class="o">=</span> <span class="n">srcfile</span>
         <span class="k">if</span> <span class="n">copy_media</span><span class="p">:</span>
-            <span class="n">dest</span> <span class="o">=</span> <span class="n">_copy_into</span><span class="p">(</span>
+            <span class="n">dest</span> <span class="o">=</span> <span class="n">_place_into</span><span class="p">(</span>
                 <span class="n">srcfile</span><span class="p">,</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"episodes"</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">report</span>
             <span class="p">)</span>
         <span class="n">artifact</span> <span class="o">=</span> <span class="n">_artifact_for</span><span class="p">(</span>
             <span class="n">dest</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"audio"</span><span class="p">,</span> <span class="n">mime</span><span class="o">=</span><span class="s2">"audio/mpeg"</span><span class="p">,</span> <span class="n">duration_s</span><span class="o">=</span><span class="n">durations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">ann_id</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"episode"</span><span class="p">,</span> <span class="n">rel</span><span class="p">)</span>
-        <span class="n">episode_ids</span><span class="p">[</span><span class="n">rel</span><span class="p">]</span> <span class="o">=</span> <span class="n">ann_id</span>
+        <span class="n">_register</span><span class="p">(</span>
+            <span class="n">dest</span><span class="p">,</span>
+            <span class="n">artifact</span><span class="o">.</span><span class="n">asset_id</span><span class="p">,</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">"audio"</span><span class="p">,</span>
+            <span class="n">duration_s</span><span class="o">=</span><span class="n">durations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rel</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">episode_ids</span><span class="p">[</span><span class="n">rel</span><span class="p">]</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"episode"</span><span class="p">,</span> <span class="n">rel</span><span class="p">)</span>
         <span class="n">episode_assets</span><span class="p">[</span><span class="n">rel</span><span class="p">]</span> <span class="o">=</span> <span class="n">artifact</span><span class="o">.</span><span class="n">asset_id</span>
+        <span class="n">episode_dests</span><span class="p">[</span><span class="n">rel</span><span class="p">]</span> <span class="o">=</span> <span class="n">dest</span>
+
+    <span class="c1"># --- per cut: the script's beats and the takes that played them ---------</span>
+    <span class="n">members_by_audio</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">beats_by_audio</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">cuts</span><span class="p">:</span>
+        <span class="n">members</span> <span class="o">=</span> <span class="n">_import_beats</span><span class="p">(</span>
+            <span class="n">project</span><span class="p">,</span>
+            <span class="n">index</span><span class="p">,</span>
+            <span class="n">manifest</span><span class="p">,</span>
+            <span class="n">cut</span><span class="p">,</span>
+            <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+            <span class="n">copy_media</span><span class="o">=</span><span class="n">copy_media</span><span class="p">,</span>
+            <span class="n">take_paths</span><span class="o">=</span><span class="n">take_paths</span><span class="p">,</span>
+            <span class="n">report</span><span class="o">=</span><span class="n">report</span><span class="p">,</span>
+            <span class="n">register</span><span class="o">=</span><span class="n">_register</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">rel</span> <span class="o">=</span> <span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span>
+        <span class="c1"># Compare the beats THEMSELVES, never the member ids. An id is</span>
+        <span class="c1"># ``_mint(production, role, mix, index)`` — a pure function of position</span>
+        <span class="c1"># — so two cuts with the same indices and roles mint the *same* ids</span>
+        <span class="c1"># however different their words and their takes are. An id comparison</span>
+        <span class="c1"># therefore passes exactly when it should refuse, and the second cut</span>
+        <span class="c1"># silently overwrites the first's beat bodies and its take files while</span>
+        <span class="c1"># the report says both were written.</span>
+        <span class="n">fingerprint</span> <span class="o">=</span> <span class="n">_beats_fingerprint</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">beats</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">beats_by_audio</span> <span class="ow">and</span> <span class="n">beats_by_audio</span><span class="p">[</span><span class="n">rel</span><span class="p">]</span> <span class="o">!=</span> <span class="n">fingerprint</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ImportError_</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"two cuts render against the same mix (</span><span class="si">{</span><span class="n">rel</span><span class="si">!r}</span><span class="s2">) but describe "</span>
+                <span class="s2">"different beats. A beat is a member of the EPISODE, so one "</span>
+                <span class="s2">"mix has one decomposition and one play order; two cuts of it "</span>
+                <span class="s2">"share that rather than each owning a copy. Reconcile the two "</span>
+                <span class="s2">"beat lists, or give each cut its own mix."</span>
+            <span class="p">)</span>
+        <span class="n">beats_by_audio</span><span class="p">[</span><span class="n">rel</span><span class="p">]</span> <span class="o">=</span> <span class="n">fingerprint</span>
+        <span class="n">members_by_audio</span><span class="p">[</span><span class="n">rel</span><span class="p">]</span> <span class="o">=</span> <span class="n">members</span>
+
+    <span class="c1"># --- the episode nodes, now that they have members ----------------------</span>
+    <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">audio_paths</span><span class="p">:</span>
+        <span class="n">members</span> <span class="o">=</span> <span class="n">members_by_audio</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rel</span><span class="p">,</span> <span class="p">())</span>
+        <span class="n">ann_id</span> <span class="o">=</span> <span class="n">episode_ids</span><span class="p">[</span><span class="n">rel</span><span class="p">]</span>
         <span class="n">_upsert</span><span class="p">(</span>
             <span class="n">project</span><span class="p">,</span>
             <span class="n">Annotation</span><span class="p">(</span>
@@ -1406,14 +1931,17 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">reference</span><span class="o">=</span><span class="n">_node_ref</span><span class="p">(</span><span class="n">TIER_EPISODE_RENDER</span><span class="p">,</span> <span class="n">ann_id</span><span class="p">),</span>
                 <span class="n">body</span><span class="o">=</span><span class="n">EpisodeRenderBodyV1</span><span class="p">(</span>
                     <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span>
-                    <span class="n">ordered_member_ids</span><span class="o">=</span><span class="p">(),</span>
-                    <span class="n">artifact_id</span><span class="o">=</span><span class="n">artifact</span><span class="o">.</span><span class="n">asset_id</span><span class="p">,</span>
-                    <span class="n">url</span><span class="o">=</span><span class="n">file_url</span><span class="p">(</span><span class="n">dest</span><span class="p">),</span>
+                    <span class="n">ordered_member_ids</span><span class="o">=</span><span class="n">members</span><span class="p">,</span>
+                    <span class="n">artifact_id</span><span class="o">=</span><span class="n">episode_assets</span><span class="p">[</span><span class="n">rel</span><span class="p">],</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">file_url</span><span class="p">(</span><span class="n">episode_dests</span><span class="p">[</span><span class="n">rel</span><span class="p">]),</span>
                     <span class="n">duration_s</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">durations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">),</span>
-                    <span class="n">timeline</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">timeline</span><span class="o">=</span><span class="n">_timeline_for</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">rel</span><span class="p">),</span>
                 <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
                 <span class="n">body_schema_uri</span><span class="o">=</span><span class="n">EPISODE_RENDER_V1</span><span class="p">,</span>
-                <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">(),</span>
+                <span class="c1"># The mix derives from its members, which is what makes</span>
+                <span class="c1"># "replace this take" read as stale through the picture track</span>
+                <span class="c1"># rather than as a change nothing notices.</span>
+                <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">([</span><span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">members</span><span class="p">]),</span>
             <span class="p">),</span>
             <span class="n">index</span><span class="p">,</span>
         <span class="p">)</span>
@@ -1491,12 +2019,29 @@ window.runMermaid = runMermaid;</script>
             <span class="n">motion_file</span> <span class="o">=</span> <span class="n">src</span> <span class="o">/</span> <span class="n">cut</span><span class="o">.</span><span class="n">motion_artifact</span>
             <span class="k">if</span> <span class="n">motion_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
                 <span class="n">motion_id</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"cut"</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="s2">"motion"</span><span class="p">)</span>
+                <span class="n">motion_file</span> <span class="o">=</span> <span class="n">_materialize_cut</span><span class="p">(</span>
+                    <span class="n">motion_file</span><span class="p">,</span>
+                    <span class="n">root</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">motion_id</span><span class="si">}</span><span class="s2">_motion.mp4"</span><span class="p">,</span>
+                    <span class="n">stage</span><span class="o">=</span><span class="s2">"motion"</span><span class="p">,</span>
+                    <span class="n">mode</span><span class="o">=</span><span class="n">materialize_cuts</span><span class="p">,</span>
+                    <span class="n">report</span><span class="o">=</span><span class="n">report</span><span class="p">,</span>
+                <span class="p">)</span>
                 <span class="n">motion_art</span> <span class="o">=</span> <span class="n">_artifact_for</span><span class="p">(</span>
                     <span class="n">motion_file</span><span class="p">,</span>
                     <span class="n">kind</span><span class="o">=</span><span class="s2">"video"</span><span class="p">,</span>
                     <span class="n">mime</span><span class="o">=</span><span class="s2">"video/mp4"</span><span class="p">,</span>
                     <span class="n">duration_s</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">duration_s</span><span class="p">,</span>
                 <span class="p">)</span>
+                <span class="k">if</span> <span class="n">_is_inside</span><span class="p">(</span><span class="n">motion_file</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+                    <span class="n">_register</span><span class="p">(</span>
+                        <span class="n">motion_file</span><span class="p">,</span>
+                        <span class="n">motion_art</span><span class="o">.</span><span class="n">asset_id</span><span class="p">,</span>
+                        <span class="n">kind</span><span class="o">=</span><span class="s2">"video"</span><span class="p">,</span>
+                        <span class="n">width</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
+                        <span class="n">height</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
+                        <span class="n">duration_s</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">duration_s</span><span class="p">,</span>
+                    <span class="p">)</span>
                 <span class="n">_upsert</span><span class="p">(</span>
                     <span class="n">project</span><span class="p">,</span>
                     <span class="n">Annotation</span><span class="p">(</span>
@@ -1534,19 +2079,49 @@ window.runMermaid = runMermaid;</script>
         <span class="n">delivered_file</span> <span class="o">=</span> <span class="n">src</span> <span class="o">/</span> <span class="n">cut</span><span class="o">.</span><span class="n">artifact</span>
         <span class="n">captions_id</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">cut</span><span class="o">.</span><span class="n">captions</span> <span class="ow">and</span> <span class="p">(</span><span class="n">src</span> <span class="o">/</span> <span class="n">cut</span><span class="o">.</span><span class="n">captions</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-            <span class="n">captions_id</span> <span class="o">=</span> <span class="n">_artifact_for</span><span class="p">(</span>
-                <span class="n">src</span> <span class="o">/</span> <span class="n">cut</span><span class="o">.</span><span class="n">captions</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"text"</span><span class="p">,</span> <span class="n">mime</span><span class="o">=</span><span class="s2">"application/x-subrip"</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">asset_id</span>
-        <span class="n">delivered_art</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">_artifact_for</span><span class="p">(</span>
+            <span class="n">captions_file</span> <span class="o">=</span> <span class="n">src</span> <span class="o">/</span> <span class="n">cut</span><span class="o">.</span><span class="n">captions</span>
+            <span class="c1"># The sidecar rides with its film. Bringing the .srt in while</span>
+            <span class="c1"># leaving the mp4 outside the project is the one combination that</span>
+            <span class="c1"># helps nobody — captions for a video no surface can serve.</span>
+            <span class="k">if</span> <span class="n">copy_media</span> <span class="ow">and</span> <span class="n">materialize_cuts</span> <span class="o">!=</span> <span class="s2">"none"</span><span class="p">:</span>
+                <span class="n">captions_file</span> <span class="o">=</span> <span class="n">_place_into</span><span class="p">(</span>
+                    <span class="n">captions_file</span><span class="p">,</span>
+                    <span class="n">root</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"cuts"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">delivered_id</span><span class="si">}</span><span class="s2">.srt"</span><span class="p">,</span>
+                    <span class="n">report</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">captions_art</span> <span class="o">=</span> <span class="n">_artifact_for</span><span class="p">(</span>
+                <span class="n">captions_file</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"text"</span><span class="p">,</span> <span class="n">mime</span><span class="o">=</span><span class="s2">"application/x-subrip"</span>
+            <span class="p">)</span>
+            <span class="n">captions_id</span> <span class="o">=</span> <span class="n">captions_art</span><span class="o">.</span><span class="n">asset_id</span>
+            <span class="c1"># Reported unregistered rather than coerced: the catalog's kinds</span>
+            <span class="c1"># are image/video/audio/json, and an .srt is none of them.</span>
+            <span class="n">_register</span><span class="p">(</span><span class="n">captions_file</span><span class="p">,</span> <span class="n">captions_id</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"text"</span><span class="p">)</span>
+        <span class="n">delivered_art</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">delivered_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="n">delivered_file</span> <span class="o">=</span> <span class="n">_materialize_cut</span><span class="p">(</span>
+                <span class="n">delivered_file</span><span class="p">,</span>
+                <span class="n">root</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">delivered_id</span><span class="si">}</span><span class="s2">.mp4"</span><span class="p">,</span>
+                <span class="n">stage</span><span class="o">=</span><span class="s2">"delivered"</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="n">materialize_cuts</span><span class="p">,</span>
+                <span class="n">report</span><span class="o">=</span><span class="n">report</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">delivered_art</span> <span class="o">=</span> <span class="n">_artifact_for</span><span class="p">(</span>
                 <span class="n">delivered_file</span><span class="p">,</span>
                 <span class="n">kind</span><span class="o">=</span><span class="s2">"video"</span><span class="p">,</span>
                 <span class="n">mime</span><span class="o">=</span><span class="s2">"video/mp4"</span><span class="p">,</span>
                 <span class="n">duration_s</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">duration_s</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="n">delivered_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
-            <span class="k">else</span> <span class="kc">None</span>
-        <span class="p">)</span>
+            <span class="k">if</span> <span class="n">_is_inside</span><span class="p">(</span><span class="n">delivered_file</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+                <span class="n">_register</span><span class="p">(</span>
+                    <span class="n">delivered_file</span><span class="p">,</span>
+                    <span class="n">delivered_art</span><span class="o">.</span><span class="n">asset_id</span><span class="p">,</span>
+                    <span class="n">kind</span><span class="o">=</span><span class="s2">"video"</span><span class="p">,</span>
+                    <span class="n">width</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
+                    <span class="n">height</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
+                    <span class="n">duration_s</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">duration_s</span><span class="p">,</span>
+                <span class="p">)</span>
         <span class="n">parents</span> <span class="o">=</span> <span class="p">[</span>
             <span class="o">*</span><span class="p">([</span><span class="n">motion_id</span><span class="p">]</span> <span class="k">if</span> <span class="n">motion_id</span> <span class="k">else</span> <span class="p">[]),</span>
             <span class="o">*</span><span class="n">label_ids</span><span class="p">,</span>
@@ -1568,7 +2143,7 @@ window.runMermaid = runMermaid;</script>
                     <span class="n">panel_ids</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">panel_ids</span><span class="p">),</span>
                     <span class="n">cache_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">artifact_id</span><span class="o">=</span><span class="n">delivered_art</span><span class="o">.</span><span class="n">asset_id</span> <span class="k">if</span> <span class="n">delivered_art</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                    <span class="n">url</span><span class="o">=</span><span class="n">file_url</span><span class="p">(</span><span class="n">delivered_file</span><span class="p">)</span> <span class="k">if</span> <span class="n">delivered_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">file_url</span><span class="p">(</span><span class="n">delivered_file</span><span class="p">)</span> <span class="k">if</span> <span class="n">delivered_art</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
                     <span class="n">duration_s</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">duration_s</span><span class="p">,</span>
                     <span class="n">width</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
                     <span class="n">height</span><span class="o">=</span><span class="n">cut</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
@@ -1586,8 +2161,403 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">cut</span><span class="o">.</span><span class="n">published</span> <span class="ow">and</span> <span class="n">cut</span><span class="o">.</span><span class="n">published</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">):</span>
             <span class="n">report</span><span class="o">.</span><span class="n">published_links</span><span class="p">[</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">published</span><span class="p">[</span><span class="s2">"url"</span><span class="p">])</span>
 
-    <span class="k">return</span> <span class="n">report</span></div>
+    <span class="k">return</span> <span class="n">report</span>
 
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_place_into</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">ImportReport</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Copy ``src`` to ``folder/name`` — the project takes its own bytes.</span>
+
+<span class="sd">    A project has to be **self-contained**: a body pointing at a path outside</span>
+<span class="sd">    it is a reference the server it gets rsynced to cannot resolve, which is</span>
+<span class="sd">    how three finished films arrived somewhere they could be read and not</span>
+<span class="sd">    watched. So the bytes come in.</span>
+
+<span class="sd">    They come in by **copy, not by hardlink**, and that is a decision with a</span>
+<span class="sd">    measured reason. A same-volume link would make the project free, and the</span>
+<span class="sd">    blob store below does exactly that — but the blob store links *within* the</span>
+<span class="sd">    project, where the filename IS the digest, so a shared inode can only ever</span>
+<span class="sd">    be rewritten with identical bytes. That argument does not transfer here.</span>
+<span class="sd">    These sources live in shared working trees (one is a git checkout, all</span>
+<span class="sd">    three are inside a syncing folder), and a link makes the source, the</span>
+<span class="sd">    project's media and the blob **one inode**: an in-place rewrite upstream</span>
+<span class="sd">    silently rewrites the project's copy *and* the blob, under a digest name</span>
+<span class="sd">    that no longer describes its bytes, and content-addressing quietly stops</span>
+<span class="sd">    holding. A rename-based writer (git checkout, an atomic save) breaks the</span>
+<span class="sd">    link harmlessly; a truncating one does not, and nothing here can tell</span>
+<span class="sd">    which a given tool is.</span>
+
+<span class="sd">    So the copy is the price of the project owning its bytes. The saving that</span>
+<span class="sd">    matters is kept: the blob store hardlinks from this copy, so registering</span>
+<span class="sd">    an artifact still costs nothing.</span>
+<span class="sd">    """</span>
+    <span class="n">folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">dest</span> <span class="o">=</span> <span class="n">folder</span> <span class="o">/</span> <span class="n">name</span>
+    <span class="k">if</span> <span class="n">_same_content</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dest</span>
+    <span class="c1"># UNLINK FIRST — this line is load-bearing, not tidy. Once an artifact has</span>
+    <span class="c1"># been registered, ``blobs/&lt;sha256&gt;`` is a hardlink to this very inode, and</span>
+    <span class="c1"># ``copy2`` opens its destination for writing rather than replacing it. So</span>
+    <span class="c1"># copying over an existing file writes the new bytes THROUGH the blob: the</span>
+    <span class="c1"># blob's contents change under a digest name that no longer describes them,</span>
+    <span class="c1"># content-addressing quietly stops holding, and the host answers 200 with</span>
+    <span class="c1"># the wrong picture under the old id. Breaking the link first means the</span>
+    <span class="c1"># copy lands on a fresh inode and the old blob keeps the bytes it is named</span>
+    <span class="c1"># for. The case is the ordinary one — a better scan of a still arrives and</span>
+    <span class="c1"># the production is re-imported.</span>
+    <span class="n">dest</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">media_copied</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">bytes_copied</span> <span class="o">+=</span> <span class="n">dest</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span>
+    <span class="k">return</span> <span class="n">dest</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_same_content</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">dest</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Is ``dest`` already this exact file? — size AND modification time.</span>
+
+<span class="sd">    Size alone is not enough, and the difference is not theoretical: a still</span>
+<span class="sd">    replaced by a genuinely different image of the same byte length would be</span>
+<span class="sd">    skipped, the project would keep the old bytes, and the report would say</span>
+<span class="sd">    ``stills_written=0`` — so "a re-import is a no-op" would be unfalsifiable,</span>
+<span class="sd">    unable to distinguish "nothing changed" from "the change was invisible to</span>
+<span class="sd">    the check". ``copy2`` preserves mtime, so comparing both is exact for</span>
+<span class="sd">    anything this function itself wrote and is rsync's own heuristic besides.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dest</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">stat</span><span class="p">(),</span> <span class="n">dest</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">st_size</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">st_size</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_inside</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Is ``path`` under ``root``? — i.e. did the project actually take it in.</span>
+
+<span class="sd">    &gt;&gt;&gt; _is_inside(Path("/a/b/c.mp4"), Path("/a"))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; _is_inside(Path("/x/c.mp4"), Path("/a"))</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_materialize_cut</span><span class="p">(</span>
+    <span class="n">src_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">stage</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">ImportReport</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Bring a rendered cut into the project — or, on ``"none"``, say it is not.</span>
+
+<span class="sd">    Named ``{annotation id}.mp4`` / ``{annotation id}_motion.mp4``, which is</span>
+<span class="sd">    exactly what ``video_cut.render`` / ``.finish`` write into ``data/cuts``.</span>
+<span class="sd">    That is not cosmetic: ``braidio.downloads`` lists a project's deliverables</span>
+<span class="sd">    by scanning that directory and reads the stage off the file name, so an</span>
+<span class="sd">    imported cut appears there on the same terms as a rendered one, and the</span>
+<span class="sd">    fix lands on two doors instead of one.</span>
+
+<span class="sd">    The mp4s are the largest thing an import moves (about 1.1 GB across the</span>
+<span class="sd">    three productions, delivered-only), so a same-volume hardlink is what</span>
+<span class="sd">    makes this affordable — see :func:`_place_into`.</span>
+<span class="sd">    """</span>
+    <span class="n">wanted</span> <span class="o">=</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"all"</span> <span class="ow">or</span> <span class="p">(</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"delivered"</span> <span class="ow">and</span> <span class="n">stage</span> <span class="o">==</span> <span class="s2">"delivered"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">wanted</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">catalog</span><span class="o">.</span><span class="n">unregistered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">src_file</span><span class="p">),</span>
+                <span class="sa">f</span><span class="s2">"materialize_cuts=</span><span class="si">{</span><span class="n">mode</span><span class="si">!r}</span><span class="s2"> leaves the </span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2"> cut where it is, "</span>
+                <span class="s2">"so no surface can serve it and the path will not exist on "</span>
+                <span class="s2">"another machine"</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">src_file</span>
+    <span class="k">return</span> <span class="n">_place_into</span><span class="p">(</span><span class="n">src_file</span><span class="p">,</span> <span class="n">root</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"cuts"</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_utc_now_iso</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``'2026-09-20T12:34:56Z'`` — the catalog's ``generated_at`` spelling."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%SZ"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_beats_fingerprint</span><span class="p">(</span><span class="n">beats</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Everything about a cut's beats that two cuts sharing a mix must agree on.</span>
+
+<span class="sd">    Deliberately the CONTENT, not the ids: an id is a pure function of</span>
+<span class="sd">    (production, role, mix, index), so two cuts with the same indices mint the</span>
+<span class="sd">    same ids no matter how different their words are. Comparing ids answers a</span>
+<span class="sd">    question nobody asked.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">beats</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">)],</span>
+        <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_breakdown_from_beats</span><span class="p">(</span><span class="n">beats</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A ``TimelineBreakdown.to_dict()`` built from a cut's normalized beats.</span>
+
+<span class="sd">    ``settings`` is **null** rather than invented: an imported production's</span>
+<span class="sd">    render settings are usually not on disk, and a fabricated settings block</span>
+<span class="sd">    is exactly the kind of plausible record that makes a later reader trust a</span>
+<span class="sd">    number nobody measured. ``from_dict`` recomputes ``totals`` and</span>
+<span class="sd">    ``duration`` from the beats, so only the beats have to be right.</span>
+<span class="sd">    """</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="s2">"kind"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">kind</span> <span class="ow">or</span> <span class="s2">"narration"</span><span class="p">,</span>
+            <span class="s2">"label"</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">label</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"source"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">source</span><span class="p">)</span> <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">source</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"duration"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">end</span><span class="p">)</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">start</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span>
+            <span class="s2">"start"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">start</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span>
+            <span class="s2">"end"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">end</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">beats</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">totals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">totals</span><span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">totals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">r</span><span class="p">[</span><span class="s2">"duration"</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"title"</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
+        <span class="s2">"duration"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="nb">max</span><span class="p">((</span><span class="n">r</span><span class="p">[</span><span class="s2">"end"</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="s2">"totals"</span><span class="p">:</span> <span class="n">totals</span><span class="p">,</span>
+        <span class="s2">"settings"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"beats"</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_timeline_for</span><span class="p">(</span><span class="n">manifest</span><span class="p">:</span> <span class="n">ProductionManifest</span><span class="p">,</span> <span class="n">audio_rel</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The ``TimelineBreakdown`` for the cut rendered against ``audio_rel``.</span>
+
+<span class="sd">    **An episode node with members must always carry one.** This is not a</span>
+<span class="sd">    preference: ``braidio.transforms.episode_timeline`` reads a persisted</span>
+<span class="sd">    breakdown when there is one and otherwise *reconstructs*, and the</span>
+<span class="sd">    reconstruction needs a ``weave-config`` node that an imported project does</span>
+<span class="sd">    not have — so it does not degrade, it **raises**, taking panel planning</span>
+<span class="sd">    (``video_panels.plan``) and cut rendering (``video_cut.render``) with it</span>
+<span class="sd">    for that whole production. A manifest that recorded no timeline of its own</span>
+<span class="sd">    therefore gets one built from its beats, which are the same facts in the</span>
+<span class="sd">    same shape.</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">cut</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">cuts</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span> <span class="o">!=</span> <span class="n">audio_rel</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">cut</span><span class="o">.</span><span class="n">timeline</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">timeline</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cut</span><span class="o">.</span><span class="n">beats</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_breakdown_from_beats</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">beats</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">manifest</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_import_beats</span><span class="p">(</span>
+    <span class="n">project</span><span class="p">,</span>
+    <span class="n">index</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="n">manifest</span><span class="p">:</span> <span class="n">ProductionManifest</span><span class="p">,</span>
+    <span class="n">cut</span><span class="p">:</span> <span class="n">CutRecord</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">copy_media</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">take_paths</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Path</span><span class="p">],</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">ImportReport</span><span class="p">,</span>
+    <span class="n">register</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Write one cut's beats and takes; return its episode's member ids.</span>
+
+<span class="sd">    This is what makes a narration segment a thing at all. Before it, the only</span>
+<span class="sd">    audio-side node an imported production had was the finished mix, so "which</span>
+<span class="sd">    part of this is the narration, and can I swap it" had no referent — the</span>
+<span class="sd">    studio was right to decline to draw a button for it.</span>
+
+<span class="sd">    One node per timeline member, because ``ordered_member_ids`` is the</span>
+<span class="sd">    episode's **play order** and a list missing a member is not one:</span>
+
+<span class="sd">    - **narration** (including a beat whose timeline ``kind`` is really a</span>
+<span class="sd">      delivery style) → a ``narrative-beat/v1`` carrying the authored text,</span>
+<span class="sd">      plus a ``narration-render/v1`` carrying the take. The render derives from</span>
+<span class="sd">      the beat, so editing the words stales the recording — which is the</span>
+<span class="sd">      relationship the whole feature rests on.</span>
+<span class="sd">    - **clip / archive-with-a-source** → a ``segment-extraction/v1``. No</span>
+<span class="sd">      ``audio-clip/v1`` parent is invented: that would need a source-media node</span>
+<span class="sd">      naming a recording this import cannot witness, and a fabricated parent is</span>
+<span class="sd">      worse than an honest root.</span>
+<span class="sd">    - **scene break** → the ``scene-break/v1`` authoring node, which *is* the</span>
+<span class="sd">      member (a break has no render node — the boundary is the decision).</span>
+
+<span class="sd">    Ids are minted from ``(production, cut label, index)``, so a re-import</span>
+<span class="sd">    addresses the same nodes and a no-op re-import writes nothing.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.bodies._domain</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">NARRATIVE_BEAT_V1</span><span class="p">,</span>
+        <span class="n">SCENE_BREAK_V1</span><span class="p">,</span>
+        <span class="n">NarrativeBeatBodyV1</span><span class="p">,</span>
+        <span class="n">SceneBreakBodyV1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.bodies._render_nodes</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">NARRATION_RENDER_V1</span><span class="p">,</span>
+        <span class="n">NARRATION_SOURCE_TTS</span><span class="p">,</span>
+        <span class="n">SEGMENT_EXTRACTION_V1</span><span class="p">,</span>
+        <span class="n">NarrationRenderBodyV1</span><span class="p">,</span>
+        <span class="n">SegmentExtractionBodyV1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">braidio.transforms._common</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">TIER_NARRATION_RENDER</span><span class="p">,</span>
+        <span class="n">TIER_NARRATIVE_BEAT</span><span class="p">,</span>
+        <span class="n">TIER_SCENE_BREAK</span><span class="p">,</span>
+        <span class="n">TIER_SEGMENT_EXTRACTION</span><span class="p">,</span>
+        <span class="n">beat_id</span> <span class="k">as</span> <span class="n">beat_identity</span><span class="p">,</span>
+        <span class="n">file_url</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">lacing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotation</span>
+
+    <span class="n">members</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"narration"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"clip"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"break"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="n">takes</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">beat</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">beats</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+        <span class="n">role</span> <span class="o">=</span> <span class="n">_beat_role</span><span class="p">(</span><span class="n">beat</span><span class="p">)</span>
+        <span class="n">counts</span><span class="p">[</span><span class="n">role</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">ident</span> <span class="o">=</span> <span class="n">beat_identity</span><span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="s2">"break"</span><span class="p">:</span>
+            <span class="n">bid</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"break"</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">_upsert</span><span class="p">(</span>
+                <span class="n">project</span><span class="p">,</span>
+                <span class="n">Annotation</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="n">bid</span><span class="p">,</span>
+                    <span class="n">tier</span><span class="o">=</span><span class="n">TIER_SCENE_BREAK</span><span class="p">,</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="n">_node_ref</span><span class="p">(</span><span class="n">TIER_SCENE_BREAK</span><span class="p">,</span> <span class="n">bid</span><span class="p">),</span>
+                    <span class="n">body</span><span class="o">=</span><span class="n">SceneBreakBodyV1</span><span class="p">(</span>
+                        <span class="n">beat_id</span><span class="o">=</span><span class="n">ident</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">beat</span><span class="o">.</span><span class="n">label</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="n">beat</span><span class="o">.</span><span class="n">marker</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
+                    <span class="n">body_schema_uri</span><span class="o">=</span><span class="n">SCENE_BREAK_V1</span><span class="p">,</span>
+                    <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">(),</span>
+                <span class="p">),</span>
+                <span class="n">index</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">bid</span><span class="p">))</span>
+            <span class="k">continue</span>
+
+        <span class="n">take_path</span> <span class="o">=</span> <span class="n">take_paths</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+        <span class="n">dest</span> <span class="o">=</span> <span class="n">take_path</span>
+        <span class="n">artifact</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">take_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">copy_media</span><span class="p">:</span>
+                <span class="n">dest</span> <span class="o">=</span> <span class="n">_place_into</span><span class="p">(</span>
+                    <span class="n">take_path</span><span class="p">,</span>
+                    <span class="n">root</span> <span class="o">/</span> <span class="s2">"data"</span> <span class="o">/</span> <span class="s2">"tts"</span><span class="p">,</span>
+                    <span class="n">_safe_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">-beat</span><span class="si">{</span><span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">take_path</span><span class="o">.</span><span class="n">suffix</span><span class="p">,</span>
+                    <span class="n">report</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">beat</span><span class="o">.</span><span class="n">take</span><span class="o">.</span><span class="n">duration_s</span>
+                <span class="k">if</span> <span class="n">beat</span><span class="o">.</span><span class="n">take</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">beat</span><span class="o">.</span><span class="n">take</span><span class="o">.</span><span class="n">duration_s</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="nb">round</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="n">beat</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">artifact</span> <span class="o">=</span> <span class="n">_artifact_for</span><span class="p">(</span>
+                <span class="n">dest</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"audio"</span><span class="p">,</span> <span class="n">mime</span><span class="o">=</span><span class="s2">"audio/mpeg"</span><span class="p">,</span> <span class="n">duration_s</span><span class="o">=</span><span class="n">duration</span>
+            <span class="p">)</span>
+            <span class="n">register</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">artifact</span><span class="o">.</span><span class="n">asset_id</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"audio"</span><span class="p">,</span> <span class="n">duration_s</span><span class="o">=</span><span class="n">duration</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">beat</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="n">beat</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="s2">"clip"</span><span class="p">:</span>
+            <span class="n">sid</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"segment"</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="c1"># No invented span. One production's driver never persisted where</span>
+            <span class="c1"># in the master each clip was cut from, and (0.0, duration) reads</span>
+            <span class="c1"># exactly like a real cut from the head of somebody else's</span>
+            <span class="c1"># recording — a false claim about third-party material, which is</span>
+            <span class="c1"># the worst place to make one.</span>
+            <span class="n">recorded</span> <span class="o">=</span> <span class="n">beat</span><span class="o">.</span><span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">start_s</span><span class="p">,</span> <span class="n">end_s</span> <span class="o">=</span> <span class="n">beat</span><span class="o">.</span><span class="n">source</span> <span class="k">if</span> <span class="n">recorded</span> <span class="k">else</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">recorded</span><span class="p">:</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">segments_without_source</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">_upsert</span><span class="p">(</span>
+                <span class="n">project</span><span class="p">,</span>
+                <span class="n">Annotation</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="n">sid</span><span class="p">,</span>
+                    <span class="n">tier</span><span class="o">=</span><span class="n">TIER_SEGMENT_EXTRACTION</span><span class="p">,</span>
+                    <span class="n">reference</span><span class="o">=</span><span class="n">_node_ref</span><span class="p">(</span><span class="n">TIER_SEGMENT_EXTRACTION</span><span class="p">,</span> <span class="n">sid</span><span class="p">),</span>
+                    <span class="n">body</span><span class="o">=</span><span class="n">SegmentExtractionBodyV1</span><span class="p">(</span>
+                        <span class="n">cache_key</span><span class="o">=</span><span class="n">_imported_cache_key</span><span class="p">(</span>
+                            <span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">beat</span><span class="o">.</span><span class="n">index</span>
+                        <span class="p">),</span>
+                        <span class="n">start_s</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">start_s</span><span class="p">),</span>
+                        <span class="n">end_s</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">end_s</span><span class="p">),</span>
+                        <span class="n">source_span_recorded</span><span class="o">=</span><span class="n">recorded</span><span class="p">,</span>
+                        <span class="n">artifact_id</span><span class="o">=</span><span class="n">artifact</span><span class="o">.</span><span class="n">asset_id</span> <span class="k">if</span> <span class="n">artifact</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">url</span><span class="o">=</span><span class="n">file_url</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span> <span class="k">if</span> <span class="n">dest</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
+                    <span class="n">body_schema_uri</span><span class="o">=</span><span class="n">SEGMENT_EXTRACTION_V1</span><span class="p">,</span>
+                    <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">(),</span>
+                <span class="p">),</span>
+                <span class="n">index</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">sid</span><span class="p">))</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># --- narration: the beat, then the take that spoke it ---------------</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">beat</span><span class="o">.</span><span class="n">text</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="c1"># NEVER the timeline's snippet — see the module docstring.</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="s2">""</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">beats_without_text</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">bid</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"beat"</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">_upsert</span><span class="p">(</span>
+            <span class="n">project</span><span class="p">,</span>
+            <span class="n">Annotation</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">bid</span><span class="p">,</span>
+                <span class="n">tier</span><span class="o">=</span><span class="n">TIER_NARRATIVE_BEAT</span><span class="p">,</span>
+                <span class="n">reference</span><span class="o">=</span><span class="n">_node_ref</span><span class="p">(</span><span class="n">TIER_NARRATIVE_BEAT</span><span class="p">,</span> <span class="n">bid</span><span class="p">),</span>
+                <span class="n">body</span><span class="o">=</span><span class="n">NarrativeBeatBodyV1</span><span class="p">(</span>
+                    <span class="n">beat_id</span><span class="o">=</span><span class="n">ident</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="n">_beat_style</span><span class="p">(</span><span class="n">beat</span><span class="p">)</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
+                <span class="n">body_schema_uri</span><span class="o">=</span><span class="n">NARRATIVE_BEAT_V1</span><span class="p">,</span>
+                <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">(),</span>
+            <span class="p">),</span>
+            <span class="n">index</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">tid</span> <span class="o">=</span> <span class="n">_mint</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="s2">"take"</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">beat</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">_upsert</span><span class="p">(</span>
+            <span class="n">project</span><span class="p">,</span>
+            <span class="n">Annotation</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">tid</span><span class="p">,</span>
+                <span class="n">tier</span><span class="o">=</span><span class="n">TIER_NARRATION_RENDER</span><span class="p">,</span>
+                <span class="n">reference</span><span class="o">=</span><span class="n">_node_ref</span><span class="p">(</span><span class="n">TIER_NARRATION_RENDER</span><span class="p">,</span> <span class="n">tid</span><span class="p">),</span>
+                <span class="n">body</span><span class="o">=</span><span class="n">NarrationRenderBodyV1</span><span class="p">(</span>
+                    <span class="n">cache_key</span><span class="o">=</span><span class="n">_imported_cache_key</span><span class="p">(</span>
+                        <span class="n">manifest</span><span class="o">.</span><span class="n">production</span><span class="p">,</span> <span class="n">cut</span><span class="o">.</span><span class="n">audio</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">beat</span><span class="o">.</span><span class="n">index</span>
+                    <span class="p">),</span>
+                    <span class="n">artifact_id</span><span class="o">=</span><span class="n">artifact</span><span class="o">.</span><span class="n">asset_id</span> <span class="k">if</span> <span class="n">artifact</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">file_url</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span> <span class="k">if</span> <span class="n">dest</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">duration_s</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">duration</span><span class="p">),</span>
+                    <span class="c1"># Imported takes are synthesized. A person's own recording</span>
+                    <span class="c1"># becomes 'upload' when they replace one; claiming that</span>
+                    <span class="c1"># here would erase the only distinction between them.</span>
+                    <span class="n">source</span><span class="o">=</span><span class="n">NARRATION_SOURCE_TTS</span><span class="p">,</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">),</span>
+                <span class="n">body_schema_uri</span><span class="o">=</span><span class="n">NARRATION_RENDER_V1</span><span class="p">,</span>
+                <span class="c1"># The take derives from the beat: edit the words, and the</span>
+                <span class="c1"># recording reads stale.</span>
+                <span class="n">provenance</span><span class="o">=</span><span class="n">_provenance</span><span class="p">([</span><span class="n">bid</span><span class="p">]),</span>
+            <span class="p">),</span>
+            <span class="n">index</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">tid</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">artifact</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">takes</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">cut</span><span class="o">.</span><span class="n">beats</span><span class="p">:</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">beats_by_cut</span><span class="p">[</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">members</span><span class="p">)</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">takes_by_cut</span><span class="p">[</span><span class="n">cut</span><span class="o">.</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">takes</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">members</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_common_profile</span><span class="p">(</span><span class="n">manifest</span><span class="p">:</span> <span class="n">ProductionManifest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1644,17 +2614,6 @@ window.runMermaid = runMermaid;</script>
         <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"WHAT THE ARCHAEOLOGY COULD NOT SETTLE:"</span><span class="p">]</span>
         <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"- </span><span class="si">{</span><span class="n">g</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">gaps</span><span class="p">]</span>
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_copy_into</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">report</span><span class="p">:</span> <span class="n">ImportReport</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Copy ``src`` to ``folder/name`` unless identical bytes are already there."""</span>
-    <span class="n">folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">dest</span> <span class="o">=</span> <span class="n">folder</span> <span class="o">/</span> <span class="n">name</span>
-    <span class="k">if</span> <span class="n">dest</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">dest</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">dest</span>
-    <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span>
-    <span class="n">report</span><span class="o">.</span><span class="n">media_copied</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="k">return</span> <span class="n">dest</span>
 </pre></div>
 
                 </article>

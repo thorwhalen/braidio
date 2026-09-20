@@ -12,6 +12,10 @@ braidio.importing
       import_production
       assert_recorded_zoom_default
       normalized_licenses
+      assert_local_backend
+      catalog_dir
+      blobs_dir
+      registered_ids
    
    .. rubric:: Classes
 
@@ -24,10 +28,15 @@ braidio.importing
       LabelRecord
       CutRecord
       ImportReport
+      BeatRecord
+      TakeRecord
+      CatalogReport
    
    .. rubric:: Exceptions
 
    .. autosummary::
    
       ImportError_
+      CrossDeviceCatalog
+      CatalogBackendMismatch
    

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=440a2162"></script>
+    <script src="../_static/documentation_options.js?v=73f2ab08"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="braidio.formats" href="braidio.formats.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.51" />
+  <meta name="docsearch:version" content="0.0.52" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -457,6 +457,18 @@ films never had (thorwhalen/braidio#72).</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#braidio.importing.normalized_licenses" title="braidio.importing.normalized_licenses"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalized_licenses</span></code></a>(stills)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">{still</span> <span class="pre">key:</span> <span class="pre">canonical</span> <span class="pre">code}</span></code>, raising on anything unrecognised.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.importing.assert_local_backend" title="braidio.importing.assert_local_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">assert_local_backend</span></code></a>([env])</p></td>
+<td><p>Refuse to register into a filesystem the host will not read.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.importing.catalog_dir" title="braidio.importing.catalog_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">catalog_dir</span></code></a>(project_root)</p></td>
+<td><p>Where the rows live.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.importing.blobs_dir" title="braidio.importing.blobs_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">blobs_dir</span></code></a>(project_root)</p></td>
+<td><p>Where the content-addressed bytes live.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.importing.registered_ids" title="braidio.importing.registered_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registered_ids</span></code></a>(project_root)</p></td>
+<td><p>Every artifact id this project's catalog currently answers for.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -484,6 +496,15 @@ films never had (thorwhalen/braidio#72).</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#braidio.importing.ImportReport" title="braidio.importing.ImportReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImportReport</span></code></a>(production, project_root, ...)</p></td>
 <td><p>What one import did, and what it could not settle.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.importing.BeatRecord" title="braidio.importing.BeatRecord"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BeatRecord</span></code></a>(**data)</p></td>
+<td><p>One member of a rendered episode — the unit a panel is cut against.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.importing.TakeRecord" title="braidio.importing.TakeRecord"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TakeRecord</span></code></a>(**data)</p></td>
+<td><p>The audio a listener actually hears for one beat — the recording.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.importing.CatalogReport" title="braidio.importing.CatalogReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CatalogReport</span></code></a>([rows_written, ...])</p></td>
+<td><p>What registering a project's media did, and what it could not hold.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -493,9 +514,72 @@ films never had (thorwhalen/braidio#72).</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#braidio.importing.ImportError_" title="braidio.importing.ImportError_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImportError_</span></code></a></p></td>
 <td><p>Raised when a manifest cannot be imported faithfully.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.importing.CrossDeviceCatalog" title="braidio.importing.CrossDeviceCatalog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CrossDeviceCatalog</span></code></a></p></td>
+<td><p>The project's blob store is not on the source media's filesystem.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.importing.CatalogBackendMismatch" title="braidio.importing.CatalogBackendMismatch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CatalogBackendMismatch</span></code></a></p></td>
+<td><p>The host is configured to read its artifacts from somewhere else.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.importing.BeatRecord">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">BeatRecord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_manifest.html#BeatRecord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.BeatRecord" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>One member of a rendered episode — the unit a panel is cut against.</p>
+<p>This is the <em>render’s own</em> beat, read off the persisted timeline
+(<code class="docutils literal notranslate"><span class="pre">TimelineBreakdown.to_dict()</span></code>), not the authored script’s. The two
+agree in order but not necessarily in count: a rights profile can drop a
+beat before it is rendered, and it is the rendered sequence the panels and
+cards were timed against.</p>
+<p><code class="docutils literal notranslate"><span class="pre">text</span></code> is the <strong>full</strong> narration, recovered from the authored script.
+The timeline’s own <code class="docutils literal notranslate"><span class="pre">label</span></code> is a 48-character snippet, which is enough to
+<em>match</em> a script beat to a rendered one and not enough to edit. A beat
+whose script did not survive carries <code class="docutils literal notranslate"><span class="pre">text=None</span></code> and is still
+addressable and playable — just not re-synthesizable without retyping it,
+which is the honest state rather than a guess.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="braidio.importing.BeatRecord.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="(in Python v3.14)"><span class="pre">ClassVar</span></a><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'frozen':</span> <span class="pre">True}</span></span><a class="headerlink" href="#braidio.importing.BeatRecord.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<code class="code docutils literal notranslate"><span class="pre">ConfigDict</span></code>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="braidio.importing.CatalogBackendMismatch">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">CatalogBackendMismatch</span></span><a class="reference internal" href="../_modules/braidio/importing/_catalog.html#CatalogBackendMismatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.CatalogBackendMismatch" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a></p>
+<p>The host is configured to read its artifacts from somewhere else.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.importing.CatalogReport">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">CatalogReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows_written</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows_unchanged</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blobs_linked</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blobs_present</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blobs_copied</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bytes_copied</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unregistered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_catalog.html#CatalogReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.CatalogReport" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>What registering a project’s media did, and what it could not hold.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="braidio.importing.CatalogReport.unregistered">
+<span class="sig-name descname"><span class="pre">unregistered</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#braidio.importing.CatalogReport.unregistered" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(path,</span> <span class="pre">reason)</span></code> for a file the catalog cannot hold — today only a
+kind outside <code class="xref py py-data docutils literal notranslate"><span class="pre">CATALOG_KINDS</span></code>. Reported, never silently dropped:
+an unregistered artifact is one a caller will ask for and not get.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="braidio.importing.CrossDeviceCatalog">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">CrossDeviceCatalog</span></span><a class="reference internal" href="../_modules/braidio/importing/_catalog.html#CrossDeviceCatalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.CrossDeviceCatalog" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#OSError" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">OSError</span></code></a></p>
+<p>The project’s blob store is not on the source media’s filesystem.</p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.importing.CutRecord">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">CutRecord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_manifest.html#CutRecord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.CutRecord" title="Link to this definition">#</a></dt>
@@ -520,7 +604,7 @@ films never had (thorwhalen/braidio#72).</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.importing.ImportReport">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">ImportReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">production</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rights_position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stills_written</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stills_unchanged</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">panels_by_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_by_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cuts_written</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">published_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">untitled_stills</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bare_attributions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license_codes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beat_ids_renumbered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">media_copied</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_writer.html#ImportReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.ImportReport" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">ImportReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">production</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rights_position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stills_written</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stills_unchanged</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">panels_by_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_by_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cuts_written</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">published_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">untitled_stills</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bare_attributions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license_codes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beat_ids_renumbered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">media_copied</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bytes_copied</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beats_by_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">takes_by_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beats_without_text</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">takes_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segments_without_source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catalog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_writer.html#ImportReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.ImportReport" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>What one import did, and what it could not settle.</p>
 <p>Returned rather than logged, so a CLI, a test and a future MCP tool all
@@ -537,6 +621,54 @@ would fail the licence condition. <code class="docutils literal notranslate"><sp
 <dd class="field-odd"><p>Stills whose <code class="docutils literal notranslate"><span class="pre">attribution</span></code> names no licence</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="braidio.importing.ImportReport.beats_by_cut">
+<span class="sig-name descname"><span class="pre">beats_by_cut</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#braidio.importing.ImportReport.beats_by_cut" title="Link to this definition">#</a></dt>
+<dd><p>narration / clip / break.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Members written per cut, by tier-ish role</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="braidio.importing.ImportReport.beats_without_text">
+<span class="sig-name descname"><span class="pre">beats_without_text</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#braidio.importing.ImportReport.beats_without_text" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;&lt;cut&gt;/&lt;index&gt;&quot;</span></code> for every narration beat whose authored text did
+not survive. Imported with an EMPTY text, never the snippet — so the
+count is the only place the loss is visible. See the module docstring.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="braidio.importing.ImportReport.media_copied">
+<span class="sig-name descname"><span class="pre">media_copied</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#braidio.importing.ImportReport.media_copied" title="Link to this definition">#</a></dt>
+<dd><p>Media files copied into the project, and the bytes that cost. The
+project owns its bytes rather than linking to a shared source tree —
+see <code class="xref py py-func docutils literal notranslate"><span class="pre">_place_into()</span></code> for why the link is the wrong trade here.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="braidio.importing.ImportReport.segments_without_source">
+<span class="sig-name descname"><span class="pre">segments_without_source</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#braidio.importing.ImportReport.segments_without_source" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;&lt;cut&gt;/&lt;index&gt;&quot;</span></code> for every clip whose span in the SOURCE recording
+was never persisted. Written with <code class="docutils literal notranslate"><span class="pre">source_span_recorded=False</span></code> rather
+than an invented <code class="docutils literal notranslate"><span class="pre">(0.0,</span> <span class="pre">duration)</span></code>, which would be a false claim
+about where third-party material was cut from.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="braidio.importing.ImportReport.takes_by_cut">
+<span class="sig-name descname"><span class="pre">takes_by_cut</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#braidio.importing.ImportReport.takes_by_cut" title="Link to this definition">#</a></dt>
+<dd><p>Playable narration takes written per cut.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="braidio.importing.ImportReport.takes_missing">
+<span class="sig-name descname"><span class="pre">takes_missing</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#braidio.importing.ImportReport.takes_missing" title="Link to this definition">#</a></dt>
+<dd><p>Takes named by the manifest whose audio file is not on disk.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -634,6 +766,55 @@ count is surfaced rather than left to be discovered in a credit roll.</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.importing.TakeRecord">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">TakeRecord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_manifest.html#TakeRecord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.TakeRecord" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>The audio a listener actually hears for one beat — the recording.</p>
+<p>A <em>take</em> is the replaceable unit. <code class="docutils literal notranslate"><span class="pre">source</span></code> is why the field exists at
+all: an imported take is <code class="docutils literal notranslate"><span class="pre">&quot;tts&quot;</span></code> (a machine said it), and the only other
+value is <code class="docutils literal notranslate"><span class="pre">&quot;upload&quot;</span></code> (a person recorded it). Without the distinction a
+replacement is indistinguishable from the thing it replaced, and “put the
+robot back” is not a question anything can answer.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="braidio.importing.TakeRecord.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ClassVar" title="(in Python v3.14)"><span class="pre">ClassVar</span></a><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'frozen':</span> <span class="pre">True}</span></span><a class="headerlink" href="#braidio.importing.TakeRecord.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<code class="code docutils literal notranslate"><span class="pre">ConfigDict</span></code>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.importing.assert_local_backend">
+<span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">assert_local_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_catalog.html#assert_local_backend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.assert_local_backend" title="Link to this definition">#</a></dt>
+<dd><p>Refuse to register into a filesystem the host will not read.</p>
+<p>This is the one failure this module could not survive quietly. Everything
+else here fails loudly — a missing blob raises, an unlinkable destination
+raises, an unholdable kind is reported. But writing a perfectly correct
+<code class="docutils literal notranslate"><span class="pre">catalog/</span></code> and <code class="docutils literal notranslate"><span class="pre">blobs/</span></code> next to a project whose host resolves artifacts
+out of S3 produces an import that reports complete success and a project
+where <strong>every id still 404s</strong> — which is precisely the defect this module
+exists to remove, reintroduced one layer up.</p>
+<p>Raising is right rather than harsh: the caller who genuinely wants the
+graph without the catalog has <code class="docutils literal notranslate"><span class="pre">register_artifacts=False</span></code>, and that is an
+explicit choice the report then records.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">assert_local_backend</span><span class="p">({})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">assert_local_backend</span><span class="p">({</span><span class="s2">"REELEE_ARTIFACT_BACKEND"</span><span class="p">:</span> <span class="s2">"fs"</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">assert_local_backend</span><span class="p">({</span><span class="s2">"REELEE_ARTIFACT_BACKEND"</span><span class="p">:</span> <span class="s2">"aws"</span><span class="p">})</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">braidio.importing._catalog.CatalogBackendMismatch</span>: <span class="n">...</span>
+</pre></div>
+</div>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="braidio.importing.assert_recorded_zoom_default">
 <span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">assert_recorded_zoom_default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.18</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_writer.html#assert_recorded_zoom_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.assert_recorded_zoom_default" title="Link to this definition">#</a></dt>
@@ -657,9 +838,53 @@ diverges over ten minutes.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="braidio.importing.blobs_dir">
+<span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">blobs_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_root</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_catalog.html#blobs_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.blobs_dir" title="Link to this definition">#</a></dt>
+<dd><p>Where the content-addressed bytes live.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.importing.catalog_dir">
+<span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">catalog_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_root</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_catalog.html#catalog_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.catalog_dir" title="Link to this definition">#</a></dt>
+<dd><p>Where the rows live.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="braidio.importing.import_production">
-<span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">import_production</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manifest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_root</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_media</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_writer.html#import_production"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.import_production" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">import_production</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manifest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_root</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_media</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">register_artifacts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">materialize_cuts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'delivered'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_cross_device_copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_writer.html#import_production"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.import_production" title="Link to this definition">#</a></dt>
 <dd><p>Write <code class="docutils literal notranslate"><span class="pre">manifest</span></code> into a braidio project at <code class="docutils literal notranslate"><span class="pre">project_root</span></code>.</p>
+<p><strong>All or nothing — when the path did not already exist.</strong> That qualifier
+is the whole of the guarantee, and it is deliberately not stronger. A
+refusal that fires after the first node is written (an unlinkable blob is
+the live case) would otherwise leave a CLI printing “import refused” over
+a directory holding a <code class="docutils literal notranslate"><span class="pre">project.json</span></code>, a graph with one annotation and
+some media — the refusal saying nothing happened and the tree saying
+otherwise. So a project <strong>this call created</strong> is removed entirely.</p>
+<p>What is NOT promised, because promising it would mean deleting directories
+we did not create:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mkdir</span> <span class="pre">-p</span></code> the path first — which is how people prepare one — and the
+rollback does not fire, so a refusal can leave exactly that half-written
+state. Measured.</p></li>
+<li><p>A failed <strong>re-import leaves an existing project partially updated</strong>, not
+as it was found: annotations written before the failure keep their new
+values. A reader who retries expecting a clean slate is wrong. The price
+of never deleting somebody’s project is that a failed run can leave it
+half-changed; re-running the import is how it converges.</p></li>
+<li><p>Empty parent directories this call created are left behind. Removing
+directories because we also made them is the first step back down the
+road that produced the bug this guard exists for.</p></li>
+</ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -671,12 +896,25 @@ project rather than two.</p></li>
 manifest never stores an absolute path (one committed production
 manifest did, in a shared repo — only basenames come forward), so
 the caller supplies the root.</p></li>
-<li><p><strong>copy_media</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – copy the stills and the episode audio into the project, so
-it is self-contained and a fork can hardlink it. The shipped cut
-mp4s are always referenced in place: they are the evidence a
-re-render is compared against, not an input to one.</p></li>
+<li><p><strong>copy_media</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – bring the stills, the episode audio and the narration
+takes into the project, so it is self-contained and survives being
+moved to a server. See <code class="xref py py-func docutils literal notranslate"><span class="pre">_place_into()</span></code> for why this is a copy
+and the blob store’s link is not.</p></li>
 <li><p><strong>dry_run</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – validate everything — files present, licences known, card
-weights sufficient, zoom default unmoved — and write nothing.</p></li>
+weights sufficient, zoom default unmoved, beat kinds coherent —
+and write nothing.</p></li>
+<li><p><strong>register_artifacts</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – register every artifact in the project’s delivery
+catalog, so <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/artifacts/{id}/bytes</span></code> answers instead of
+404ing. On by default: an unregistered artifact is a file the
+graph names and no surface can hand over.</p></li>
+<li><p><strong>materialize_cuts</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – which rendered cuts come into the project —
+<code class="docutils literal notranslate"><span class="pre">&quot;delivered&quot;</span></code> (default; every cut’s delivered mp4), <code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code>
+(also the text-free motion passes), or <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> (reference them
+where they are, which means no surface can serve them; reported).</p></li>
+<li><p><strong>allow_cross_device_copy</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – permit a real byte copy when the project’s
+blob store is not on the media’s filesystem. Off by default,
+because the copy is silent, is the whole production again, and is
+rarely what the caller meant.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -684,6 +922,13 @@ weights sufficient, zoom default unmoved — and write nothing.</p></li>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>an <a class="reference internal" href="#braidio.importing.ImportReport" title="braidio.importing.ImportReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImportReport</span></code></a>.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ImportError" title="(in Python v3.14)"><strong>ImportError</strong></a> – the manifest cannot be imported faithfully.</p></li>
+<li><p><a class="reference internal" href="#braidio.importing.CatalogBackendMismatch" title="braidio.importing.CatalogBackendMismatch"><strong>CatalogBackendMismatch</strong></a> – the host reads artifacts from an object store.</p></li>
+<li><p><a class="reference internal" href="#braidio.importing.CrossDeviceCatalog" title="braidio.importing.CrossDeviceCatalog"><strong>CrossDeviceCatalog</strong></a> – blobs cannot be linked and no copy was authorized.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -726,6 +971,17 @@ error at all — which is why an unknown fails here instead.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.importing.registered_ids">
+<span class="sig-prename descclassname"><span class="pre">braidio.importing.</span></span><span class="sig-name descname"><span class="pre">registered_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_root</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/importing/_catalog.html#registered_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.importing.registered_ids" title="Link to this definition">#</a></dt>
+<dd><p>Every artifact id this project’s catalog currently answers for.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#frozenset" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -779,6 +1035,16 @@ error at all — which is why an unknown fails here instead.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.BeatRecord"><code class="docutils literal notranslate"><span class="pre">BeatRecord</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.BeatRecord.model_config"><code class="docutils literal notranslate"><span class="pre">BeatRecord.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.CatalogBackendMismatch"><code class="docutils literal notranslate"><span class="pre">CatalogBackendMismatch</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.CatalogReport"><code class="docutils literal notranslate"><span class="pre">CatalogReport</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.CatalogReport.unregistered"><code class="docutils literal notranslate"><span class="pre">CatalogReport.unregistered</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.CrossDeviceCatalog"><code class="docutils literal notranslate"><span class="pre">CrossDeviceCatalog</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.CutRecord"><code class="docutils literal notranslate"><span class="pre">CutRecord</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.CutRecord.model_config"><code class="docutils literal notranslate"><span class="pre">CutRecord.model_config</span></code></a></li>
 </ul>
@@ -786,6 +1052,12 @@ error at all — which is why an unknown fails here instead.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.ImportError_"><code class="docutils literal notranslate"><span class="pre">ImportError_</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.ImportReport"><code class="docutils literal notranslate"><span class="pre">ImportReport</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.ImportReport.bare_attributions"><code class="docutils literal notranslate"><span class="pre">ImportReport.bare_attributions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.ImportReport.beats_by_cut"><code class="docutils literal notranslate"><span class="pre">ImportReport.beats_by_cut</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.ImportReport.beats_without_text"><code class="docutils literal notranslate"><span class="pre">ImportReport.beats_without_text</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.ImportReport.media_copied"><code class="docutils literal notranslate"><span class="pre">ImportReport.media_copied</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.ImportReport.segments_without_source"><code class="docutils literal notranslate"><span class="pre">ImportReport.segments_without_source</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.ImportReport.takes_by_cut"><code class="docutils literal notranslate"><span class="pre">ImportReport.takes_by_cut</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.ImportReport.takes_missing"><code class="docutils literal notranslate"><span class="pre">ImportReport.takes_missing</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.ImportReport.to_dict"><code class="docutils literal notranslate"><span class="pre">ImportReport.to_dict()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.ImportReport.untitled_stills"><code class="docutils literal notranslate"><span class="pre">ImportReport.untitled_stills</span></code></a></li>
 </ul>
@@ -810,10 +1082,18 @@ error at all — which is why an unknown fails here instead.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.StillRecord.model_config"><code class="docutils literal notranslate"><span class="pre">StillRecord.model_config</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.TakeRecord"><code class="docutils literal notranslate"><span class="pre">TakeRecord</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.TakeRecord.model_config"><code class="docutils literal notranslate"><span class="pre">TakeRecord.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.assert_local_backend"><code class="docutils literal notranslate"><span class="pre">assert_local_backend()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.assert_recorded_zoom_default"><code class="docutils literal notranslate"><span class="pre">assert_recorded_zoom_default()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.blobs_dir"><code class="docutils literal notranslate"><span class="pre">blobs_dir()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.catalog_dir"><code class="docutils literal notranslate"><span class="pre">catalog_dir()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.import_production"><code class="docutils literal notranslate"><span class="pre">import_production()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.load_manifest"><code class="docutils literal notranslate"><span class="pre">load_manifest()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.normalized_licenses"><code class="docutils literal notranslate"><span class="pre">normalized_licenses()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.importing.registered_ids"><code class="docutils literal notranslate"><span class="pre">registered_ids()</span></code></a></li>
 </ul>
   </nav></div>
 
