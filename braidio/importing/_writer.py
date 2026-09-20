@@ -32,22 +32,54 @@ measured defect in the three finished productions:
    default has moved, the extracted number is already wrong and this is the
    last place anyone would look, so :func:`assert_recorded_zoom_default` fails
    the import loudly.
-3. **Every licence is normalized through ``illustration``, and an unknown one
-   fails.** All 15 spellings across the three productions resolve to ``by`` /
-   ``by-sa`` / ``cc0`` / ``pdm``, so a failure means something genuinely new
-   rather than a gap in the table. The *recorded* spelling is what gets
-   written — a credit reading "CC BY-SA 4.0" is the useful one — normalization
-   is the gate, not the value.
+3. **Every licence is stored as its canonical code, and an unknown one fails.**
+   All 15 spellings across the three productions resolve to ``by`` / ``by-sa``
+   / ``cc0`` / ``pdm`` through ``illustration.licensing.normalize_license``, so
+   a failure means something genuinely new rather than a gap in the table.
+   ``StillBodyV1.license`` gets the **code**, because that is what a gate
+   compares and an unrecognised spelling survives normalization unchanged and
+   therefore fails a published-profile check *silently* — fewer hits, no error.
+   The human spelling is not discarded: it goes to ``license_label``, which
+   ``credit_line`` prefers, so a credit still reads "CC BY-SA 4.0" while a gate
+   still reads ``by-sa`` (thorwhalen/illustration#24).
 4. **A context card is written with ``weight >= 2``.** ``video_cut.finish``
    refuses an overlay collision at plan time, and a weight-1 card over a
    labelled still is one, so a weight-1 context card would make the cut
    unrenderable at the point where it is least obvious why.
+5. **Every registered artifact's catalog row carries the host's route, never a
+   ``file://`` path.** An imported artifact that is not registered is a 404 on
+   every surface (see :mod:`braidio.importing._catalog`), and one registered
+   with a local path puts the importing machine's home directory into a served
+   record. Registration is on by default; a cross-device destination refuses
+   rather than silently copying the production a second time.
+6. **A rendered take's ``cache_key`` cannot be mistaken for a computed one.**
+   Every imported take carries a key prefixed :data:`IMPORTED_CACHE_KEY_PREFIX`,
+   which no ``nw.transforms.cache_key`` digest can ever equal — the same
+   bargain as a cut's ``cache_key=None``. braidio did not render these, so
+   nothing may serve one as though it had.
+
+**The delivered cut comes into the project; the motion pass does not.** The
+plan's original line — cuts "referenced in place, not copied", to fit the
+server's disk — is superseded, because a reference to a path outside the
+project is not retrievable through *any* surface, and on the server that path
+does not exist at all. The result was three finished films a reader could read
+and could not watch. So ``materialize_cuts`` defaults to ``"delivered"``: every
+cut record's delivered mp4 is brought in and registered, and *every* cut counts
+— one production's four cuts are four different edits, not four versions of
+one, and they are the point of that production. The **motion** pass stays out
+by default: it is the text-free intermediate a re-render can resume from,
+evidence rather than a deliverable, and carrying it roughly doubles the weight.
+Measured, delivered-only across the three productions is about 1.1 GB, which
+fits; ``"all"`` adds the motion passes and ``"none"`` restores the old
+reference-in-place behaviour and *says* in the report that those cuts are
+unretrievable.
 
 What it deliberately does **not** do: mark anything publishable the source did
 not (every cut keeps its recorded profile, and the rights finding is carried as
-project-level data), invent a beat it cannot witness, or copy the shipped mp4s
-into the project — those are the *evidence* a re-render is checked against, not
-an input to one, and they are large.
+project-level data), or invent a beat it cannot witness — a beat whose authored
+text did not survive is imported with an **empty** ``text`` and counted, never
+with the timeline's 48-character snippet, which a re-synthesis would cheerfully
+speak.
 """
 
 from __future__ import annotations
@@ -60,7 +92,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
+from braidio.importing._catalog import (
+    CatalogReport,
+    _link_or_copy,
+    CrossDeviceCatalog,  # noqa: F401  (re-exported: callers catch it)
+    hash_file,
+    register_artifact,
+)
 from braidio.importing._manifest import (
+    BeatRecord,
     CutRecord,
     LabelRecord,
     ProductionManifest,
@@ -93,6 +133,50 @@ MOVE_IMPORT_NOTE = (
 #: Rights positions that are NOT a licence to publish. The importer never
 #: promotes a cut; the position is carried so a surface can show it.
 _NON_PUBLIC_POSITIONS = frozenset({"private", "unlisted"})
+
+#: Prefix on every imported take's / extraction's ``cache_key``. A computed key
+#: is a 64-character SHA-256 digest (``nw.transforms.cache_key``), so a key
+#: carrying this prefix can never equal one — which is the point: braidio did
+#: not render these, and ``cached_output`` scans a tier for a key match. A
+#: colliding key would let a later render adopt a shipped take as its own
+#: output, which is the audio equivalent of serving a shipped mp4 from a cache.
+IMPORTED_CACHE_KEY_PREFIX = "imported:"
+
+#: What ``materialize_cuts`` accepts. See the module docstring for the argument
+#: behind the default — briefly: a delivered cut is the deliverable and every
+#: one of them counts, a motion pass is a resumable intermediate.
+_MATERIALIZE_CHOICES = frozenset({"delivered", "all", "none"})
+
+#: Timeline beat kinds that are **spoken narration**. The renderer writes the
+#: delivery *style* in place of ``"narration"`` when a beat declared one
+#: (``_member_role``), so this cannot be a single literal — anything that is
+#: not a clip, a break or a dialogue is narration, and an unknown kind is
+#: refused rather than guessed (see :func:`_beat_role`).
+#: ``"archive"`` is deliberately NOT here. It looks like a clip and is not:
+#: Two Silences' nine archive beats are narration in an archival register —
+#: they carry no ``source`` span and their labels are the spoken text. Filing
+#: them as clips loses nine replaceable segments per production and writes
+#: nine segment-extractions whose ``(start_s, end_s)`` are invented.
+_CLIP_KINDS = frozenset({"clip", "segment"})
+_BREAK_KINDS = frozenset({"scene-break", "sting", "scene_break"})
+_DIALOGUE_KINDS = frozenset({"dialogue"})
+_NARRATION_KINDS = frozenset({"narration"})
+
+#: The whole reason a take is addressable, stated where the code is. Replacing
+#: one is NOT a cheap in-place edit: see :data:`NARRATION_REPLACEMENT_NOTE`.
+NARRATION_REPLACEMENT_NOTE = (
+    "Replacing a narration take requires a RE-WEAVE of the episode, not an "
+    "in-place swap. Every panel and card is pinned to the mix by a MediaRef "
+    "whose asset_id is the content hash of the mix's bytes and whose interval "
+    "is an offset into it, so a new take changes the mix's bytes (new hash, "
+    "every reference dangling) and its own duration (every later beat, panel "
+    "and card shifts). The graph says so: each cut's episode node derives from "
+    "its members, and every panel derives from that episode, so replacing one "
+    "take reads as stale through the whole picture track. What the import buys "
+    "is that the segment is now a thing you can point at, play and replace at "
+    "all — the re-weave is the cost of using it, and a surface must quote it "
+    "as a re-render of the cut rather than as an edit."
+)
 
 _UNSAFE_IN_FILENAME = re.compile(r"[^A-Za-z0-9._-]+")
 
@@ -128,13 +212,43 @@ class ImportReport:
     bare_attributions: list[str] = field(default_factory=list)
     license_codes: dict[str, str] = field(default_factory=dict)
     beat_ids_renumbered: int = 0
+    #: Media files brought into the project by a real byte copy (a cross-device
+    #: source), and by a same-volume hardlink. Both make the project
+    #: self-contained; only the first costs disk.
     media_copied: int = 0
+    media_linked: int = 0
+    bytes_copied: int = 0
+    #: Members written per cut, by tier-ish role: narration / clip / break.
+    beats_by_cut: dict[str, int] = field(default_factory=dict)
+    #: Playable narration takes written per cut.
+    takes_by_cut: dict[str, int] = field(default_factory=dict)
+    #: ``"<cut>/<index>"`` for every narration beat whose authored text did
+    #: not survive. Imported with an EMPTY text, never the snippet — so the
+    #: count is the only place the loss is visible. See the module docstring.
+    beats_without_text: list[str] = field(default_factory=list)
+    #: Takes named by the manifest whose audio file is not on disk.
+    takes_missing: list[str] = field(default_factory=list)
+    #: ``"<cut>/<index>"`` for every clip whose span in the SOURCE recording
+    #: was never persisted. Written with ``source_span_recorded=False`` rather
+    #: than an invented ``(0.0, duration)``, which would be a false claim
+    #: about where third-party material was cut from.
+    segments_without_source: list[str] = field(default_factory=list)
+    catalog: CatalogReport = field(default_factory=CatalogReport)
     gaps: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
     @property
     def panels_total(self) -> int:
         return sum(self.panels_by_cut.values())
+
+    @property
+    def takes_total(self) -> int:
+        return sum(self.takes_by_cut.values())
+
+    @property
+    def media_placed(self) -> int:
+        """Files brought into the project, however they got there."""
+        return self.media_copied + self.media_linked
 
     def to_dict(self) -> dict[str, Any]:
         """A JSON-able summary (what the CLI's ``--json`` prints)."""
@@ -156,6 +270,16 @@ class ImportReport:
             "license_codes": dict(self.license_codes),
             "beat_ids_renumbered": self.beat_ids_renumbered,
             "media_copied": self.media_copied,
+            "media_linked": self.media_linked,
+            "media_placed": self.media_placed,
+            "bytes_copied": self.bytes_copied,
+            "beats_by_cut": dict(self.beats_by_cut),
+            "takes_by_cut": dict(self.takes_by_cut),
+            "takes_total": self.takes_total,
+            "beats_without_text": list(self.beats_without_text),
+            "takes_missing": list(self.takes_missing),
+            "segments_without_source": list(self.segments_without_source),
+            "catalog": self.catalog.to_dict(),
             "gaps": list(self.gaps),
             "notes": list(self.notes),
         }
@@ -428,6 +552,124 @@ def _beat_id(raw: Optional[str]) -> Optional[str]:
     return text
 
 
+def _beat_role(beat: BeatRecord) -> str:
+    """Which kind of node a timeline beat becomes: narration / clip / break.
+
+    The renderer records a narration beat's **delivery style** in the timeline's
+    ``kind`` field in place of ``"narration"`` (``_member_role``), so this
+    cannot be a lookup against one literal: Two Silences' ``"archive"`` beats
+    are narration in an archival register, not clips. Anything that is not a
+    clip, a break or a dialogue is therefore narration, and the style is
+    carried onto the beat body so a re-weave reproduces it.
+
+    The one contradiction that is refused rather than resolved: a beat that
+    reads as narration while carrying a ``source`` span into another recording.
+    A clip mis-imported as narration becomes a segment the studio offers to
+    re-synthesize and replace — and on these productions that clip is a
+    commercial master. Getting this wrong silently is how a rights posture
+    becomes a rights incident.
+
+    >>> from braidio.importing._manifest import BeatRecord
+    >>> b = lambda **kw: BeatRecord(index=0, start=0.0, end=1.0, **kw)
+    >>> _beat_role(b(kind="narration")), _beat_role(b(kind="archive"))
+    ('narration', 'narration')
+    >>> _beat_role(b(kind="clip", source=(1.0, 2.0))), _beat_role(b(kind="scene-break"))
+    ('clip', 'break')
+    >>> _beat_role(b(kind="narration", source=(1.0, 2.0)))
+    Traceback (most recent call last):
+        ...
+    braidio.importing._writer.ImportError_: beat 0 reads as narration...
+    """
+    kind = (beat.kind or "").strip()
+    if kind in _CLIP_KINDS:
+        return "clip"
+    if kind in _BREAK_KINDS:
+        return "break"
+    if kind in _DIALOGUE_KINDS:
+        raise ImportError_(
+            f"beat {beat.index} is a dialogue exchange, which this importer "
+            "does not carry: a dialogue-render derives from a dialogue-cast "
+            "recording which voice speaks each role, and none of the three "
+            "finished productions has one to read. Importing it without the "
+            "cast would write a render node whose only parent is missing."
+        )
+    if beat.source is not None:
+        raise ImportError_(
+            f"beat {beat.index} reads as narration (kind {kind!r}) but carries "
+            f"a source span {beat.source!r} into another recording. A clip "
+            "imported as narration becomes a segment a surface offers to "
+            "re-synthesize — and on these productions that is a commercial "
+            "master. Declare the kind, or drop the span."
+        )
+    return "narration"
+
+
+def _beat_style(beat: BeatRecord) -> Optional[str]:
+    """The delivery style a narration beat's timeline ``kind`` stands in for.
+
+    >>> from braidio.importing._manifest import BeatRecord
+    >>> _beat_style(BeatRecord(index=0, kind="archive", start=0.0, end=1.0))
+    'archive'
+    >>> _beat_style(BeatRecord(index=0, kind="narration", start=0.0, end=1.0)) is None
+    True
+    """
+    kind = (beat.kind or "").strip()
+    return None if kind in _NARRATION_KINDS or not kind else kind
+
+
+#: What a manifest's own ``gaps`` prose says about the move mapping, and what
+#: superseded it. The extraction concluded ``drift -> auto`` and that reasoning
+#: was void before the importer shipped (``burns.choose_move`` became a
+#: weighted pool, so ``auto`` is a real drift ~40% of the time). The importer
+#: writes ``push_in`` regardless, so this is a READING hazard rather than a
+#: behavioural one — but a gap note that contradicts the code is exactly how a
+#: later reader re-derives the wrong answer with the manifest in hand.
+_SUPERSEDED_GAP_MARKERS = ("drift -> auto", "drift is mapped to auto", "-> auto")
+
+_GAP_CORRECTION = (
+    "CORRECTION, applied by the importer: this manifest's own `gaps` text "
+    "still describes the superseded move mapping (drift -> auto). It is void. "
+    "burns.choose_move is a weighted pool, so 'auto' resolves to a real "
+    "directional drift about 40% of the time against a source in which every "
+    "panel pushed in. Every panel was imported as push_in — read the code, not "
+    "that note. See thorwhalen/braidio#72."
+)
+
+
+def _stale_gap_corrections(manifest: ProductionManifest) -> list[str]:
+    """Correct, in the report, any gap note that still asserts ``drift -> auto``.
+
+    >>> from braidio.importing._manifest import ProductionManifest
+    >>> m = ProductionManifest.model_validate(dict(
+    ...     production="p", title="P", source_dir="p",
+    ...     rights=dict(position="private", why="w"),
+    ...     episode_audio=dict(path="e.mp3", duration_s=1.0),
+    ...     stills=[], cuts=[], gaps=["MOVE ENCODING. push -> push_in; drift -> auto."]))
+    >>> len(_stale_gap_corrections(m))
+    1
+    >>> m2 = m.model_copy(update={"gaps": ("nothing about moves",)})
+    >>> _stale_gap_corrections(m2)
+    []
+    """
+    text = " ".join(manifest.gaps).lower()
+    if any(marker.lower() in text for marker in _SUPERSEDED_GAP_MARKERS):
+        return [_GAP_CORRECTION]
+    return []
+
+
+def _imported_cache_key(production: str, audio_rel: str, index: int) -> str:
+    """A take's cache key — unmistakable for a computed one. See rule 6.
+
+    Keyed on the **mix**, not the cut, for the same reason the node ids are:
+    a beat is a member of an episode, and two cuts made against one mix share
+    its decomposition rather than each owning a copy of it.
+
+    >>> _imported_cache_key("two-silences", "data/episodes/two-silences.mp3", 3)
+    'imported:two-silences:data/episodes/two-silences.mp3:0003'
+    """
+    return f"{IMPORTED_CACHE_KEY_PREFIX}{production}:{audio_rel}:{index:04d}"
+
+
 # --- the verb ---------------------------------------------------------------
 
 
@@ -438,6 +680,9 @@ def import_production(
     source_root=None,
     copy_media: bool = True,
     dry_run: bool = False,
+    register_artifacts: bool = True,
+    materialize_cuts: str = "delivered",
+    allow_cross_device_copy: bool = False,
 ) -> ImportReport:
     """Write ``manifest`` into a braidio project at ``project_root``.
 
@@ -450,15 +695,32 @@ def import_production(
             manifest never stores an absolute path (one committed production
             manifest did, in a shared repo — only basenames come forward), so
             the caller supplies the root.
-        copy_media: copy the stills and the episode audio into the project, so
-            it is self-contained and a fork can hardlink it. The shipped cut
-            mp4s are always referenced in place: they are the evidence a
-            re-render is compared against, not an input to one.
+        copy_media: bring the stills, the episode audio and the narration takes
+            into the project, so it is self-contained and survives being moved
+            to a server. Same-volume files are hardlinked, so this is usually
+            free; see :func:`_place_into`.
         dry_run: validate everything — files present, licences known, card
-            weights sufficient, zoom default unmoved — and write nothing.
+            weights sufficient, zoom default unmoved, beat kinds coherent — and
+            write nothing.
+        register_artifacts: register every artifact in the project's delivery
+            catalog, so ``GET /api/artifacts/{id}/bytes`` answers instead of
+            404ing. On by default: an unregistered artifact is a file the graph
+            names and no surface can hand over.
+        materialize_cuts: which rendered cuts come into the project —
+            ``"delivered"`` (default; every cut's delivered mp4), ``"all"``
+            (also the text-free motion passes), or ``"none"`` (reference them
+            where they are, which means no surface can serve them; reported).
+        allow_cross_device_copy: permit a real byte copy when the project's
+            blob store is not on the media's filesystem. Off by default,
+            because the copy is silent, is the whole production again, and is
+            rarely what the caller meant.
 
     Returns:
         an :class:`ImportReport`.
+
+    Raises:
+        ImportError_: the manifest cannot be imported faithfully.
+        CrossDeviceCatalog: blobs cannot be linked and no copy was authorized.
     """
     import nw  # noqa: F401  (import registers the tiers/transforms)
 
@@ -473,7 +735,11 @@ def import_production(
         VideoCutBodyV1,
         VideoPanelBodyV1,
     )
-    from braidio.bodies._render_nodes import EpisodeRenderBodyV1, RenderProfileBodyV1
+    from braidio.bodies._render_nodes import (
+        NARRATION_SOURCE_TTS,
+        EpisodeRenderBodyV1,
+        RenderProfileBodyV1,
+    )
     from braidio.project import Project
     from braidio.rights import PUBLISHABLE_CLIP_RIGHTS, Profile
     from braidio.transforms._common import (
@@ -489,6 +755,12 @@ def import_production(
 
     # --- rule 2: the library default the extraction depended on -------------
     assert_recorded_zoom_default()
+
+    if materialize_cuts not in _MATERIALIZE_CHOICES:
+        raise ImportError_(
+            f"materialize_cuts={materialize_cuts!r} is not one of "
+            f"{sorted(_MATERIALIZE_CHOICES)}."
+        )
 
     source_root = Path(source_root or ".").expanduser().resolve()
     src = source_root / manifest.source_dir
@@ -507,6 +779,8 @@ def import_production(
         gaps=list(manifest.gaps),
     )
     report.notes.append(MOVE_IMPORT_NOTE)
+    report.notes.append(NARRATION_REPLACEMENT_NOTE)
+    report.gaps.extend(_stale_gap_corrections(manifest))
 
     # --- rule 3: licences, and rule 4: card weights -------------------------
     report.license_codes = normalized_licenses(manifest.stills)
@@ -550,6 +824,38 @@ def import_production(
     if missing_audio:
         raise ImportError_(f"episode audio not on disk: {missing_audio}")
 
+    # Beat kinds are classified BEFORE anything is written, so a clip carrying
+    # a narration kind (or a dialogue we cannot carry) refuses the import
+    # rather than half-writing a picture track.
+    take_paths: dict[tuple[str, int], Path] = {}
+    for cut in manifest.cuts:
+        seen_index: set[int] = set()
+        for beat in cut.beats:
+            if beat.index in seen_index:
+                raise ImportError_(
+                    f"cut {cut.label!r}: two beats share index {beat.index}. "
+                    "The index is the member's identity and its position in "
+                    "the episode's play order; a duplicate makes "
+                    "ordered_member_ids a list that is not the order."
+                )
+            seen_index.add(beat.index)
+            _beat_role(beat)  # raises on a contradiction or a dialogue
+            if beat.take is not None:
+                f = src / beat.take.path
+                if not f.is_file():
+                    report.takes_missing.append(f"{cut.label}/{beat.index}")
+                else:
+                    take_paths[(cut.label, beat.index)] = f
+            if beat.take is not None and beat.take.source != NARRATION_SOURCE_TTS:
+                raise ImportError_(
+                    f"cut {cut.label!r} beat {beat.index}: take source "
+                    f"{beat.take.source!r}. An imported take is always 'tts' — "
+                    "it is what the production synthesized. 'upload' is what a "
+                    "person's own recording becomes when they replace one, and "
+                    "claiming it here erases the distinction the field exists "
+                    "for."
+                )
+
     report.untitled_stills = sorted(s.key for s in manifest.stills if not s.title)
     report.bare_attributions = sorted(
         s.key
@@ -577,6 +883,37 @@ def import_production(
     index = {a.id: a for a in nw.iter_all_annotations(project.root)}
     profile = _common_profile(manifest)
 
+    # One timestamp for the whole import, so a re-import produces byte-identical
+    # rows and the catalog stops churning after the first run.
+    stamped_at = _utc_now_iso()
+
+    def _register(
+        path: Path,
+        artifact_id: str,
+        *,
+        kind: str,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        duration_s: Optional[float] = None,
+    ) -> None:
+        """Make one artifact retrievable, if this import was asked to."""
+        if not register_artifacts:
+            report.catalog.unregistered.append((str(path), "register_artifacts=False"))
+            return
+        register_artifact(
+            root,
+            path,
+            artifact_id=artifact_id,
+            kind=kind,
+            generated_at=stamped_at,
+            report=report.catalog,
+            width=width,
+            height=height,
+            duration_s=duration_s,
+            note=f"imported from {manifest.production}",
+            allow_cross_device_copy=allow_cross_device_copy,
+        )
+
     # --- the rights position, as structured graph data ----------------------
     _upsert(
         project,
@@ -601,13 +938,20 @@ def import_production(
     for still in manifest.stills:
         dest = still_paths[still.key]
         if copy_media:
-            dest = _copy_into(
+            dest = _place_into(
                 still_paths[still.key],
                 root / "data" / "stills",
                 _safe_name(still.key) + still_paths[still.key].suffix,
                 report,
             )
         artifact = _artifact_for(dest, kind="image")
+        _register(
+            dest,
+            artifact.asset_id,
+            kind="image",
+            width=still.width,
+            height=still.height,
+        )
         ann_id = _mint(manifest.production, "still", still.key)
         still_ids[still.key] = ann_id
         body = StillBodyV1(
@@ -617,7 +961,11 @@ def import_production(
             width=still.width,
             height=still.height,
             title=still.title,
-            license=still.license,
+            # rule 3: the CODE is what a gate compares; the spelling a credit
+            # reads rides beside it. `license_codes` is keyed only on stills
+            # that recorded one, so an unlicensed still keeps its None.
+            license=report.license_codes.get(still.key, still.license),
+            license_label=still.license,
             license_url=still.license_url,
             attribution=still.attribution,
             source_page_url=still.source_page_url,
@@ -647,24 +995,64 @@ def import_production(
         else:
             report.stills_unchanged += 1
 
-    # --- the episode audio: one node per distinct mix -----------------------
+    # --- the episode audio: resolve the mixes, WITHOUT writing them yet -----
+    # The episode node carries its members and derives from them, so it cannot
+    # be written until each cut's beats have been. Resolving the files here
+    # keeps the ids deterministic and available to everything below.
     episode_ids: dict[str, uuid.UUID] = {}
     episode_assets: dict[str, str] = {}
+    episode_dests: dict[str, Path] = {}
     durations = {manifest.episode_audio.path: manifest.episode_audio.duration_s}
     for cut in manifest.cuts:
         durations[cut.audio.path] = cut.audio.duration_s
     for rel, srcfile in audio_paths.items():
         dest = srcfile
         if copy_media:
-            dest = _copy_into(
+            dest = _place_into(
                 srcfile, root / "data" / "episodes", Path(rel).name, report
             )
         artifact = _artifact_for(
             dest, kind="audio", mime="audio/mpeg", duration_s=durations.get(rel)
         )
-        ann_id = _mint(manifest.production, "episode", rel)
-        episode_ids[rel] = ann_id
+        _register(
+            dest,
+            artifact.asset_id,
+            kind="audio",
+            duration_s=durations.get(rel),
+        )
+        episode_ids[rel] = _mint(manifest.production, "episode", rel)
         episode_assets[rel] = artifact.asset_id
+        episode_dests[rel] = dest
+
+    # --- per cut: the script's beats and the takes that played them ---------
+    members_by_audio: dict[str, tuple[str, ...]] = {}
+    for cut in manifest.cuts:
+        members = _import_beats(
+            project,
+            index,
+            manifest,
+            cut,
+            root=root,
+            copy_media=copy_media,
+            take_paths=take_paths,
+            report=report,
+            register=_register,
+        )
+        rel = cut.audio.path
+        if rel in members_by_audio and members_by_audio[rel] != members:
+            raise ImportError_(
+                f"two cuts render against the same mix ({rel!r}) but describe "
+                "different beats. A beat is a member of the EPISODE, so one "
+                "mix has one decomposition and one play order; two cuts of it "
+                "share that rather than each owning a copy. Reconcile the two "
+                "beat lists, or give each cut its own mix."
+            )
+        members_by_audio[rel] = members
+
+    # --- the episode nodes, now that they have members ----------------------
+    for rel in audio_paths:
+        members = members_by_audio.get(rel, ())
+        ann_id = episode_ids[rel]
         _upsert(
             project,
             Annotation(
@@ -673,14 +1061,17 @@ def import_production(
                 reference=_node_ref(TIER_EPISODE_RENDER, ann_id),
                 body=EpisodeRenderBodyV1(
                     profile=profile,
-                    ordered_member_ids=(),
-                    artifact_id=artifact.asset_id,
-                    url=file_url(dest),
+                    ordered_member_ids=members,
+                    artifact_id=episode_assets[rel],
+                    url=file_url(episode_dests[rel]),
                     duration_s=float(durations.get(rel) or 0.0),
-                    timeline=None,
+                    timeline=_timeline_for(manifest, rel),
                 ).model_dump(mode="json"),
                 body_schema_uri=EPISODE_RENDER_V1,
-                provenance=_provenance(),
+                # The mix derives from its members, which is what makes
+                # "replace this take" read as stale through the picture track
+                # rather than as a change nothing notices.
+                provenance=_provenance([uuid.UUID(m) for m in members]),
             ),
             index,
         )
@@ -758,12 +1149,29 @@ def import_production(
             motion_file = src / cut.motion_artifact
             if motion_file.is_file():
                 motion_id = _mint(manifest.production, "cut", cut.label, "motion")
+                motion_file = _materialize_cut(
+                    motion_file,
+                    root,
+                    f"{motion_id}_motion.mp4",
+                    stage="motion",
+                    mode=materialize_cuts,
+                    report=report,
+                )
                 motion_art = _artifact_for(
                     motion_file,
                     kind="video",
                     mime="video/mp4",
                     duration_s=cut.duration_s,
                 )
+                if _is_inside(motion_file, root):
+                    _register(
+                        motion_file,
+                        motion_art.asset_id,
+                        kind="video",
+                        width=cut.width,
+                        height=cut.height,
+                        duration_s=cut.duration_s,
+                    )
                 _upsert(
                     project,
                     Annotation(
@@ -801,19 +1209,46 @@ def import_production(
         delivered_file = src / cut.artifact
         captions_id = None
         if cut.captions and (src / cut.captions).is_file():
-            captions_id = _artifact_for(
-                src / cut.captions, kind="text", mime="application/x-subrip"
-            ).asset_id
-        delivered_art = (
-            _artifact_for(
+            captions_file = src / cut.captions
+            if copy_media:
+                captions_file = _place_into(
+                    captions_file,
+                    root / "data" / "cuts",
+                    f"{delivered_id}.srt",
+                    report,
+                )
+            captions_art = _artifact_for(
+                captions_file, kind="text", mime="application/x-subrip"
+            )
+            captions_id = captions_art.asset_id
+            # Reported unregistered rather than coerced: the catalog's kinds
+            # are image/video/audio/json, and an .srt is none of them.
+            _register(captions_file, captions_id, kind="text")
+        delivered_art = None
+        if delivered_file.is_file():
+            delivered_file = _materialize_cut(
+                delivered_file,
+                root,
+                f"{delivered_id}.mp4",
+                stage="delivered",
+                mode=materialize_cuts,
+                report=report,
+            )
+            delivered_art = _artifact_for(
                 delivered_file,
                 kind="video",
                 mime="video/mp4",
                 duration_s=cut.duration_s,
             )
-            if delivered_file.is_file()
-            else None
-        )
+            if _is_inside(delivered_file, root):
+                _register(
+                    delivered_file,
+                    delivered_art.asset_id,
+                    kind="video",
+                    width=cut.width,
+                    height=cut.height,
+                    duration_s=cut.duration_s,
+                )
         parents = [
             *([motion_id] if motion_id else []),
             *label_ids,
@@ -835,7 +1270,7 @@ def import_production(
                     panel_ids=tuple(str(p) for p in panel_ids),
                     cache_key=None,
                     artifact_id=delivered_art.asset_id if delivered_art else None,
-                    url=file_url(delivered_file) if delivered_file.is_file() else None,
+                    url=file_url(delivered_file) if delivered_art else None,
                     duration_s=cut.duration_s,
                     width=cut.width,
                     height=cut.height,
@@ -854,6 +1289,284 @@ def import_production(
             report.published_links[cut.label] = str(cut.published["url"])
 
     return report
+
+
+def _is_inside(path: Path, root: Path) -> bool:
+    """Is ``path`` under ``root``? — i.e. did the project actually take it in.
+
+    >>> _is_inside(Path("/a/b/c.mp4"), Path("/a"))
+    True
+    >>> _is_inside(Path("/x/c.mp4"), Path("/a"))
+    False
+    """
+    try:
+        Path(path).resolve().relative_to(Path(root).resolve())
+    except ValueError:
+        return False
+    return True
+
+
+def _materialize_cut(
+    src_file: Path,
+    root: Path,
+    name: str,
+    *,
+    stage: str,
+    mode: str,
+    report: ImportReport,
+) -> Path:
+    """Bring a rendered cut into the project — or, on ``"none"``, say it is not.
+
+    Named ``{annotation id}.mp4`` / ``{annotation id}_motion.mp4``, which is
+    exactly what ``video_cut.render`` / ``.finish`` write into ``data/cuts``.
+    That is not cosmetic: ``braidio.downloads`` lists a project's deliverables
+    by scanning that directory and reads the stage off the file name, so an
+    imported cut appears there on the same terms as a rendered one, and the
+    fix lands on two doors instead of one.
+
+    The mp4s are the largest thing an import moves (about 1.1 GB across the
+    three productions, delivered-only), so a same-volume hardlink is what
+    makes this affordable — see :func:`_place_into`.
+    """
+    wanted = mode == "all" or (mode == "delivered" and stage == "delivered")
+    if not wanted:
+        report.catalog.unregistered.append(
+            (
+                str(src_file),
+                f"materialize_cuts={mode!r} leaves the {stage} cut where it is, "
+                "so no surface can serve it and the path will not exist on "
+                "another machine",
+            )
+        )
+        return src_file
+    return _place_into(src_file, root / "data" / "cuts", name, report)
+
+
+def _utc_now_iso() -> str:
+    """``'2026-09-20T12:34:56Z'`` — the catalog's ``generated_at`` spelling."""
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _timeline_for(manifest: ProductionManifest, audio_rel: str):
+    """The persisted ``TimelineBreakdown`` of the cut rendered against ``audio_rel``.
+
+    Carried verbatim onto the episode node, because it is the render's own
+    record of where every beat landed — and it is what
+    ``braidio.transforms.episode_timeline`` reads *instead of* reconstructing.
+    An imported episode has no weave-config and no durations to probe, so the
+    reconstruction path would return an empty breakdown and the panels would
+    be cut against nothing.
+    """
+    for cut in manifest.cuts:
+        if cut.audio.path == audio_rel and cut.timeline:
+            return dict(cut.timeline)
+    return None
+
+
+def _import_beats(
+    project,
+    index: dict,
+    manifest: ProductionManifest,
+    cut: CutRecord,
+    *,
+    root: Path,
+    copy_media: bool,
+    take_paths: dict[tuple[str, int], Path],
+    report: ImportReport,
+    register,
+) -> tuple[str, ...]:
+    """Write one cut's beats and takes; return its episode's member ids.
+
+    This is what makes a narration segment a thing at all. Before it, the only
+    audio-side node an imported production had was the finished mix, so "which
+    part of this is the narration, and can I swap it" had no referent — the
+    studio was right to decline to draw a button for it.
+
+    One node per timeline member, because ``ordered_member_ids`` is the
+    episode's **play order** and a list missing a member is not one:
+
+    - **narration** (including a beat whose timeline ``kind`` is really a
+      delivery style) → a ``narrative-beat/v1`` carrying the authored text,
+      plus a ``narration-render/v1`` carrying the take. The render derives from
+      the beat, so editing the words stales the recording — which is the
+      relationship the whole feature rests on.
+    - **clip / archive-with-a-source** → a ``segment-extraction/v1``. No
+      ``audio-clip/v1`` parent is invented: that would need a source-media node
+      naming a recording this import cannot witness, and a fabricated parent is
+      worse than an honest root.
+    - **scene break** → the ``scene-break/v1`` authoring node, which *is* the
+      member (a break has no render node — the boundary is the decision).
+
+    Ids are minted from ``(production, cut label, index)``, so a re-import
+    addresses the same nodes and a no-op re-import writes nothing.
+    """
+    from braidio.bodies._domain import (
+        NARRATIVE_BEAT_V1,
+        SCENE_BREAK_V1,
+        NarrativeBeatBodyV1,
+        SceneBreakBodyV1,
+    )
+    from braidio.bodies._render_nodes import (
+        NARRATION_RENDER_V1,
+        NARRATION_SOURCE_TTS,
+        SEGMENT_EXTRACTION_V1,
+        NarrationRenderBodyV1,
+        SegmentExtractionBodyV1,
+    )
+    from braidio.transforms._common import (
+        TIER_NARRATION_RENDER,
+        TIER_NARRATIVE_BEAT,
+        TIER_SCENE_BREAK,
+        TIER_SEGMENT_EXTRACTION,
+        beat_id as beat_identity,
+        file_url,
+    )
+    from lacing import Annotation
+
+    members: list[str] = []
+    counts = {"narration": 0, "clip": 0, "break": 0}
+    takes = 0
+
+    for beat in sorted(cut.beats, key=lambda b: b.index):
+        role = _beat_role(beat)
+        counts[role] += 1
+        ident = beat_identity(beat.index)
+
+        if role == "break":
+            bid = _mint(manifest.production, "break", cut.audio.path, beat.index)
+            _upsert(
+                project,
+                Annotation(
+                    id=bid,
+                    tier=TIER_SCENE_BREAK,
+                    reference=_node_ref(TIER_SCENE_BREAK, bid),
+                    body=SceneBreakBodyV1(
+                        beat_id=ident, label=beat.label or "", marker=beat.marker
+                    ).model_dump(mode="json"),
+                    body_schema_uri=SCENE_BREAK_V1,
+                    provenance=_provenance(),
+                ),
+                index,
+            )
+            members.append(str(bid))
+            continue
+
+        take_path = take_paths.get((cut.label, beat.index))
+        dest = take_path
+        artifact = None
+        if take_path is not None:
+            if copy_media:
+                dest = _place_into(
+                    take_path,
+                    root / "data" / "tts",
+                    _safe_name(f"{Path(cut.audio.path).stem}-beat{beat.index:03d}")
+                    + take_path.suffix,
+                    report,
+                )
+            duration = (
+                beat.take.duration_s
+                if beat.take is not None and beat.take.duration_s is not None
+                else round(max(beat.end - beat.start, 0.0), 3)
+            )
+            artifact = _artifact_for(
+                dest, kind="audio", mime="audio/mpeg", duration_s=duration
+            )
+            register(dest, artifact.asset_id, kind="audio", duration_s=duration)
+        else:
+            duration = round(max(beat.end - beat.start, 0.0), 3)
+
+        if role == "clip":
+            sid = _mint(manifest.production, "segment", cut.audio.path, beat.index)
+            # No invented span. One production's driver never persisted where
+            # in the master each clip was cut from, and (0.0, duration) reads
+            # exactly like a real cut from the head of somebody else's
+            # recording — a false claim about third-party material, which is
+            # the worst place to make one.
+            recorded = beat.source is not None
+            start_s, end_s = beat.source if recorded else (0.0, 0.0)
+            if not recorded:
+                report.segments_without_source.append(f"{cut.label}/{beat.index}")
+            _upsert(
+                project,
+                Annotation(
+                    id=sid,
+                    tier=TIER_SEGMENT_EXTRACTION,
+                    reference=_node_ref(TIER_SEGMENT_EXTRACTION, sid),
+                    body=SegmentExtractionBodyV1(
+                        cache_key=_imported_cache_key(
+                            manifest.production, cut.audio.path, beat.index
+                        ),
+                        start_s=float(start_s),
+                        end_s=float(end_s),
+                        source_span_recorded=recorded,
+                        artifact_id=artifact.asset_id if artifact else None,
+                        url=file_url(dest) if dest is not None else None,
+                    ).model_dump(mode="json"),
+                    body_schema_uri=SEGMENT_EXTRACTION_V1,
+                    provenance=_provenance(),
+                ),
+                index,
+            )
+            members.append(str(sid))
+            continue
+
+        # --- narration: the beat, then the take that spoke it ---------------
+        text = beat.text
+        if not (text or "").strip():
+            # NEVER the timeline's snippet — see the module docstring.
+            text = ""
+            report.beats_without_text.append(f"{cut.label}/{beat.index}")
+        bid = _mint(manifest.production, "beat", cut.audio.path, beat.index)
+        _upsert(
+            project,
+            Annotation(
+                id=bid,
+                tier=TIER_NARRATIVE_BEAT,
+                reference=_node_ref(TIER_NARRATIVE_BEAT, bid),
+                body=NarrativeBeatBodyV1(
+                    beat_id=ident, text=text, style=_beat_style(beat)
+                ).model_dump(mode="json"),
+                body_schema_uri=NARRATIVE_BEAT_V1,
+                provenance=_provenance(),
+            ),
+            index,
+        )
+        tid = _mint(manifest.production, "take", cut.audio.path, beat.index)
+        _upsert(
+            project,
+            Annotation(
+                id=tid,
+                tier=TIER_NARRATION_RENDER,
+                reference=_node_ref(TIER_NARRATION_RENDER, tid),
+                body=NarrationRenderBodyV1(
+                    cache_key=_imported_cache_key(
+                        manifest.production, cut.audio.path, beat.index
+                    ),
+                    artifact_id=artifact.asset_id if artifact else None,
+                    url=file_url(dest) if dest is not None else None,
+                    duration_s=float(duration),
+                    # Imported takes are synthesized. A person's own recording
+                    # becomes 'upload' when they replace one; claiming that
+                    # here would erase the only distinction between them.
+                    source=NARRATION_SOURCE_TTS,
+                ).model_dump(mode="json"),
+                body_schema_uri=NARRATION_RENDER_V1,
+                # The take derives from the beat: edit the words, and the
+                # recording reads stale.
+                provenance=_provenance([bid]),
+            ),
+            index,
+        )
+        members.append(str(tid))
+        if artifact is not None:
+            takes += 1
+
+    if cut.beats:
+        report.beats_by_cut[cut.label] = len(members)
+        report.takes_by_cut[cut.label] = takes
+    return tuple(members)
 
 
 def _common_profile(manifest: ProductionManifest) -> str:
@@ -912,12 +1625,32 @@ def _project_notes(manifest: ProductionManifest, report: ImportReport) -> str:
     return "\n".join(lines)
 
 
-def _copy_into(src: Path, folder: Path, name: str, report: ImportReport) -> Path:
-    """Copy ``src`` to ``folder/name`` unless identical bytes are already there."""
+def _place_into(src: Path, folder: Path, name: str, report: ImportReport) -> Path:
+    """Put ``src`` at ``folder/name`` — hardlinked when the volume allows it.
+
+    A project has to be **self-contained**: a body pointing at a path outside
+    it is a reference the server it gets rsynced to cannot resolve, which is
+    how three finished films arrived somewhere they could be read and not
+    watched. So the bytes come in.
+
+    They come in by *link* where that is possible, because a same-volume
+    hardlink makes a self-contained project cost nothing, and a copy of 1.1 GB
+    of finished cuts costs 1.1 GB twice on the machine that does the import.
+    The link is safe for the same reason the blob store's is: this is finished
+    media, never edited in place. Across a device boundary a copy is the right
+    answer and is taken silently — unlike the blob store, where a cross-device
+    copy means doubling *inside* the project and is refused.
+    """
     folder.mkdir(parents=True, exist_ok=True)
     dest = folder / name
     if dest.exists() and dest.stat().st_size == src.stat().st_size:
         return dest
-    shutil.copyfile(src, dest)
-    report.media_copied += 1
+    if dest.exists():
+        dest.unlink()
+    linked, written = _link_or_copy(src, dest, allow_copy=True)
+    if linked:
+        report.media_linked += 1
+    else:
+        report.media_copied += 1
+        report.bytes_copied += written
     return dest

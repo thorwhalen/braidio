@@ -378,6 +378,10 @@ PINNED: dict[str, dict] = {
             "artifact_id": "string|null = null",
             "cache_key": "string",
             "end_s": "number",
+            # additive: start_s/end_s are required floats with no null, so a
+            # clip whose source span was never persisted needs a bool to say
+            # so rather than an invented (0.0, duration).
+            "source_span_recorded": "boolean = true",
             "start_s": "number",
             "url": "string|null = null",
         },
@@ -409,6 +413,7 @@ PINNED: dict[str, dict] = {
             "key": "string",
             "labelled": "boolean",
             "license": "string|null = null",
+            "license_label": "string|null = null",
             "license_url": "string|null = null",
             "note": "string|null = null",
             "source_page_url": "string|null = null",

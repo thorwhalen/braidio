@@ -139,7 +139,27 @@ class StillBodyV1(BaseModel):
         ),
     )
     # --- rights: named exactly as illustration.RIGHTS_FIELDS ---
-    license: Optional[str] = Field(None, description="Licence code or name.")
+    license: Optional[str] = Field(
+        None,
+        description=(
+            "The CANONICAL licence code — what a gate compares. "
+            "`illustration.licensing.normalize_license`'s output: 'by', "
+            "'by-sa', 'cc0', 'pdm'. Never a provider spelling."
+        ),
+    )
+    # Additive (default None), so every row written before it exists still
+    # loads and simply has no display spelling. The human form a credit should
+    # read ("CC BY-SA 4.0"), kept BESIDE the canonical code rather than instead
+    # of it: a gate that compares "CC BY-SA 4.0" against "by-sa" matches
+    # nothing while looking like it works, and a credit reading "by-sa"
+    # satisfies nobody. Two readers, two fields — thorwhalen/illustration#24.
+    license_label: Optional[str] = Field(
+        None,
+        description=(
+            "The licence as a human reads it ('CC BY-SA 4.0'). Display only; "
+            "`credit_line` prefers it and falls back to `license`."
+        ),
+    )
     license_url: Optional[str] = Field(None)
     attribution: Optional[str] = Field(
         None,
@@ -326,10 +346,20 @@ def credit_line(still: StillBodyV1 | dict) -> str:
     CC BY-SA image. This builds the line from the parts and **raises** when
     no licence is recorded: a credit that names no licence satisfies nothing.
 
+    The licence it prints is ``license_label`` when one is recorded and
+    ``license`` otherwise. ``license`` is the *canonical* code a gate compares
+    (``'by-sa'``), which is not what a credit should read, so the display
+    spelling is carried beside it rather than instead of it — a still that has
+    only the canonical code still credits, just tersely.
+
     >>> credit_line(dict(key="k", artifact_id="a", labelled=False,
     ...     title="Portrait of Eliza Hamilton", author="Ralph Earl",
     ...     license="public-domain"))
     'Portrait of Eliza Hamilton — Ralph Earl — public-domain'
+    >>> credit_line(dict(key="k", artifact_id="a", labelled=False,
+    ...     title="A Photograph", author="EliziR",
+    ...     license="by-sa", license_label="CC BY-SA 4.0"))
+    'A Photograph — EliziR — CC BY-SA 4.0'
     >>> credit_line(dict(key="k", artifact_id="a", labelled=True, subject="Eliza",
     ...     author="Ralph Earl", license="public-domain",
     ...     source_page_url="https://commons.wikimedia.org/wiki/File:E.jpg"))
@@ -346,7 +376,8 @@ def credit_line(still: StillBodyV1 | dict) -> str:
             "no licence satisfies no attribution condition. Record `license` "
             "(and `license_url`) before this still can be credited."
         )
-    parts = [body.title, body.author, body.source_page_url, body.license]
+    shown = (body.license_label or "").strip() or body.license
+    parts = [body.title, body.author, body.source_page_url, shown]
     return " — ".join(p.strip() for p in parts if p and p.strip())
 
 

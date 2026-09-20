@@ -239,6 +239,18 @@ class SegmentExtractionBodyV1(BaseModel):
     )
     start_s: float = Field(..., description="Padded extraction start (seconds).")
     end_s: float = Field(..., description="Padded extraction end (seconds).")
+    # Additive (default True), so every row written before it exists reads as
+    # the recorded span it is. `start_s`/`end_s` are REQUIRED floats, so there
+    # is no null to mean "nobody recorded this" — and an imported production
+    # whose driver did not persist the span would otherwise have to invent one.
+    # (0.0, duration) reads exactly like a real cut from the head of the
+    # source, which is a claim about somebody else's recording. A required
+    # bool says it instead of leaning on a sentinel: False means the pair is
+    # not a span and nothing may reason from it.
+    source_span_recorded: bool = Field(
+        True,
+        description="False: start_s/end_s are unknown, not a span. Do not use.",
+    )
     artifact_id: Optional[str] = Field(None, description="lacing Artifact asset_id.")
     url: Optional[str] = Field(
         None, description="file:// (or hosted) URL of the extracted audio."
