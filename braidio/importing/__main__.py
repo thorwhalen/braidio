@@ -111,10 +111,10 @@ def _render(report) -> str:
             + ", ".join(f"{k}={v}" for k, v in report.beats_by_cut.items())
         )
         out.append(f"  takes        {report.takes_total} playable narration take(s)")
-    if report.media_placed:
+    if report.media_copied:
         out.append(
-            f"  media        {report.media_linked} linked, "
-            f"{report.media_copied} copied ({report.bytes_copied / 1e6:.0f} MB)"
+            f"  media        {report.media_copied} file(s) copied in "
+            f"({report.bytes_copied / 1e6:.0f} MB) — the project owns its bytes"
         )
     cat = report.catalog
     out.append(

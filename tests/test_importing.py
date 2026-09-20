@@ -715,10 +715,25 @@ def test_media_is_copied_into_the_project_so_it_is_self_contained(tmp_path, sour
 def test_no_copy_media_references_the_source_in_place(tmp_path, source):
     from braidio.transforms._common import TIER_STILL, url_to_path
 
-    report = _run(tmp_path, source, copy_media=False)
+    report = _run(
+        tmp_path,
+        source,
+        copy_media=False,
+        materialize_cuts="none",
+        register_artifacts=False,
+    )
     assert report.media_copied == 0
+    assert report.bytes_copied == 0
     still = _annotations(tmp_path / "project", TIER_STILL)[0]
     assert source.resolve() in url_to_path(still.body["url"]).parents
+
+    # `copy_media` and `materialize_cuts` are INDEPENDENT knobs: the first
+    # governs the stills, the mix and the takes, the second the rendered
+    # films. Declining the first does not decline the second.
+    with_cuts = _run(
+        tmp_path / "cuts", source, copy_media=False, register_artifacts=False
+    )
+    assert with_cuts.media_copied == 1, "the delivered cut still comes in"
 
 
 # --- gap 1: the narration is addressable ------------------------------------
@@ -940,9 +955,7 @@ def test_every_imported_artifact_is_registered_and_its_bytes_are_there(
     is worse than no row — the host's route has already promised a 200."""
     from braidio.importing._catalog import blobs_dir, iter_rows, registered_ids
     from braidio.transforms._common import (
-        TIER_EPISODE_RENDER,
-        TIER_NARRATION_RENDER,
-        TIER_STILL,
+        TIER_SEGMENT_EXTRACTION,
         TIER_VIDEO_CUT,
     )
 
@@ -951,17 +964,24 @@ def test_every_imported_artifact_is_registered_and_its_bytes_are_there(
     registered = registered_ids(root)
     assert registered, "nothing registered at all"
 
+    # Derived from the GRAPH, not from a hand-written tier list. The first
+    # version listed four tiers and forgot `segment-extractions`, so guarding
+    # the clip registrations left the whole suite green while every commercial
+    # -master excerpt went unregistered. A census that enumerates what to count
+    # cannot notice what it forgot.
+    import nw
+
     wanted = set()
-    for tier in (TIER_STILL, TIER_EPISODE_RENDER, TIER_NARRATION_RENDER):
-        for ann in _annotations(root, tier):
-            if ann.body.get("artifact_id"):
-                wanted.add(ann.body["artifact_id"])
-    delivered = [
-        a
-        for a in _annotations(root, TIER_VIDEO_CUT)
-        if a.body["stage"] == "delivered" and a.body.get("artifact_id")
-    ]
-    wanted |= {a.body["artifact_id"] for a in delivered}
+    for ann in nw.iter_all_annotations(root):
+        aid = ann.body.get("artifact_id")
+        if not aid:
+            continue
+        if ann.tier == TIER_VIDEO_CUT and ann.body.get("stage") != "delivered":
+            continue  # motion passes are deliberately out — see their own test
+        wanted.add(aid)
+    assert len(wanted) >= 7, wanted
+    tiers = {a.tier for a in nw.iter_all_annotations(root) if a.body.get("artifact_id")}
+    assert TIER_SEGMENT_EXTRACTION in tiers, "clips must be in the census"
 
     missing = sorted(wanted - registered)
     assert not missing, (
@@ -1173,12 +1193,18 @@ def test_a_row_braidio_writes_loads_through_the_hosts_own_model(tmp_path, source
         assert record.url.startswith("/api/artifacts/")
 
 
-def test_the_catalog_row_declares_every_field_the_host_requires():
-    """What CI pins when the host is not importable.
+def test_the_catalog_row_emits_exactly_the_fields_it_declares():
+    """The builder and its declared field list agree.
 
-    A literal, on purpose: this list *is* the contract braidio is promising
-    to honour, so changing it has to be a deliberate edit rather than a
-    silent consequence of editing the builder.
+    Note what this does NOT do, because its old name claimed otherwise: it
+    compares braidio against braidio, so it cannot detect drift in the host's
+    model. Only ``test_a_row_braidio_writes_loads_through_the_hosts_own_model``
+    can, and that needs the host importable. What this one buys is that
+    changing the emitted shape has to be a deliberate two-place edit rather
+    than a silent consequence of editing the builder — and, in particular,
+    that ``filename`` stays OUT: it is the newest field in the host's model,
+    and emitting it makes every row unreadable by an older host, whole
+    catalog at a time.
     """
     from braidio.importing._catalog import CatalogRow
 
@@ -1200,7 +1226,10 @@ def test_the_catalog_row_declares_every_field_the_host_requires():
         "prompt",
         "generated_at",
         "triggered_by",
-        "filename",
+    )
+    assert "filename" not in CatalogRow.PROVENANCE_FIELDS, (
+        "the host gained `filename` one day before this module was written; "
+        "emitting it fails an older host's whole index, not one row"
     )
     row = CatalogRow.build("ab" * 32, kind="image", generated_at="2026-01-01T00:00:00Z")
     assert tuple(sorted(row)) == tuple(sorted(CatalogRow.FIELDS))
@@ -1414,3 +1443,354 @@ def test_registering_under_a_non_digest_id_is_refused_here_not_at_the_host():
             generated_at="2026-01-01T00:00:00Z",
             report=CatalogReport(),
         )
+
+
+@needs_illustration
+def test_two_cuts_on_one_mix_with_different_words_are_refused(tmp_path, source):
+    """**Negative control** for a guard that was checking the wrong thing.
+
+    Member ids are ``_mint(production, role, mix, index)`` — a pure function
+    of position — so two cuts with the same indices and roles mint identical
+    id tuples however different their words and take files are. The first
+    version of this guard compared those tuples, which passes exactly when it
+    should refuse: the second cut silently overwrote the first's beat bodies
+    and its take file, and the report said both were written.
+    """
+    from braidio.importing import ImportError_
+
+    (source / "demo" / "takes" / "other00.mp3").write_bytes(b"a different take")
+    a = dict(_doc()["cuts"][0])
+    b = dict(a)
+    b["label"] = "v2"
+    beats = [dict(x) for x in a["beats"]]
+    beats[0] = {**beats[0], "text": "Completely different words."}
+    beats[0]["take"] = {**beats[0]["take"], "path": "takes/other00.mp3"}
+    b["beats"] = beats
+    with pytest.raises(ImportError_, match="describe different beats"):
+        _run(tmp_path, source, overrides={"cuts": [a, b]})
+
+    # two cuts that genuinely agree are still fine — the guard must not just
+    # refuse every shared mix
+    same = dict(a)
+    same["label"] = "v2"
+    report = _run(tmp_path / "ok", source, overrides={"cuts": [a, same]})
+    assert report.beats_by_cut == {"v1": 4, "v2": 4}
+
+
+@needs_illustration
+def test_a_production_with_no_persisted_timeline_can_still_plan_its_panels(
+    tmp_path, source
+):
+    """**Negative control.** ``episode_timeline`` reads a persisted breakdown
+    or RECONSTRUCTS — and the reconstruction needs a weave-config an imported
+    project does not have, so it does not degrade, it RAISES, taking panel
+    planning and cut rendering with it. One of the three real productions
+    records its timeline in its own shape and carried none.
+    """
+    from braidio.project import Project
+    from braidio.transforms import episode_timeline
+    from braidio.transforms._common import TIER_EPISODE_RENDER
+
+    cut = _cuts_with()[0]
+    cut.pop("timeline")  # beats, but no timeline of its own
+    _run(tmp_path, source, overrides={"cuts": [cut]})
+    root = tmp_path / "project"
+    episode = _annotations(root, TIER_EPISODE_RENDER)[0]
+    assert episode.body["timeline"], "one must be built from the beats"
+    breakdown = episode_timeline(Project(root), episode)  # must not raise
+    assert len(breakdown.beats) == 4
+    assert breakdown.duration == 20.0
+    # settings are NOT invented
+    assert episode.body["timeline"]["settings"] is None
+
+
+@needs_illustration
+def test_a_refusal_leaves_no_project_behind(tmp_path, source, monkeypatch):
+    """All or nothing. Several refusals fire AFTER the first node is written —
+    an unlinkable blob is the live case — and a CLI printing "import refused"
+    over a tree holding a project.json, one annotation and some media is worse
+    than either outcome alone: the refusal says nothing happened and the tree
+    says otherwise, and the next run re-imports into a project nobody meant to
+    create."""
+    import os
+
+    from braidio.importing import CrossDeviceCatalog
+
+    real_link = os.link
+
+    def _exdev(src, dst, *a, **kw):
+        if "artifacts" in str(dst):
+            raise OSError(18, "Invalid cross-device link")
+        return real_link(src, dst, *a, **kw)
+
+    monkeypatch.setattr(os, "link", _exdev)
+    with pytest.raises(CrossDeviceCatalog):
+        _run(tmp_path, source)
+    assert not (tmp_path / "project").exists(), (
+        "a refusal must not leave a half-written project"
+    )
+
+
+@needs_illustration
+def test_a_failed_reimport_leaves_an_existing_project_alone(
+    tmp_path, source, monkeypatch
+):
+    """The other half of all-or-nothing, and the dangerous one: rollback must
+    never delete a project this call did not create."""
+    import os
+
+    from braidio.importing import CrossDeviceCatalog
+
+    _run(tmp_path, source)
+    root = tmp_path / "project"
+    before = sorted(p.name for p in root.iterdir())
+    assert before
+
+    real_link = os.link
+
+    def _exdev(src, dst, *a, **kw):
+        if "artifacts" in str(dst):
+            raise OSError(18, "Invalid cross-device link")
+        return real_link(src, dst, *a, **kw)
+
+    # force the blob work to happen again so the failure can fire
+    import shutil as _sh
+
+    _sh.rmtree(root / ".reelee")
+    monkeypatch.setattr(os, "link", _exdev)
+    with pytest.raises(CrossDeviceCatalog):
+        _run(tmp_path, source)
+    assert root.exists(), "a failed RE-import must not delete the project"
+    assert sorted(p.name for p in root.iterdir()) == before
+
+
+@needs_illustration
+def test_the_project_owns_its_bytes_rather_than_linking_to_the_source(tmp_path, source):
+    """**Negative control** for the inode the blob-store test cannot see.
+
+    The blob is linked from the project's media, so comparing those two
+    inodes is green whether the media arrived by copy or by link. What the
+    media must NOT share is an inode with the SOURCE: these sources are
+    shared working trees, and a link makes an in-place rewrite upstream
+    rewrite the project's copy and the blob under a digest name that no
+    longer describes it.
+    """
+    from braidio.importing._catalog import blobs_dir
+    from braidio.transforms._common import TIER_STILL, url_to_path
+
+    _run(tmp_path, source)
+    root = tmp_path / "project"
+    still = _annotations(root, TIER_STILL)[0]
+    media = url_to_path(still.body["url"])
+    origin = source / "demo" / "one.jpg"
+    assert media.read_bytes() == origin.read_bytes()
+    assert media.stat().st_ino != origin.stat().st_ino, (
+        "the project must own its bytes, not share an inode with a shared source tree"
+    )
+    # ...while the blob still costs nothing
+    blob = blobs_dir(root) / still.body["artifact_id"]
+    assert blob.stat().st_ino == media.stat().st_ino
+
+
+@needs_illustration
+def test_a_changed_source_of_the_same_length_is_not_mistaken_for_unchanged(
+    tmp_path, source
+):
+    """**Negative control.** A size-only check makes "a re-import is a no-op"
+    unfalsifiable: it cannot tell "nothing changed" from "the change was
+    invisible to the check"."""
+    from braidio.transforms._common import TIER_STILL, url_to_path
+    import os
+    import time
+
+    _run(tmp_path, source)
+    media = url_to_path(_annotations(tmp_path / "project", TIER_STILL)[0].body["url"])
+    origin = source / "demo" / "one.jpg"
+    replacement = b"XXXX-image-one"  # same length, different bytes
+    assert len(replacement) == len(origin.read_bytes())
+    origin.write_bytes(replacement)
+    os.utime(origin, (time.time() + 10, time.time() + 10))
+
+    report = _run(tmp_path, source)
+    assert report.media_copied > 0, "the changed source must be brought in again"
+    assert media.read_bytes() == replacement
+
+
+@needs_illustration
+def test_non_contiguous_beat_indices_are_refused(tmp_path, source):
+    """A member's POSITION in ``ordered_member_ids`` is matched against a
+    timeline beat's INDEX downstream (``braidio.captions.cues_for``), so a gap
+    silently shifts every cue after it onto the wrong beat. Real data is
+    contiguous everywhere; nothing validated it."""
+    from braidio.importing import ImportError_
+
+    beats = [dict(b) for b in _doc()["cuts"][0]["beats"]]
+    beats[3] = {**beats[3], "index": 7}  # a gap
+    with pytest.raises(ImportError_, match="not 0.."):
+        _run(tmp_path, source, overrides={"cuts": _cuts_with(beats=beats)})
+
+
+# --- what a rollback may NEVER do -------------------------------------------
+#
+# The rollback added above is the most dangerous code in this module: it calls
+# `shutil.rmtree` on a caller-supplied path. The three tests below are the
+# reason its condition is "this directory did not exist when we started" and
+# not the far more natural "there is no project.json here, so it is not a
+# project yet". Under that second test, a manifest with one missing still file
+# deletes every one of these.
+
+
+@needs_illustration
+def test_a_refusal_never_deletes_a_directory_it_did_not_create(tmp_path, source):
+    """**Negative control.** The caller named a directory; that is not consent
+    to destroy it. Most refusals here are ordinary validation that used to
+    write nothing at all."""
+    from braidio.importing import ImportError_
+
+    target = tmp_path / "project"
+    target.mkdir()
+    (target / "IMPORTANT.md").write_text("a year of notes")
+    (target / "sub").mkdir()
+    (target / "sub" / "thesis.pdf").write_bytes(b"%PDF-")
+
+    (source / "demo" / "one.jpg").unlink()  # one missing still: pure validation
+    with pytest.raises(ImportError_, match="not on disk"):
+        _run(tmp_path, source)
+
+    assert (target / "IMPORTANT.md").read_text() == "a year of notes"
+    assert (target / "sub" / "thesis.pdf").exists()
+
+
+@needs_illustration
+def test_dry_run_never_deletes_the_directory_it_was_pointed_at(tmp_path, source):
+    """``--dry-run``'s whole contract is "validate everything and write
+    nothing". Deleting the directory is the opposite of nothing — and dry-run
+    is the mode a careful person uses to check they typed the path right."""
+    from braidio.importing import ImportError_
+
+    target = tmp_path / "project"
+    target.mkdir()
+    (target / "keep.txt").write_text("keep me")
+    (source / "demo" / "one.jpg").unlink()
+    with pytest.raises(ImportError_, match="not on disk"):
+        _run(tmp_path, source, dry_run=True)
+    assert (target / "keep.txt").read_text() == "keep me"
+
+
+@needs_illustration
+def test_a_refusal_never_deletes_the_source_production(tmp_path, source):
+    """The source root and the project root are separate arguments, so this is
+    one typo away — and the sources are the irreplaceable half of the whole
+    exercise."""
+    from braidio.importing import import_production, load_manifest
+
+    before = sorted(p.name for p in (source / "demo").iterdir())
+    assert len(before) > 5
+    (source / "demo" / "one.jpg").unlink()
+    with pytest.raises(Exception):
+        # the project root typed as the source folder
+        import_production(_manifest(tmp_path), source / "demo", source_root=source)
+    assert (source / "demo").exists(), "the source production must survive"
+    assert (source / "demo" / "ep.mp3").exists()
+
+
+@needs_illustration
+def test_a_reimport_never_writes_new_bytes_through_an_existing_blob(tmp_path, source):
+    """**Negative control**, and the sharpest one here.
+
+    After a registration, ``blobs/<sha256>`` is a hardlink to the project's
+    media file. ``shutil.copy2`` opens its destination for writing rather than
+    replacing it, so copying a changed source over that file writes the new
+    bytes THROUGH the blob — its contents change under a digest name that no
+    longer describes them, and the host answers 200 with the wrong picture
+    under the old id. The trigger is the ordinary case: a better scan arrives
+    and the production is re-imported.
+    """
+    import hashlib
+    import os
+    import time
+
+    from braidio.importing._catalog import blobs_dir
+
+    _run(tmp_path, source)
+    root = tmp_path / "project"
+
+    origin = source / "demo" / "one.jpg"
+    origin.write_bytes(b"a-completely-different-photograph")
+    os.utime(origin, (time.time() + 10, time.time() + 10))
+    _run(tmp_path, source)
+
+    bad = []
+    for blob in blobs_dir(root).iterdir():
+        digest = hashlib.sha256(blob.read_bytes()).hexdigest()
+        if digest != blob.name:
+            bad.append((blob.name, digest))
+    assert not bad, (
+        "every blob's bytes must hash to its own name; these do not, so the "
+        f"catalog serves the wrong content under a live id: {bad}"
+    )
+
+
+@needs_illustration
+def test_not_copying_the_media_may_not_be_combined_with_registering_it(
+    tmp_path, source
+):
+    """**Negative control** for Defect 8 reaching the blob store by a flag.
+
+    With ``copy_media=False`` the path handed to the catalog IS the source
+    file, so the blob store hardlinks a shared working tree into the project:
+    source, media and blob become one inode, and an in-place rewrite upstream
+    changes the blob's bytes under a digest name that no longer describes
+    them. `_place_into`'s docstring is where that rule is stated — and the one
+    path that violated it was the path that never calls `_place_into`.
+    """
+    from braidio.importing import ImportError_
+
+    with pytest.raises(ImportError_, match="cannot be combined"):
+        _run(tmp_path, source, copy_media=False)
+
+    # each alone is fine
+    _run(tmp_path / "a", source, copy_media=False, register_artifacts=False)
+    _run(tmp_path / "b", source)
+
+
+@needs_illustration
+def test_an_interrupt_rolls_back_like_any_other_failure(tmp_path, source, monkeypatch):
+    """``except Exception`` would miss this, and a Ctrl-C half-way through a
+    1 GB import is the interruption a person is most likely to perform — so
+    it is the one most likely to leave the half-written project."""
+    from braidio.importing import _writer
+
+    real = _writer._place_into
+    calls = {"n": 0}
+
+    def _boom(*a, **kw):
+        calls["n"] += 1
+        if calls["n"] > 2:
+            raise KeyboardInterrupt
+        return real(*a, **kw)
+
+    monkeypatch.setattr(_writer, "_place_into", _boom)
+    with pytest.raises(KeyboardInterrupt):
+        _run(tmp_path, source)
+    assert not (tmp_path / "project").exists(), (
+        "an interrupt must roll back a project this call created"
+    )
+
+
+@needs_illustration
+def test_the_burnt_in_attribution_shows_the_spelling_not_the_code(tmp_path, source):
+    """The SECOND place a licence reaches a viewer, and the one burnt into the
+    picture. A doctest alone guarded this; the regression it covers changed 78
+    of the 82 labelled stills across the three real productions, so it earns a
+    test that runs against a real imported body."""
+    from braidio.transforms._video_cut import _short_attribution
+    from braidio.transforms._common import TIER_STILL
+
+    _run(tmp_path, source)
+    stills = {
+        s.body["key"]: s.body for s in _annotations(tmp_path / "project", TIER_STILL)
+    }
+    line = _short_attribution(stills["one#1"])
+    assert line == "EliziR · CC BY-SA 4.0", line
+    assert "by-sa" not in line, "a lower third reading 'by-sa' credits nobody"

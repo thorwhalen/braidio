@@ -183,9 +183,22 @@ class CatalogRow:
     as a diff against this list rather than as an absence.
     """
 
-    #: Every key the host's record declares, in its own order. The host
-    #: validates ``extra="forbid"``, so an omission and an addition are both
-    #: fatal — which is why this is an exhaustive list rather than a subset.
+    #: Every key this module EMITS, in the host's own order.
+    #:
+    #: An omission is safe and an addition is fatal, which is the opposite of
+    #: how it first reads. Every field the host declares is optional except
+    #: ``id``, ``kind``, ``url`` and ``provenance.generated_at``, so a key left
+    #: out simply takes its default — while a key the host does not know fails
+    #: validation, and it fails it for the **whole catalog**, because
+    #: ``ArtifactRepository.index()`` validates every row. One unknown key does
+    #: not cost one artifact; it costs all of them.
+    #:
+    #: **So the rule is: emit the minimum, and only fields that have been in
+    #: the host's model long enough to be everywhere.** This is not caution for
+    #: its own sake — the host's ``provenance.filename`` landed one day before
+    #: this module was written, and emitting it would have made every row
+    #: braidio writes unreadable by every host build older than that, with the
+    #: failure showing up as an empty catalog rather than as a bad row.
     FIELDS: tuple[str, ...] = (
         "id",
         "kind",
@@ -197,6 +210,10 @@ class CatalogRow:
         "provenance",
         "content_hash",
     )
+    #: The provenance keys this module emits. ``filename`` is deliberately
+    #: ABSENT: it is the newest field in the host's model and the one that
+    #: would fail an older host's whole index. Its only value was a friendlier
+    #: name in a downloads folder.
     PROVENANCE_FIELDS: tuple[str, ...] = (
         "source",
         "model",
@@ -204,7 +221,6 @@ class CatalogRow:
         "prompt",
         "generated_at",
         "triggered_by",
-        "filename",
     )
 
     @staticmethod
@@ -216,7 +232,6 @@ class CatalogRow:
         width: Optional[int] = None,
         height: Optional[int] = None,
         duration_s: Optional[float] = None,
-        filename: str = "",
         note: str = "",
     ) -> dict:
         """One record, ready to serialize.
@@ -249,7 +264,6 @@ class CatalogRow:
                 "prompt": note or None,
                 "generated_at": generated_at,
                 "triggered_by": None,
-                "filename": filename or None,
             },
             "content_hash": artifact_id,
         }
@@ -392,7 +406,6 @@ def register_artifact(
         width=width,
         height=height,
         duration_s=duration_s,
-        filename=src.name,
         note=note,
     )
     if row_path.exists():
