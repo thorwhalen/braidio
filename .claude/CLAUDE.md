@@ -148,6 +148,39 @@ at a singleton tier: both leave the old renders looking fresh, which is worse
 than a refusal. `weave_project`'s wire description promises exactly this
 behaviour on a re-run.
 
+## The importer (`braidio.importing`) — four things that are not obvious
+
+`import_production(manifest, project_root, …)` turns a normalized manifest of a
+**finished** production into a real project graph. Its module docstrings carry
+the full reasoning; these are the four a caller gets wrong.
+
+1. **Retrievability is not optional, and it is a separate write from the
+   graph.** The graph records an artifact by content hash; until a row exists
+   in the project's delivery catalog (`.reelee/artifacts/{catalog,blobs}`) that
+   id **404s on every surface**. `register_artifacts=True` is the default for
+   that reason. Two rules inside it: the row is keyed on the hash the graph
+   already recorded (a host-minted opaque id gives a populated catalog that
+   answers nothing the project asks for), and a row's `url` is the host's
+   route, **never** a `file://` path — one of those reached an `<img src>` and
+   put a home directory in a page's DOM. `assert_local_backend` refuses up
+   front when the host is configured to read from an object store, because
+   that is the one failure mode that would otherwise report success.
+2. **A delivered cut comes into the project; a motion pass does not.**
+   `materialize_cuts="delivered"` — a path outside the project is not
+   retrievable through any surface and does not exist on the server. Motion
+   passes are resumable intermediates and roughly double the weight.
+3. **Replacing a narration take is a re-weave, not an edit.** Beats and takes
+   are imported so a segment is addressable at all, but a panel is pinned to
+   the mix by a `MediaRef` over the mix's *content hash*, so a new take changes
+   the mix's bytes and its own duration. Measured: one take reaches 27
+   downstream nodes on a 24-panel production. `NARRATION_REPLACEMENT_NOTE` is
+   the text to quote; never describe it as cheap.
+4. **`StillBodyV1.license` is the canonical code, `license_label` is the
+   spelling.** A gate comparing `"CC BY-SA 4.0"` against `"by-sa"` matches
+   nothing while looking like it works, and an unrecognised code survives
+   `normalize_license` unchanged — so the failure is silent. `credit_line`
+   prefers the label and falls back to the code.
+
 ## Body schemas are a federation contract
 
 `braidio/bodies/` registers 17 lacing body-schema URIs (7 domain, 10 render —
