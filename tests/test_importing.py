@@ -1388,3 +1388,29 @@ def test_two_mixes_with_one_file_name_are_refused_not_overwritten(tmp_path, sour
     cut_b["audio"] = {"path": "other/ep.mp3", "duration_s": 20.0}
     with pytest.raises(ImportError_, match="share a file name"):
         _run(tmp_path, source, overrides={"cuts": [cut_a, cut_b]})
+
+
+def test_registering_under_a_non_digest_id_is_refused_here_not_at_the_host():
+    """The host validates `content_hash` as 64 lowercase hex. A row written
+    under anything else is accepted by this module and refused when the host
+    reads it back — a failure surfacing nowhere near its cause."""
+    from braidio.importing._catalog import CatalogReport, register_artifact
+
+    with pytest.raises(ValueError, match="64-character lowercase hex"):
+        register_artifact(
+            "/tmp/nowhere",
+            "/tmp/nowhere/x.jpg",
+            artifact_id="art-image-Ky3z",
+            kind="image",
+            generated_at="2026-01-01T00:00:00Z",
+            report=CatalogReport(),
+        )
+    with pytest.raises(ValueError, match="64-character lowercase hex"):
+        register_artifact(
+            "/tmp/nowhere",
+            "/tmp/nowhere/x.jpg",
+            artifact_id="AB" * 32,  # uppercase: the host refuses it
+            kind="image",
+            generated_at="2026-01-01T00:00:00Z",
+            report=CatalogReport(),
+        )

@@ -59,6 +59,7 @@ import errno
 import hashlib
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Optional
@@ -85,6 +86,10 @@ BYTES_ROUTE = "/api/artifacts/{artifact_id}/bytes"
 #: ceiling; EPERM is a filesystem that refuses links outright. Everything else
 #: propagates. Same allow-list as ``reelee.fork._link_or_copy``.
 _LINKABLE_REFUSALS = (errno.EXDEV, errno.EMLINK, errno.EPERM)
+
+#: The host's ``content_hash`` validator, mirrored. A 64-character lowercase
+#: hex digest and nothing else.
+_IS_DIGEST = re.compile(r"[0-9a-f]{64}")
 
 
 class CrossDeviceCatalog(OSError):
@@ -337,11 +342,21 @@ def register_artifact(
     ``artifact_id`` must be the content hash of ``path``'s bytes — it is what
     the graph already recorded, and registering under anything else produces a
     catalog that answers nothing the project actually asks for. The caller
-    passes it rather than this function recomputing it, so the two can be
-    compared: a mismatch means the file on disk is not the file the graph
-    describes, which is a real defect and is raised, not repaired.
+    passes it rather than this function re-deriving it, because the caller has
+    already hashed the file to build the annotation and a 300 MB mp4 is not
+    worth reading twice. The *shape* is checked here, though: the host's
+    ``content_hash`` validator accepts exactly 64 lowercase hex characters, so
+    anything else would be written happily and rejected when the host reads
+    the row back — a failure that surfaces nowhere near its cause.
     """
     src = Path(path)
+    if not _IS_DIGEST.fullmatch(artifact_id or ""):
+        raise ValueError(
+            f"artifact_id {artifact_id!r} is not a 64-character lowercase hex "
+            "digest. The catalog is content-addressed and the host validates "
+            "the same shape, so a row written under any other id is accepted "
+            "here and refused there."
+        )
     if kind not in CATALOG_KINDS:
         report.unregistered.append(
             (str(src), f"kind {kind!r} is not one the catalog can hold")
