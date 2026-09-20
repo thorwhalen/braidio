@@ -1367,3 +1367,24 @@ def test_an_object_store_backend_refuses_rather_than_registering_into_the_void(
     # and an unset / fs backend is unaffected
     monkeypatch.delenv("REELEE_ARTIFACT_BACKEND")
     assert _run(tmp_path / "fs", source).catalog.rows_written > 0
+
+
+@needs_illustration
+def test_two_mixes_with_one_file_name_are_refused_not_overwritten(tmp_path, source):
+    """**Negative control** for a silent corruption.
+
+    Each episode node's artifact is hashed from the destination *after* its
+    own placement, so on a name clash the second node is correct and the
+    first ends up pointing at the second's audio — with nothing raised, and
+    every count in the report right.
+    """
+    from braidio.importing import ImportError_
+
+    (source / "demo" / "other").mkdir(parents=True, exist_ok=True)
+    (source / "demo" / "other" / "ep.mp3").write_bytes(b"a completely different mix")
+    cut_a = dict(_doc()["cuts"][0])
+    cut_b = dict(cut_a)
+    cut_b["label"] = "v2"
+    cut_b["audio"] = {"path": "other/ep.mp3", "duration_s": 20.0}
+    with pytest.raises(ImportError_, match="share a file name"):
+        _run(tmp_path, source, overrides={"cuts": [cut_a, cut_b]})

@@ -833,6 +833,24 @@ def import_production(
     if missing_audio:
         raise ImportError_(f"episode audio not on disk: {missing_audio}")
 
+    # Two mixes at different source paths but the same BASENAME would be
+    # placed at one destination, and the second placement would overwrite the
+    # first — silently, because each episode node's artifact is hashed from
+    # the destination *after* its own placement, so the second node is right
+    # and the first ends up pointing at the second's bytes. The productions
+    # here all differ, so this refuses rather than renaming: a conditional
+    # name is its own trap (adding a third mix would rename the first two).
+    by_basename: dict[str, list[str]] = {}
+    for rel in audio_paths:
+        by_basename.setdefault(Path(rel).name, []).append(rel)
+    clashes = {name: rels for name, rels in by_basename.items() if len(rels) > 1}
+    if clashes:
+        raise ImportError_(
+            "two mixes share a file name and would overwrite each other in the "
+            f"project: {clashes}. One episode would end up pointing at the "
+            "other's audio, with nothing raised. Give them distinct names."
+        )
+
     # Beat kinds are classified BEFORE anything is written, so a clip carrying
     # a narration kind (or a dialogue we cannot carry) refuses the import
     # rather than half-writing a picture track.
