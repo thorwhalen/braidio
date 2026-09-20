@@ -199,6 +199,15 @@ class CatalogRow:
     #: this module was written, and emitting it would have made every row
     #: braidio writes unreadable by every host build older than that, with the
     #: failure showing up as an empty catalog rather than as a bad row.
+    #:
+    #: **That omission has a cost and is meant to be temporary.** Without
+    #: ``filename`` the connector falls back to naming a download after the id,
+    #: so a file lands in somebody's Downloads folder as
+    #: ``2b80f373….mp4`` — which is the exact problem the host added the field
+    #: to solve. The trade is deliberate (a wrong-looking name is visible; a
+    #: refused catalog is not), and it expires: once every host this writes for
+    #: is reliably newer than 2026-09-19, put ``filename`` back. Written down
+    #: here so the omission does not become permanent by being forgotten.
     FIELDS: tuple[str, ...] = (
         "id",
         "kind",
