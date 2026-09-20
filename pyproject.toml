@@ -213,9 +213,19 @@ testpaths = [
     "tests",
     "braidio",
 ]
+# EXACTLY what CI passes, and for a reason: every wads runner overrides this
+# key wholesale with `-o doctest_optionflags='ELLIPSIS IGNORE_EXCEPTION_DETAIL'`
+# (run-tests-uv, run-tests and windows-tests all do). Any difference disagrees
+# in BOTH directions — NORMALIZE_WHITESPACE on here and off there makes a
+# doctest that leans on it pass locally and fail in CI; IGNORE_EXCEPTION_DETAIL
+# off here and on there makes one whose traceback detail drifts pass in CI and
+# fail locally. Doctests in this repo are guards, not decoration (see the
+# guardrails section of .claude/CLAUDE.md), so the instrument that runs them
+# must be configured like the one that grades them. Same trap is recorded in
+# dol, an and ocracy.
 doctest_optionflags = [
-    "NORMALIZE_WHITESPACE",
     "ELLIPSIS",
+    "IGNORE_EXCEPTION_DETAIL",
 ]
 
 # System dependencies CI must install (wads `install-system-deps` action).

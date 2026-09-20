@@ -455,7 +455,10 @@ all three found in one review of the importer, all three invisible to reading:
 2. **A narrower command than CI makes a guarded fix read as UNGUARDED.** The
    fix to the burnt-in attribution was covered by a doctest; a run of
    `tests/` alone said it had no guard at all. Mutation-test with CI's own
-   invocation, `--doctest-modules` included.
+   invocation, `--doctest-modules` included — **and with CI's flags, not
+   yours.** `doctest_optionflags` in `pyproject.toml` is set to exactly what
+   the wads runners pass, because they override the key wholesale and any
+   difference disagrees in both directions at once.
 3. **A guard that ENUMERATES what to check cannot notice what it forgot.**
    The artifact census listed four tiers by hand and omitted
    `segment-extractions`, so deleting every clip registration passed the whole
