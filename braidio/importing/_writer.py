@@ -93,7 +93,9 @@ from pathlib import Path
 from typing import Any, Iterable, Optional
 
 from braidio.importing._catalog import (
+    CatalogBackendMismatch,  # noqa: F401  (re-exported: callers catch it)
     CatalogReport,
+    assert_local_backend,
     _link_or_copy,
     CrossDeviceCatalog,  # noqa: F401  (re-exported: callers catch it)
     hash_file,
@@ -761,6 +763,13 @@ def import_production(
             f"materialize_cuts={materialize_cuts!r} is not one of "
             f"{sorted(_MATERIALIZE_CHOICES)}."
         )
+
+    # Up front, beside the other refusals and BEFORE the project exists, so a
+    # --dry-run reports it and a real run leaves nothing half-written. A
+    # catalog the host will not read is the one failure this module cannot
+    # survive quietly.
+    if register_artifacts:
+        assert_local_backend()
 
     source_root = Path(source_root or ".").expanduser().resolve()
     src = source_root / manifest.source_dir

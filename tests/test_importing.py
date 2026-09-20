@@ -1340,3 +1340,30 @@ def test_no_row_is_written_when_the_blob_could_not_be_placed(
         _run(tmp_path, source)
     rows = list(catalog_dir(tmp_path / "project").glob("*.json"))
     assert rows == [], "a row was written for bytes that never landed"
+
+
+@needs_illustration
+def test_an_object_store_backend_refuses_rather_than_registering_into_the_void(
+    tmp_path, source, monkeypatch
+):
+    """The one failure this module could not survive quietly.
+
+    Everything else here fails loudly. Writing a perfectly correct catalog
+    next to a project whose host resolves artifacts out of S3 produces an
+    import that reports complete success and a project where every id still
+    404s — this module's own defect, reintroduced one layer up.
+    """
+    from braidio.importing import CatalogBackendMismatch
+
+    monkeypatch.setenv("REELEE_ARTIFACT_BACKEND", "aws")
+    with pytest.raises(CatalogBackendMismatch, match="register_artifacts=False"):
+        _run(tmp_path, source)
+    assert not (tmp_path / "project").exists(), (
+        "it must refuse before writing a node, not half-way through"
+    )
+    # the deliberate opt-out still works
+    report = _run(tmp_path, source, register_artifacts=False)
+    assert report.catalog.unregistered
+    # and an unset / fs backend is unaffected
+    monkeypatch.delenv("REELEE_ARTIFACT_BACKEND")
+    assert _run(tmp_path / "fs", source).catalog.rows_written > 0

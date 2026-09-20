@@ -91,6 +91,55 @@ class CrossDeviceCatalog(OSError):
     """The project's blob store is not on the source media's filesystem."""
 
 
+class CatalogBackendMismatch(RuntimeError):
+    """The host is configured to read its artifacts from somewhere else."""
+
+
+#: The host's backend switch. Read — never written — because the whole point
+#: of this module is a local ``blobs/`` directory, and on an object-store
+#: deployment the host does not look there at all.
+BACKEND_ENV_KEY = "REELEE_ARTIFACT_BACKEND"
+_LOCAL_BACKENDS = frozenset({"", "fs"})
+
+
+def assert_local_backend(env=None) -> None:
+    """Refuse to register into a filesystem the host will not read.
+
+    This is the one failure this module could not survive quietly. Everything
+    else here fails loudly — a missing blob raises, an unlinkable destination
+    raises, an unholdable kind is reported. But writing a perfectly correct
+    ``catalog/`` and ``blobs/`` next to a project whose host resolves artifacts
+    out of S3 produces an import that reports complete success and a project
+    where **every id still 404s** — which is precisely the defect this module
+    exists to remove, reintroduced one layer up.
+
+    Raising is right rather than harsh: the caller who genuinely wants the
+    graph without the catalog has ``register_artifacts=False``, and that is an
+    explicit choice the report then records.
+
+    >>> assert_local_backend({})
+    >>> assert_local_backend({"REELEE_ARTIFACT_BACKEND": "fs"})
+    >>> assert_local_backend({"REELEE_ARTIFACT_BACKEND": "aws"})
+    Traceback (most recent call last):
+        ...
+    braidio.importing._catalog.CatalogBackendMismatch: ...
+    """
+    if env is None:
+        env = os.environ
+    backend = (env.get(BACKEND_ENV_KEY) or "").strip().lower()
+    if backend in _LOCAL_BACKENDS:
+        return
+    raise CatalogBackendMismatch(
+        f"{BACKEND_ENV_KEY}={backend!r}: the host resolves artifacts from an "
+        "object store, not from the project's own blobs/ directory, so rows "
+        "written here would be invisible and every artifact id would still "
+        "404 — with the import reporting success. Import with the backend "
+        "unset (or 'fs') and upload afterwards, or pass "
+        "register_artifacts=False to take the graph without the catalog "
+        "deliberately."
+    )
+
+
 @dataclass
 class CatalogReport:
     """What registering a project's media did, and what it could not hold."""
