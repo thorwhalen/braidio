@@ -443,6 +443,46 @@ different records.
 
 ## Tests = guardrails
 
+### Before trusting a guard, make it fail on purpose
+
+A guard that has only been *read* has not been checked. Three ways this repo's
+verification has reported green on a smaller world than it claimed to cover —
+all three found in one review of the importer, all three invisible to reading:
+
+1. **A red baseline makes every mutation read as CAUGHT.** A mutation suite
+   that does not first assert the unmutated tree is green is measuring
+   nothing, and it reports a perfect score while doing it.
+2. **A narrower command than CI makes a guarded fix read as UNGUARDED.** The
+   fix to the burnt-in attribution was covered by a doctest; a run of
+   `tests/` alone said it had no guard at all. Mutation-test with CI's own
+   invocation, `--doctest-modules` included.
+3. **A guard that ENUMERATES what to check cannot notice what it forgot.**
+   The artifact census listed four tiers by hand and omitted
+   `segment-extractions`, so deleting every clip registration passed the whole
+   suite. Derive the scope from the artifact — `iter_all_annotations` — so the
+   census cannot have a blind spot its author did not think of.
+
+The cheap tell for all three is the same: none of them survives one deliberate
+mutation, and all of them survive being read carefully.
+
+### State a rule where it can bind, not where it is already obeyed
+
+`_place_into`'s docstring is the place that explains why media is copied
+rather than hardlinked out of a shared source tree. The one code path that
+violated the rule was `copy_media=False` — *the path that never calls
+`_place_into`*. A rule written at the site that obeys it cannot bind the site
+that bypasses it; if a rule matters, put a refusal at the seam, not a
+paragraph at the compliant end.
+
+### A second ROUND, not just a second reviewer
+
+Four of the thirteen defects in the importer review were introduced **while
+fixing** earlier ones, and two of those were worse than what they replaced (a
+rollback that deleted the directory a `--dry-run` was pointed at; a copy that
+wrote through a content-addressed blob's inode and served the wrong picture
+under a live id). A single review pass would have caught the first six and
+shipped those four. Re-review the fixes.
+
 Run `pytest -q` for the current count, and `pytest -q --doctest-modules` for the
 CI-equivalent pass (`testpaths` lists both `tests` and `braidio`, so
 `--doctest-modules` doubles as an import smoke test for every module). CI
