@@ -660,6 +660,77 @@ def test_every_move_resolves_to_a_burns_path(tmp_path):
     )
 
 
+def test_resolve_move_refits_a_stored_path_to_a_new_aspect(tmp_path):
+    """thorwhalen/braidio#74 item 3: ``resolve_move`` defaults to
+    ``on_aspect_mismatch="refit"``, not burns' own ``"raise"``, so a
+    hand-corrected path authored for one delivery keeps working — refit,
+    never dropped — when the same track is cut at a second aspect."""
+    pytest.importorskip("burns")
+    from braidio.transforms import resolve_move
+
+    image = _png(tmp_path / "m.png", size=(160, 90))
+    landscape = resolve_move("push_in", image=str(image), aspect=16 / 9, seed=3)
+    refit = resolve_move(
+        landscape.to_dict(), image=str(image), aspect=9 / 16, seed=3
+    )
+    assert refit.output_aspect == pytest.approx(9 / 16)
+
+
+def test_resolver_identity_prefers_burns_own_version_constant(monkeypatch):
+    """thorwhalen/braidio#74 item 1: the motion cache key must key on burns'
+    own ``RESOLVER_IMPL_VERSION`` — the identity burns itself commits to
+    bumping on any framing-affecting change — rather than a source digest,
+    which only catches a change inside the one file it reads."""
+    import braidio.transforms._video_cut as vc
+
+    burns = pytest.importorskip("burns")
+    monkeypatch.setattr(burns, "RESOLVER_IMPL_VERSION", "sentinel-7", raising=False)
+    assert vc.resolver_identity() == "burns.moves@sentinel-7"
+
+
+def test_path_for_panel_converts_focus_from_still_to_canvas_coordinates(
+    tmp_path, monkeypatch
+):
+    """thorwhalen/braidio#74 item 4, pinned end to end. ``VideoPanelBodyV1.focus``'s
+    own docstring says it is authored "on the picture AS SHOWN — the still
+    after its crop". ``prepare_still`` then letterboxes that still onto a
+    blurred fill to reach the delivery aspect, so the same normalized rect is
+    a different place on the canvas whenever the aspects differ — measured
+    upstream as the subject landing fully out of frame at zoom >= 3.5. This
+    pins that ``path_for_panel`` actually converts via ``focus_on_canvas``
+    when given ``image_size``, by capturing what reaches ``resolve_move``,
+    rather than trusting the plumbing (which existed with zero test coverage
+    before this)."""
+    import braidio.transforms._video_cut as vc
+
+    canvas = _png(tmp_path / "canvas.png", size=(200, 100))  # 2:1 delivery
+    still_size = (100, 100)  # the 1:1 still the focus was authored on
+    body = {
+        "move": "push_in",
+        "zoom": 1.2,
+        "seed": 0,
+        "focus": {"x": 0.0, "y": 0.0, "w": 1.0, "h": 1.0},
+    }
+    seen = {}
+
+    def _fake_resolve_move(move, *, image, aspect, zoom, focus, seed, **kw):
+        seen["focus"] = focus
+        return "sentinel"
+
+    monkeypatch.setattr(vc, "resolve_move", _fake_resolve_move)
+    result = vc.path_for_panel(
+        body, image=str(canvas), aspect=2.0, image_size=still_size
+    )
+    assert result == "sentinel"
+    expected = vc.focus_on_canvas(
+        (0.0, 0.0, 1.0, 1.0), image_size=still_size, canvas_size=(200, 100)
+    )
+    assert seen["focus"] == pytest.approx(expected)
+    # the raw, un-normalized rect the panel authored — the bug this pins
+    # against is passing this straight through to a canvas of another aspect
+    assert seen["focus"] != (0.0, 0.0, 1.0, 1.0)
+
+
 def test_finish_refuses_a_motion_cut_whose_frames_would_differ(
     project, episode, stills, panels, patched_render, patched_overlay
 ):
@@ -774,9 +845,17 @@ def test_finish_stamps_and_gates_the_episodes_current_profile(
         _plan(VIDEO_CUT_FINISH_TRANSFORM, project, motion)
 
 
-def test_a_stored_path_for_another_aspect_fails_the_render_plan(
+def test_a_stored_path_for_another_aspect_plans_cleanly(
     project, episode, stills, panels
 ):
+    """A hand-corrected path authored for one delivery aspect must not block
+    PLANNING a cut at another aspect — refitting it is burns'
+    ``resolve_move(..., on_aspect_mismatch="refit")`` job at render time, not
+    a plan-time refusal (thorwhalen/braidio#74 item 3). The old raise here
+    made a vertical cut of a landscape-authored track unrenderable; refit
+    keeps the authored framing and only reshapes the window. See
+    ``test_resolve_move_refits_a_stored_path_to_a_new_aspect`` for the refit
+    itself."""
     from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM
 
     four_three = {
@@ -792,8 +871,8 @@ def test_a_stored_path_for_another_aspect_fails_the_render_plan(
     edited = _rewrite_in_place(
         project, panels[0], body={**panels[0].body, "path": four_three}
     )
-    with pytest.raises(ValueError, match="aspect"):
-        _plan(VIDEO_CUT_RENDER_TRANSFORM, project, edited, *panels[1:])
+    skeleton = _plan(VIDEO_CUT_RENDER_TRANSFORM, project, edited, *panels[1:])[1]
+    assert skeleton[0].body["cache_key"]
 
 
 def test_finish_leaves_no_staging_file_where_the_lister_looks(

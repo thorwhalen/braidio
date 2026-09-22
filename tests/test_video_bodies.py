@@ -229,10 +229,14 @@ def test_panel_move_must_be_in_the_vocabulary():
         )
 
 
-def test_move_vocabulary_matches_burns_when_burns_ships_it():
+def test_move_vocabulary_matches_burns():
+    """No longer soft on whether burns ships ``MOVES``: braidio's declared
+    floor is ``burns>=0.0.15`` (thorwhalen/braidio#74 item 5), which always
+    has it, so the old ``hasattr`` skip greened in exactly the environment
+    where the two vocabularies had drifted apart and never actually compared
+    them. The only remaining skip is burns being absent altogether — the
+    ``video`` extra is genuinely optional."""
     burns = pytest.importorskip("burns")
-    if not hasattr(burns, "MOVES"):
-        pytest.skip("burns has not shipped MOVES yet (sibling session)")
     from braidio.bodies import MOVES
 
     assert tuple(MOVES) == tuple(burns.MOVES)

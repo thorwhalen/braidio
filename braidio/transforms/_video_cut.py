@@ -37,14 +37,18 @@ been deleted is never adopted: the product is the file.
 ``burns.resolve_move`` — a panel stores an *intent* (``move``, ``zoom``,
 ``focus``, ``seed``), not a path pinned to one image's pixels, so swapping the
 still re-frames the move. A stored ``path`` (``BurnsPath.to_dict()``) is the
-explicit override for a hand-corrected move. burns' ``resolve_move`` is in
-review (thorwhalen/burns#20) and not in a release, so :func:`resolve_move`
-here is a shim that defers to burns' when present and otherwise builds the
-same eight moves from burns' shipped primitives. **The two do not frame
-identically**, so *which one ran* is part of the motion cache key
-(:func:`resolver_identity`): the day burns ships the name, every motion cut
-re-renders under the new framing instead of being served with one the panel
-body no longer describes.
+explicit override for a hand-corrected move, refit to a new delivery aspect
+(``on_aspect_mismatch="refit"``, thorwhalen/braidio#74 item 3) rather than
+refused — a vertical cut of a landscape-authored track is a real workflow, and
+a panel carries one path, not one per delivery. burns shipped the resolver in
+0.0.15 (thorwhalen/burns#20), which is braidio's declared minimum, so
+:func:`resolve_move` is a thin pass-through rather than a shim with a second
+implementation to drift from burns'. *Which behavioural version of burns
+resolved it* is still part of the motion cache key
+(:func:`resolver_identity`, keyed on ``burns.RESOLVER_IMPL_VERSION``): a
+framing-affecting change to burns' resolver must still re-stale every motion
+cut instead of being served under a framing the panel body no longer
+describes.
 
 Concurrency: ``execute`` is synchronous and carries no in-flight receipt.
 Two enqueued renders of one plan both render; the job layer that enqueues
@@ -69,7 +73,6 @@ from nw.transforms._provenance import derive_provenance
 from braidio.bodies._render_nodes import EPISODE_RENDER_V1
 from braidio.bodies._video import (
     LABEL_TRACK_V1,
-    MOVES,
     STILL_V1,
     VIDEO_CUT_V1,
     VIDEO_PANEL_V1,
@@ -139,108 +142,67 @@ _STAGING_DIR = "_staging"
 def resolver_identity() -> str:
     """Which code frames a named move — part of the motion cache key.
 
-    ``"braidio.shim"`` when burns does not export ``resolve_move`` (the shim's
-    own behaviour is versioned by this Transform's ``impl_version``, which the
-    key already folds). Otherwise ``"burns.moves@<sha256 of burns/moves.py>"``
-    — the *behaviour*, not a name or a distribution version: a checkout ahead
-    of its metadata (this machine's reads ``0.0.9`` for a tree far past it) or
-    a revised framing landing under the same name must both move the key
-    (nw invariant 3), and only the source digest sees either.
+    Keyed on burns' own :data:`burns.RESOLVER_IMPL_VERSION` when the
+    installed burns exports one (0.0.15+; burns bumps it deliberately on
+    any change that moves a rendered pixel, per its own docstring) —
+    that is the *behavioural* identity burns itself commits to, not a
+    guess at one. Older burns exported ``resolve_move`` without the
+    constant, so a source-digest of ``burns/moves.py`` is the fallback for
+    that window: a checkout ahead of its metadata (this machine's reads
+    ``0.0.9`` for a tree far past it) or a revised framing landing under the
+    same name must both move the key (nw invariant 3), and only one of the
+    two signals sees either. braidio's own minimum is ``burns>=0.0.15`` (see
+    ``pyproject.toml``), so the digest fallback is dead weight for a fresh
+    install and only matters for an out-of-band burns upgrade.
     """
     import burns
 
-    if not hasattr(burns, "resolve_move"):
-        return "braidio.shim"
+    version = getattr(burns, "RESOLVER_IMPL_VERSION", None)
+    if version is not None:
+        return f"burns.moves@{version}"
     from burns import moves
 
     digest = hashlib.sha256(Path(moves.__file__).read_bytes()).hexdigest()
     return f"burns.moves@{digest[:_NAME_DIGEST_CHARS]}"
 
 
-def resolve_move(move, *, image, aspect: float, zoom=1.18, focus=None, seed=0):
+def resolve_move(
+    move,
+    *,
+    image,
+    aspect: float,
+    zoom=1.18,
+    focus=None,
+    seed=0,
+    on_aspect_mismatch: str = "refit",
+):
     """A ``BurnsPath`` for an authored ``move`` over ``image``.
 
-    burns' signature: ``resolve_move(move, *, image, aspect, zoom, focus,
-    seed) -> BurnsPath``, where ``move`` is a name from ``MOVES`` **or** an
-    explicit ``BurnsPath`` / its ``to_dict()`` payload (the two front doors
-    on one path), ``focus`` is a normalized ``(x, y, w, h)`` tuple overriding
-    the saliency frame, and ``seed`` chooses what ``"auto"`` becomes and
-    nothing else. Delegates to burns' when it exports the name; the fallback
-    is for a released burns that does not yet (see the module docstring on
-    why the choice is in the cache key).
+    Thin pass-through to ``burns.resolve_move(move, *, image, aspect, zoom,
+    focus, seed, on_aspect_mismatch) -> BurnsPath``, where ``move`` is a name
+    from ``MOVES`` **or** an explicit ``BurnsPath`` / its ``to_dict()``
+    payload (the two front doors on one path), ``focus`` is a normalized
+    ``(x, y, w, h)`` tuple overriding the saliency frame, and ``seed`` chooses
+    what ``"auto"`` becomes and nothing else.
+
+    ``on_aspect_mismatch`` defaults to ``"refit"`` rather than burns' own
+    ``"raise"``: a stored, hand-corrected path is authored for one delivery
+    aspect, and a second cut of the same track at another aspect (a vertical
+    edit of a landscape production) is a real workflow, not an error. Refit
+    keeps what the author chose — where the camera looks and how far in it
+    is — and only reshapes the window (thorwhalen/braidio#74 item 3).
     """
     import burns
 
-    if hasattr(burns, "resolve_move"):
-        return burns.resolve_move(
-            move, image=image, aspect=aspect, zoom=zoom, focus=focus, seed=seed
-        )
-    return _fallback_resolve_move(
-        move, image=image, aspect=aspect, zoom=zoom, focus=focus, seed=seed
+    return burns.resolve_move(
+        move,
+        image=image,
+        aspect=aspect,
+        zoom=zoom,
+        focus=focus,
+        seed=seed,
+        on_aspect_mismatch=on_aspect_mismatch,
     )
-
-
-def _fallback_resolve_move(move, *, image, aspect, zoom, focus, seed):
-    from burns import BurnsPath, Rect, content_aware_path
-    from burns.content import content_aware_path_for, salient_box
-    from PIL import Image
-
-    if isinstance(move, BurnsPath):
-        return move
-    if isinstance(move, dict):
-        return BurnsPath.from_dict(move)
-    if move not in MOVES:
-        raise ValueError(f"resolve_move: {move!r} is not one of {MOVES}")
-    box = None
-    if focus is not None:
-        x, y, w, h = (float(v) for v in focus)
-        box = (x, y, x + w, y + h)
-    if move == "hold":
-        full = Rect(0.0, 0.0, 1.0, 1.0)
-        return BurnsPath.from_start_end(full, full, output_aspect=aspect)
-    if move in ("push_in", "pull_out", "auto"):
-        mode = {"push_in": "in", "pull_out": "out", "auto": "auto"}[move]
-        if box is None:
-            return content_aware_path_for(
-                str(image), index=int(seed), output_aspect=aspect, zoom=zoom, mode=mode
-            )
-        with Image.open(image) as img:
-            iw, ih = img.size
-        return content_aware_path(
-            iw,
-            ih,
-            subject=box,
-            index=int(seed),
-            output_aspect=aspect,
-            zoom=zoom,
-            mode=mode,
-        )
-    # a drift: a constant-zoom window sliding through the image along one
-    # axis, centred on the keep-region on the other — honouring zoom and focus
-    subject = box if box is not None else salient_box(str(image))
-    axis, sign = {
-        "drift_left": ("x", -1.0),
-        "drift_right": ("x", +1.0),
-        "drift_up": ("y", -1.0),
-        "drift_down": ("y", +1.0),
-    }[move]
-    z = max(1.05, float(zoom))
-    w = h = 1.0 / z
-    cx, cy = (subject[0] + subject[2]) / 2.0, (subject[1] + subject[3]) / 2.0
-    travel = min(0.5 * (1.0 - w), 0.08)
-
-    def clamp(v, size):
-        return min(max(v - size / 2.0, 0.0), 1.0 - size)
-
-    if axis == "x":
-        ys = clamp(cy, h)
-        start = Rect(clamp(0.5 - sign * travel, w), ys, w, h)
-        end = Rect(clamp(0.5 + sign * travel, w), ys, w, h)
-    else:
-        xs = clamp(cx, w)
-        start = Rect(xs, clamp(0.5 - sign * travel, h), w, h)
-        end = Rect(xs, clamp(0.5 + sign * travel, h), w, h)
-    return BurnsPath.from_start_end(start, end, output_aspect=aspect)
 
 
 def focus_on_canvas(focus, *, image_size, canvas_size):
@@ -300,6 +262,7 @@ def path_for_panel(panel_body: dict, *, image, aspect: float, image_size=None):
         zoom=float(panel_body.get("zoom", 1.18)),
         focus=focus,
         seed=int(panel_body.get("seed", 0)),
+        on_aspect_mismatch="refit",
     )
 
 
@@ -492,28 +455,6 @@ def _refuse_unlicensed_under_published(profile: str, stills) -> None:
         )
 
 
-#: Tolerance on a stored path's ``output_aspect`` against the cut's.
-_ASPECT_TOLERANCE = 1e-3
-
-
-def _check_stored_paths(panels, settings: dict) -> None:
-    """A stored ``path`` whose ``output_aspect`` contradicts the cut's fails
-    the PLAN: burns' resolver refuses it at render time, after every canvas
-    is prepared; the shim would silently cover-crop it. Neither is what an
-    author who hand-corrected a move for one delivery meant for another."""
-    w, h = settings["size"]
-    aspect = w / h
-    for panel in panels:
-        stored = panel.body.get("path") or {}
-        authored = stored.get("output_aspect")
-        if authored is not None and abs(float(authored) - aspect) > _ASPECT_TOLERANCE:
-            raise ValueError(
-                f"{RENDER_NAME}: panel {panel.id} stores a path authored for aspect "
-                f"{float(authored):.4f}; this cut is {w}x{h} ({aspect:.4f}). Re-author "
-                "the path for this delivery, or clear it and let the move resolve."
-            )
-
-
 def _motion_cache_key(transform, *, audio_id, settings, panels, stills) -> str:
     from nw.transforms import cache_key as transform_cache_key
 
@@ -611,7 +552,6 @@ class VideoCutRender(BaseTransform):
         _refuse_unlicensed_under_published(profile, stills)
 
         settings = _render_settings(params)
-        _check_stored_paths(panels, settings)
         cache_key = _motion_cache_key(
             self, audio_id=audio_id, settings=settings, panels=panels, stills=stills
         )
