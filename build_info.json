@@ -1,34 +1,34 @@
 {
   "schema_version": 1,
-  "built_at": "2026-09-22T14:20:16Z",
+  "built_at": "2026-09-22T15:52:43Z",
   "package": {
     "name": "braidio",
-    "version": "0.0.56",
+    "version": "0.0.57",
     "display_name": "braidio",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "51cb38d8a7e0f0119da3c41bf5c8038d8681c3df",
-    "short_commit": "51cb38d",
+    "commit": "4c85518eddd13808302b9c51b2e9613f00ecf0f7",
+    "short_commit": "4c85518",
     "branch": "main",
     "tags": [
-      "0.0.56"
+      "0.0.57"
     ],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/braidio",
-    "commit_url": "https://github.com/thorwhalen/braidio/commit/51cb38d8a7e0f0119da3c41bf5c8038d8681c3df",
+    "commit_url": "https://github.com/thorwhalen/braidio/commit/4c85518eddd13808302b9c51b2e9613f00ecf0f7",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/braidio",
-    "sha": "10b3a5ae588c4c9daa2d3a38f053c636e22296ed",
+    "sha": "b91f2e4974784cb0f819993a6dac46d5f1d47493",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "35739096158",
-    "run_url": "https://github.com/thorwhalen/braidio/actions/runs/35739096158",
+    "run_id": "35749741175",
+    "run_url": "https://github.com/thorwhalen/braidio/actions/runs/35749741175",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -63,13 +63,15 @@
   "pypi": {
     "checked": true,
     "latest": "0.0.56",
-    "relation": "same",
+    "relation": "ahead",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/braidio && cd braidio\ngit checkout 51cb38d8a7e0f0119da3c41bf5c8038d8681c3df\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/braidio && cd braidio\ngit checkout 4c85518eddd13808302b9c51b2e9613f00ecf0f7\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
-    "aligned": true,
-    "notes": []
+    "aligned": false,
+    "notes": [
+      "The documented version (0.0.57) is ahead of the latest release on PyPI (0.0.56): these docs describe unreleased code."
+    ]
   }
 }
