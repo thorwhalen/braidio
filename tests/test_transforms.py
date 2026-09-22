@@ -1107,3 +1107,84 @@ def test_a_noop_reweave_adds_no_nodes_and_returns_the_same_episode(
 
     assert second.id == first.id
     assert {a.id for a in nw.iter_all_annotations(project.root)} == before
+
+
+# --- artifact-tier lineage, by declaration (nw#55) ------------------------------
+
+
+def _weave_with_sting_and_bed(project, script_and_source, tmp_path):
+    sting_asset = tmp_path / "hit.mp3"
+    sting_asset.write_bytes(b"STING-ASSET")
+    bed_asset = tmp_path / "bed.mp3"
+    bed_asset.write_bytes(b"BED-ASSET")
+    script, source = script_and_source
+    return braidio.weave_project(
+        project,
+        _script_with_break(script),
+        source=source,
+        structure=braidio.MusicStructure(sting=braidio.Sting(str(sting_asset))),
+        bed=braidio.MusicBed(str(bed_asset)),
+    )
+
+
+def test_the_episode_derives_from_the_sting_and_bed_bytes(
+    project, script_and_source, patched_synthesis, tmp_path
+):
+    """The declared ids land in the episode's provenance and it still reads fresh."""
+    import nw
+
+    episode = _weave_with_sting_and_bed(project, script_and_source, tmp_path)
+    (structure,) = nw.annotations_at_tier(project.root, "production-structures")
+    parents = episode.provenance.was_derived_from
+
+    assert structure.body["sting_asset_id"] in parents
+    assert structure.body["bed_asset_id"] in parents
+    assert structure.id in parents
+    verdicts = {v.annotation.id: v for v in nw.stale_verdicts_all(project.root)}
+    assert not verdicts[episode.id].is_stale, verdicts[episode.id]
+
+
+def test_source_media_paths_are_not_declared_as_asset_ids(
+    project, script_and_source, patched_synthesis, tmp_path
+):
+    """``source-media/v1.asset_id`` is a filesystem path: declaring it would make
+    every segment extraction raise at plan time. No extraction names an asset."""
+    import nw
+    from nw.transforms import asset_refs_of
+
+    from braidio.bodies import SOURCE_MEDIA_V1
+    from braidio.transforms._asset_refs import ASSET_REF_FIELDS
+
+    _weave_with_sting_and_bed(project, script_and_source, tmp_path)
+    assert SOURCE_MEDIA_V1 not in ASSET_REF_FIELDS
+    for media in (
+        a for a in nw.iter_all_annotations(project.root)
+        if a.body_schema_uri == SOURCE_MEDIA_V1
+    ):
+        assert asset_refs_of(media) == ()
+    for extraction in nw.annotations_at_tier(project.root, "segment-extractions"):
+        assert all(isinstance(p, UUID) for p in extraction.provenance.was_derived_from)
+
+
+def test_an_episode_woven_before_the_declaration_is_reused_not_re_rendered(
+    project, script_and_source, patched_synthesis, tmp_path, monkeypatch
+):
+    """``fresh_equivalent`` compares annotation parents only. A whole-list compare
+    never matches a node written before the declaration (it names no assets), so
+    the first re-weave after upgrading would add a second episode-render."""
+    import nw
+    from nw.transforms import asset_refs as _asset_refs
+
+    from braidio.bodies import PRODUCTION_STRUCTURE_V1
+
+    with monkeypatch.context() as undeclared:
+        undeclared.delitem(_asset_refs._RESOLVERS, PRODUCTION_STRUCTURE_V1)
+        before = _weave_with_sting_and_bed(project, script_and_source, tmp_path)
+    assert all(isinstance(p, UUID) for p in before.provenance.was_derived_from)
+
+    after = _weave_with_sting_and_bed(project, script_and_source, tmp_path)
+
+    assert after.id == before.id
+    assert [a.id for a in nw.annotations_at_tier(project.root, "episode-renders")] == [
+        before.id
+    ]
