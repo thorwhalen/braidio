@@ -660,18 +660,25 @@ def test_every_move_resolves_to_a_burns_path(tmp_path):
     )
 
 
-def test_resolve_move_refits_a_stored_path_to_a_new_aspect(tmp_path):
-    """thorwhalen/braidio#74 item 3: ``resolve_move`` defaults to
-    ``on_aspect_mismatch="refit"``, not burns' own ``"raise"``, so a
-    hand-corrected path authored for one delivery keeps working — refit,
-    never dropped — when the same track is cut at a second aspect."""
-    pytest.importorskip("burns")
+def test_resolve_move_keeps_burns_raise_default_for_a_cross_aspect_path(tmp_path):
+    """Post-hoc review of thorwhalen/braidio#81: burns' canvas-relative refit
+    frames a different part of the still once braidio's canvas letterboxes it
+    at another aspect, so braidio must NOT refit silently by default. The
+    explicit ``"refit"`` is still passed through for a caller whose canvas is
+    the still itself."""
+    burns = pytest.importorskip("burns")
     from braidio.transforms import resolve_move
 
     image = _png(tmp_path / "m.png", size=(160, 90))
     landscape = resolve_move("push_in", image=str(image), aspect=16 / 9, seed=3)
+    with pytest.raises(burns.MoveError):
+        resolve_move(landscape.to_dict(), image=str(image), aspect=9 / 16, seed=3)
     refit = resolve_move(
-        landscape.to_dict(), image=str(image), aspect=9 / 16, seed=3
+        landscape.to_dict(),
+        image=str(image),
+        aspect=9 / 16,
+        seed=3,
+        on_aspect_mismatch="refit",
     )
     assert refit.output_aspect == pytest.approx(9 / 16)
 
@@ -686,6 +693,18 @@ def test_resolver_identity_prefers_burns_own_version_constant(monkeypatch):
     burns = pytest.importorskip("burns")
     monkeypatch.setattr(burns, "RESOLVER_IMPL_VERSION", "sentinel-7", raising=False)
     assert vc.resolver_identity() == "burns.moves@sentinel-7"
+
+
+def test_resolver_identity_refuses_a_burns_without_the_resolver(monkeypatch):
+    """Post-hoc review of #81: ``mixing`` pulls burns with no floor, so an old
+    burns is reachable without the ``video`` extra. It must fail the PLAN with
+    a clear message, not raise AttributeError from execute after canvases."""
+    import braidio.transforms._video_cut as vc
+
+    burns = pytest.importorskip("burns")
+    monkeypatch.delattr(burns, "RESOLVER_IMPL_VERSION", raising=False)
+    with pytest.raises(RuntimeError, match="burns>=0.0.15"):
+        vc.resolver_identity()
 
 
 def test_path_for_panel_converts_focus_from_still_to_canvas_coordinates(
@@ -845,17 +864,13 @@ def test_finish_stamps_and_gates_the_episodes_current_profile(
         _plan(VIDEO_CUT_FINISH_TRANSFORM, project, motion)
 
 
-def test_a_stored_path_for_another_aspect_plans_cleanly(
+def test_a_stored_path_for_another_aspect_fails_the_render_plan(
     project, episode, stills, panels
 ):
-    """A hand-corrected path authored for one delivery aspect must not block
-    PLANNING a cut at another aspect — refitting it is burns'
-    ``resolve_move(..., on_aspect_mismatch="refit")`` job at render time, not
-    a plan-time refusal (thorwhalen/braidio#74 item 3). The old raise here
-    made a vertical cut of a landscape-authored track unrenderable; refit
-    keeps the authored framing and only reshapes the window. See
-    ``test_resolve_move_refits_a_stored_path_to_a_new_aspect`` for the refit
-    itself."""
+    """Restored after a post-hoc review of thorwhalen/braidio#81: a stored
+    path's rectangles are relative to the prepared canvas of the delivery it
+    was authored for, so burns' refit would silently frame blurred fill at
+    another aspect. Refuse at plan time, before any canvas is prepared."""
     from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM
 
     four_three = {
@@ -871,8 +886,8 @@ def test_a_stored_path_for_another_aspect_plans_cleanly(
     edited = _rewrite_in_place(
         project, panels[0], body={**panels[0].body, "path": four_three}
     )
-    skeleton = _plan(VIDEO_CUT_RENDER_TRANSFORM, project, edited, *panels[1:])[1]
-    assert skeleton[0].body["cache_key"]
+    with pytest.raises(ValueError, match="aspect"):
+        _plan(VIDEO_CUT_RENDER_TRANSFORM, project, edited, *panels[1:])
 
 
 def test_finish_leaves_no_staging_file_where_the_lister_looks(
@@ -935,6 +950,43 @@ def test_a_caption_overflow_names_the_still_and_the_delivery(
     # tituli's own structured attributes survive, for a programmatic catcher
     assert exc_info.value.text == "Alice, 1971"
     assert exc_info.value.max_lines == 3
+
+
+def test_an_attribution_overflow_also_names_the_still(
+    project, episode, stills, panels, patched_render, monkeypatch
+):
+    """Post-hoc review of #82: tituli fits a label's attribution separately
+    from its subject, so on a narrow frame the overflowing text can be the
+    credit line. It must still name the still, not "an overlay tituli could
+    not identify"."""
+    pytest.importorskip("tituli")
+    import tituli.video
+    from tituli.compose import TextDoesNotFit
+
+    from braidio.transforms import (
+        VIDEO_CUT_FINISH_TRANSFORM,
+        VIDEO_CUT_RENDER_TRANSFORM,
+    )
+
+    motion = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+
+    def _overlay_overflows(video, overlays, dst, **kw):
+        label = next(
+            o.payload for o in overlays if getattr(o.payload, "key", None) == "a"
+        )
+        assert label.attribution  # the fixture credits every still
+        raise TextDoesNotFit(label.attribution, 0.022, 3, 2)
+
+    monkeypatch.setattr(tituli.video, "overlay", _overlay_overflows)
+    with pytest.raises(TextDoesNotFit) as exc_info:
+        _run(VIDEO_CUT_FINISH_TRANSFORM, project, motion)
+    # every fixture still shares one credit, so any labelled still is a
+    # correct answer; what must not happen is the unidentified fallback
+    assert "still '" in str(exc_info.value)
+    assert "could not identify" not in str(exc_info.value)
+
+
+
 
 
 def test_motion_key_names_the_move_resolver(

@@ -37,10 +37,14 @@ been deleted is never adopted: the product is the file.
 ``burns.resolve_move`` — a panel stores an *intent* (``move``, ``zoom``,
 ``focus``, ``seed``), not a path pinned to one image's pixels, so swapping the
 still re-frames the move. A stored ``path`` (``BurnsPath.to_dict()``) is the
-explicit override for a hand-corrected move, refit to a new delivery aspect
-(``on_aspect_mismatch="refit"``, thorwhalen/braidio#74 item 3) rather than
-refused — a vertical cut of a landscape-authored track is a real workflow, and
-a panel carries one path, not one per delivery. burns shipped the resolver in
+explicit override for a hand-corrected move. A stored path authored for a
+different delivery aspect is **refused at plan time** (:func:`_check_stored_paths`):
+its rectangles are relative to the *prepared canvas* of that delivery, and burns'
+``on_aspect_mismatch="refit"`` keeps each rectangle's centre and zoom relative to
+the *new* canvas — a different spot on the still once ``prepare_still`` letterboxes
+it differently, so the refit silently frames blurred fill instead of the subject.
+Refit is safe only after converting keyframes old canvas -> still -> new canvas
+(the ``focus_on_canvas`` treatment, for paths); until then, refuse. burns shipped the resolver in
 0.0.15 (thorwhalen/burns#20), which is braidio's declared minimum, so
 :func:`resolve_move` is a thin pass-through rather than a shim with a second
 implementation to drift from burns'. *Which behavioural version of burns
@@ -142,28 +146,26 @@ _STAGING_DIR = "_staging"
 def resolver_identity() -> str:
     """Which code frames a named move — part of the motion cache key.
 
-    Keyed on burns' own :data:`burns.RESOLVER_IMPL_VERSION` when the
-    installed burns exports one (0.0.15+; burns bumps it deliberately on
-    any change that moves a rendered pixel, per its own docstring) —
-    that is the *behavioural* identity burns itself commits to, not a
-    guess at one. Older burns exported ``resolve_move`` without the
-    constant, so a source-digest of ``burns/moves.py`` is the fallback for
-    that window: a checkout ahead of its metadata (this machine's reads
-    ``0.0.9`` for a tree far past it) or a revised framing landing under the
-    same name must both move the key (nw invariant 3), and only one of the
-    two signals sees either. braidio's own minimum is ``burns>=0.0.15`` (see
-    ``pyproject.toml``), so the digest fallback is dead weight for a fresh
-    install and only matters for an out-of-band burns upgrade.
+    Keyed on burns' own :data:`burns.RESOLVER_IMPL_VERSION` — the
+    behavioural identity burns bumps on any change that moves a rendered
+    pixel. burns 0.0.15 introduced both it and ``resolve_move`` in the same
+    release, so there is no burns that has one and not the other: a burns
+    without them is refused here, at PLAN time, rather than planning fine
+    and raising ``AttributeError`` from ``execute`` after every canvas has
+    been prepared. (``mixing``, a core dependency, pulls ``burns`` with no
+    floor, so an older burns is reachable without the ``video`` extra.)
     """
     import burns
 
     version = getattr(burns, "RESOLVER_IMPL_VERSION", None)
-    if version is not None:
-        return f"burns.moves@{version}"
-    from burns import moves
-
-    digest = hashlib.sha256(Path(moves.__file__).read_bytes()).hexdigest()
-    return f"burns.moves@{digest[:_NAME_DIGEST_CHARS]}"
+    if version is None or not hasattr(burns, "resolve_move"):
+        raise RuntimeError(
+            f"{RENDER_NAME}: the installed burns "
+            f"({getattr(burns, '__version__', 'unknown version')}) has no "
+            "resolve_move / RESOLVER_IMPL_VERSION; braidio's video cuts need "
+            "burns>=0.0.15 (pip install 'braidio[video]')."
+        )
+    return f"burns.moves@{version}"
 
 
 def resolve_move(
@@ -174,7 +176,7 @@ def resolve_move(
     zoom=1.18,
     focus=None,
     seed=0,
-    on_aspect_mismatch: str = "refit",
+    on_aspect_mismatch: str = "raise",
 ):
     """A ``BurnsPath`` for an authored ``move`` over ``image``.
 
@@ -185,12 +187,11 @@ def resolve_move(
     ``(x, y, w, h)`` tuple overriding the saliency frame, and ``seed`` chooses
     what ``"auto"`` becomes and nothing else.
 
-    ``on_aspect_mismatch`` defaults to ``"refit"`` rather than burns' own
-    ``"raise"``: a stored, hand-corrected path is authored for one delivery
-    aspect, and a second cut of the same track at another aspect (a vertical
-    edit of a landscape production) is a real workflow, not an error. Refit
-    keeps what the author chose — where the camera looks and how far in it
-    is — and only reshapes the window (thorwhalen/braidio#74 item 3).
+    ``on_aspect_mismatch`` keeps burns' own default, ``"raise"``. burns'
+    ``"refit"`` preserves each rectangle's centre and zoom relative to the
+    *canvas*; braidio's canvases letterbox the still differently per aspect,
+    so a refit path lands on a different part of the still (see the module
+    docstring). Pass ``"refit"`` only for a path whose canvas IS the still.
     """
     import burns
 
@@ -229,8 +230,9 @@ def path_for_panel(panel_body: dict, *, image, aspect: float, image_size=None):
     """The ``BurnsPath`` a panel body asks for over ``image``.
 
     One code path, two front doors: a stored ``path`` (a hand-corrected
-    move) is handed to :func:`resolve_move` as the move itself and returned
-    as authored; otherwise the named ``move`` resolves against the image with
+    move) is handed to :func:`resolve_move` as the move itself (a path
+    authored for another aspect is refused at plan time, see
+    :func:`_check_stored_paths`); otherwise the named ``move`` resolves against the image with
     the panel's ``zoom`` / ``focus`` / ``seed``. A stored path that names no
     ``output_aspect`` takes the cut's, so a path authored before the delivery
     size was chosen still fills the frame. ``image_size`` is the size of the
@@ -262,7 +264,6 @@ def path_for_panel(panel_body: dict, *, image, aspect: float, image_size=None):
         zoom=float(panel_body.get("zoom", 1.18)),
         focus=focus,
         seed=int(panel_body.get("seed", 0)),
-        on_aspect_mismatch="refit",
     )
 
 
@@ -455,6 +456,35 @@ def _refuse_unlicensed_under_published(profile: str, stills) -> None:
         )
 
 
+#: Tolerance on a stored path's ``output_aspect`` against the cut's.
+_ASPECT_TOLERANCE = 1e-3
+
+
+def _check_stored_paths(panels, settings: dict) -> None:
+    """A stored ``path`` whose ``output_aspect`` contradicts the cut's fails
+    the PLAN, before any canvas is prepared.
+
+    Not a refit: the path's rectangles are relative to the prepared canvas of
+    the delivery it was authored for, and ``prepare_still`` letterboxes the
+    still differently at another aspect, so burns' canvas-relative refit
+    frames a different part of the still (measured: a 3x push on a landscape
+    subject re-cut vertical ends ~60% blurred fill). Restored after a
+    post-hoc review of thorwhalen/braidio#81; a correct refit needs the
+    keyframes converted old canvas -> still -> new canvas first.
+    """
+    w, h = settings["size"]
+    aspect = w / h
+    for panel in panels:
+        stored = panel.body.get("path") or {}
+        authored = stored.get("output_aspect")
+        if authored is not None and abs(float(authored) - aspect) > _ASPECT_TOLERANCE:
+            raise ValueError(
+                f"{RENDER_NAME}: panel {panel.id} stores a path authored for aspect "
+                f"{float(authored):.4f}; this cut is {w}x{h} ({aspect:.4f}). Re-author "
+                "the path for this delivery, or clear it and let the move resolve."
+            )
+
+
 def _motion_cache_key(transform, *, audio_id, settings, panels, stills) -> str:
     from nw.transforms import cache_key as transform_cache_key
 
@@ -552,6 +582,7 @@ class VideoCutRender(BaseTransform):
         _refuse_unlicensed_under_published(profile, stills)
 
         settings = _render_settings(params)
+        _check_stored_paths(panels, settings)
         cache_key = _motion_cache_key(
             self, audio_id=audio_id, settings=settings, panels=panels, stills=stills
         )
@@ -743,6 +774,28 @@ def _overlays(panels, stills_by_id: dict, label_tracks):
     return resolve([*cards, *labels])
 
 
+def _card_named_by(text, overlays) -> str:
+    """Name the label-track card whose text ``text`` is, for an error message.
+
+    >>> from types import SimpleNamespace as NS
+    >>> card = NS(payload={"kind": "title", "text": "T", "subtitle": "long sub"}, start=4.0)
+    >>> _card_named_by("long sub", [card])
+    "a 'title' card at 4.0s"
+    >>> _card_named_by("nope", [card])
+    'an overlay tituli could not identify'
+    """
+    for overlay in overlays:
+        payload = overlay.payload
+        if not isinstance(payload, dict):
+            continue
+        texts = [payload.get(k) for k in ("text", "subtitle", "role")]
+        texts += list(payload.get("lines") or ())
+        texts.append(" ".join(payload.get("lines") or ()))
+        if text in texts:
+            return f"a {payload.get('kind')!r} card at {float(overlay.start):.1f}s"
+    return "an overlay tituli could not identify"
+
+
 def _caption_overflow_error(exc, overlays, *, size, delivery: str):
     """Re-raise a ``tituli.compose.TextDoesNotFit`` naming the still and the
     delivery it happened on (thorwhalen/braidio#77 item 4).
@@ -753,9 +806,11 @@ def _caption_overflow_error(exc, overlays, *, size, delivery: str):
     frame height but has to fit the frame's width), so the author needs both
     to know what to shorten. Matches ``exc.text`` against each overlay's
     payload — a still-label overlay's is a ``tituli.Label`` whose ``key`` is
-    the still's key; a card's payload has no ``.text`` and is skipped. Falls
-    back to tituli's own message when nothing matches (should not happen, but
-    a worse message beats a new exception masking the original).
+    the still's key, and tituli fits its subject and its attribution
+    separately, so either can be the text that overflowed. A card's payload
+    is a dict (see :func:`_card_payload`) and is named by kind and start time
+    instead. Falls back to a generic phrase when nothing matches — a worse
+    message beats a new exception masking the original.
     """
     from tituli.compose import TextDoesNotFit
 
@@ -763,14 +818,16 @@ def _caption_overflow_error(exc, overlays, *, size, delivery: str):
         (
             overlay.payload.key
             for overlay in overlays
-            if getattr(overlay.payload, "text", None) == exc.text
+            if exc.text
+            in (
+                getattr(overlay.payload, "text", None),
+                getattr(overlay.payload, "attribution", None),
+            )
             and getattr(overlay.payload, "key", None)
         ),
         None,
     )
-    where = (
-        f"still {still_key!r}" if still_key else "an overlay tituli could not identify"
-    )
+    where = f"still {still_key!r}" if still_key else _card_named_by(exc.text, overlays)
     w, h = size
     # Reconstruct through tituli's own constructor (not a bare message) so the
     # structured attributes (`.text`, `.tried_size`, `.lines_at_min`,
