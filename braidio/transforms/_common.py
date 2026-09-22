@@ -189,9 +189,13 @@ def fresh_equivalent(project, skeleton: Annotation) -> Annotation | None:
     declared input schema also contributes the artifact ids its body names
     (``_asset_refs``), so a node written before the declaration has none and a
     whole-list comparison would never match it — one re-plan would re-render
-    every such node. Nothing is lost by ignoring them: a declared asset id is
-    read off a parent's body, so a replaced artifact changes that parent's
-    value, which the freshness walk below already refuses.
+    every such node. Freshness loses nothing by ignoring them: a declared
+    asset id is read off a parent's body, so a replaced artifact changes that
+    parent's value, which the freshness walk below already refuses. Lineage
+    does lose something, deliberately: a reused pre-declaration node keeps
+    its old provenance, with no asset edge, until something re-renders it —
+    re-rendering instead would mint a new node and orphan whatever was built
+    on the old one (video panels, cuts).
     """
     import nw
 

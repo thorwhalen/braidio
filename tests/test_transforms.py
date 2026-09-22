@@ -1167,19 +1167,22 @@ def test_source_media_paths_are_not_declared_as_asset_ids(
 
 
 def test_an_episode_woven_before_the_declaration_is_reused_not_re_rendered(
-    project, script_and_source, patched_synthesis, tmp_path, monkeypatch
+    project, script_and_source, patched_synthesis, tmp_path
 ):
     """``fresh_equivalent`` compares annotation parents only. A whole-list compare
     never matches a node written before the declaration (it names no assets), so
     the first re-weave after upgrading would add a second episode-render."""
     import nw
-    from nw.transforms import asset_refs as _asset_refs
+    from nw.transforms import register_asset_refs
 
     from braidio.bodies import PRODUCTION_STRUCTURE_V1
+    from braidio.transforms._asset_refs import declare_asset_refs
 
-    with monkeypatch.context() as undeclared:
-        undeclared.delitem(_asset_refs._RESOLVERS, PRODUCTION_STRUCTURE_V1)
+    register_asset_refs(PRODUCTION_STRUCTURE_V1, lambda body: ())  # "declares nothing"
+    try:
         before = _weave_with_sting_and_bed(project, script_and_source, tmp_path)
+    finally:
+        declare_asset_refs()
     assert all(isinstance(p, UUID) for p in before.provenance.was_derived_from)
 
     after = _weave_with_sting_and_bed(project, script_and_source, tmp_path)
@@ -1188,3 +1191,17 @@ def test_an_episode_woven_before_the_declaration_is_reused_not_re_rendered(
     assert [a.id for a in nw.annotations_at_tier(project.root, "episode-renders")] == [
         before.id
     ]
+
+
+@pytest.mark.parametrize("bad", ["", "sha256:" + "a" * 64, "A" * 64, "a" * 64 + "\n"])
+def test_a_malformed_structure_asset_id_is_refused_at_write_time(bad):
+    """nw would refuse it at plan time, on every later weave; refuse it here."""
+    from pydantic import ValidationError
+
+    from braidio.bodies._render_nodes import ProductionStructureBodyV1
+
+    with pytest.raises(ValidationError):
+        ProductionStructureBodyV1(structure={}, sting_asset_id=bad)
+    with pytest.raises(ValidationError):
+        ProductionStructureBodyV1(structure={}, bed_asset_id=bad)
+    assert ProductionStructureBodyV1(structure={}, bed_asset_id="a" * 64).bed_asset_id
