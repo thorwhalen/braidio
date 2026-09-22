@@ -902,6 +902,41 @@ def test_finish_leaves_no_staging_file_where_the_lister_looks(
     ]
 
 
+def test_a_caption_overflow_names_the_still_and_the_delivery(
+    project, episode, stills, panels, patched_render, monkeypatch
+):
+    """thorwhalen/braidio#77 item 4: whatever the eventual fix for the fit
+    itself, the error at least has to say which still and which delivery —
+    tituli's own message names only the truncated text. Fires regardless of
+    (1)-(3) because it wraps the SAME ``TextDoesNotFit`` tituli always
+    raises."""
+    pytest.importorskip("tituli")
+    import tituli.video
+    from tituli.compose import TextDoesNotFit
+
+    from braidio.transforms import (
+        VIDEO_CUT_FINISH_TRANSFORM,
+        VIDEO_CUT_RENDER_TRANSFORM,
+    )
+
+    motion = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+
+    def _overlay_overflows(video, overlays, dst, **kw):
+        # still "a" is labelled with subject "Alice, 1971" (see the `stills`
+        # fixture) — this is exactly the text tituli could not set.
+        raise TextDoesNotFit("Alice, 1971", 0.022, 4, 3)
+
+    monkeypatch.setattr(tituli.video, "overlay", _overlay_overflows)
+    with pytest.raises(TextDoesNotFit) as exc_info:
+        _run(VIDEO_CUT_FINISH_TRANSFORM, project, motion)
+    message = str(exc_info.value)
+    assert "'a'" in message  # the still's key, not just the truncated text
+    assert "1920x1080" in message  # the delivery's size
+    # tituli's own structured attributes survive, for a programmatic catcher
+    assert exc_info.value.text == "Alice, 1971"
+    assert exc_info.value.max_lines == 3
+
+
 def test_motion_key_names_the_move_resolver(
     project, episode, stills, panels, monkeypatch
 ):

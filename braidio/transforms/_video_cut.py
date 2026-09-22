@@ -743,6 +743,49 @@ def _overlays(panels, stills_by_id: dict, label_tracks):
     return resolve([*cards, *labels])
 
 
+def _caption_overflow_error(exc, overlays, *, size, delivery: str):
+    """Re-raise a ``tituli.compose.TextDoesNotFit`` naming the still and the
+    delivery it happened on (thorwhalen/braidio#77 item 4).
+
+    tituli's own message names the truncated text but not *which* still or
+    *which* cut's aspect made it refuse — a caption that fits the same still's
+    16:9 cut can still overflow a 9:16 one (type is sized as a fraction of
+    frame height but has to fit the frame's width), so the author needs both
+    to know what to shorten. Matches ``exc.text`` against each overlay's
+    payload — a still-label overlay's is a ``tituli.Label`` whose ``key`` is
+    the still's key; a card's payload has no ``.text`` and is skipped. Falls
+    back to tituli's own message when nothing matches (should not happen, but
+    a worse message beats a new exception masking the original).
+    """
+    from tituli.compose import TextDoesNotFit
+
+    still_key = next(
+        (
+            overlay.payload.key
+            for overlay in overlays
+            if getattr(overlay.payload, "text", None) == exc.text
+            and getattr(overlay.payload, "key", None)
+        ),
+        None,
+    )
+    where = (
+        f"still {still_key!r}" if still_key else "an overlay tituli could not identify"
+    )
+    w, h = size
+    # Reconstruct through tituli's own constructor (not a bare message) so the
+    # structured attributes (`.text`, `.tried_size`, `.lines_at_min`,
+    # `.max_lines`) a programmatic catcher relies on survive unchanged; only
+    # the printed message gains the still + delivery tituli has no way to know.
+    augmented = TextDoesNotFit(
+        exc.text, exc.tried_size, exc.lines_at_min, exc.max_lines
+    )
+    augmented.args = (
+        f"on {where}, at this cut's delivery ({delivery}, {w}x{h}, aspect "
+        f"{w / h:.3f}): {augmented.args[0]}",
+    )
+    return augmented
+
+
 def _short_attribution(body: dict) -> str:
     """The lower third's credit — author and licence, as a person reads them.
 
@@ -1065,17 +1108,23 @@ def _composite(
     extra: dict = {}
     overlays = _overlays(panels, stills, tracks)
     if overlays:
+        from tituli.compose import TextDoesNotFit
         from tituli.video import overlay
 
         staged = staging / f"{skel.id}_labels.mp4"
-        overlay(
-            current,
-            overlays,
-            staged,
-            size=size,
-            delivery=settings["delivery"],
-            workdir=staging / "_overlays",
-        )
+        try:
+            overlay(
+                current,
+                overlays,
+                staged,
+                size=size,
+                delivery=settings["delivery"],
+                workdir=staging / "_overlays",
+            )
+        except TextDoesNotFit as exc:
+            raise _caption_overflow_error(
+                exc, overlays, size=size, delivery=settings["delivery"]
+            ) from exc
         current = staged
         stages.append(staged)
 
