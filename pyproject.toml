@@ -252,8 +252,11 @@ project_name = ""
 # `importing` rides along for the same reason: without `illustration` every
 # test in tests/test_importing.py skips itself, and a skipped licence gate is
 # exactly the thing nobody notices is not running.
+# `video` (burns, pillow, tituli) likewise: without tituli every
+# video_cut.finish test skips itself (a post-hoc review of #82 found the new
+# overflow test had never run in CI).
 [tool.wads.ci.install]
-extras = "mcp,importing"
+extras = "mcp,importing,video"
 
 [tool.wads.ci.commands]
 pre_test = []
