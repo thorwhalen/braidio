@@ -1,4 +1,4 @@
-> built 2026-09-22 13:37 UTC from 01bd2fa (main) · braidio 0.0.54. Details: build_info.json
+> built 2026-09-22 13:38 UTC from 4e356fe (main) · braidio 0.0.55. Details: build_info.json
 
 # index.html.md
 
@@ -4474,7 +4474,7 @@ Return a copy with fields overridden (e.g. `cfg.with_(min_turn=1)`).
 
 # About this build
 
-This documentation was built on **2026-09-22 13:37 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/01bd2fae5abe70348e02583ca11b2cb25c1f7241"><code>01bd2fa</code></a> on branch <code>main</code>, for **braidio 0.0.54** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-22 13:38 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/4e356fe815ce114341fbe6612123f941956a7120"><code>4e356fe</code></a> on branch <code>main</code>, for **braidio 0.0.55** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -4483,9 +4483,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/01bd2fae5abe70348e02583ca11b2cb25c1f7241"><code>01bd2fae5abe70348e02583ca11b2cb25c1f7241</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/4e356fe815ce114341fbe6612123f941956a7120"><code>4e356fe815ce114341fbe6612123f941956a7120</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | none                                                                                                                                                      |
+| Tags at this commit | <code>0.0.55</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/braidio</code>                                                                                                        |
 
@@ -4494,9 +4494,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/braidio</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35734217279">35734217279</a>   |
+| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35734240799">35734240799</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>471cdd94f26484f92468364eefb78d6a9c25083a</code> (in the history of the built commit) |
+| Event commit | <code>f998bfaf98ad2897d0336f5d689f0f2aeedc733e</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4521,13 +4521,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/braidio/0.0.54/">0.0.54</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/braidio/0.0.55/">0.0.55</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/braidio && cd braidio
-git checkout 01bd2fae5abe70348e02583ca11b2cb25c1f7241
+git checkout 4e356fe815ce114341fbe6612123f941956a7120
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
