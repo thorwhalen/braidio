@@ -1,34 +1,34 @@
 {
   "schema_version": 1,
-  "built_at": "2026-09-20T02:22:01Z",
+  "built_at": "2026-09-22T13:29:14Z",
   "package": {
     "name": "braidio",
-    "version": "0.0.52",
+    "version": "0.0.53",
     "display_name": "braidio",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "e9cbaacf4bc2afbd6bf122ed53302d98bb4175df",
-    "short_commit": "e9cbaac",
+    "commit": "687e80a4c8984c697e8375d9f7585e5b270090c2",
+    "short_commit": "687e80a",
     "branch": "main",
     "tags": [
-      "0.0.52"
+      "0.0.53"
     ],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/braidio",
-    "commit_url": "https://github.com/thorwhalen/braidio/commit/e9cbaacf4bc2afbd6bf122ed53302d98bb4175df",
+    "commit_url": "https://github.com/thorwhalen/braidio/commit/687e80a4c8984c697e8375d9f7585e5b270090c2",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/braidio",
-    "sha": "f94db21f0afa785dfb101ca8afaa1770eadaf6e5",
+    "sha": "41c8aba3a045c1d59d62510edc573833196aae41",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "35483624397",
-    "run_url": "https://github.com/thorwhalen/braidio/actions/runs/35483624397",
+    "run_id": "35733245905",
+    "run_url": "https://github.com/thorwhalen/braidio/actions/runs/35733245905",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -62,11 +62,11 @@
   },
   "pypi": {
     "checked": true,
-    "latest": "0.0.52",
+    "latest": "0.0.53",
     "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/braidio && cd braidio\ngit checkout e9cbaacf4bc2afbd6bf122ed53302d98bb4175df\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/braidio && cd braidio\ngit checkout 687e80a4c8984c697e8375d9f7585e5b270090c2\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,
