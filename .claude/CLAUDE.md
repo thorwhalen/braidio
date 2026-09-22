@@ -19,7 +19,7 @@ careless signature change has real blast radius:
 | Consumer | What it uses | Failure mode if you break it |
 |---|---|---|
 | **PyPI** (`braidio`, published by CI on merge) | the whole public API | anyone installing the release |
-| **`reelee`** — `reelee/transforms/panel_to_voiceover.py` | `braidio.narrate`, `braidio.render_dialogue`, `braidio.ConversationCast` (declared `braidio>=0.0.2`) | storyboard voiceover stops rendering |
+| **`reelee`** — `reelee/transforms/panel_to_voiceover.py` | `braidio.narrate`, `braidio.render_dialogue`, `braidio.ConversationCast` (declared `braidio>=0.0.51`) | storyboard voiceover stops rendering |
 | **Two deployed MCP connectors** | `braidio.mcp.TOOL_REFS` (own connector) and `braidio.mcp.register_tools(..., prefix="braidio_")` (aggregated into the unified AV connector) | a live tool surface breaks for real users mid-conversation |
 
 Practical consequences:
@@ -183,8 +183,8 @@ the full reasoning; these are the four a caller gets wrong.
 
 ## Body schemas are a federation contract
 
-`braidio/bodies/` registers 17 lacing body-schema URIs (7 domain, 10 render —
-see `braidio.bodies.SCHEMA_URIS`). These are **on the wire**: the nw pipeline
+`braidio/bodies/` registers 21 lacing body-schema URIs (7 domain, 10 render,
+4 video — see `braidio.bodies.SCHEMA_URIS`). These are **on the wire**: the nw pipeline
 persists them in project graphs, and both deployed MCP connectors read and
 write them live. Renaming a URI, or renaming, removing, retyping, or
 re-defaulting a serialized field is a **federation event** — it silently

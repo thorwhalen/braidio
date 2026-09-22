@@ -227,9 +227,11 @@ def test_bodies_forbid_extra_fields(uri):
 # --- the serialized shapes ---------------------------------------------------
 
 #: Model name → its pinned ``required`` field names and per-field shapes.
-#: Generated once from the current models (none of the 17 bodies nests
-#: another registered model, so there is exactly one entry per body — no
-#: nested-model table like artful's ``PanelImage``/``ShotEntry``).
+#: Generated once from the current models (two of the 21 bodies nest
+#: another registered model, ``RectV1`` — see the ``PINNED_NESTED`` note
+#: in the module docstring — otherwise there is exactly one entry per
+#: body — no full nested-model table like artful's
+#: ``PanelImage``/``ShotEntry``).
 #: ``required`` is a *set*: JSON object key order is not part of the
 #: contract, so moving a field declaration is invisible on the wire and must
 #: not fire the federation alarm. Adding, dropping or renaming a required
