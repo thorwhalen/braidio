@@ -567,7 +567,11 @@ def test_finish_composites_labels_and_writes_captions(
     assert cut.body["panel_ids"] == motion.body["panel_ids"]
     assert cut.body["audio_artifact_id"] == motion.body["audio_artifact_id"]
     # the captions sidecar is from the beats' own text, never ASR
-    srt = Path(cut.body["url"][len("file://") :]).with_suffix(".srt")
+    from braidio.transforms._common import url_to_path
+
+    # url_to_path, not a "file://" prefix strip: on Windows the latter leaves
+    # "/C:/..." (this test never ran on Windows until CI installed `video`)
+    srt = url_to_path(cut.body["url"]).with_suffix(".srt")
     assert cut.body["captions_artifact_id"] and srt.exists()
     assert "Opening line about the song." in srt.read_text()
     # tituli got the card and one label per LABELLED still; the unlabelled
