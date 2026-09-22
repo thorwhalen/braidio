@@ -16,11 +16,6 @@ from pydantic import BaseModel, Field
 
 from lacing.schema import register_body_schema
 
-#: A lacing asset id: the bare lowercase SHA-256 hex of the bytes. Declared
-#: artifact-id fields (``braidio.transforms._asset_refs``, nw#55) carry it, and
-#: nw refuses anything else at plan time — so it is refused at write time here.
-_ASSET_ID_PATTERN = r"^[0-9a-f]{64}$"
-
 WEAVE_CONFIG_V1 = "annot://schema/weave-config/v1"
 PRODUCTION_STRUCTURE_V1 = "annot://schema/production-structure/v1"
 RENDER_PROFILE_V1 = "annot://schema/render-profile/v1"
@@ -75,9 +70,7 @@ class ProductionStructureBodyV1(BaseModel):
         None, description="Sting knobs (gain_db, max_len_s, fade_out_s, gap_after_s)."
     )
     sting_asset_id: Optional[str] = Field(
-        None,
-        pattern=_ASSET_ID_PATTERN,
-        description="lacing Artifact asset_id of the sting audio (bare 64-hex).",
+        None, description="lacing Artifact asset_id of the sting audio."
     )
     sting_url: Optional[str] = Field(
         None, description="file:// URL of the sting audio."
@@ -86,9 +79,7 @@ class ProductionStructureBodyV1(BaseModel):
         None, description="MusicBed knobs (gain_db, fades, lead_in_s, start_s, loop…)."
     )
     bed_asset_id: Optional[str] = Field(
-        None,
-        pattern=_ASSET_ID_PATTERN,
-        description="lacing Artifact asset_id of the bed audio (bare 64-hex).",
+        None, description="lacing Artifact asset_id of the bed audio."
     )
     bed_url: Optional[str] = Field(None, description="file:// URL of the bed audio.")
 

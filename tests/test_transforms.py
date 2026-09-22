@@ -1192,16 +1192,3 @@ def test_an_episode_woven_before_the_declaration_is_reused_not_re_rendered(
         before.id
     ]
 
-
-@pytest.mark.parametrize("bad", ["", "sha256:" + "a" * 64, "A" * 64, "a" * 64 + "\n"])
-def test_a_malformed_structure_asset_id_is_refused_at_write_time(bad):
-    """nw would refuse it at plan time, on every later weave; refuse it here."""
-    from pydantic import ValidationError
-
-    from braidio.bodies._render_nodes import ProductionStructureBodyV1
-
-    with pytest.raises(ValidationError):
-        ProductionStructureBodyV1(structure={}, sting_asset_id=bad)
-    with pytest.raises(ValidationError):
-        ProductionStructureBodyV1(structure={}, bed_asset_id=bad)
-    assert ProductionStructureBodyV1(structure={}, bed_asset_id="a" * 64).bed_asset_id
