@@ -695,6 +695,29 @@ def test_resolver_identity_prefers_burns_own_version_constant(monkeypatch):
     assert vc.resolver_identity() == "burns.moves@sentinel-7"
 
 
+def test_a_near_miss_aspect_fails_the_plan_not_the_render(
+    project, episode, stills, panels
+):
+    """Second review of the #81 follow-up: the plan-time check must be as strict
+    as burns' own, or a path authored at 1366x768 (0.00087 off 16:9) passes
+    planning and raises MoveError from execute after the canvases."""
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM
+
+    near = {
+        "version": 1,
+        "keyframes": [
+            {"t": 0.0, "rect": {"x": 0, "y": 0, "w": 1, "h": 1}},
+            {"t": 1.0, "rect": {"x": 0.1, "y": 0.1, "w": 0.8, "h": 0.8}},
+        ],
+        "interp": "linear",
+        "easing": "ease-in-out",
+        "output_aspect": 1366 / 768,
+    }
+    edited = _rewrite_in_place(project, panels[0], body={**panels[0].body, "path": near})
+    with pytest.raises(ValueError, match="aspect"):
+        _plan(VIDEO_CUT_RENDER_TRANSFORM, project, edited, *panels[1:])
+
+
 def test_resolver_identity_refuses_a_burns_without_the_resolver(monkeypatch):
     """Post-hoc review of #81: ``mixing`` pulls burns with no floor, so an old
     burns is reachable without the ``video`` extra. It must fail the PLAN with

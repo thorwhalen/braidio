@@ -64,6 +64,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import shutil
 import subprocess
 import uuid
@@ -456,8 +457,11 @@ def _refuse_unlicensed_under_published(profile: str, stills) -> None:
         )
 
 
-#: Tolerance on a stored path's ``output_aspect`` against the cut's.
-_ASPECT_TOLERANCE = 1e-3
+#: Relative tolerance on a stored path's ``output_aspect`` against the cut's —
+#: burns' own (``burns.moves._ASPECT_REL_TOL``). Any looser and a path this
+#: check passes would still raise ``MoveError`` from execute, after every
+#: canvas is prepared (a 1366x768 path is 0.00087 off 1920x1080).
+_ASPECT_REL_TOL = 1e-9
 
 
 def _check_stored_paths(panels, settings: dict) -> None:
@@ -477,7 +481,9 @@ def _check_stored_paths(panels, settings: dict) -> None:
     for panel in panels:
         stored = panel.body.get("path") or {}
         authored = stored.get("output_aspect")
-        if authored is not None and abs(float(authored) - aspect) > _ASPECT_TOLERANCE:
+        if authored is not None and not math.isclose(
+            float(authored), aspect, rel_tol=_ASPECT_REL_TOL
+        ):
             raise ValueError(
                 f"{RENDER_NAME}: panel {panel.id} stores a path authored for aspect "
                 f"{float(authored):.4f}; this cut is {w}x{h} ({aspect:.4f}). Re-author "
@@ -784,6 +790,8 @@ def _card_named_by(text, overlays) -> str:
     >>> _card_named_by("nope", [card])
     'an overlay tituli could not identify'
     """
+    if not text:
+        return "an overlay tituli could not identify"
     for overlay in overlays:
         payload = overlay.payload
         if not isinstance(payload, dict):
