@@ -68,6 +68,7 @@ from braidio.transforms._common import (
     TIER_EPISODE_RENDER,
     TIER_STILL,
     TIER_VIDEO_PANEL,
+    annotation_parents,
     graph_index,
     resolve_parents,
 )
@@ -327,7 +328,10 @@ class VideoPanelsPlan(BaseTransform):
     ) -> TransformResult:
         if not skeleton:
             return TransformResult(annotations=(), artifacts=(), cost_usd_actual=0.0)
-        episode_id = skeleton[0].provenance.was_derived_from[0]
+        # The first ANNOTATION parent: nw orders annotation ids before any
+        # declared artifact ids (nw#55), but relying on list position is how
+        # this would quietly start reading an asset id as the episode.
+        episode_id = annotation_parents(skeleton[0])[0]
         if use_cache and not force:
             existing = panels_for_episode(project, episode_id)
             if existing and _track_value(existing) == _track_value(skeleton):

@@ -154,10 +154,25 @@ def planned_value(ann: Annotation) -> dict:
     return json.loads(json.dumps(planned, sort_keys=True, default=str))
 
 
+def annotation_parents(ann: Annotation) -> list:
+    """The annotation ids in ``ann``'s ``was_derived_from``, in recorded order.
+
+    ``was_derived_from`` holds annotation ids **and** 64-hex artifact asset ids
+    (lacing#31; nw writes the latter for declared schemas, nw#55). Code that
+    means "the annotations this node was derived from" reads this half only.
+    """
+    from lacing.model import partition_provenance_refs
+
+    annotation_ids, _asset_ids = partition_provenance_refs(
+        list(ann.provenance.was_derived_from or ())
+    )
+    return annotation_ids
+
+
 def fresh_equivalent(project, skeleton: Annotation) -> Annotation | None:
     """An existing node this ``skeleton`` would only duplicate, or ``None``.
 
-    Equivalent means: same tier, the same ``was_derived_from`` set, the same
+    Equivalent means: same tier, the same **annotation** parents, the same
     :func:`planned_value` — and **verified fresh** by nw's freshness walk, so
     its recorded upstream digests still match its parents' current values.
     That last clause is what makes this safe after a re-ingest: a parent
@@ -169,16 +184,28 @@ def fresh_equivalent(project, skeleton: Annotation) -> Annotation | None:
     no voice-assignment, no render, no episode. It is a full freshness walk
     per call, honest about scale like nw's ``cached_output``: fine at project
     size, and an index behind this signature is the fix if that changes.
+
+    Only the annotation half of ``was_derived_from`` is compared. Since nw#55 a
+    declared input schema also contributes the artifact ids its body names
+    (``_asset_refs``), so a node written before the declaration has none and a
+    whole-list comparison would never match it — one re-plan would re-render
+    every such node. Freshness loses nothing by ignoring them: a declared
+    asset id is read off a parent's body, so a replaced artifact changes that
+    parent's value, which the freshness walk below already refuses. Lineage
+    does lose something, deliberately: a reused pre-declaration node keeps
+    its old provenance, with no asset edge, until something re-renders it —
+    re-rendering instead would mint a new node and orphan whatever was built
+    on the old one (video panels, cuts).
     """
     import nw
 
-    parents = set(skeleton.provenance.was_derived_from)
+    parents = set(annotation_parents(skeleton))
     value = planned_value(skeleton)
     candidates = [
         a
         for a in nw.annotations_at_tier(project.root, skeleton.tier)
         if a.id != skeleton.id
-        and set(a.provenance.was_derived_from) == parents
+        and set(annotation_parents(a)) == parents
         and planned_value(a) == value
     ]
     if not candidates:

@@ -40,6 +40,7 @@ from nw import TransformInputs
 from braidio.transforms._common import ELEVENLABS_SECRET
 from braidio.transforms._ingest import ingest_script, IngestedScript
 from braidio.transforms import (  # noqa: F401
+    _asset_refs,
     _voice,
     _narration,
     _dialogue,
