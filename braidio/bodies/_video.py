@@ -43,7 +43,7 @@ Registered with lacing on import, like the other two body modules.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -78,6 +78,10 @@ CUT_STAGES: tuple[str, ...] = ("motion", "delivered")
 motion cut with labels, captions and credits composited (the cheap pass)."""
 
 CUT_PROFILES: tuple[str, ...] = ("personal", "published")
+
+PanelRole = Literal["literal", "contextual", "decorative"]
+#: What a placement claims about its picture, strongest first.
+PANEL_ROLES: tuple[str, ...] = ("literal", "contextual", "decorative")
 LABEL_KINDS: tuple[str, ...] = ("title", "context", "tag", "note")
 
 #: The rights record — **exactly** ``illustration.RIGHTS_FIELDS``, by name.
@@ -251,6 +255,43 @@ class VideoPanelBodyV1(BaseModel):
             "The track this panel belongs to — minted once per plan run and "
             "shared by every panel it wrote. A cut lists panels; a track is "
             "how two plans over one episode stay apart."
+        ),
+    )
+    # --- the placement decision (thorwhalen/braidio#85) ---------------------
+    # All additive (default None/False): a panel written before them loads and
+    # reads as "unexplained, unscored" — which is exactly what it was.
+    anchor_text: Optional[str] = Field(
+        None, description="The words spoken under this panel, as planned."
+    )
+    rationale: Optional[str] = Field(
+        None,
+        description=(
+            "What in `anchor_text` the picture illustrates — the author's reason "
+            "for the placement. None = nobody said why."
+        ),
+    )
+    relevance: Optional[float] = Field(
+        None,
+        ge=0.0,
+        le=1.0,
+        description="How well the still relates to `anchor_text`, per `scorer`.",
+    )
+    scorer: Optional[str] = Field(
+        None, description="Id of the relevance scorer that produced `relevance`."
+    )
+    role: Optional[PanelRole] = Field(
+        None,
+        description=(
+            "'literal' (shows what is said), 'contextual' (shows its world), "
+            "'decorative' (filler, admitted as such). None = unexplained."
+        ),
+    )
+    disclaimed: bool = Field(
+        False,
+        description=(
+            "The placement is honest only while the still's label is on screen "
+            "(a right-shaped, wrong-specific picture). Its label then outranks "
+            "any card in its slot at the panel's first appearance."
         ),
     )
 

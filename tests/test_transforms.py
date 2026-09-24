@@ -1158,7 +1158,8 @@ def test_source_media_paths_are_not_declared_as_asset_ids(
     _weave_with_sting_and_bed(project, script_and_source, tmp_path)
     assert SOURCE_MEDIA_V1 not in ASSET_REF_FIELDS
     for media in (
-        a for a in nw.iter_all_annotations(project.root)
+        a
+        for a in nw.iter_all_annotations(project.root)
         if a.body_schema_uri == SOURCE_MEDIA_V1
     ):
         assert asset_refs_of(media) == ()
@@ -1191,4 +1192,3 @@ def test_an_episode_woven_before_the_declaration_is_reused_not_re_rendered(
     assert [a.id for a in nw.annotations_at_tier(project.root, "episode-renders")] == [
         before.id
     ]
-

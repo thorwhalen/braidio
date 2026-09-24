@@ -428,8 +428,14 @@ PINNED: dict[str, dict] = {
     "VideoPanelBodyV1": {
         "required": frozenset({"order", "seed", "still_id", "track_id"}),
         "fields": {
+            "anchor_text": "string|null = null",
             "beat_id": "string|null = null",
+            "disclaimed": "boolean = false",
             "focus": "RectV1|null = null",
+            "rationale": "string|null = null",
+            "relevance": "number(maximum=1.0, minimum=0.0)|null = null",
+            "role": "enum[contextual|decorative|literal]|null = null",
+            "scorer": "string|null = null",
             "move": 'string = "auto"',
             "order": "integer(minimum=0)",
             "path": "object<string,any>|null = null",

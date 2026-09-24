@@ -71,7 +71,7 @@ Each layer only knows the ones beneath it. Keep it that way.
 
 | Layer | Modules | Depends on |
 |---|---|---|
-| **1. Functional core** | `script` (Narration/SegmentBeat/Dialogue/Script), `rights` (Profile + plan_production), `sources` (SegmentSource, TimedLine), `tts`, `cost`, `delivery`, `pacing`, `multivoice`, `weave_config`, `music`, `compose`, `weave`, `render`, `timeline`, `captions`, `textprep`, `style`, `kinds` | `mixing`, `elevenlabs`, `ffmpeg` on PATH — nothing else |
+| **1. Functional core** | `script` (Narration/SegmentBeat/Dialogue/Script), `rights` (Profile + plan_production), `sources` (SegmentSource, TimedLine), `tts`, `cost`, `delivery`, `pacing`, `multivoice`, `weave_config`, `music`, `compose`, `weave`, `render`, `timeline`, `captions`, `relevance`, `textprep`, `style`, `kinds` | `mixing`, `elevenlabs`, `ffmpeg` on PATH — nothing else |
 | **2. Format templates** | `formats` (`Format`, `render_format`, `FORMATS`) | layer 1 only. Templates are *good defaults over the primitives*, never new mechanism |
 | **3. Graph vocabulary** | `bodies/` — lacing body schemas + tiers, registered as an import side effect | `lacing` (extra `graph`) |
 | **4. nw pipeline** | `transforms/` (voice-assignment → narration-render / dialogue-render → segment-extraction → episode), `provenance`, `project`, `genre` | layers 1–3 + `nw` (extra `nw-app`) |

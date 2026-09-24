@@ -717,7 +717,9 @@ def test_a_near_miss_aspect_fails_the_plan_not_the_render(
         "easing": "ease-in-out",
         "output_aspect": 1366 / 768,
     }
-    edited = _rewrite_in_place(project, panels[0], body={**panels[0].body, "path": near})
+    edited = _rewrite_in_place(
+        project, panels[0], body={**panels[0].body, "path": near}
+    )
     with pytest.raises(ValueError, match="aspect"):
         _plan(VIDEO_CUT_RENDER_TRANSFORM, project, edited, *panels[1:])
 
@@ -1013,9 +1015,6 @@ def test_an_attribution_overflow_also_names_the_still(
     assert "could not identify" not in str(exc_info.value)
 
 
-
-
-
 def test_motion_key_names_the_move_resolver(
     project, episode, stills, panels, monkeypatch
 ):
@@ -1136,3 +1135,230 @@ def test_commentary_weave_genre_carries_the_picture_track():
     # a video is a delivery, orthogonal to format: the templates are untouched
     assert {t.slug for t in genre.templates} == set(FORMATS)
     assert genre.projection_entrypoint == "weave_to_episode.default"
+
+
+# --- placement reasons, relevance and the knobs (thorwhalen/braidio#85) -------
+
+
+def _keys_by_order(skels, stills):
+    by_id = {s.id: s.body["key"] for s in stills}
+    return [by_id[uuid.UUID(p.body["still_id"])] for p in skels]
+
+
+def test_every_panel_records_its_words_its_score_and_its_scorer(
+    project, episode, stills
+):
+    from braidio.transforms import VIDEO_PANELS_TRANSFORM, placement_report
+
+    skels = _plan(VIDEO_PANELS_TRANSFORM, project, episode)[1]
+    assert skels[0].body["anchor_text"].startswith("Opening line")
+    for p in skels:
+        assert 0.0 <= p.body["relevance"] <= 1.0
+        assert p.body["scorer"] == "lexical"
+    # a pool-cycled still is nobody's reasoned choice: unexplained, and — since
+    # the narration never names Alice or Carol — scored decorative
+    assert {p.body["role"] for p in skels} == {"decorative"}
+    assert all("decorative" in r["issues"] for r in placement_report(skels))
+
+
+def test_the_defaults_place_the_same_stills_as_before(project, episode, stills):
+    """A re-plan of an existing (e.g. imported) track must not silently move a
+    picture: the new knobs describe the placement, they do not change it."""
+    from braidio.transforms import VIDEO_PANELS_TRANSFORM
+    from braidio.transforms._video_panels import _track_value
+
+    new = _run(VIDEO_PANELS_TRANSFORM, project, episode).annotations
+    legacy_body = [
+        {
+            k: v
+            for k, v in p.body.items()
+            if k
+            not in {
+                "anchor_text",
+                "rationale",
+                "relevance",
+                "scorer",
+                "role",
+                "disclaimed",
+            }
+        }
+        for p in new
+    ]
+    legacy = [p.model_copy(update={"body": b}) for p, b in zip(new, legacy_body)]
+    # a track written before the fields existed compares equal to today's plan,
+    # so execute() returns it instead of writing a new "latest" beside it
+    assert _track_value(legacy) == _track_value(new)
+
+
+def test_a_reasoned_pick_carries_its_reason_and_role(project, episode, stills):
+    from braidio.transforms import VIDEO_PANELS_TRANSFORM, picks_from_panels
+    from braidio.transforms._common import graph_index
+
+    beat = _plan(VIDEO_PANELS_TRANSFORM, project, episode)[1][0].body["beat_id"]
+    pick = {"still_key": "c", "reason": "the song's opening", "role": "contextual"}
+    skels = _plan(
+        VIDEO_PANELS_TRANSFORM,
+        project,
+        episode,
+        params={"picks": {beat: [pick]}, "min_relevance": 0.0},
+    )[1]
+    mine = [p for p in skels if p.body["beat_id"] == beat]
+    assert all(p.body["rationale"] == "the song's opening" for p in mine)
+    assert all(p.body["role"] == "contextual" for p in mine)
+    carried = picks_from_panels(skels, graph_index(project), with_reasons=True)[beat]
+    assert carried[0] == {**pick, "disclaimed": False}
+    # and a carried reason is RE-SCORED where it lands: under the default
+    # threshold the same pick is decorative, because nothing names Carol
+    rescored = _plan(
+        VIDEO_PANELS_TRANSFORM, project, episode, params={"picks": {beat: carried}}
+    )[1]
+    assert {p.body["role"] for p in rescored if p.body["beat_id"] == beat} == {
+        "decorative"
+    }
+
+
+def test_a_still_the_words_name_is_not_decorative(project, episode, stills, tmp_path):
+    from braidio.transforms import VIDEO_PANELS_TRANSFORM
+
+    add_still(
+        project,
+        _png(tmp_path / "song.png"),
+        key="song",
+        labelled=True,
+        subject="The opening song",
+    )
+    beat = _plan(VIDEO_PANELS_TRANSFORM, project, episode)[1][0].body["beat_id"]
+    skels = _plan(
+        VIDEO_PANELS_TRANSFORM,
+        project,
+        episode,
+        params={"picks": {beat: [{"still_key": "song", "role": "literal"}]}},
+    )[1]
+    first = skels[0]
+    assert first.body["relevance"] > 0.5 and first.body["role"] == "literal"
+
+
+def test_allow_decorative_refuses_or_caps(project, episode, stills):
+    from braidio.transforms import VIDEO_PANELS_TRANSFORM
+
+    with pytest.raises(ValueError, match="allow_decorative"):
+        _plan(
+            VIDEO_PANELS_TRANSFORM, project, episode, params={"allow_decorative": False}
+        )
+    with pytest.raises(ValueError, match="allow_decorative=0.1"):
+        _plan(
+            VIDEO_PANELS_TRANSFORM, project, episode, params={"allow_decorative": 0.1}
+        )
+    # nothing below threshold → nothing to refuse
+    _plan(
+        VIDEO_PANELS_TRANSFORM,
+        project,
+        episode,
+        params={"allow_decorative": False, "min_relevance": 0.0},
+    )
+
+
+def test_a_disclaimed_pick_is_off_by_default_and_needs_a_label(
+    project, episode, stills
+):
+    from braidio.transforms import VIDEO_PANELS_TRANSFORM
+
+    beat = _plan(VIDEO_PANELS_TRANSFORM, project, episode)[1][0].body["beat_id"]
+
+    def picks(key):
+        return {"picks": {beat: [{"still_key": key, "disclaimed": True}]}}
+
+    with pytest.raises(ValueError, match="allow_disclaimed=True"):
+        _plan(VIDEO_PANELS_TRANSFORM, project, episode, params=picks("a"))
+    with pytest.raises(ValueError, match="unlabelled"):
+        _plan(
+            VIDEO_PANELS_TRANSFORM,
+            project,
+            episode,
+            params={**picks("b"), "allow_disclaimed": True},
+        )
+    skels = _plan(
+        VIDEO_PANELS_TRANSFORM,
+        project,
+        episode,
+        params={**picks("a"), "allow_disclaimed": True},
+    )[1]
+    assert skels[0].body["disclaimed"] is True
+
+
+def test_pick_scope_span_chooses_by_the_words_under_each_span(project, episode, stills):
+    from braidio.transforms import VIDEO_PANELS_TRANSFORM
+
+    def scorer(text, bodies):  # a stand-in for a model scorer: likes "b" on "hook"
+        return [1.0 if ("hook" in text and b["key"] == "b") else 0.0 for b in bodies]
+
+    skels = _plan(
+        VIDEO_PANELS_TRANSFORM,
+        project,
+        episode,
+        params={"pick_scope": "span", "relevance": scorer},
+    )[1]
+    keys = _keys_by_order(skels, stills)
+    hooked = [i for i, p in enumerate(skels) if "hook" in (p.body["anchor_text"] or "")]
+    assert hooked, [p.body["anchor_text"] for p in skels]
+    # the first span about the hook gets the still the scorer likes; the next
+    # one may not (never the same still twice in a row)
+    assert keys[hooked[0]] == "b" and skels[hooked[0]].body["relevance"] == 1.0
+    assert all(a != b for a, b in zip(keys, keys[1:]))
+    assert skels[0].body["scorer"].endswith("scorer")
+    with pytest.raises(ValueError, match="pick_scope"):
+        _plan(VIDEO_PANELS_TRANSFORM, project, episode, params={"pick_scope": "x"})
+    with pytest.raises(ValueError, match="unknown relevance scorer"):
+        _plan(VIDEO_PANELS_TRANSFORM, project, episode, params={"relevance": "nope"})
+
+
+def test_a_disclaimer_label_is_not_hidden_by_a_heavier_card():
+    """The Two Silences defect: the recording tag (weight 2) owned the label's
+    slot at first appearance, so the Beach Boys still showed captioned only
+    '1981 · Central Park, live'. A disclaimed panel's label now wins."""
+    from types import SimpleNamespace as NS
+
+    from lacing import MediaRef, TimeInterval, RationalTime
+
+    from braidio.transforms._video_cut import _overlays
+
+    def ref(a, b):
+        return MediaRef(
+            asset_id="x",
+            interval=TimeInterval(RationalTime(a, 1), RationalTime(b, 1)),
+        )
+
+    still = NS(
+        body={
+            "key": "beach",
+            "labelled": True,
+            "subject": "The Beach Boys in Central Park, 1971 — not this concert",
+            "author": "ABC",
+            "license": "pdm",
+        }
+    )
+    card = NS(
+        reference=ref(0, 20),
+        body={"kind": "context", "lines": ["1981 · Central Park, live"], "weight": 2},
+    )
+
+    def overlays(disclaimed):
+        panel = NS(
+            reference=ref(0, 10),
+            body={"still_id": "s", "disclaimed": disclaimed},
+        )
+        return _overlays([panel], {"s": still}, [card])
+
+    def label_times(ovs):
+        return [
+            (o.start, o.end)
+            for o in ovs
+            if not isinstance(o.payload, dict) and o.payload.key == "beach"
+        ]
+
+    assert label_times(overlays(False)) == []  # the old behaviour: hidden
+    assert label_times(overlays(True)) == [(0.0, 10.0)]  # the whole panel
+    card_times = [
+        (o.start, o.end) for o in overlays(True) if isinstance(o.payload, dict)
+    ]
+    assert card_times == [(10.0, 20.0)]  # the card yields the panel's stretch
