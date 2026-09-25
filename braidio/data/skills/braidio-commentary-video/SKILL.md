@@ -199,12 +199,30 @@ Library of Congress *portraits of jazz musicians*, a Dresden apartment block sat
 under the words "tenement halls", and a 1910 hotel was captioned as a record
 shop. A thumbnail tells you what a picture looks like, not what it is.
 
-**A picture that is right-shaped but wrong-specific needs a label, not a
-deletion.** A photograph of a genuine large concert in the right park that is
-*not the concert you are discussing* is honest illustration the moment `tituli`
-names it on screen ("The Beach Boys in Central Park, 1971 — not this concert"),
-and an implicit false claim the moment it is unlabelled. Decide which you are
-shipping.
+**Pick each picture for the words spoken over it, and write down why.** The
+test is the sentence under the panel, not the topic of the beat: a Dylan portrait
+chosen for "the same day as Dylan's *Like a Rolling Stone* sessions" was still
+on screen through the session-musician credits after it, and it stayed in the
+2-minute cut after that cut had dropped the Dylan sentence. So give every pick
+a reason (`{"still_key": ..., "reason": ..., "role": ...}`), plan with
+`pick_scope="span"` when a beat runs to several panels, and read
+`placement_report(track)` before rendering. Anything it lists as `decorative`
+or `unexplained` is a placement nobody can defend yet. Re-plan whenever picks
+are carried into another cut, because the planner re-scores each carried pick
+against the narration it now sits under.
+
+**A right-shaped but wrong-specific picture is a replacement job first, and a
+labelled exception only by choice.** A photograph of a real large concert in the
+right park that is *not the concert being discussed* ("The Beach Boys in Central
+Park, 1971", shown over a 1981 recording) is a wrong picture. Look for the right
+one. Keep it only as an explicit, opt-in exception: the pick is marked
+`disclaimed: true`, the plan runs with `allow_disclaimed=True` (off by
+default, and without it the plan refuses), and the still is `labelled` with a
+subject that says what it is *not*. `video_cut.finish` then holds that label
+for the whole panel, and any card in the label's slot yields to it. Once, the
+heavier recording tag hid the disclaimer at first appearance, so the picture
+went out captioned "1981 · Central Park, live", the very claim the label
+existed to deny.
 
 **Queries come from the research, not from the topic.** "Illustrate the 1965
 overdub" gives you generic studio stock; knowing *what the research turned up*
@@ -388,7 +406,18 @@ panels = plan.execute(
     *plan.plan(
         project,
         TransformInputs(primary=(episode,)),
-        params={"picks": {"0003": ["eliza-earl"]}},
+        params={
+            "picks": {
+                "0003": [
+                    {
+                        "still_key": "eliza-earl",
+                        "reason": "the sentence names Eliza",
+                        "role": "literal",
+                    }
+                ]
+            },
+            "pick_scope": "span",
+        },
     ),
 ).annotations
 render = nw.get_transform(VIDEO_CUT_RENDER_TRANSFORM)
@@ -438,7 +467,19 @@ Rules that fall out of the shape, each of which cost a real production:
   edit *after* planning, so a re-plan never overwrites an edit).
   `panels_for_episode(project, episode.id)` is the latest track,
   `tracks_for_episode` all of them. After a re-weave, carry choices forward
-  with `picks_from_panels(old_track, index)`.
+  with `picks_from_panels(old_track, index, with_reasons=True)`.
+- **Every panel records why it is there** (braidio#85): `anchor_text` (the
+  words under it), `rationale` (the pick's reason), `relevance` + `scorer`,
+  `role` (`literal` / `contextual` / `decorative`, `None` = unexplained) and
+  `disclaimed`. The knobs on `video_panels.plan` are `relevance=` (a
+  registered scorer name or a `(text, still_bodies) -> scores` callable, which
+  is the same shape as illustration's reranking scorer; the default `"lexical"`
+  checks whether the words name the still), `min_relevance` (default 0.1:
+  anything below it is recorded as decorative), `allow_decorative` (`True`,
+  `False`, or a maximum share of screen time), `allow_disclaimed` (default
+  `False`) and `pick_scope` (`"beat"` or `"span"`). With the defaults, the same
+  picks place the same stills as before, so re-planning an existing track only
+  adds the assessment.
 - **`video_cut.finish` refuses a motion cut whose frames would differ** (a
   still swapped, a crop changed, the audio re-woven since it rendered) and
   fails an overlay collision (two equal-weight cards in one slot) at plan

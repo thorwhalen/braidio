@@ -126,6 +126,8 @@ _KIND_SLOTS = {
 }
 #: Weight of a per-still label — lighter than any card (whose default is 2).
 _LABEL_WEIGHT = 1
+#: The slot a per-still label lands in (tituli's ``schedule_labels`` default).
+_LABEL_SLOT = "top-left"
 #: Chars of a content digest used in a canvas / crop file name.
 _NAME_DIGEST_CHARS = 16
 #: JPEG quality a cropped still is re-encoded at (PIL's default 75 would put a
@@ -746,6 +748,15 @@ def _overlays(panels, stills_by_id: dict, label_tracks):
     Pure, and run at **plan** time too: tituli's ``resolve`` raises on two
     equal-weight overlays contending for one slot (an authoring error), and
     that must fail the plan, not the render after it.
+
+    **A disclaimer outranks a card** (thorwhalen/braidio#85). A ``disclaimed``
+    panel shows a picture that is honest only while its label says what it is
+    ("The Beach Boys in Central Park, 1971 — not this concert"), so its label
+    is held for the whole panel, at every appearance, and any heavier card in
+    the label's slot yields that stretch of time — cut around it, not the
+    other way round. Left to tituli's ordinary rule (the heavier overlay owns
+    the moment), the first viewing showed the picture under the tag alone,
+    which is the false claim the label existed to prevent.
     """
     from tituli import UNLABELLED, Label, Span, TimedOverlay, resolve, schedule_labels
 
@@ -763,10 +774,11 @@ def _overlays(panels, stills_by_id: dict, label_tracks):
                 payload=payload,
             )
         )
-    spans = []
+    spans, disclaimed = [], []
     for panel in panels:
         start, end = _interval_s(panel)
-        spans.append(Span(start, end, key=str(panel.body["still_id"])))
+        span = Span(start, end, key=str(panel.body["still_id"]))
+        (disclaimed if panel.body.get("disclaimed") else spans).append(span)
 
     def label_for(span):
         body = stills_by_id[span.key].body
@@ -774,10 +786,64 @@ def _overlays(panels, stills_by_id: dict, label_tracks):
             return UNLABELLED
         return Label(str(body["subject"]), _short_attribution(body), key=body["key"])
 
+    cards = _yield_to_disclaimers(cards, disclaimed)
     labels = schedule_labels(
         spans, label_for, suppressed_by=cards, weight=_LABEL_WEIGHT
     )
+    if disclaimed:
+        labels += schedule_labels(
+            disclaimed,
+            label_for,
+            weight=_LABEL_WEIGHT,
+            hold_s=float("inf"),
+            repeat_gap_s=0.0,
+        )
     return resolve([*cards, *labels])
+
+
+def _yield_to_disclaimers(cards, disclaimed_spans):
+    """``cards`` with the disclaimed spans cut out of every card in the label slot.
+
+    A card that loses its middle becomes two pieces; a piece shorter than
+    tituli's readable minimum is dropped (a flash is not a card).
+
+    >>> from tituli import Span, TimedOverlay
+    >>> card = TimedOverlay(None, 0.0, 20.0, slot=_LABEL_SLOT, weight=2)
+    >>> [(c.start, c.end) for c in _yield_to_disclaimers([card], [Span(5.0, 9.0, key="s")])]
+    [(0.0, 5.0), (9.0, 20.0)]
+    >>> other = TimedOverlay(None, 0.0, 20.0, slot="bottom-left", weight=2)
+    >>> _yield_to_disclaimers([other], [Span(5.0, 9.0, key="s")]) == [other]
+    True
+    """
+    from tituli import TimedOverlay
+    from tituli.schedule import MIN_READABLE_S
+
+    out = list(cards)
+    for span in disclaimed_spans:
+        kept = []
+        for c in out:
+            if c.slot != _LABEL_SLOT or c.weight <= _LABEL_WEIGHT:
+                kept.append(c)
+                continue
+            if not (c.start < span.end and span.start < c.end):
+                kept.append(c)
+                continue
+            for a, b in ((c.start, span.start), (span.end, c.end)):
+                if b - a >= MIN_READABLE_S:
+                    kept.append(
+                        TimedOverlay(
+                            c.layout,
+                            a,
+                            b,
+                            c.slot,
+                            c.weight,
+                            c.fade,
+                            c.payload,
+                            dict(c.meta),
+                        )
+                    )
+        out = kept
+    return out
 
 
 def _card_named_by(text, overlays) -> str:
@@ -1037,6 +1103,9 @@ class VideoCutFinish(BaseTransform):
                 str(still.body.get("subject")),
                 _short_attribution(still.body),
             ]
+            if panel.body.get("disclaimed"):
+                # only when set, so every key minted before the field stays put
+                parts.append("disclaimed")
         if settings["captions"]:
             parts.append(
                 _captions_srt(project, episode, max_chars=settings["caption_chars"])

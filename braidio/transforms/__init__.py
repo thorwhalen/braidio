@@ -51,9 +51,12 @@ from braidio.transforms import (  # noqa: F401
 )
 from braidio.transforms._episode import episode_script, episode_timeline
 from braidio.transforms._video_panels import (
+    Pick,
+    as_pick,
     mint_seed,
     panels_for_episode,
     picks_from_panels,
+    placement_report,
     tracks_for_episode,
 )
 from braidio.transforms._video_cut import path_for_panel, resolve_move
@@ -80,6 +83,9 @@ __all__ = [
     "mint_seed",
     "panels_for_episode",
     "picks_from_panels",
+    "placement_report",
+    "Pick",
+    "as_pick",
     "tracks_for_episode",
     "path_for_panel",
     "resolve_move",
