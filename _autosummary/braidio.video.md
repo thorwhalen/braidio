@@ -34,6 +34,7 @@ and never shows dead black bars.
 | [`missing_dependencies`](#braidio.video.missing_dependencies)()                         | Which `braidio[video]` dependencies are absent (empty when ready).   |
 | [`plan_spans`](#braidio.video.plan_spans)(timeline, \*[, min_panel_s, ...])   | Cut `timeline` into contiguous spans of roughly one still each.      |
 | [`prepare_still`](#braidio.video.prepare_still)(src, dst, \*[, size])            | Composite `src` onto a blurred fill of itself at exactly `size`.     |
+| [`save_atomically`](#braidio.video.save_atomically)(img, dst, \*\*encode)          | `img.save(dst)` through a sibling temp file and an atomic rename.    |
 | [`render_video`](#braidio.video.render_video)(panels, \*, audio_path, out_path) | Render `panels` as one Ken Burns film and mux `audio_path` under it. |
 
 ### Classes
@@ -184,3 +185,14 @@ tail.
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 * **Returns:**
   The written mp4 path.
+
+### braidio.video.save_atomically(img, dst, \*\*encode)
+
+`img.save(dst)` through a sibling temp file and an atomic rename.
+
+A cached canvas is shared: the studio’s move preview and a render can both
+ask for it at once, and a reader that opens a half-written JPEG would
+otherwise cache the truncation under its content key for good.
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)

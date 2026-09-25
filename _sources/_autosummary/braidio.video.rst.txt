@@ -13,6 +13,7 @@ braidio.video
       missing_dependencies
       plan_spans
       prepare_still
+      save_atomically
       render_video
    
    .. rubric:: Classes

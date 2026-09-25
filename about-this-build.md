@@ -2,7 +2,7 @@
 
 # About this build
 
-This documentation was built on **2026-09-25 00:53 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/d47d64ceecd2bc823e8ede8eb26dae1aff98cae9"><code>d47d64c</code></a> on branch <code>main</code>, for **braidio 0.0.58** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-25 01:37 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/c6c41f7131e9a3dcc97c9080f7b59d87451758e0"><code>c6c41f7</code></a> on branch <code>main</code>, for **braidio 0.0.59** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -11,9 +11,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/d47d64ceecd2bc823e8ede8eb26dae1aff98cae9"><code>d47d64ceecd2bc823e8ede8eb26dae1aff98cae9</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/c6c41f7131e9a3dcc97c9080f7b59d87451758e0"><code>c6c41f7131e9a3dcc97c9080f7b59d87451758e0</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.0.58</code>                                                                                                                                       |
+| Tags at this commit | <code>0.0.59</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/braidio</code>                                                                                                        |
 
@@ -22,9 +22,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/braidio</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/36079295101">36079295101</a>   |
+| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/36082538526">36082538526</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>fcd917bcdbec78b5ce57a817d5834df3528a4b12</code> (in the history of the built commit) |
+| Event commit | <code>f6e59535c49b052b882300a0c64ee394878236ee</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -49,13 +49,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/braidio/0.0.58/">0.0.58</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/braidio/0.0.59/">0.0.59</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/braidio && cd braidio
-git checkout d47d64ceecd2bc823e8ede8eb26dae1aff98cae9
+git checkout c6c41f7131e9a3dcc97c9080f7b59d87451758e0
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
