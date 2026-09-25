@@ -127,6 +127,9 @@ _KIND_SLOTS = {
 #: The whole still, as a normalized box — mapped onto the canvas it is the
 #: ``content_box`` burns confines saliency to.
 _WHOLE_STILL = (0.0, 0.0, 1.0, 1.0)
+#: Below this normalized short side (a ~100:1 panorama strip) the still's box is
+#: too thin for burns' saliency after its downscale; it is then not passed.
+_MIN_CONTENT_SIDE = 0.02
 #: Weight of a per-still label — lighter than any card (whose default is 2).
 _LABEL_WEIGHT = 1
 #: The slot a per-still label lands in (tituli's ``schedule_labels`` default).
@@ -285,6 +288,10 @@ def path_for_panel(panel_body: dict, *, image, aspect: float, image_size=None):
         content_box = focus_on_canvas(
             _WHOLE_STILL, image_size=image_size, canvas_size=canvas_size
         )
+        if min(content_box[2], content_box[3]) < _MIN_CONTENT_SIDE:
+            # a strip too thin for saliency to read: frame on the canvas, as
+            # before content_box existed, rather than refuse the render
+            content_box = None
         if focus is not None:
             focus = focus_on_canvas(
                 focus, image_size=image_size, canvas_size=canvas_size
@@ -568,7 +575,9 @@ def _crop_still(
         encode = (
             {"quality": _CROP_JPEG_QUALITY} if dst.suffix in (".jpg", ".jpeg") else {}
         )
-        img.crop(box).save(dst, **encode)
+        from braidio.video import save_atomically
+
+        save_atomically(img.crop(box), dst, **encode)
     return dst
 
 
@@ -628,10 +637,12 @@ def panel_path(project, panel: Annotation, *, size: tuple[int, int]):
     ``settings["size"]``. Reads the still's bytes and writes the canvas into
     the project's frame cache.
     """
+    resolver_identity()  # refuses an old burns with the message the render gives
+    size = (int(size[0]), int(size[1]))
+    _check_stored_paths([panel], {"size": size})
     index = graph_index(project)
     workdir = _frames_dir(project)
     workdir.mkdir(parents=True, exist_ok=True)
-    size = (int(size[0]), int(size[1]))
     source = _panel_source(panel, index, workdir)
     canvas = _content_keyed_prepare(workdir, size)(source, None)
     return _path_on_canvas(panel.body, canvas, source, aspect=size[0] / size[1])

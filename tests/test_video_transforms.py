@@ -1452,7 +1452,7 @@ def test_string_flags_are_read_strictly(project, episode, stills):
 
 
 def test_panel_path_is_the_path_the_render_uses(
-    project, episode, stills, panels, monkeypatch
+    project, episode, stills, panels, monkeypatch, tmp_path
 ):
     """One source of truth for "what will the camera do": a preview through
     :func:`panel_path` must equal what ``video_cut.render`` hands the frame
@@ -1474,7 +1474,26 @@ def test_panel_path_is_the_path_the_render_uses(
             "focus": {"x": 0.1, "y": 0.2, "w": 0.5, "h": 0.5},
         },
     )
-    panels = [edited, *panels[1:]]
+    # and a textured portrait still WITH a crop, so saliency, the crop and the
+    # content_box all have something to act on (a flat colour exercises none)
+    np = pytest.importorskip("numpy")
+    PIL = pytest.importorskip("PIL.Image")
+    tex = np.random.default_rng(3).integers(0, 255, (150, 75, 3), dtype=np.uint8)
+    portrait = tmp_path / "portrait.png"
+    PIL.fromarray(np.kron(tex, np.ones((8, 8, 1), dtype=np.uint8))).save(portrait)
+    cropped = add_still(
+        project,
+        portrait,
+        key="portrait",
+        labelled=False,
+        crop={"x": 0.1, "y": 0.05, "w": 0.8, "h": 0.7},
+    )
+    swapped = _rewrite_in_place(
+        project,
+        panels[1],
+        body={**panels[1].body, "still_id": str(cropped.id), "zoom": 1.3},
+    )
+    panels = [edited, swapped, *panels[2:]]
     seen = []
 
     def _render_video(vpanels, *, out_path, size, workdir, prepare, path_for, **kw):
@@ -1487,3 +1506,5 @@ def test_panel_path_is_the_path_the_render_uses(
     cut = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
     size = tuple(cut.body["settings"]["size"])
     assert seen and [panel_path(project, p, size=size) for p in panels] == seen
+    # JSON callers send the size as a list
+    assert panel_path(project, panels[1], size=list(size)) == seen[1]

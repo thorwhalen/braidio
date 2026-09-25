@@ -52,6 +52,7 @@ __all__ = [
     "missing_dependencies",
     "plan_spans",
     "prepare_still",
+    "save_atomically",
     "render_video",
 ]
 
@@ -300,7 +301,27 @@ def prepare_still(src, dst, *, size: tuple[int, int] = DEFAULT_SIZE) -> Path:
         (round(img.width * contain), round(img.height * contain)), Image.LANCZOS
     )
     bg.paste(fg, ((width - fg.width) // 2, (height - fg.height) // 2))
-    bg.save(dst, quality=94)
+    save_atomically(bg, dst, quality=94)
+    return dst
+
+
+def save_atomically(img, dst, **encode) -> Path:
+    """``img.save(dst)`` through a sibling temp file and an atomic rename.
+
+    A cached canvas is shared: the studio's move preview and a render can both
+    ask for it at once, and a reader that opens a half-written JPEG would
+    otherwise cache the truncation under its content key for good.
+    """
+    import os
+    import uuid
+
+    dst = Path(dst)
+    tmp = dst.with_name(f".{dst.stem}.{uuid.uuid4().hex[:8]}.tmp{dst.suffix}")
+    try:
+        img.save(tmp, **encode)
+        os.replace(tmp, dst)
+    finally:
+        tmp.unlink(missing_ok=True)
     return dst
 
 
