@@ -66,7 +66,12 @@ score from a pluggable scorer (``params["relevance"]``, see
 
 The defaults keep a re-plan of an existing track placing the same stills
 over the same spans: nothing is refused unless a caller asks for it, and the
-new fields only describe the placement. :func:`placement_report` lists what
+new fields only describe the placement. The flip side: because the
+assessment fields (``anchor_text``, ``relevance``, ``scorer``, ``role``) are
+not part of a track's identity, a re-plan whose only change is a pick's
+``role`` — or a first scoring of a track planned before these fields
+existed — returns the existing track; pass ``force=True`` to write the
+assessed track. :func:`placement_report` lists what
 a reviewer should look at.
 """
 
@@ -157,7 +162,7 @@ def as_pick(entry) -> Pick:
             still_key=str(entry["still_key"]),
             reason=(None if entry.get("reason") is None else str(entry["reason"])),
             role=entry.get("role"),
-            disclaimed=bool(entry.get("disclaimed", False)),
+            disclaimed=as_flag(entry.get("disclaimed", False), name="disclaimed"),
         )
     else:
         raise ValueError(f"{NAME}: cannot read a pick from {entry!r}")
@@ -169,14 +174,42 @@ def as_pick(entry) -> Pick:
     return pick
 
 
+def as_flag(value, *, name: str) -> bool:
+    """A boolean knob, read strictly: JSON callers send ``"false"`` too.
+
+    >>> as_flag("false", name="x"), as_flag(True, name="x"), as_flag(0, name="x")
+    (False, True, False)
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)) and value in (0, 1):
+        return bool(value)
+    text = str(value).strip().lower()
+    if text in ("true", "1", "yes", "on"):
+        return True
+    if text in ("false", "0", "no", "off", "", "none"):
+        return False
+    raise ValueError(f"{NAME}: {name} must be a boolean, got {value!r}")
+
+
+def _min_relevance(value) -> float:
+    """``min_relevance`` in ``[0, 1]`` (``None`` = the default)."""
+    threshold = DEFAULT_MIN_RELEVANCE if value is None else float(value)
+    if not 0.0 <= threshold <= 1.0:
+        raise ValueError(f"{NAME}: min_relevance must lie in [0, 1], got {value!r}")
+    return threshold
+
+
 def _decorative_share(value) -> float:
     """``allow_decorative`` as the largest admissible share of screen time.
 
     >>> _decorative_share(True), _decorative_share(False), _decorative_share(0.25)
     (1.0, 0.0, 0.25)
     """
-    if isinstance(value, bool):
-        return 1.0 if value else 0.0
+    if isinstance(value, bool) or (
+        isinstance(value, str) and not value.strip().replace(".", "", 1).isdigit()
+    ):
+        return 1.0 if as_flag(value, name="allow_decorative") else 0.0
     share = float(value)
     if not 0.0 <= share <= 1.0:
         raise ValueError(
@@ -237,7 +270,15 @@ def picks_from_panels(panels, index: dict, *, with_reasons: bool = False) -> dic
             {
                 "still_key": key,
                 "reason": panel.body.get("rationale"),
-                "role": panel.body.get("role"),
+                # "decorative" may be the plan's verdict rather than the
+                # author's claim, and carried forward it would stick even
+                # where the new narration names the still; the planner
+                # re-derives it from the score instead.
+                "role": (
+                    None
+                    if panel.body.get("role") == "decorative"
+                    else panel.body.get("role")
+                ),
                 "disclaimed": bool(panel.body.get("disclaimed", False)),
             }
             if with_reasons
@@ -397,6 +438,7 @@ def _anchor_texts(project, episode: Annotation, timeline, spans) -> list[str]:
             for c in cues
             if min(c.end_s, span.end) - max(c.start_s, span.start)
             >= min(_MIN_CUE_OVERLAP_S, c.duration_s / 2)
+            and c.duration_s > 0
         ]
         out.append(" ".join(said) or str(span.label or ""))
     return out
@@ -604,9 +646,11 @@ class VideoPanelsPlan(BaseTransform):
         verdicts = _judge(
             chosen,
             spans,
-            min_relevance=float(params.get("min_relevance", DEFAULT_MIN_RELEVANCE)),
+            min_relevance=_min_relevance(params.get("min_relevance")),
             decorative_share=_decorative_share(params.get("allow_decorative", True)),
-            allow_disclaimed=bool(params.get("allow_disclaimed", False)),
+            allow_disclaimed=as_flag(
+                params.get("allow_disclaimed", False), name="allow_disclaimed"
+            ),
         )
         scored_by = scorer_id(scorer_spec)
         move = str(params.get("move", DEFAULT_MOVE))

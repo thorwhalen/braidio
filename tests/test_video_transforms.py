@@ -1362,3 +1362,49 @@ def test_a_disclaimer_label_is_not_hidden_by_a_heavier_card():
         (o.start, o.end) for o in overlays(True) if isinstance(o.payload, dict)
     ]
     assert card_times == [(10.0, 20.0)]  # the card yields the panel's stretch
+
+
+def test_a_threshold_verdict_is_not_carried_forward_as_an_authored_role(
+    project, episode, stills
+):
+    """Review finding: a pick demoted to decorative by the threshold must not
+    come back as the author's claim, or it stays decorative where the new
+    narration names the still."""
+    from braidio.transforms import VIDEO_PANELS_TRANSFORM, picks_from_panels
+    from braidio.transforms._common import graph_index
+
+    beat = _plan(VIDEO_PANELS_TRANSFORM, project, episode)[1][0].body["beat_id"]
+    skels = _plan(
+        VIDEO_PANELS_TRANSFORM,
+        project,
+        episode,
+        params={"picks": {beat: [{"still_key": "c", "role": "literal"}]}},
+    )[1]
+    assert skels[0].body["role"] == "decorative"  # nothing names Carol
+    carried = picks_from_panels(skels, graph_index(project), with_reasons=True)
+    assert carried[beat][0]["role"] is None
+
+
+def test_string_flags_are_read_strictly(project, episode, stills):
+    from braidio.transforms import VIDEO_PANELS_TRANSFORM
+
+    beat = _plan(VIDEO_PANELS_TRANSFORM, project, episode)[1][0].body["beat_id"]
+    skels = _plan(
+        VIDEO_PANELS_TRANSFORM,
+        project,
+        episode,
+        params={"picks": {beat: [{"still_key": "a", "disclaimed": "false"}]}},
+    )[1]
+    assert skels[0].body["disclaimed"] is False
+    with pytest.raises(ValueError, match="allow_disclaimed=True"):
+        _plan(
+            VIDEO_PANELS_TRANSFORM,
+            project,
+            episode,
+            params={
+                "picks": {beat: [{"still_key": "a", "disclaimed": True}]},
+                "allow_disclaimed": "false",
+            },
+        )
+    with pytest.raises(ValueError, match="min_relevance"):
+        _plan(VIDEO_PANELS_TRANSFORM, project, episode, params={"min_relevance": 2})
