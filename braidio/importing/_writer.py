@@ -1007,6 +1007,12 @@ def _import_into_project(
                 "members."
             )
 
+    # rule 1's other door, checked HERE so a dry run catches it and a real run
+    # refuses before writing anything (the write loop would fail half-way)
+    for cut in manifest.cuts:
+        for panel in cut.panels:
+            _panel_move(manifest, panel.move)
+
     report.untitled_stills = sorted(s.key for s in manifest.stills if not s.title)
     report.bare_attributions = sorted(
         s.key

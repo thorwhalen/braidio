@@ -1836,4 +1836,8 @@ def test_rendered_moves_refuse_auto(tmp_path, source):
     from braidio.importing import ImportError_
 
     with pytest.raises(ImportError_, match="rendered with"):
+        _run(tmp_path, source, overrides=_rendered("push_in", "auto"), dry_run=True)
+    with pytest.raises(ImportError_, match="rendered with"):
         _run(tmp_path, source, overrides=_rendered("push_in", "auto"))
+    # refused before anything was written, not half-way through the panels
+    assert not (tmp_path / "project").exists()
