@@ -123,6 +123,7 @@ IMPORTED_MOVE = "push_in"
 #: were extracted. Asserted at import; see rule 2.
 RECORDED_PANEL_ZOOM_DEFAULT = 1.18
 
+
 def _panel_move(manifest: ProductionManifest, move: str) -> str:
     """The move a panel is imported with: rule 1, or the rendered move as is.
 
