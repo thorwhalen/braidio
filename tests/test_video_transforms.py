@@ -1570,7 +1570,7 @@ def test_a_still_found_nowhere_names_every_place_looked(project, stills):
     from braidio.transforms._common import media_path
 
     body = {**stills[0].body, "url": "file:///nowhere/at/all.png"}
-    with pytest.raises(FileNotFoundError, match="catalog blob .*; /nowhere/at/all.png"):
+    with pytest.raises(FileNotFoundError, match=r"catalog blob .*; .*nowhere.at.all\.png"):
         media_path(project.root, body, what="still")
 
 
