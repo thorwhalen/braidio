@@ -15,7 +15,8 @@ unchanged is *left alone* rather than rewritten, because rewriting moves
 Four rules this module enforces rather than documents, each of which was a
 measured defect in the three finished productions:
 
-1. **Every imported panel is ``push_in``.** The source encodes a ``push`` /
+1. **Every imported panel is ``push_in`` — unless the manifest says its moves
+   were rendered** (``moves="rendered"``, see :func:`_panel_move`). The source encodes a ``push`` /
    ``drift`` alternation, and it was a **no-op**: ``drift`` reached burns as
    ``mode="auto"``, whose only use of the index was ``push = index % 2 == 1``,
    and every project set style by the same ordinal it passed as the index — so
@@ -121,6 +122,32 @@ IMPORTED_MOVE = "push_in"
 #: braidio.video.Panel's zoom default as it stood when the three productions
 #: were extracted. Asserted at import; see rule 2.
 RECORDED_PANEL_ZOOM_DEFAULT = 1.18
+
+def _panel_move(manifest: ProductionManifest, move: str) -> str:
+    """The move a panel is imported with: rule 1, or the rendered move as is.
+
+    Under ``moves="rendered"`` the manifest's move is the burns move the
+    delivered cut was framed with, so it is the truth and is written. ``auto``
+    is refused there: it names no move, only a draw that ``burns.choose_move``
+    makes from a seed, and the producer already knows what that draw was.
+
+    >>> from types import SimpleNamespace as NS
+    >>> _panel_move(NS(moves="source"), "auto")
+    'push_in'
+    >>> _panel_move(NS(moves="rendered"), "pull_out")
+    'pull_out'
+    """
+    if manifest.moves != "rendered":
+        return IMPORTED_MOVE
+    from burns import MOVES
+
+    if move == "auto" or move not in MOVES:
+        raise ImportError_(
+            f"moves='rendered' needs the move each panel was rendered with, one "
+            f"of {', '.join(m for m in MOVES if m != 'auto')}; got {move!r}"
+        )
+    return move
+
 
 MOVE_IMPORT_NOTE = (
     "Every panel imported as push_in. The source alternated push/drift by "
@@ -864,7 +891,8 @@ def _import_into_project(
         rights_position=manifest.rights.position,
         gaps=list(manifest.gaps),
     )
-    report.notes.append(MOVE_IMPORT_NOTE)
+    if manifest.moves == "source":
+        report.notes.append(MOVE_IMPORT_NOTE)
     report.notes.append(NARRATION_REPLACEMENT_NOTE)
     report.gaps.extend(_stale_gap_corrections(manifest))
 
@@ -1235,7 +1263,7 @@ def _import_into_project(
                     body=VideoPanelBodyV1(
                         still_id=str(still_ids[panel.still_key]),
                         # rule 1 — reality, not the never-realised intent
-                        move=IMPORTED_MOVE,
+                        move=_panel_move(manifest, panel.move),
                         zoom=panel.zoom,
                         focus=panel.focus,
                         path=None,
@@ -1857,9 +1885,11 @@ def _cut_settings(manifest: ProductionManifest, cut: CutRecord) -> dict[str, Any
         "why": manifest.rights.why,
         "measured": manifest.rights.measured,
     }
+    # key order kept as it was, so a re-import of a "source" production writes
+    # the same bytes and stales nothing
     settings["import"] = {
         "source": manifest.source_dir,
-        "move_note": MOVE_IMPORT_NOTE,
+        **({"move_note": MOVE_IMPORT_NOTE} if manifest.moves == "source" else {}),
         "audio": cut.audio.model_dump(mode="json", exclude_none=True),
     }
     return settings
@@ -1875,7 +1905,8 @@ def _project_notes(manifest: ProductionManifest, report: ImportReport) -> str:
     ]
     if manifest.rights.measured:
         lines += ["", f"Measured: {manifest.rights.measured}"]
-    lines += ["", "IMPORT NOTE:", MOVE_IMPORT_NOTE]
+    if manifest.moves == "source":
+        lines += ["", "IMPORT NOTE:", MOVE_IMPORT_NOTE]
     if manifest.gaps:
         lines += ["", "WHAT THE ARCHAEOLOGY COULD NOT SETTLE:"]
         lines += [f"- {g}" for g in manifest.gaps]
