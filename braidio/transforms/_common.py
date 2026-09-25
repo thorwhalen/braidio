@@ -288,6 +288,41 @@ def url_to_path(url: str) -> Path:
     return Path(url2pathname(parsed.path))
 
 
+def media_path(project_root, body: dict, *, what: str) -> Path:
+    """The local file holding a body's media — found **by content first**.
+
+    1. ``artifact_id`` → the project's delivery-catalog blob
+       (``.reelee/artifacts/blobs/<sha256>``). The id *is* the content hash, so
+       the blob is exactly these bytes wherever the project now lives. This is
+       what an imported project carries to the server: its recorded urls are
+       the importing machine's paths (thorwhalen/braidio#89).
+    2. the recorded ``url``, for media never registered in a catalog (a
+       project braidio wove itself, a motion pass).
+
+    Deliberately **no basename guess**: a filename says nothing about the
+    bytes, and a still re-fetched under the same name would be served as the
+    old one. The error names every place looked.
+    """
+    from braidio.importing._catalog import _IS_DIGEST, blobs_dir
+
+    tried = []
+    artifact_id = str(body.get("artifact_id") or "")
+    if _IS_DIGEST.fullmatch(artifact_id):
+        blob = blobs_dir(project_root) / artifact_id
+        if blob.is_file():
+            return blob
+        tried.append(f"catalog blob {artifact_id[:12]}…")
+    url = body.get("url")
+    if url:
+        path = url_to_path(url)
+        if path.exists():
+            return path
+        tried.append(str(path))
+    if not tried:
+        raise ValueError(f"{what}: no artifact_id or url — nothing to read")
+    raise FileNotFoundError(f"{what}: missing — looked for {'; '.join(tried)}")
+
+
 def graph_index(project) -> dict:
     """``{annotation.id: annotation}`` across the whole project graph.
 

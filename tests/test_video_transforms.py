@@ -1508,3 +1508,94 @@ def test_panel_path_is_the_path_the_render_uses(
     assert seen and [panel_path(project, p, size=size) for p in panels] == seen
     # JSON callers send the size as a list
     assert panel_path(project, panels[1], size=list(size)) == seen[1]
+
+
+# --- media by content, not by recorded path (thorwhalen/braidio#89) --------------
+
+
+def _register(project, ann, path):
+    from braidio.importing._catalog import CatalogReport, register_artifact
+
+    register_artifact(
+        project.root,
+        path,
+        artifact_id=ann.body["artifact_id"],
+        kind="image",
+        generated_at="2026-09-25T00:00:00Z",
+        report=CatalogReport(),
+    )
+
+
+def test_stills_resolve_through_the_catalog_when_their_urls_point_nowhere(
+    project, episode, stills, panels, tmp_path
+):
+    """The server case: an imported project whose recorded still urls are the
+    importing machine's paths. The catalog blob, keyed by the content hash the
+    graph already records, is found wherever the project now lives."""
+    burns = pytest.importorskip("burns")
+    if getattr(burns, "RESOLVER_IMPL_VERSION", 0) < 2:
+        pytest.skip("needs burns with content_box")
+    from braidio.transforms import panel_path
+    from braidio.transforms._common import url_to_path
+
+    before = [panel_path(project, p, size=(640, 360)) for p in panels]
+    for still in stills:
+        _register(project, still, url_to_path(still.body["url"]))
+        _rewrite_in_place(
+            project,
+            still,
+            body={**still.body, "url": "file:///Users/someone-else/gone/x.png"},
+        )
+    after = [panel_path(project, p, size=(640, 360)) for p in panels]
+    assert after == before
+
+
+def test_the_catalog_blob_wins_over_a_recorded_path(project, stills):
+    """Content first: a file at the recorded path with other bytes (a still
+    re-fetched under the same name) must not be read as this still."""
+    from braidio.transforms._common import media_path, url_to_path
+
+    still = stills[0]
+    original = url_to_path(still.body["url"])
+    _register(project, still, original)
+    # replaced, not written through: the importer hardlinks the blob to the
+    # project copy, so an in-place write would change both (same inode)
+    original.unlink()
+    original.write_bytes(b"not the still any more")
+    found = media_path(project.root, still.body, what="still")
+    assert found != original and found.read_bytes() != b"not the still any more"
+
+
+def test_a_still_found_nowhere_names_every_place_looked(project, stills):
+    from braidio.transforms._common import media_path
+
+    body = {**stills[0].body, "url": "file:///nowhere/at/all.png"}
+    with pytest.raises(
+        FileNotFoundError, match=r"catalog blob .*; .*nowhere.at.all\.png"
+    ):
+        media_path(project.root, body, what="still")
+
+
+def test_a_deleted_cut_re_renders_even_when_its_blob_survives(
+    project, episode, stills, panels, patched_render
+):
+    """Review of braidio#90: a cut is a deliverable at its own path; finding
+    its bytes in the catalog must not make a deleted file count as present."""
+    from braidio.importing._catalog import CatalogReport, register_artifact
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM
+    from braidio.transforms._common import url_to_path
+
+    cut = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    path = url_to_path(cut.body["url"])
+    register_artifact(
+        project.root,
+        path,
+        artifact_id=cut.body["artifact_id"],
+        kind="video",
+        generated_at="2026-09-25T00:00:00Z",
+        report=CatalogReport(),
+    )
+    path.unlink()
+    again = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    assert len(patched_render) == 2  # rendered again, not served from the blob
+    assert url_to_path(again.body["url"]).exists()

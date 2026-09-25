@@ -97,6 +97,7 @@ from braidio.transforms._common import (
     fresh_equivalent,
     graph_index,
     media_artifact,
+    media_path,
     node_ref,
     planned_value,
     resolve_parents,
@@ -358,14 +359,9 @@ def _episode_of(panels, index: dict) -> Annotation:
     return next(iter(episodes.values()))
 
 
-def _local_path(ann: Annotation, what: str) -> Path:
-    url = ann.body.get("url")
-    if not url:
-        raise ValueError(f"video cut: {what} {ann.id} has no url — nothing to read")
-    path = url_to_path(url)
-    if not path.exists():
-        raise FileNotFoundError(f"video cut: {what} {ann.id}: {path} is missing")
-    return path
+def _local_path(project, ann: Annotation, what: str) -> Path:
+    """``ann``'s media on this machine: by content, then by recorded url."""
+    return media_path(project.root, ann.body, what=f"video cut: {what} {ann.id}")
 
 
 def _cuts_dir(project) -> Path:
@@ -420,7 +416,14 @@ def _complete(skel: Annotation, artifact, out_path: Path, **extra) -> Annotation
     )
 
 
-def _hit_file_exists(hit: Annotation) -> bool:
+def _hit_file_exists(project, hit: Annotation) -> bool:
+    """Whether the cut's OWN file is there — not merely its bytes somewhere.
+
+    Deliberately the recorded url, not :func:`media_path`: a cut is a
+    deliverable at that path (Downloads lists ``data/cuts``), so a cut whose
+    file was deleted must re-render and put it back, even when a catalog blob
+    of the same bytes survives (braidio#90 review).
+    """
     url = hit.body.get("url")
     return bool(url) and url_to_path(url).exists()
 
@@ -454,11 +457,11 @@ def _reuse(project, skel: Annotation):
     and the next stage would fail on it.
     """
     existing = fresh_equivalent(project, skel)
-    if existing is not None and not _hit_file_exists(existing):
+    if existing is not None and not _hit_file_exists(project, existing):
         existing = None
     if existing is None:
         hit = cached_output(project, TIER_VIDEO_CUT, skel.body["cache_key"])
-        if hit is not None and _hit_file_exists(hit):
+        if hit is not None and _hit_file_exists(project, hit):
             same_parents = set(hit.provenance.was_derived_from) == set(
                 skel.provenance.was_derived_from
             )
@@ -551,7 +554,7 @@ def _motion_cache_key(transform, *, audio_id, settings, panels, stills) -> str:
 
 
 def _crop_still(
-    src: Path, crop: dict | None, workdir: Path, *, artifact_id: str
+    src: Path, crop: dict | None, workdir: Path, *, artifact_id: str, suffix: str = ""
 ) -> Path:
     """``src`` cropped to ``crop`` (a RectV1 dump), cached by bytes + crop."""
     if not crop:
@@ -559,7 +562,8 @@ def _crop_still(
     from PIL import Image
 
     tag = hashlib.sha256(f"{artifact_id}|{_json(crop)}".encode()).hexdigest()
-    dst = workdir / f"crop_{tag[:_NAME_DIGEST_CHARS]}{src.suffix.lower() or '.png'}"
+    ext = suffix or src.suffix.lower() or ".png"
+    dst = workdir / f"crop_{tag[:_NAME_DIGEST_CHARS]}{ext}"
     if dst.exists():
         return dst
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -605,15 +609,22 @@ def _frames_dir(project) -> Path:
     return _cuts_dir(project) / "_frames"
 
 
-def _panel_source(panel: Annotation, index: dict, workdir: Path) -> Path:
+def _panel_source(project, panel: Annotation, index: dict, workdir: Path) -> Path:
     """The picture a panel shows: its still's bytes, after the still's crop."""
     still = _still_of(panel, index)
     return _crop_still(
-        _local_path(still, "still"),
+        _local_path(project, still, "still"),
         still.body.get("crop"),
         workdir,
         artifact_id=str(still.body["artifact_id"]),
+        suffix=_recorded_suffix(still),
     )
+
+
+def _recorded_suffix(ann: Annotation) -> str:
+    """The file extension the body's url records (a catalog blob has none)."""
+    url = ann.body.get("url")
+    return url_to_path(url).suffix.lower() if url else ""
 
 
 def _path_on_canvas(panel_body: dict, canvas, source: Path, *, aspect: float):
@@ -643,7 +654,7 @@ def panel_path(project, panel: Annotation, *, size: tuple[int, int]):
     index = graph_index(project)
     workdir = _frames_dir(project)
     workdir.mkdir(parents=True, exist_ok=True)
-    source = _panel_source(panel, index, workdir)
+    source = _panel_source(project, panel, index, workdir)
     canvas = _content_keyed_prepare(workdir, size)(source, None)
     return _path_on_canvas(panel.body, canvas, source, aspect=size[0] / size[1])
 
@@ -725,7 +736,7 @@ class VideoCutRender(BaseTransform):
         index = graph_index(project)
         panels = _panels_from_ids(skel.body["panel_ids"], index)
         episode = require_tier(resolve_parents(skel, index), TIER_EPISODE_RENDER)
-        audio_path = _local_path(episode, "episode")
+        audio_path = _local_path(project, episode, "episode")
         size = tuple(skel.body["settings"]["size"])
         fps = int(skel.body["settings"]["fps"])
         aspect = size[0] / size[1]
@@ -734,7 +745,7 @@ class VideoCutRender(BaseTransform):
         video_panels = []
         sources: list[Path] = []
         for panel in panels:
-            src = _panel_source(panel, index, workdir)
+            src = _panel_source(project, panel, index, workdir)
             sources.append(src)
             start, end = _interval_s(panel)
             video_panels.append(
@@ -1263,7 +1274,7 @@ class VideoCutFinish(BaseTransform):
                 stages,
                 cuts=cuts,
                 staging=staging,
-                motion_path=_local_path(motion, "motion cut"),
+                motion_path=_local_path(project, motion, "motion cut"),
                 panels=panels,
                 stills=stills,
                 tracks=tracks,
