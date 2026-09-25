@@ -124,6 +124,9 @@ _KIND_SLOTS = {
     "note": "top-left",
     "tag": "bottom-left",
 }
+#: The whole still, as a normalized box — mapped onto the canvas it is the
+#: ``content_box`` burns confines saliency to.
+_WHOLE_STILL = (0.0, 0.0, 1.0, 1.0)
 #: Weight of a per-still label — lighter than any card (whose default is 2).
 _LABEL_WEIGHT = 1
 #: The slot a per-still label lands in (tituli's ``schedule_labels`` default).
@@ -146,6 +149,14 @@ _STAGING_DIR = "_staging"
 # --- the move ---------------------------------------------------------------
 
 
+#: burns' resolver version that takes ``content_box`` and honours the zoom on a
+#: detailed photograph (thorwhalen/burns#21).
+_MIN_RESOLVER_IMPL = 2
+#: braidio's own share of the framing: saliency confined to the still's box on
+#: its prepared canvas. Part of the motion key, since it moves pixels.
+_CANVAS_FRAMING = "content_box@1"
+
+
 def resolver_identity() -> str:
     """Which code frames a named move — part of the motion cache key.
 
@@ -161,14 +172,18 @@ def resolver_identity() -> str:
     import burns
 
     version = getattr(burns, "RESOLVER_IMPL_VERSION", None)
-    if version is None or not hasattr(burns, "resolve_move"):
+    if (
+        version is None
+        or (isinstance(version, int) and version < _MIN_RESOLVER_IMPL)
+        or not hasattr(burns, "resolve_move")
+    ):
         raise RuntimeError(
             f"{RENDER_NAME}: the installed burns "
             f"({getattr(burns, '__version__', 'unknown version')}) has no "
-            "resolve_move / RESOLVER_IMPL_VERSION; braidio's video cuts need "
-            "burns>=0.0.15 (pip install 'braidio[video]')."
+            f"resolve_move / RESOLVER_IMPL_VERSION>={_MIN_RESOLVER_IMPL}; "
+            "braidio's video cuts need burns>=0.0.16 (pip install 'braidio[video]')."
         )
-    return f"burns.moves@{version}"
+    return f"burns.moves@{version}/{_CANVAS_FRAMING}"
 
 
 def resolve_move(
@@ -180,6 +195,7 @@ def resolve_move(
     focus=None,
     seed=0,
     on_aspect_mismatch: str = "raise",
+    content_box=None,
 ):
     """A ``BurnsPath`` for an authored ``move`` over ``image``.
 
@@ -195,6 +211,10 @@ def resolve_move(
     *canvas*; braidio's canvases letterbox the still differently per aspect,
     so a refit path lands on a different part of the still (see the module
     docstring). Pass ``"refit"`` only for a path whose canvas IS the still.
+
+    ``content_box`` is the still's box on the canvas: burns runs saliency only
+    inside it, so the blurred fill around a letterboxed still (and the hard
+    seam between them) is never read as subject (thorwhalen/burns#21).
     """
     import burns
 
@@ -206,6 +226,7 @@ def resolve_move(
         focus=focus,
         seed=seed,
         on_aspect_mismatch=on_aspect_mismatch,
+        content_box=content_box,
     )
 
 
@@ -239,8 +260,11 @@ def path_for_panel(panel_body: dict, *, image, aspect: float, image_size=None):
     the panel's ``zoom`` / ``focus`` / ``seed``. A stored path that names no
     ``output_aspect`` takes the cut's, so a path authored before the delivery
     size was chosen still fills the frame. ``image_size`` is the size of the
-    *still* the focus was authored on, when ``image`` is a prepared canvas of
-    a different aspect (see :func:`focus_on_canvas`).
+    *still* shown, when ``image`` is a prepared canvas of a different aspect:
+    it maps the focus onto the canvas (see :func:`focus_on_canvas`) and tells
+    burns which part of the canvas is picture, so saliency never reads the
+    blurred fill. Pass it whenever ``image`` is a canvas — a caller previewing
+    a move (the studio) gets the same framing as the render only if it does.
     """
     stored = panel_body.get("path")
     if stored:
@@ -252,11 +276,16 @@ def path_for_panel(panel_body: dict, *, image, aspect: float, image_size=None):
     focus = panel_body.get("focus")
     if focus is not None:
         focus = (focus["x"], focus["y"], focus["w"], focus["h"])
-        if image_size is not None:
-            from PIL import Image
+    content_box = None
+    if image_size is not None:
+        from PIL import Image
 
-            with Image.open(image) as img:
-                canvas_size = img.size
+        with Image.open(image) as img:
+            canvas_size = img.size
+        content_box = focus_on_canvas(
+            _WHOLE_STILL, image_size=image_size, canvas_size=canvas_size
+        )
+        if focus is not None:
             focus = focus_on_canvas(
                 focus, image_size=image_size, canvas_size=canvas_size
             )
@@ -267,6 +296,7 @@ def path_for_panel(panel_body: dict, *, image, aspect: float, image_size=None):
         zoom=float(panel_body.get("zoom", 1.18)),
         focus=focus,
         seed=int(panel_body.get("seed", 0)),
+        content_box=content_box,
     )
 
 
@@ -657,7 +687,7 @@ class VideoCutRender(BaseTransform):
             video_panels.append(
                 video.Panel(start, end, str(src), zoom=float(panel.body["zoom"]))
             )
-            image_sizes.append(_image_size(src) if panel.body.get("focus") else None)
+            image_sizes.append(_image_size(src))
 
         def path_for(canvas, i, panel):
             return path_for_panel(

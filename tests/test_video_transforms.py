@@ -696,7 +696,8 @@ def test_resolver_identity_prefers_burns_own_version_constant(monkeypatch):
 
     burns = pytest.importorskip("burns")
     monkeypatch.setattr(burns, "RESOLVER_IMPL_VERSION", "sentinel-7", raising=False)
-    assert vc.resolver_identity() == "burns.moves@sentinel-7"
+    # braidio's own share of the framing (content_box, burns#21) rides along
+    assert vc.resolver_identity() == "burns.moves@sentinel-7/content_box@1"
 
 
 def test_a_near_miss_aspect_fails_the_plan_not_the_render(
@@ -732,8 +733,48 @@ def test_resolver_identity_refuses_a_burns_without_the_resolver(monkeypatch):
 
     burns = pytest.importorskip("burns")
     monkeypatch.delattr(burns, "RESOLVER_IMPL_VERSION", raising=False)
-    with pytest.raises(RuntimeError, match="burns>=0.0.15"):
+    with pytest.raises(RuntimeError, match="burns>=0.0.16"):
         vc.resolver_identity()
+
+
+def test_resolver_identity_refuses_a_resolver_without_content_box(monkeypatch):
+    """burns#21: RESOLVER_IMPL_VERSION 1 has no ``content_box`` and caps every
+    zoom at ~1.07 on a photograph; planning against it must refuse."""
+    import braidio.transforms._video_cut as vc
+
+    burns = pytest.importorskip("burns")
+    monkeypatch.setattr(burns, "RESOLVER_IMPL_VERSION", 1)
+    with pytest.raises(RuntimeError, match="RESOLVER_IMPL_VERSION>=2"):
+        vc.resolver_identity()
+
+
+def test_the_four_studio_zooms_are_distinct_on_a_letterboxed_canvas(tmp_path):
+    """burns#21 end to end through braidio: a detailed 4:3 still prepared onto
+    the 16:9 canvas the render uses. Before, every zoom ended at ~1.07."""
+    np = pytest.importorskip("numpy")
+    PIL = pytest.importorskip("PIL.Image")
+    burns = pytest.importorskip("burns")
+    if getattr(burns, "RESOLVER_IMPL_VERSION", 0) < 2:
+        pytest.skip("needs burns with content_box")
+    from burns.content import axis_maxima
+
+    from braidio.transforms._video_cut import path_for_panel
+    from braidio.video import prepare_still
+
+    rng = np.random.default_rng(0)
+    tex = rng.integers(0, 255, size=(120, 160, 3), dtype=np.uint8)
+    photo = np.kron(tex, np.ones((8, 8, 1), dtype=np.uint8))
+    src = tmp_path / "photo.png"
+    PIL.fromarray(photo).save(src)
+    canvas = prepare_still(src, tmp_path / "canvas.jpg", size=(1920, 1080))
+    wmax, _ = axis_maxima(1920, 1080, 16 / 9)
+    ends = []
+    for zoom in (1.0, 1.08, 1.18, 1.3):
+        body = {"move": "push_in", "zoom": zoom, "seed": 0}
+        path = path_for_panel(body, image=canvas, aspect=16 / 9, image_size=(1280, 960))
+        ends.append(wmax / path.evaluate(1.0).w)
+    assert all(b > a + 0.005 for a, b in zip(ends, ends[1:])), ends
+    assert ends[-1] == pytest.approx(1.3, abs=0.01), ends
 
 
 def test_path_for_panel_converts_focus_from_still_to_canvas_coordinates(
