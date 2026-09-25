@@ -97,9 +97,13 @@ graph = ["lacing"]
 # CI bumps the version in a commit AFTER the feature, so the fix commit's own
 # pyproject still reads the old number and the log makes it look one commit
 # later than it is (the same trap documented for nw#27 below).
+# burns>=0.0.16: `resolve_move(content_box=)` + RESOLVER_IMPL_VERSION 2 — the
+# requested zoom is honoured on a detailed photograph, and saliency is confined
+# to the still on its canvas (thorwhalen/burns#21). `resolver_identity` refuses
+# an older resolver at plan time.
 # tituli: the text pass (`video_cut.finish`) composites labels, cards and the
 # credits roll through it; burning captions in uses mixing (already a core dep).
-video = ["burns>=0.0.15", "pillow", "tituli>=0.0.4"]
+video = ["burns>=0.0.16", "pillow", "tituli>=0.0.4"]
 # nw>=0.0.29: `derive_provenance` takes the Transform instance rather than
 # (name, version) — it reads `name` and `impl_version` off it (nw#27). The break is
 # at CALL time, not import time, so an older nw installs cleanly and then fails

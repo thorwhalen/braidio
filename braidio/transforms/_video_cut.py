@@ -124,6 +124,12 @@ _KIND_SLOTS = {
     "note": "top-left",
     "tag": "bottom-left",
 }
+#: The whole still, as a normalized box — mapped onto the canvas it is the
+#: ``content_box`` burns confines saliency to.
+_WHOLE_STILL = (0.0, 0.0, 1.0, 1.0)
+#: Below this normalized short side (a ~100:1 panorama strip) the still's box is
+#: too thin for burns' saliency after its downscale; it is then not passed.
+_MIN_CONTENT_SIDE = 0.02
 #: Weight of a per-still label — lighter than any card (whose default is 2).
 _LABEL_WEIGHT = 1
 #: The slot a per-still label lands in (tituli's ``schedule_labels`` default).
@@ -146,6 +152,14 @@ _STAGING_DIR = "_staging"
 # --- the move ---------------------------------------------------------------
 
 
+#: burns' resolver version that takes ``content_box`` and honours the zoom on a
+#: detailed photograph (thorwhalen/burns#21).
+_MIN_RESOLVER_IMPL = 2
+#: braidio's own share of the framing: saliency confined to the still's box on
+#: its prepared canvas. Part of the motion key, since it moves pixels.
+_CANVAS_FRAMING = "content_box@1"
+
+
 def resolver_identity() -> str:
     """Which code frames a named move — part of the motion cache key.
 
@@ -161,14 +175,18 @@ def resolver_identity() -> str:
     import burns
 
     version = getattr(burns, "RESOLVER_IMPL_VERSION", None)
-    if version is None or not hasattr(burns, "resolve_move"):
+    if (
+        version is None
+        or (isinstance(version, int) and version < _MIN_RESOLVER_IMPL)
+        or not hasattr(burns, "resolve_move")
+    ):
         raise RuntimeError(
             f"{RENDER_NAME}: the installed burns "
             f"({getattr(burns, '__version__', 'unknown version')}) has no "
-            "resolve_move / RESOLVER_IMPL_VERSION; braidio's video cuts need "
-            "burns>=0.0.15 (pip install 'braidio[video]')."
+            f"resolve_move / RESOLVER_IMPL_VERSION>={_MIN_RESOLVER_IMPL}; "
+            "braidio's video cuts need burns>=0.0.16 (pip install 'braidio[video]')."
         )
-    return f"burns.moves@{version}"
+    return f"burns.moves@{version}/{_CANVAS_FRAMING}"
 
 
 def resolve_move(
@@ -180,6 +198,7 @@ def resolve_move(
     focus=None,
     seed=0,
     on_aspect_mismatch: str = "raise",
+    content_box=None,
 ):
     """A ``BurnsPath`` for an authored ``move`` over ``image``.
 
@@ -195,6 +214,10 @@ def resolve_move(
     *canvas*; braidio's canvases letterbox the still differently per aspect,
     so a refit path lands on a different part of the still (see the module
     docstring). Pass ``"refit"`` only for a path whose canvas IS the still.
+
+    ``content_box`` is the still's box on the canvas: burns runs saliency only
+    inside it, so the blurred fill around a letterboxed still (and the hard
+    seam between them) is never read as subject (thorwhalen/burns#21).
     """
     import burns
 
@@ -206,6 +229,7 @@ def resolve_move(
         focus=focus,
         seed=seed,
         on_aspect_mismatch=on_aspect_mismatch,
+        content_box=content_box,
     )
 
 
@@ -239,8 +263,11 @@ def path_for_panel(panel_body: dict, *, image, aspect: float, image_size=None):
     the panel's ``zoom`` / ``focus`` / ``seed``. A stored path that names no
     ``output_aspect`` takes the cut's, so a path authored before the delivery
     size was chosen still fills the frame. ``image_size`` is the size of the
-    *still* the focus was authored on, when ``image`` is a prepared canvas of
-    a different aspect (see :func:`focus_on_canvas`).
+    *still* shown, when ``image`` is a prepared canvas of a different aspect:
+    it maps the focus onto the canvas (see :func:`focus_on_canvas`) and tells
+    burns which part of the canvas is picture, so saliency never reads the
+    blurred fill. Pass it whenever ``image`` is a canvas — a caller previewing
+    a move (the studio) gets the same framing as the render only if it does.
     """
     stored = panel_body.get("path")
     if stored:
@@ -252,11 +279,20 @@ def path_for_panel(panel_body: dict, *, image, aspect: float, image_size=None):
     focus = panel_body.get("focus")
     if focus is not None:
         focus = (focus["x"], focus["y"], focus["w"], focus["h"])
-        if image_size is not None:
-            from PIL import Image
+    content_box = None
+    if image_size is not None:
+        from PIL import Image
 
-            with Image.open(image) as img:
-                canvas_size = img.size
+        with Image.open(image) as img:
+            canvas_size = img.size
+        content_box = focus_on_canvas(
+            _WHOLE_STILL, image_size=image_size, canvas_size=canvas_size
+        )
+        if min(content_box[2], content_box[3]) < _MIN_CONTENT_SIDE:
+            # a strip too thin for saliency to read: frame on the canvas, as
+            # before content_box existed, rather than refuse the render
+            content_box = None
+        if focus is not None:
             focus = focus_on_canvas(
                 focus, image_size=image_size, canvas_size=canvas_size
             )
@@ -267,6 +303,7 @@ def path_for_panel(panel_body: dict, *, image, aspect: float, image_size=None):
         zoom=float(panel_body.get("zoom", 1.18)),
         focus=focus,
         seed=int(panel_body.get("seed", 0)),
+        content_box=content_box,
     )
 
 
@@ -538,7 +575,9 @@ def _crop_still(
         encode = (
             {"quality": _CROP_JPEG_QUALITY} if dst.suffix in (".jpg", ".jpeg") else {}
         )
-        img.crop(box).save(dst, **encode)
+        from braidio.video import save_atomically
+
+        save_atomically(img.crop(box), dst, **encode)
     return dst
 
 
@@ -558,6 +597,55 @@ def _content_keyed_prepare(workdir: Path, size: tuple[int, int]):
         return prepare_still(src, dst, size=size)
 
     return prepare
+
+
+def _frames_dir(project) -> Path:
+    """Where prepared canvases and cropped stills are cached (shared by the
+    render and :func:`panel_path`, so a preview warms the render's cache)."""
+    return _cuts_dir(project) / "_frames"
+
+
+def _panel_source(panel: Annotation, index: dict, workdir: Path) -> Path:
+    """The picture a panel shows: its still's bytes, after the still's crop."""
+    still = _still_of(panel, index)
+    return _crop_still(
+        _local_path(still, "still"),
+        still.body.get("crop"),
+        workdir,
+        artifact_id=str(still.body["artifact_id"]),
+    )
+
+
+def _path_on_canvas(panel_body: dict, canvas, source: Path, *, aspect: float):
+    """The move for ``panel_body`` on ``canvas`` (the prepared ``source``)."""
+    return path_for_panel(
+        panel_body, image=canvas, aspect=aspect, image_size=_image_size(source)
+    )
+
+
+def panel_path(project, panel: Annotation, *, size: tuple[int, int]):
+    """The ``BurnsPath`` the motion render will use for ``panel`` at ``size``.
+
+    The one way to ask "what will the camera do on this panel?": the still's
+    crop, the prepared canvas the render frames on (same file, same cache),
+    and :func:`path_for_panel` with the still's size, so the focus and burns'
+    ``content_box`` are mapped exactly as ``video_cut.render`` maps them. A
+    preview built any other way drifts from the film the day either changes
+    (the studio's move preview is the caller this exists for).
+
+    ``size`` is the delivery ``(width, height)`` — the cut's
+    ``settings["size"]``. Reads the still's bytes and writes the canvas into
+    the project's frame cache.
+    """
+    resolver_identity()  # refuses an old burns with the message the render gives
+    size = (int(size[0]), int(size[1]))
+    _check_stored_paths([panel], {"size": size})
+    index = graph_index(project)
+    workdir = _frames_dir(project)
+    workdir.mkdir(parents=True, exist_ok=True)
+    source = _panel_source(panel, index, workdir)
+    canvas = _content_keyed_prepare(workdir, size)(source, None)
+    return _path_on_canvas(panel.body, canvas, source, aspect=size[0] / size[1])
 
 
 @register_transform(RENDER_NAME)
@@ -642,27 +730,19 @@ class VideoCutRender(BaseTransform):
         fps = int(skel.body["settings"]["fps"])
         aspect = size[0] / size[1]
 
-        workdir = _cuts_dir(project) / "_frames"
+        workdir = _frames_dir(project)
         video_panels = []
-        image_sizes: list[tuple[int, int] | None] = []
+        sources: list[Path] = []
         for panel in panels:
-            still = _still_of(panel, index)
-            src = _crop_still(
-                _local_path(still, "still"),
-                still.body.get("crop"),
-                workdir,
-                artifact_id=str(still.body["artifact_id"]),
-            )
+            src = _panel_source(panel, index, workdir)
+            sources.append(src)
             start, end = _interval_s(panel)
             video_panels.append(
                 video.Panel(start, end, str(src), zoom=float(panel.body["zoom"]))
             )
-            image_sizes.append(_image_size(src) if panel.body.get("focus") else None)
 
         def path_for(canvas, i, panel):
-            return path_for_panel(
-                panels[i].body, image=canvas, aspect=aspect, image_size=image_sizes[i]
-            )
+            return _path_on_canvas(panels[i].body, canvas, sources[i], aspect=aspect)
 
         out_path = _cuts_dir(project) / f"{skel.id}_motion.mp4"
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -673,7 +753,7 @@ class VideoCutRender(BaseTransform):
             size=size,
             fps=fps,
             workdir=workdir,
-            prepare=_content_keyed_prepare(workdir, size),
+            prepare=_content_keyed_prepare(workdir, size),  # = panel_path's
             path_for=path_for,
         )
         artifact = media_artifact(

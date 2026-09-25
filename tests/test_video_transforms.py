@@ -696,7 +696,8 @@ def test_resolver_identity_prefers_burns_own_version_constant(monkeypatch):
 
     burns = pytest.importorskip("burns")
     monkeypatch.setattr(burns, "RESOLVER_IMPL_VERSION", "sentinel-7", raising=False)
-    assert vc.resolver_identity() == "burns.moves@sentinel-7"
+    # braidio's own share of the framing (content_box, burns#21) rides along
+    assert vc.resolver_identity() == "burns.moves@sentinel-7/content_box@1"
 
 
 def test_a_near_miss_aspect_fails_the_plan_not_the_render(
@@ -732,8 +733,48 @@ def test_resolver_identity_refuses_a_burns_without_the_resolver(monkeypatch):
 
     burns = pytest.importorskip("burns")
     monkeypatch.delattr(burns, "RESOLVER_IMPL_VERSION", raising=False)
-    with pytest.raises(RuntimeError, match="burns>=0.0.15"):
+    with pytest.raises(RuntimeError, match="burns>=0.0.16"):
         vc.resolver_identity()
+
+
+def test_resolver_identity_refuses_a_resolver_without_content_box(monkeypatch):
+    """burns#21: RESOLVER_IMPL_VERSION 1 has no ``content_box`` and caps every
+    zoom at ~1.07 on a photograph; planning against it must refuse."""
+    import braidio.transforms._video_cut as vc
+
+    burns = pytest.importorskip("burns")
+    monkeypatch.setattr(burns, "RESOLVER_IMPL_VERSION", 1)
+    with pytest.raises(RuntimeError, match="RESOLVER_IMPL_VERSION>=2"):
+        vc.resolver_identity()
+
+
+def test_the_four_studio_zooms_are_distinct_on_a_letterboxed_canvas(tmp_path):
+    """burns#21 end to end through braidio: a detailed 4:3 still prepared onto
+    the 16:9 canvas the render uses. Before, every zoom ended at ~1.07."""
+    np = pytest.importorskip("numpy")
+    PIL = pytest.importorskip("PIL.Image")
+    burns = pytest.importorskip("burns")
+    if getattr(burns, "RESOLVER_IMPL_VERSION", 0) < 2:
+        pytest.skip("needs burns with content_box")
+    from burns.content import axis_maxima
+
+    from braidio.transforms._video_cut import path_for_panel
+    from braidio.video import prepare_still
+
+    rng = np.random.default_rng(0)
+    tex = rng.integers(0, 255, size=(120, 160, 3), dtype=np.uint8)
+    photo = np.kron(tex, np.ones((8, 8, 1), dtype=np.uint8))
+    src = tmp_path / "photo.png"
+    PIL.fromarray(photo).save(src)
+    canvas = prepare_still(src, tmp_path / "canvas.jpg", size=(1920, 1080))
+    wmax, _ = axis_maxima(1920, 1080, 16 / 9)
+    ends = []
+    for zoom in (1.0, 1.08, 1.18, 1.3):
+        body = {"move": "push_in", "zoom": zoom, "seed": 0}
+        path = path_for_panel(body, image=canvas, aspect=16 / 9, image_size=(1280, 960))
+        ends.append(wmax / path.evaluate(1.0).w)
+    assert all(b > a + 0.005 for a, b in zip(ends, ends[1:])), ends
+    assert ends[-1] == pytest.approx(1.3, abs=0.01), ends
 
 
 def test_path_for_panel_converts_focus_from_still_to_canvas_coordinates(
@@ -1408,3 +1449,62 @@ def test_string_flags_are_read_strictly(project, episode, stills):
         )
     with pytest.raises(ValueError, match="min_relevance"):
         _plan(VIDEO_PANELS_TRANSFORM, project, episode, params={"min_relevance": 2})
+
+
+def test_panel_path_is_the_path_the_render_uses(
+    project, episode, stills, panels, monkeypatch, tmp_path
+):
+    """One source of truth for "what will the camera do": a preview through
+    :func:`panel_path` must equal what ``video_cut.render`` hands the frame
+    renderer, focus and crop included, or the studio shows a move the film
+    does not make."""
+    burns = pytest.importorskip("burns")
+    if getattr(burns, "RESOLVER_IMPL_VERSION", 0) < 2:
+        pytest.skip("needs burns with content_box")
+    import braidio.video
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM, panel_path
+
+    edited = _rewrite_in_place(
+        project,
+        panels[0],
+        body={
+            **panels[0].body,
+            "move": "push_in",
+            "zoom": 1.3,
+            "focus": {"x": 0.1, "y": 0.2, "w": 0.5, "h": 0.5},
+        },
+    )
+    # and a textured portrait still WITH a crop, so saliency, the crop and the
+    # content_box all have something to act on (a flat colour exercises none)
+    np = pytest.importorskip("numpy")
+    PIL = pytest.importorskip("PIL.Image")
+    tex = np.random.default_rng(3).integers(0, 255, (150, 75, 3), dtype=np.uint8)
+    portrait = tmp_path / "portrait.png"
+    PIL.fromarray(np.kron(tex, np.ones((8, 8, 1), dtype=np.uint8))).save(portrait)
+    cropped = add_still(
+        project,
+        portrait,
+        key="portrait",
+        labelled=False,
+        crop={"x": 0.1, "y": 0.05, "w": 0.8, "h": 0.7},
+    )
+    swapped = _rewrite_in_place(
+        project,
+        panels[1],
+        body={**panels[1].body, "still_id": str(cropped.id), "zoom": 1.3},
+    )
+    panels = [edited, swapped, *panels[2:]]
+    seen = []
+
+    def _render_video(vpanels, *, out_path, size, workdir, prepare, path_for, **kw):
+        for i, vp in enumerate(vpanels):
+            canvas = prepare(vp.still, Path(workdir) / f"{i}.jpg", size=size)
+            seen.append(path_for(canvas, i, vp))
+        return _write(out_path, b"MOTION")
+
+    monkeypatch.setattr(braidio.video, "render_video", _render_video)
+    cut = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    size = tuple(cut.body["settings"]["size"])
+    assert seen and [panel_path(project, p, size=size) for p in panels] == seen
+    # JSON callers send the size as a list
+    assert panel_path(project, panels[1], size=list(size)) == seen[1]
