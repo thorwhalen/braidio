@@ -59,7 +59,7 @@ from braidio.transforms._video_panels import (
     placement_report,
     tracks_for_episode,
 )
-from braidio.transforms._video_cut import path_for_panel, resolve_move
+from braidio.transforms._video_cut import panel_path, path_for_panel, resolve_move
 
 # Registered transform names (the genre references these).
 VOICE_ASSIGNMENT_TRANSFORM = _voice.NAME
@@ -87,6 +87,7 @@ __all__ = [
     "Pick",
     "as_pick",
     "tracks_for_episode",
+    "panel_path",
     "path_for_panel",
     "resolve_move",
     "VOICE_ASSIGNMENT_TRANSFORM",

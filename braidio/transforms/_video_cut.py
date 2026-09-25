@@ -590,6 +590,53 @@ def _content_keyed_prepare(workdir: Path, size: tuple[int, int]):
     return prepare
 
 
+def _frames_dir(project) -> Path:
+    """Where prepared canvases and cropped stills are cached (shared by the
+    render and :func:`panel_path`, so a preview warms the render's cache)."""
+    return _cuts_dir(project) / "_frames"
+
+
+def _panel_source(panel: Annotation, index: dict, workdir: Path) -> Path:
+    """The picture a panel shows: its still's bytes, after the still's crop."""
+    still = _still_of(panel, index)
+    return _crop_still(
+        _local_path(still, "still"),
+        still.body.get("crop"),
+        workdir,
+        artifact_id=str(still.body["artifact_id"]),
+    )
+
+
+def _path_on_canvas(panel_body: dict, canvas, source: Path, *, aspect: float):
+    """The move for ``panel_body`` on ``canvas`` (the prepared ``source``)."""
+    return path_for_panel(
+        panel_body, image=canvas, aspect=aspect, image_size=_image_size(source)
+    )
+
+
+def panel_path(project, panel: Annotation, *, size: tuple[int, int]):
+    """The ``BurnsPath`` the motion render will use for ``panel`` at ``size``.
+
+    The one way to ask "what will the camera do on this panel?": the still's
+    crop, the prepared canvas the render frames on (same file, same cache),
+    and :func:`path_for_panel` with the still's size, so the focus and burns'
+    ``content_box`` are mapped exactly as ``video_cut.render`` maps them. A
+    preview built any other way drifts from the film the day either changes
+    (the studio's move preview is the caller this exists for).
+
+    ``size`` is the delivery ``(width, height)`` — the cut's
+    ``settings["size"]``. Reads the still's bytes and writes the canvas into
+    the project's frame cache.
+    """
+    index = graph_index(project)
+    workdir = _frames_dir(project)
+    workdir.mkdir(parents=True, exist_ok=True)
+    size = (int(size[0]), int(size[1]))
+    source = _panel_source(panel, index, workdir)
+    canvas = _content_keyed_prepare(workdir, size)(source, None)
+    return _path_on_canvas(panel.body, canvas, source, aspect=size[0] / size[1])
+
+
 @register_transform(RENDER_NAME)
 class VideoCutRender(BaseTransform):
     """Panels (+ their stills + the episode audio) → ``video-cut/v1`` (motion)."""
@@ -672,27 +719,19 @@ class VideoCutRender(BaseTransform):
         fps = int(skel.body["settings"]["fps"])
         aspect = size[0] / size[1]
 
-        workdir = _cuts_dir(project) / "_frames"
+        workdir = _frames_dir(project)
         video_panels = []
-        image_sizes: list[tuple[int, int] | None] = []
+        sources: list[Path] = []
         for panel in panels:
-            still = _still_of(panel, index)
-            src = _crop_still(
-                _local_path(still, "still"),
-                still.body.get("crop"),
-                workdir,
-                artifact_id=str(still.body["artifact_id"]),
-            )
+            src = _panel_source(panel, index, workdir)
+            sources.append(src)
             start, end = _interval_s(panel)
             video_panels.append(
                 video.Panel(start, end, str(src), zoom=float(panel.body["zoom"]))
             )
-            image_sizes.append(_image_size(src))
 
         def path_for(canvas, i, panel):
-            return path_for_panel(
-                panels[i].body, image=canvas, aspect=aspect, image_size=image_sizes[i]
-            )
+            return _path_on_canvas(panels[i].body, canvas, sources[i], aspect=aspect)
 
         out_path = _cuts_dir(project) / f"{skel.id}_motion.mp4"
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -703,7 +742,7 @@ class VideoCutRender(BaseTransform):
             size=size,
             fps=fps,
             workdir=workdir,
-            prepare=_content_keyed_prepare(workdir, size),
+            prepare=_content_keyed_prepare(workdir, size),  # = panel_path's
             path_for=path_for,
         )
         artifact = media_artifact(

@@ -1449,3 +1449,41 @@ def test_string_flags_are_read_strictly(project, episode, stills):
         )
     with pytest.raises(ValueError, match="min_relevance"):
         _plan(VIDEO_PANELS_TRANSFORM, project, episode, params={"min_relevance": 2})
+
+
+def test_panel_path_is_the_path_the_render_uses(
+    project, episode, stills, panels, monkeypatch
+):
+    """One source of truth for "what will the camera do": a preview through
+    :func:`panel_path` must equal what ``video_cut.render`` hands the frame
+    renderer, focus and crop included, or the studio shows a move the film
+    does not make."""
+    burns = pytest.importorskip("burns")
+    if getattr(burns, "RESOLVER_IMPL_VERSION", 0) < 2:
+        pytest.skip("needs burns with content_box")
+    import braidio.video
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM, panel_path
+
+    edited = _rewrite_in_place(
+        project,
+        panels[0],
+        body={
+            **panels[0].body,
+            "move": "push_in",
+            "zoom": 1.3,
+            "focus": {"x": 0.1, "y": 0.2, "w": 0.5, "h": 0.5},
+        },
+    )
+    panels = [edited, *panels[1:]]
+    seen = []
+
+    def _render_video(vpanels, *, out_path, size, workdir, prepare, path_for, **kw):
+        for i, vp in enumerate(vpanels):
+            canvas = prepare(vp.still, Path(workdir) / f"{i}.jpg", size=size)
+            seen.append(path_for(canvas, i, vp))
+        return _write(out_path, b"MOTION")
+
+    monkeypatch.setattr(braidio.video, "render_video", _render_video)
+    cut = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    size = tuple(cut.body["settings"]["size"])
+    assert seen and [panel_path(project, p, size=size) for p in panels] == seen
