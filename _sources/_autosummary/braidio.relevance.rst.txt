@@ -1,0 +1,22 @@
+braidio.relevance
+=================
+
+.. automodule:: braidio.relevance
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      RelevanceScorer
+      RELEVANCE_SCORERS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      lexical_relevance
+      register_relevance_scorer
+      resolve_scorer
+      scorer_id
+   

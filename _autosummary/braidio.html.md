@@ -1262,6 +1262,7 @@ whole-span file. Falls back to a plain concat feel when
 | [`multivoice`](braidio.multivoice.html.md#module-braidio.multivoice)     | Multi-voice narration: cycle a pool of voices across segments (issue #10).                                 |
 | [`music`](braidio.music.html.md#module-braidio.music)               | Music bed — an instrumental underscore laid under the whole production, ducked.                            |
 | [`pacing`](braidio.pacing.html.md#module-braidio.pacing)             | Intra-beat narration pacing — how one narration beat becomes spoken *turns*.                               |
+| [`relevance`](braidio.relevance.html.md#module-braidio.relevance)       | How well a still relates to the words spoken over it — the scorer seam.                                    |
 | [`render`](braidio.render.html.md#module-braidio.render)             | Render a [`Script`](braidio.script.html.md#braidio.script.Script) into an audio file. |
 | [`rights`](braidio.rights.html.md#module-braidio.rights)             | Render profiles: enforce personal-vs-published rights as data.                                             |
 | [`script`](braidio.script.html.md#module-braidio.script)             | Composition model — the ordered beats a render walks.                                                      |

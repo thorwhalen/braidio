@@ -123,6 +123,7 @@
    pacing
    project
    provenance
+   relevance
    render
    rights
    script

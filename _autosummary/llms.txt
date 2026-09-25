@@ -18,6 +18,7 @@
 - [braidio.multivoice](braidio.multivoice.html.md): Multi-voice narration: cycle a pool of voices across segments (issue #10).
 - [braidio.music](braidio.music.html.md): Music bed — an instrumental underscore laid under the whole production, ducked.
 - [braidio.pacing](braidio.pacing.html.md): Intra-beat narration pacing — how one narration beat becomes spoken &#42;turns&#42;.
+- [braidio.relevance](braidio.relevance.html.md): How well a still relates to the words spoken over it — the scorer seam.
 - [braidio.render](braidio.render.html.md): Render a &#96;Script&#96; into an audio file.
 - [braidio.rights](braidio.rights.html.md): Render profiles: enforce personal-vs-published rights as data.
 - [braidio.script](braidio.script.html.md): Composition model — the ordered beats a render walks.

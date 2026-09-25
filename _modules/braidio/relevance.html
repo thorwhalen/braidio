@@ -7,9 +7,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="alternate" type="text/markdown" href="compose.html.md">
+<link rel="alternate" type="text/markdown" href="relevance.html.md">
 <link rel="describedby" href="../../llms.txt" type="text/markdown">
-    <title>braidio.compose &#8212; braidio</title>
+    <title>braidio.relevance &#8212; braidio</title>
   
   
   
@@ -404,7 +404,7 @@ mermaid.initialize(
 
 window.addEventListener("load", load);
 window.runMermaid = runMermaid;</script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/braidio/compose';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/braidio/relevance';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -696,7 +696,7 @@ window.runMermaid = runMermaid;</script>
     
     <li class="breadcrumb-item"><a href="../braidio.html" class="nav-link">braidio</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">braidio.compose</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">braidio.relevance</span></li>
   </ul>
 </nav>
 </div>
@@ -713,83 +713,170 @@ window.runMermaid = runMermaid;</script>
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <h1>Source code for braidio.compose</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""Config-driven narration composition (#20) — the reusable entrypoint.</span>
+  <h1>Source code for braidio.relevance</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""How well a still relates to the words spoken over it — the scorer seam.</span>
 
-<span class="sd">Turn a list of narration segments + a :class:`WeaveConfig` into audio. Dispatches</span>
-<span class="sd">single-voice and multi-voice uniformly (single = a pool of one), reading *every*</span>
-<span class="sd">knob from the config. This is the seed of the reusable weave engine (#18/#19):</span>
-<span class="sd">it has no Hamilton-specifics — it takes plain text segments and a config.</span>
+<span class="sd">A picture track used to be placed with no recorded reason and no check, so an</span>
+<span class="sd">off-topic still could not be explained, caught or tuned (thorwhalen/braidio#85:</span>
+<span class="sd">a Dylan portrait over a sentence that no longer mentioned Dylan, a Beach Boys</span>
+<span class="sd">frame under a tag naming a different concert). ``video_panels.plan`` now scores</span>
+<span class="sd">every placement against its ``anchor_text`` through a **scorer**, and this</span>
+<span class="sd">module is where scorers live.</span>
 
-<span class="sd">Clip weaving (padded extraction + ducking) is composed separately (#21); this</span>
-<span class="sd">module renders the narration track.</span>
+<span class="sd">A scorer has the shape of ``illustration``'s reranking ``Scorer`` —</span>
+<span class="sd">``(query, items) -&gt; scores`` — with the anchor text as the query and still</span>
+<span class="sd">*bodies* (plain dicts) as the items, one score in ``[0, 1]`` per still. Batch</span>
+<span class="sd">by design, so a model-backed scorer (illustration's SigLIP rerank, its VLM</span>
+<span class="sd">judge) embeds the text once per span, not once per candidate.</span>
+
+<span class="sd">The default, :func:`lexical_relevance`, needs nothing installed: the share of a</span>
+<span class="sd">still's naming words (``subject``, ``title``, ``key``) that the anchor text</span>
+<span class="sd">actually says. It is deliberately literal — it cannot see that a studio console</span>
+<span class="sd">suits "Tom Wilson booked a rhythm section" — so a low score means *the words do</span>
+<span class="sd">not name this picture*, which is the question a disclaimer or a decorative role</span>
+<span class="sd">has to answer, not a verdict that the picture is bad.</span>
+
+<span class="sd">Examples:</span>
+<span class="sd">    &gt;&gt;&gt; dylan = {"key": "dylan-1965", "subject": "Bob Dylan, 1965"}</span>
+<span class="sd">    &gt;&gt;&gt; said = "the same day as the sessions for Bob Dylan's Like a Rolling Stone"</span>
+<span class="sd">    &gt;&gt;&gt; round(lexical_relevance(said, [dylan])[0], 2)</span>
+<span class="sd">    0.67</span>
+<span class="sd">    &gt;&gt;&gt; lexical_relevance("overdubbed electric guitar onto the tape", [dylan])</span>
+<span class="sd">    [0.0]</span>
+<span class="sd">    &gt;&gt;&gt; resolve_scorer("lexical") is lexical_relevance</span>
+<span class="sd">    True</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.multivoice</span><span class="w"> </span><span class="kn">import</span> <span class="n">POOL_MANY</span><span class="p">,</span> <span class="n">Voice</span><span class="p">,</span> <span class="n">render_multivoice</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.tts</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_VOICE_ID</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">braidio.weave_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeaveConfig</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"DEFAULT_SCORER"</span><span class="p">,</span>
+    <span class="s2">"RELEVANCE_SCORERS"</span><span class="p">,</span>
+    <span class="s2">"RelevanceScorer"</span><span class="p">,</span>
+    <span class="s2">"lexical_relevance"</span><span class="p">,</span>
+    <span class="s2">"register_relevance_scorer"</span><span class="p">,</span>
+    <span class="s2">"resolve_scorer"</span><span class="p">,</span>
+    <span class="s2">"scorer_id"</span><span class="p">,</span>
+<span class="p">]</span>
 
-<span class="c1"># Registry so pooled ids render with human-readable turn labels; unknown ids</span>
-<span class="c1"># fall back to the id itself.</span>
-<span class="n">_KNOWN_VOICES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Voice</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">POOL_MANY</span><span class="p">}</span>
-<span class="n">_KNOWN_VOICES</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
-    <span class="n">DEFAULT_VOICE_ID</span><span class="p">,</span> <span class="n">Voice</span><span class="p">(</span><span class="n">DEFAULT_VOICE_ID</span><span class="p">,</span> <span class="s2">"George"</span><span class="p">,</span> <span class="s2">"M"</span><span class="p">,</span> <span class="s2">"British"</span><span class="p">,</span> <span class="s2">"storyteller"</span><span class="p">)</span>
+<span class="n">RelevanceScorer</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">]],</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
+<span class="sd">"""``(anchor_text, still_bodies) -&gt; one score in [0, 1] per still``."""</span>
+
+<span class="c1">#: The still fields that NAME the picture. ``about`` and ``note`` are prose</span>
+<span class="c1">#: about it (and ``note`` is rejection reasoning), so they would reward a</span>
+<span class="c1">#: still for being discussed rather than for being what is said.</span>
+<span class="n">NAMING_FIELDS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"subject"</span><span class="p">,</span> <span class="s2">"title"</span><span class="p">,</span> <span class="s2">"key"</span><span class="p">)</span>
+
+<span class="n">_WORD</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[a-z0-9]+"</span><span class="p">)</span>
+<span class="c1">#: Words that name nothing. Small on purpose: this is our own authored text.</span>
+<span class="n">_STOPWORDS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+    <span class="s2">"a an and are as at be by for from has have in into is it its of on or "</span>
+    <span class="s2">"that the their this to was were with not jpg jpeg png file category"</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
 <span class="p">)</span>
+<span class="c1">#: Shorter tokens are initials or noise ("s" of a possessive, "b" of "b&amp;w").</span>
+<span class="n">_MIN_TOKEN_LEN</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="c1">#: Only strip a plural ``s`` from words long enough to have one.</span>
+<span class="n">_MIN_PLURAL_LEN</span> <span class="o">=</span> <span class="mi">4</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_pool_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">WeaveConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Voice</span><span class="p">]:</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">_KNOWN_VOICES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">vid</span><span class="p">,</span> <span class="n">Voice</span><span class="p">(</span><span class="n">vid</span><span class="p">,</span> <span class="n">vid</span><span class="p">[:</span><span class="mi">6</span><span class="p">],</span> <span class="s2">"?"</span><span class="p">))</span> <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">voices</span><span class="p">]</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_tokens</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Content words of ``text``, lower-cased, possessives and plurals folded.</span>
 
-
-<div class="viewcode-block" id="compose_narration">
-<a class="viewcode-back" href="../../_autosummary/braidio.compose.html#braidio.compose_narration">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">compose_narration</span><span class="p">(</span>
-    <span class="n">segments</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="n">config</span><span class="p">:</span> <span class="n">WeaveConfig</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">out_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
-    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">work_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">"data/tts/compose"</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Voice</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">"""Render ``segments`` under ``config`` → ``out_path``.</span>
-
-<span class="sd">    Single-voice and multi-voice go through the same turn-based path (a single</span>
-<span class="sd">    voice is just a one-voice pool). Returns the ``(voice, turn_text)``</span>
-<span class="sd">    assignment for reporting / provenance.</span>
-
-<span class="sd">    ``api_key`` is an optional per-request ElevenLabs key threaded to</span>
-<span class="sd">    :func:`braidio.multivoice.render_multivoice` (and thence every synthesized</span>
-<span class="sd">    turn); ``None`` (default) keeps the ``$ELEVENLABS_API_KEY`` fallback.</span>
-
-<span class="sd">    Note ``config.segmentation_unit`` is **not** read here: this function is</span>
-<span class="sd">    handed ``segments`` already cut, so the unit was chosen upstream (usually</span>
-<span class="sd">    :func:`braidio.script.narration_segments`). It is the</span>
-<span class="sd">    :func:`braidio.render.render_production` path that cuts a beat itself, and</span>
-<span class="sd">    there the field is the switch that turns pacing on — see</span>
-<span class="sd">    :mod:`braidio.pacing`.</span>
+<span class="sd">    &gt;&gt;&gt; sorted(_tokens("Bob Dylan's sessions, 1965"))</span>
+<span class="sd">    ['1965', 'bob', 'dylan', 'session']</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">render_multivoice</span><span class="p">(</span>
-        <span class="n">segments</span><span class="p">,</span>
-        <span class="n">_pool_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
-        <span class="n">out_path</span><span class="o">=</span><span class="n">out_path</span><span class="p">,</span>
-        <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">,</span>
-        <span class="n">work_dir</span><span class="o">=</span><span class="n">work_dir</span><span class="p">,</span>
-        <span class="n">seed</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">voice_seed</span><span class="p">,</span>
-        <span class="n">min_turn</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">min_turn</span><span class="p">,</span>
-        <span class="n">max_turn</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">max_turn</span><span class="p">,</span>
-        <span class="n">avoid_immediate_repeat</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">avoid_immediate_repeat</span><span class="p">,</span>
-        <span class="n">model_id</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span>
-        <span class="n">base_settings</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">voice_settings</span><span class="p">),</span>
-        <span class="n">speed_base</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">speed_base</span><span class="p">,</span>
-        <span class="n">speed_jitter</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">speed_jitter</span><span class="p">,</span>
-        <span class="n">crossfade_s</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">crossfade_s</span><span class="p">,</span>
-        <span class="n">gap_s</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">gap_turn_s</span><span class="p">,</span>
-        <span class="n">target_lufs</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">target_lufs</span><span class="p">,</span>
-    <span class="p">)</span></div>
+    <span class="n">out</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">_WORD</span><span class="o">.</span><span class="n">findall</span><span class="p">((</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"'s"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">_MIN_TOKEN_LEN</span> <span class="ow">or</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">_STOPWORDS</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">_MIN_PLURAL_LEN</span> <span class="ow">and</span> <span class="n">w</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">w</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"ss"</span><span class="p">):</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<div class="viewcode-block" id="lexical_relevance">
+<a class="viewcode-back" href="../../_autosummary/braidio.relevance.html#braidio.relevance.lexical_relevance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">lexical_relevance</span><span class="p">(</span><span class="n">anchor_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stills</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Per still: the best share of a naming field's words that ``anchor_text`` says.</span>
+
+<span class="sd">    The maximum over :data:`NAMING_FIELDS`, so a long Commons title does not</span>
+<span class="sd">    dilute a short, exact subject.</span>
+
+<span class="sd">    &gt;&gt;&gt; beach = {"key": "central-park-decay",</span>
+<span class="sd">    ...          "subject": "The Beach Boys in Central Park, 1971",</span>
+<span class="sd">    ...          "title": "Beach Boys Good Vibrations from Central Park 1971"}</span>
+<span class="sd">    &gt;&gt;&gt; lexical_relevance("half a million people all getting the joke", [beach])</span>
+<span class="sd">    [0.0]</span>
+<span class="sd">    """</span>
+    <span class="n">said</span> <span class="o">=</span> <span class="n">_tokens</span><span class="p">(</span><span class="n">anchor_text</span><span class="p">)</span>
+    <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">stills</span><span class="p">:</span>
+        <span class="n">best</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">NAMING_FIELDS</span><span class="p">:</span>
+            <span class="n">words</span> <span class="o">=</span> <span class="n">_tokens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">words</span><span class="p">:</span>
+                <span class="n">best</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">best</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span> <span class="o">&amp;</span> <span class="n">said</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">))</span>
+        <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">best</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">scores</span></div>
+
+
+
+<span class="c1">#: Registered scorers by id. The id is what a panel records in ``scorer``.</span>
+<span class="n">RELEVANCE_SCORERS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">RelevanceScorer</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"lexical"</span><span class="p">:</span> <span class="n">lexical_relevance</span><span class="p">}</span>
+<span class="n">DEFAULT_SCORER</span> <span class="o">=</span> <span class="s2">"lexical"</span>
+
+
+<div class="viewcode-block" id="register_relevance_scorer">
+<a class="viewcode-back" href="../../_autosummary/braidio.relevance.html#braidio.relevance.register_relevance_scorer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_relevance_scorer</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">scorer</span><span class="p">:</span> <span class="n">RelevanceScorer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Make ``scorer`` addressable by ``name`` (e.g. an illustration rerank adapter).</span>
+
+<span class="sd">    &gt;&gt;&gt; register_relevance_scorer("lexical", lexical_relevance)  # idempotent</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">scorer</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"relevance scorer </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> must be callable"</span><span class="p">)</span>
+    <span class="n">RELEVANCE_SCORERS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">scorer</span></div>
+
+
+
+<div class="viewcode-block" id="resolve_scorer">
+<a class="viewcode-back" href="../../_autosummary/braidio.relevance.html#braidio.relevance.resolve_scorer">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_scorer</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">RelevanceScorer</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">RelevanceScorer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A scorer from a registered name, a callable, or ``None`` (the default)."""</span>
+    <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">DEFAULT_SCORER</span>
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">spec</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">RELEVANCE_SCORERS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">spec</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"unknown relevance scorer </span><span class="si">{</span><span class="n">spec</span><span class="si">!r}</span><span class="s2">; registered: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">RELEVANCE_SCORERS</span><span class="p">)</span><span class="si">}</span><span class="s2"> (or pass a callable)"</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="scorer_id">
+<a class="viewcode-back" href="../../_autosummary/braidio.relevance.html#braidio.relevance.scorer_id">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">scorer_id</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">RelevanceScorer</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The id a panel records for ``spec``: its registered name, else its qualname.</span>
+
+<span class="sd">    &gt;&gt;&gt; scorer_id(None), scorer_id(lexical_relevance)</span>
+<span class="sd">    ('lexical', 'lexical')</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DEFAULT_SCORER</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">RELEVANCE_SCORERS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">fn</span> <span class="ow">is</span> <span class="n">spec</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">name</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s2">"__qualname__"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span></div>
 
 </pre></div>
 

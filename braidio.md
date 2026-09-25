@@ -1,4 +1,4 @@
-> built 2026-09-22 15:52 UTC from 4c85518 (main) · braidio 0.0.57. Details: build_info.json
+> built 2026-09-25 00:53 UTC from d47d64c (main) · braidio 0.0.58. Details: build_info.json
 
 # index.html.md
 
@@ -2184,6 +2184,7 @@ whole-span file. Falls back to a plain concat feel when
 | [`multivoice`](_autosummary/braidio.multivoice.html.md#module-braidio.multivoice)     | Multi-voice narration: cycle a pool of voices across segments (issue #10).                                 |
 | [`music`](_autosummary/braidio.music.html.md#module-braidio.music)               | Music bed — an instrumental underscore laid under the whole production, ducked.                            |
 | [`pacing`](_autosummary/braidio.pacing.html.md#module-braidio.pacing)             | Intra-beat narration pacing — how one narration beat becomes spoken *turns*.                               |
+| [`relevance`](_autosummary/braidio.relevance.html.md#module-braidio.relevance)       | How well a still relates to the words spoken over it — the scorer seam.                                    |
 | [`render`](_autosummary/braidio.render.html.md#module-braidio.render)             | Render a [`Script`](_autosummary/braidio.script.html.md#braidio.script.Script) into an audio file. |
 | [`rights`](_autosummary/braidio.rights.html.md#module-braidio.rights)             | Render profiles: enforce personal-vs-published rights as data.                                             |
 | [`script`](_autosummary/braidio.script.html.md#module-braidio.script)             | Composition model — the ordered beats a render walks.                                                      |
@@ -3041,6 +3042,118 @@ pause in the beat). `unit="beat"` returns one paragraph of one unit.
 [['A one.', 'A two.'], ['B one.']]
 >>> split_units("Yes, really. No.", unit="clause")
 [['Yes,', 'really.', 'No.']]
+```
+
+
+# _autosummary/braidio.relevance.html.md
+
+# braidio.relevance
+
+How well a still relates to the words spoken over it — the scorer seam.
+
+A picture track used to be placed with no recorded reason and no check, so an
+off-topic still could not be explained, caught or tuned (thorwhalen/braidio#85:
+a Dylan portrait over a sentence that no longer mentioned Dylan, a Beach Boys
+frame under a tag naming a different concert). `video_panels.plan` now scores
+every placement against its `anchor_text` through a **scorer**, and this
+module is where scorers live.
+
+A scorer has the shape of `illustration`’s reranking `Scorer` —
+`(query, items) -> scores` — with the anchor text as the query and still
+*bodies* (plain dicts) as the items, one score in `[0, 1]` per still. Batch
+by design, so a model-backed scorer (illustration’s SigLIP rerank, its VLM
+judge) embeds the text once per span, not once per candidate.
+
+The default, [`lexical_relevance()`](_autosummary/braidio.relevance.html.md#braidio.relevance.lexical_relevance), needs nothing installed: the share of a
+still’s naming words (`subject`, `title`, `key`) that the anchor text
+actually says. It is deliberately literal — it cannot see that a studio console
+suits “Tom Wilson booked a rhythm section” — so a low score means \*the words do
+not name this picture\*, which is the question a disclaimer or a decorative role
+has to answer, not a verdict that the picture is bad.
+
+### Examples
+
+```pycon
+>>> dylan = {"key": "dylan-1965", "subject": "Bob Dylan, 1965"}
+>>> said = "the same day as the sessions for Bob Dylan's Like a Rolling Stone"
+>>> round(lexical_relevance(said, [dylan])[0], 2)
+0.67
+>>> lexical_relevance("overdubbed electric guitar onto the tape", [dylan])
+[0.0]
+>>> resolve_scorer("lexical") is lexical_relevance
+True
+```
+
+### Module Attributes
+
+| [`RelevanceScorer`](_autosummary/braidio.relevance.html.md#braidio.relevance.RelevanceScorer)   | `(anchor_text, still_bodies) -> one score in [0, 1] per still`.   |
+|--------------------------------------------------------------------|-------------------------------------------------------------------|
+| [`RELEVANCE_SCORERS`](_autosummary/braidio.relevance.html.md#braidio.relevance.RELEVANCE_SCORERS) | Registered scorers by id.                                         |
+
+### Functions
+
+| [`lexical_relevance`](_autosummary/braidio.relevance.html.md#braidio.relevance.lexical_relevance)(anchor_text, stills)   | Per still: the best share of a naming field's words that `anchor_text` says.   |
+|-------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| [`register_relevance_scorer`](_autosummary/braidio.relevance.html.md#braidio.relevance.register_relevance_scorer)(name, scorer)  | Make `scorer` addressable by `name` (e.g. an illustration rerank adapter).     |
+| [`resolve_scorer`](_autosummary/braidio.relevance.html.md#braidio.relevance.resolve_scorer)(spec)                     | A scorer from a registered name, a callable, or `None` (the default).          |
+| [`scorer_id`](_autosummary/braidio.relevance.html.md#braidio.relevance.scorer_id)(spec)                          | The id a panel records for `spec`: its registered name, else its qualname.     |
+
+### braidio.relevance.RELEVANCE_SCORERS *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Callable](https://docs.python.org/3/library/typing.html#typing.Callable)[[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Sequence](https://docs.python.org/3/library/typing.html#typing.Sequence)[[Mapping](https://docs.python.org/3/library/typing.html#typing.Mapping)]], [Sequence](https://docs.python.org/3/library/typing.html#typing.Sequence)[[float](https://docs.python.org/3/builtins/functions.html#float)]]]* *= {'lexical': <function lexical_relevance>}*
+
+Registered scorers by id. The id is what a panel records in `scorer`.
+
+### braidio.relevance.RelevanceScorer
+
+`(anchor_text, still_bodies) -> one score in [0, 1] per still`.
+
+alias of `Callable`[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)]], [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+
+### braidio.relevance.lexical_relevance(anchor_text, stills)
+
+Per still: the best share of a naming field’s words that `anchor_text` says.
+
+The maximum over `NAMING_FIELDS`, so a long Commons title does not
+dilute a short, exact subject.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
+
+```pycon
+>>> beach = {"key": "central-park-decay",
+...          "subject": "The Beach Boys in Central Park, 1971",
+...          "title": "Beach Boys Good Vibrations from Central Park 1971"}
+>>> lexical_relevance("half a million people all getting the joke", [beach])
+[0.0]
+```
+
+### braidio.relevance.register_relevance_scorer(name, scorer)
+
+Make `scorer` addressable by `name` (e.g. an illustration rerank adapter).
+
+* **Return type:**
+  [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+```pycon
+>>> register_relevance_scorer("lexical", lexical_relevance)  # idempotent
+```
+
+### braidio.relevance.resolve_scorer(spec)
+
+A scorer from a registered name, a callable, or `None` (the default).
+
+* **Return type:**
+  [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)]], [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+
+### braidio.relevance.scorer_id(spec)
+
+The id a panel records for `spec`: its registered name, else its qualname.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> scorer_id(None), scorer_id(lexical_relevance)
+('lexical', 'lexical')
 ```
 
 
@@ -4474,20 +4587,18 @@ Return a copy with fields overridden (e.g. `cfg.with_(min_turn=1)`).
 
 # About this build
 
-This documentation was built on **2026-09-22 15:52 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/4c85518eddd13808302b9c51b2e9613f00ecf0f7"><code>4c85518</code></a> on branch <code>main</code>, for **braidio 0.0.57** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-25 00:53 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/d47d64ceecd2bc823e8ede8eb26dae1aff98cae9"><code>d47d64c</code></a> on branch <code>main</code>, for **braidio 0.0.58** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.57) is ahead of the latest release on PyPI (0.0.56): these docs describe unreleased code.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/4c85518eddd13808302b9c51b2e9613f00ecf0f7"><code>4c85518eddd13808302b9c51b2e9613f00ecf0f7</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/d47d64ceecd2bc823e8ede8eb26dae1aff98cae9"><code>d47d64ceecd2bc823e8ede8eb26dae1aff98cae9</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.0.57</code>                                                                                                                                       |
+| Tags at this commit | <code>0.0.58</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/braidio</code>                                                                                                        |
 
@@ -4496,9 +4607,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/braidio</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/35749741175">35749741175</a>   |
+| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/36079295101">36079295101</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>b91f2e4974784cb0f819993a6dac46d5f1d47493</code> (in the history of the built commit) |
+| Event commit | <code>fcd917bcdbec78b5ce57a817d5834df3528a4b12</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4523,13 +4634,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/braidio/0.0.56/">0.0.56</a>, older than the documented version (0.0.57).
+Latest release: <a href="https://pypi.org/project/braidio/0.0.58/">0.0.58</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/braidio && cd braidio
-git checkout 4c85518eddd13808302b9c51b2e9613f00ecf0f7
+git checkout d47d64ceecd2bc823e8ede8eb26dae1aff98cae9
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
