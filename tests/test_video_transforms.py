@@ -1572,3 +1572,28 @@ def test_a_still_found_nowhere_names_every_place_looked(project, stills):
     body = {**stills[0].body, "url": "file:///nowhere/at/all.png"}
     with pytest.raises(FileNotFoundError, match="catalog blob .*; /nowhere/at/all.png"):
         media_path(project.root, body, what="still")
+
+
+def test_a_deleted_cut_re_renders_even_when_its_blob_survives(
+    project, episode, stills, panels, patched_render
+):
+    """Review of braidio#90: a cut is a deliverable at its own path; finding
+    its bytes in the catalog must not make a deleted file count as present."""
+    from braidio.importing._catalog import CatalogReport, register_artifact
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM
+    from braidio.transforms._common import url_to_path
+
+    cut = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    path = url_to_path(cut.body["url"])
+    register_artifact(
+        project.root,
+        path,
+        artifact_id=cut.body["artifact_id"],
+        kind="video",
+        generated_at="2026-09-25T00:00:00Z",
+        report=CatalogReport(),
+    )
+    path.unlink()
+    again = _run(VIDEO_CUT_RENDER_TRANSFORM, project, *panels).annotations[0]
+    assert len(patched_render) == 2  # rendered again, not served from the blob
+    assert url_to_path(again.body["url"]).exists()

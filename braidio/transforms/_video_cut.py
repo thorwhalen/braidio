@@ -417,11 +417,15 @@ def _complete(skel: Annotation, artifact, out_path: Path, **extra) -> Annotation
 
 
 def _hit_file_exists(project, hit: Annotation) -> bool:
-    try:
-        _local_path(project, hit, "cached cut")
-    except (FileNotFoundError, ValueError):
-        return False
-    return True
+    """Whether the cut's OWN file is there — not merely its bytes somewhere.
+
+    Deliberately the recorded url, not :func:`media_path`: a cut is a
+    deliverable at that path (Downloads lists ``data/cuts``), so a cut whose
+    file was deleted must re-render and put it back, even when a catalog blob
+    of the same bytes survives (braidio#90 review).
+    """
+    url = hit.body.get("url")
+    return bool(url) and url_to_path(url).exists()
 
 
 def _reverify(project, hit: Annotation) -> Annotation:
@@ -550,7 +554,7 @@ def _motion_cache_key(transform, *, audio_id, settings, panels, stills) -> str:
 
 
 def _crop_still(
-    src: Path, crop: dict | None, workdir: Path, *, artifact_id: str
+    src: Path, crop: dict | None, workdir: Path, *, artifact_id: str, suffix: str = ""
 ) -> Path:
     """``src`` cropped to ``crop`` (a RectV1 dump), cached by bytes + crop."""
     if not crop:
@@ -558,7 +562,8 @@ def _crop_still(
     from PIL import Image
 
     tag = hashlib.sha256(f"{artifact_id}|{_json(crop)}".encode()).hexdigest()
-    dst = workdir / f"crop_{tag[:_NAME_DIGEST_CHARS]}{src.suffix.lower() or '.png'}"
+    ext = suffix or src.suffix.lower() or ".png"
+    dst = workdir / f"crop_{tag[:_NAME_DIGEST_CHARS]}{ext}"
     if dst.exists():
         return dst
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -612,7 +617,14 @@ def _panel_source(project, panel: Annotation, index: dict, workdir: Path) -> Pat
         still.body.get("crop"),
         workdir,
         artifact_id=str(still.body["artifact_id"]),
+        suffix=_recorded_suffix(still),
     )
+
+
+def _recorded_suffix(ann: Annotation) -> str:
+    """The file extension the body's url records (a catalog blob has none)."""
+    url = ann.body.get("url")
+    return url_to_path(url).suffix.lower() if url else ""
 
 
 def _path_on_canvas(panel_body: dict, canvas, source: Path, *, aspect: float):
