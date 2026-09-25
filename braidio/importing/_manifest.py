@@ -20,12 +20,14 @@ are declared:
   untitled still credits without one rather than failing; the importer reports
   the count so that silence is loud.
 - ``PanelRecord.move`` is what the *source* recorded, not what gets written.
-  See :mod:`braidio.importing._writer` — every imported panel is ``push_in``.
+  See :mod:`braidio.importing._writer` — every imported panel is ``push_in`` —
+  unless the manifest declares ``moves="rendered"``: a film framed through
+  ``burns.resolve_move`` whose moves are the delivered pixels, written as is.
 """
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -115,8 +117,10 @@ class PanelRecord(BaseModel):
     still_key: str
     start: float = Field(..., ge=0.0)
     end: float = Field(..., gt=0.0)
-    # What the SOURCE recorded ('push_in' or 'auto'). The importer does not
-    # write this value — see _writer.IMPORTED_MOVE and braidio#72.
+    # Under ``moves="source"`` (the default): what the SOURCE recorded
+    # ('push_in' or 'auto'), which the importer does not write — see
+    # _writer.IMPORTED_MOVE and braidio#72. Under ``moves="rendered"``: the
+    # burns move the delivered cut was actually rendered with, written as is.
     move: str
     zoom: float = Field(..., gt=0.0)
     # An explicit RectV1 mapping — ``{"x":…, "y":…, "w":…, "h":…}`` — and NOT
@@ -267,6 +271,17 @@ class ProductionManifest(BaseModel):
     gaps: tuple[str, ...] = Field(
         default_factory=tuple,
         description="What the archaeology could NOT settle. Carried, never hidden.",
+    )
+    moves: Literal["source", "rendered"] = Field(
+        "source",
+        description=(
+            "What the panels' `move` fields mean. 'source' (the default): the "
+            "source's own vocabulary, whose alternation was never realised, so "
+            "every panel is imported as push_in (braidio#72). 'rendered': each "
+            "`move` is the burns move the delivered cut was rendered with — a "
+            "producer that framed its film through burns.resolve_move (walkthru's "
+            "reelee target does) — so it is written as recorded."
+        ),
     )
     # Leading underscore: evidence from the extraction, kept with the data.
     verification: dict[str, Any] = Field(default_factory=dict, alias="_verification")

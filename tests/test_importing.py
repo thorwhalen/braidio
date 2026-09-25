@@ -1794,3 +1794,50 @@ def test_the_burnt_in_attribution_shows_the_spelling_not_the_code(tmp_path, sour
     line = _short_attribution(stills["one#1"])
     assert line == "EliziR · CC BY-SA 4.0", line
     assert "by-sa" not in line, "a lower third reading 'by-sa' credits nobody"
+
+
+# --- rule 1, the other door: moves the delivered film was rendered with --------
+
+
+def _rendered(*moves):
+    """Overrides that declare the demo manifest ``moves="rendered"`` with ``moves``."""
+    cut = dict(_doc()["cuts"][0])
+    cut["panels"] = [
+        {**panel, "move": move} for panel, move in zip(cut["panels"], moves)
+    ]
+    return {"moves": "rendered", "cuts": [cut]}
+
+
+@needs_illustration
+def test_rendered_moves_are_written_as_recorded_without_the_push_in_note(
+    tmp_path, source
+):
+    """A producer that framed its film through ``burns.resolve_move`` (walkthru's
+    tour) records moves that ARE the pixels; forcing push_in would make the
+    panel records describe a film nobody rendered."""
+    import nw
+    from braidio.transforms._common import TIER_VIDEO_CUT, TIER_VIDEO_PANEL
+
+    report = _run(tmp_path, source, overrides=_rendered("pull_out", "hold"))
+    panels = sorted(
+        _annotations(tmp_path / "project", TIER_VIDEO_PANEL),
+        key=lambda a: a.body["order"],
+    )
+    assert [p.body["move"] for p in panels] == ["pull_out", "hold"]
+    assert not any("braidio#72" in n for n in report.notes)
+    assert "braidio#72" not in nw.Project(tmp_path / "project").read_spec().notes
+    cut = _annotations(tmp_path / "project", TIER_VIDEO_CUT)[0]
+    assert "move_note" not in cut.body["settings"]["import"]
+
+
+@needs_illustration
+def test_rendered_moves_refuse_auto(tmp_path, source):
+    """``auto`` names a draw, not a move; the producer knows what it drew."""
+    from braidio.importing import ImportError_
+
+    with pytest.raises(ImportError_, match="rendered with"):
+        _run(tmp_path, source, overrides=_rendered("push_in", "auto"), dry_run=True)
+    with pytest.raises(ImportError_, match="rendered with"):
+        _run(tmp_path, source, overrides=_rendered("push_in", "auto"))
+    # refused before anything was written, not half-way through the panels
+    assert not (tmp_path / "project").exists()
