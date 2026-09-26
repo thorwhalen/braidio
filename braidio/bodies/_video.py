@@ -121,6 +121,22 @@ class RectV1(BaseModel):
         return self
 
 
+class FootageRefV1(BaseModel):
+    """Recorded video a panel plays as a straight cut, instead of a moved still.
+
+    The media fields follow a still's (``artifact_id`` first, ``url`` as the
+    fallback), so the file is found by content wherever the project lives.
+    ``in_s`` is where in the footage the panel's span starts; the panel's own
+    interval says how much of it plays.
+    """
+
+    model_config = {"frozen": True, "extra": "forbid"}
+
+    artifact_id: str = Field(..., description="Content id of the video artifact.")
+    url: Optional[str] = Field(None, description="Where it was recorded, as a fallback.")
+    in_s: float = Field(0.0, ge=0.0, description="In-point in the footage, seconds.")
+
+
 class StillBodyV1(BaseModel):
     """An image, its rights, and its editorial label — one record."""
 
@@ -292,6 +308,15 @@ class VideoPanelBodyV1(BaseModel):
             "The placement is honest only while the still's label is on screen "
             "(a right-shaped, wrong-specific picture). Its label then outranks "
             "any card in its slot at the panel's first appearance."
+        ),
+    )
+    # Additive (thorwhalen/braidio footage panels): None is every panel before
+    # it — a still under a move.
+    footage: Optional[FootageRefV1] = Field(
+        None,
+        description=(
+            "Play this recorded video over the panel's span as a straight cut. "
+            "The still stays the panel's poster; move/zoom/focus are not rendered."
         ),
     )
 

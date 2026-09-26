@@ -45,6 +45,7 @@ from typing import Callable, Iterable, Sequence
 
 __all__ = [
     "HAS_VIDEO",
+    "Footage",
     "Panel",
     "Span",
     "assign_stills",
@@ -54,6 +55,9 @@ __all__ = [
     "prepare_still",
     "save_atomically",
     "render_video",
+    "footage_argv",
+    "frame_counts",
+    "runs",
 ]
 
 #: Default frame. 16:9 at 1080p is what every consumer player and upload wants.
@@ -142,8 +146,26 @@ class Span:
 
 
 @dataclass(frozen=True)
+class Footage:
+    """Recorded video a panel plays as it is — a straight cut, no camera move.
+
+    ``in_s`` is where in ``path`` the panel's span starts; the panel's own
+    duration says how much of it plays. A screen recording, a clip of a talk,
+    a phone video: anything ffmpeg reads.
+    """
+
+    path: str
+    in_s: float = 0.0
+
+
+@dataclass(frozen=True)
 class Panel:
-    """A :class:`Span` with a still and its camera move."""
+    """A :class:`Span` with a still and its camera move — or with footage.
+
+    With ``footage`` set, the panel plays that video over its span and
+    ``still``/``style``/``zoom`` are not rendered: ``still`` stays the panel's
+    poster (what a storyboard or a picker shows for it).
+    """
 
     start: float
     end: float
@@ -151,6 +173,7 @@ class Panel:
     style: str = "push"
     zoom: float = 1.18
     label: str = ""
+    footage: Footage | None = None
 
     @property
     def duration(self) -> float:
@@ -431,16 +454,20 @@ def render_video(
     workdir=None,
     prepare: Callable[..., Path] | None = None,
     path_for: Callable[..., object] | None = None,
+    runner: Callable[..., object] | None = None,
     **write_kwargs,
 ) -> Path:
-    """Render ``panels`` as one Ken Burns film and mux ``audio_path`` under it.
+    """Render ``panels`` as one film and mux ``audio_path`` under it.
 
-    One ``burns.ken_burns_film`` pass rather than per-panel renders plus a concat:
-    that avoids a re-encode seam at every cut and a frozen frame at every panel
-    tail.
+    Stills get a Ken Burns move; panels with :class:`Footage` play their video
+    as a straight cut. A film of stills only is one ``burns.ken_burns_film``
+    pass rather than per-panel renders plus a concat: that avoids a re-encode
+    seam at every cut and a frozen frame at every panel tail. A film with
+    footage renders each run of consecutive stills that way (silent), then
+    cuts runs and footage together in one ffmpeg pass (:func:`footage_argv`).
 
     Args:
-        panels: the stills and their screen time, in order.
+        panels: the stills (or footage) and their screen time, in order.
         audio_path: the finished mix. Its length should match the panels; pad it
             first if the film ends on a credits card.
         out_path: mp4 to write.
@@ -450,47 +477,172 @@ def render_video(
         path_for: ``(image_path, index, panel) -> BurnsPath``. Default is
             ``burns.content_aware_path_for``, which frames on the image's salient
             region so a slow push stays on the subject.
+        runner: runs an ffmpeg argv (default :func:`subprocess.run` with
+            ``check=True``); only the footage path shells out.
         **write_kwargs: forwarded to ``burns.ken_burns_film``.
 
     Returns:
         The written mp4 path.
     """
-    _require()
-    from burns import content_aware_path_for, ken_burns_film
-
     if not panels:
         raise ValueError("render_video needs at least one panel")
 
     out_path = Path(out_path)
     workdir = Path(workdir) if workdir else out_path.parent / "_frames"
-    prepare = prepare or prepare_still
-
-    def default_path_for(image, index, panel):
-        return content_aware_path_for(
-            str(image),
-            index=index,
-            output_aspect=size[0] / size[1],
-            zoom=panel.zoom,
-            mode="in" if panel.style == "push" else "auto",
-        )
-
-    path_for = path_for or default_path_for
-
-    triples = []
-    for i, panel in enumerate(panels):
-        canvas = prepare(
-            panel.still, workdir / f"{i:03d}_{Path(panel.still).stem}.jpg", size=size
-        )
-        triples.append((str(canvas), path_for(canvas, i, panel), panel.duration))
-
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    return ken_burns_film(
-        triples,
-        saveas=str(out_path),
-        fps=fps,
-        audio_path=str(audio_path),
-        **write_kwargs,
+
+    def still_film(indices, saveas, audio):
+        _require()
+        from burns import content_aware_path_for, ken_burns_film
+
+        prep = prepare or prepare_still
+
+        def default_path_for(image, index, panel):
+            return content_aware_path_for(
+                str(image),
+                index=index,
+                output_aspect=size[0] / size[1],
+                zoom=panel.zoom,
+                mode="in" if panel.style == "push" else "auto",
+            )
+
+        path_of = path_for or default_path_for
+        triples = []
+        for i in indices:
+            panel = panels[i]
+            canvas = prep(
+                panel.still, workdir / f"{i:03d}_{Path(panel.still).stem}.jpg", size=size
+            )
+            triples.append((str(canvas), path_of(canvas, i, panel), panel.duration))
+        return ken_burns_film(
+            triples,
+            saveas=str(saveas),
+            fps=fps,
+            audio_path=None if audio is None else str(audio),
+            **write_kwargs,
+        )
+
+    if all(p.footage is None for p in panels):
+        return still_film(range(len(panels)), out_path, audio_path)
+
+    import subprocess
+
+    run = runner or (lambda argv: subprocess.run(argv, check=True))
+    workdir.mkdir(parents=True, exist_ok=True)
+    frames = frame_counts(panels, fps=fps)
+    segments, counts = [], []
+    for kind, indices in runs(panels):
+        if kind == "footage":
+            footage = panels[indices[0]].footage
+            segments.append((footage.path, footage.in_s))
+        else:
+            run_path = workdir / f"_stills_{indices[0]:03d}-{indices[-1]:03d}.mp4"
+            still_film(indices, run_path, None)
+            segments.append((str(run_path), 0.0))
+        counts.append(sum(frames[i] for i in indices))
+    run(
+        footage_argv(
+            segments,
+            counts,
+            audio_path=audio_path,
+            out_path=out_path,
+            size=size,
+            fps=fps,
+        )
     )
+    return out_path
+
+
+def runs(panels: Sequence[Panel]) -> list[tuple[str, list[int]]]:
+    """Group consecutive panels into ``("footage" | "stills", indices)`` runs.
+
+    Each footage panel is its own run (it has its own in-point); consecutive
+    stills share one, rendered as a single Ken Burns pass.
+
+    >>> P = lambda f=None: Panel(0, 1, "a.jpg", footage=f)
+    >>> runs([P(), P(), P(Footage("v.mp4")), P(Footage("v.mp4", 3)), P()])
+    [('stills', [0, 1]), ('footage', [2]), ('footage', [3]), ('stills', [4])]
+    """
+    out: list[tuple[str, list[int]]] = []
+    for i, panel in enumerate(panels):
+        if panel.footage is not None:
+            out.append(("footage", [i]))
+        elif out and out[-1][0] == "stills":
+            out[-1][1].append(i)
+        else:
+            out.append(("stills", [i]))
+    return out
+
+
+def frame_counts(panels: Sequence[Panel], *, fps: int) -> list[int]:
+    """Frames per panel, rounded on the ABSOLUTE timeline so they never drift.
+
+    Rounding each duration alone would let a film of many short panels slide
+    off its narration by a frame per cut; rounding each boundary keeps every
+    cut within half a frame of where the audio says it is.
+
+    >>> ps = [Panel(0, 1.01, "a"), Panel(1.01, 2.02, "b"), Panel(2.02, 3.03, "c")]
+    >>> frame_counts(ps, fps=30)
+    [30, 31, 30]
+    """
+    bounds = [round(panels[0].start * fps)] + [round(p.end * fps) for p in panels]
+    return [b - a for a, b in zip(bounds, bounds[1:])]
+
+
+def footage_argv(
+    segments: Sequence[tuple[str, float]],
+    frames: Sequence[int],
+    *,
+    audio_path,
+    out_path,
+    size: tuple[int, int] = DEFAULT_SIZE,
+    fps: int = DEFAULT_FPS,
+    ffmpeg: str = "ffmpeg",
+    crf: int = 18,
+) -> list[str]:
+    """The one ffmpeg call that cuts ``segments`` together under ``audio_path``.
+
+    Each segment is ``(video path, in-point seconds)`` and plays for exactly
+    ``frames[i]`` frames: seeked at the input (fast, and exact in modern
+    ffmpeg), resampled to ``fps``, fitted inside ``size`` without cropping
+    (letterboxed on black), and — should the source run out early — held on its
+    last frame rather than cutting short, so the picture never slides off the
+    narration.
+
+    >>> argv = footage_argv([("rec.mp4", 2.5)], [60], audio_path="a.wav",
+    ...                     out_path="o.mp4", size=(1080, 1920), fps=30)
+    >>> argv[argv.index("-ss") + 1], argv[argv.index("-t") + 1]
+    ('2.500', '3.000')
+    >>> "trim=end_frame=60" in argv[argv.index("-filter_complex") + 1]
+    True
+    """
+    if len(segments) != len(frames):
+        raise ValueError(f"{len(segments)} segments but {len(frames)} frame counts")
+    if not segments:
+        raise ValueError("footage_argv needs at least one segment")
+    w, h = size
+    argv = [ffmpeg, "-v", "error", "-y"]
+    chains = []
+    for i, ((path, in_s), n) in enumerate(zip(segments, frames)):
+        if n <= 0:
+            raise ValueError(f"segment {i} ({path} @ {in_s}s) has {n} frames")
+        # a second of slack: the tail is held by tpad and cut by trim anyway
+        argv += ["-ss", f"{in_s:.3f}", "-t", f"{n / fps + 1.0:.3f}", "-i", str(path)]
+        chains.append(
+            f"[{i}:v]setpts=PTS-STARTPTS,fps={fps},"
+            f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
+            f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1,format=yuv420p,"
+            f"tpad=stop_mode=clone:stop=-1,trim=end_frame={n},setpts=PTS-STARTPTS[v{i}]"
+        )
+    labels = "".join(f"[v{i}]" for i in range(len(segments)))
+    graph = ";".join(chains) + f";{labels}concat=n={len(segments)}:v=1:a=0[v]"
+    total_s = sum(frames) / fps
+    argv += ["-i", str(audio_path), "-filter_complex", graph]
+    argv += ["-map", "[v]", "-map", f"{len(segments)}:a"]
+    argv += ["-c:v", "libx264", "-preset", "medium", "-crf", str(crf)]
+    argv += ["-pix_fmt", "yuv420p", "-r", str(fps), "-c:a", "aac", "-b:a", "192k"]
+    argv += ["-t", f"{total_s:.3f}", "-movflags", "+faststart", str(out_path)]
+    return argv
 
 
 def with_credits(

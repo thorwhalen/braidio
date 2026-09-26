@@ -109,8 +109,36 @@ class StillRecord(BaseModel):
     note: Optional[str] = None
 
 
+class FootageRecord(BaseModel):
+    """A recorded video panels may play as straight cuts (a screen recording).
+
+    Declared once, like a still, and named by ``key`` from each panel that
+    plays a stretch of it (:class:`PanelFootage`).
+    """
+
+    model_config = {"frozen": True, "extra": "forbid"}
+
+    key: str
+    path: str = Field(..., description="Relative to source_dir; never absolute.")
+    width: Optional[int] = None
+    height: Optional[int] = None
+    fps: Optional[int] = None
+    duration_s: Optional[float] = Field(None, ge=0.0)
+    note: Optional[str] = None
+
+
+class PanelFootage(BaseModel):
+    """Which footage a panel plays, from where. It plays for the panel's span."""
+
+    model_config = {"frozen": True, "extra": "forbid"}
+
+    key: str
+    in_s: float = Field(0.0, ge=0.0)
+
+
 class PanelRecord(BaseModel):
-    """A still over a span of one cut's episode audio."""
+    """A still over a span of one cut's episode audio — or footage, with the
+    still as its poster."""
 
     model_config = {"frozen": True, "extra": "forbid"}
 
@@ -133,6 +161,9 @@ class PanelRecord(BaseModel):
         None, description="'beat:N' — the timeline member index, or None."
     )
     order: int = Field(..., ge=0)
+    # Set: the panel plays this footage as a straight cut and its move is not
+    # rendered (the still stays its poster). None: a still under a move.
+    footage: Optional[PanelFootage] = None
 
 
 class LabelRecord(BaseModel):
@@ -267,6 +298,10 @@ class ProductionManifest(BaseModel):
         ..., description="The production's canonical mix (a cut may use another)."
     )
     stills: tuple[StillRecord, ...]
+    footage: tuple[FootageRecord, ...] = Field(
+        default_factory=tuple,
+        description="Recorded video that footage panels cut from (see PanelFootage).",
+    )
     cuts: tuple[CutRecord, ...]
     gaps: tuple[str, ...] = Field(
         default_factory=tuple,
@@ -289,6 +324,10 @@ class ProductionManifest(BaseModel):
     @property
     def still_keys(self) -> frozenset[str]:
         return frozenset(s.key for s in self.stills)
+
+    @property
+    def footage_keys(self) -> frozenset[str]:
+        return frozenset(f.key for f in self.footage)
 
 
 def load_manifest(path) -> ProductionManifest:

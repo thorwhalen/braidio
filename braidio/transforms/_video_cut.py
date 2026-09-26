@@ -550,6 +550,9 @@ def _motion_cache_key(transform, *, audio_id, settings, panels, stills) -> str:
             _json(panel.body.get("path")),
             str(panel.body.get("seed")),
         ]
+        footage = panel.body.get("footage")
+        if footage:  # appended only when set: a still panel's key is unchanged
+            parts += [str(footage["artifact_id"]), f"{float(footage.get('in_s', 0)):.3f}"]
     return transform_cache_key(transform, "video-cut-motion", *parts)
 
 
@@ -619,6 +622,15 @@ def _panel_source(project, panel: Annotation, index: dict, workdir: Path) -> Pat
         artifact_id=str(still.body["artifact_id"]),
         suffix=_recorded_suffix(still),
     )
+
+
+def _panel_footage(project, panel: Annotation, video):
+    """The recorded video a footage panel plays, or ``None`` for a still panel."""
+    footage = panel.body.get("footage")
+    if not footage:
+        return None
+    path = media_path(project.root, footage, what=f"video cut: footage of panel {panel.id}")
+    return video.Footage(str(path), float(footage.get("in_s", 0.0)))
 
 
 def _recorded_suffix(ann: Annotation) -> str:
@@ -749,7 +761,13 @@ class VideoCutRender(BaseTransform):
             sources.append(src)
             start, end = _interval_s(panel)
             video_panels.append(
-                video.Panel(start, end, str(src), zoom=float(panel.body["zoom"]))
+                video.Panel(
+                    start,
+                    end,
+                    str(src),
+                    zoom=float(panel.body["zoom"]),
+                    footage=_panel_footage(project, panel, video),
+                )
             )
 
         def path_for(canvas, i, panel):

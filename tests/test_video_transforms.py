@@ -501,6 +501,51 @@ def test_a_move_edit_re_renders(project, episode, stills, panels, patched_render
     assert len(patched_render) == 2
 
 
+def test_a_footage_panel_renders_its_footage_and_keys_the_cache_on_it(
+    project, episode, stills, panels, patched_render, tmp_path
+):
+    """A panel carrying footage hands the render a straight cut from its
+    in-point; the footage and the in-point reach a pixel, so they are in the
+    motion key — and a still panel's key is what it was before footage existed."""
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM
+
+    key0 = _plan(VIDEO_CUT_RENDER_TRANSFORM, project, *panels)[1][0].body["cache_key"]
+    recording = _write(tmp_path / "screen.mp4", b"SCREENCAST")
+    footage = {"artifact_id": "not-a-digest", "url": recording.as_uri(), "in_s": 2.5}
+    edited = _rewrite_in_place(project, panels[0], body={**panels[0].body, "footage": footage})
+    key1 = _plan(VIDEO_CUT_RENDER_TRANSFORM, project, edited, *panels[1:])[1][0].body[
+        "cache_key"
+    ]
+    assert key1 != key0
+    moved = _rewrite_in_place(
+        project, edited, body={**edited.body, "footage": {**footage, "in_s": 3.0}}
+    )
+    key2 = _plan(VIDEO_CUT_RENDER_TRANSFORM, project, moved, *panels[1:])[1][0].body[
+        "cache_key"
+    ]
+    assert key2 not in (key0, key1)
+
+    _run(VIDEO_CUT_RENDER_TRANSFORM, project, moved, *panels[1:])
+    rendered = patched_render[-1]["panels"]
+    assert rendered[0].footage == braidio.video.Footage(str(recording), 3.0)
+    assert all(p.footage is None for p in rendered[1:])
+
+
+def test_a_footage_panel_whose_video_is_gone_names_it(
+    project, episode, stills, panels, patched_render, tmp_path
+):
+    from braidio.transforms import VIDEO_CUT_RENDER_TRANSFORM
+
+    gone = (tmp_path / "gone.mp4").as_uri()
+    edited = _rewrite_in_place(
+        project,
+        panels[0],
+        body={**panels[0].body, "footage": {"artifact_id": "x", "url": gone, "in_s": 0}},
+    )
+    with pytest.raises(Exception, match="footage"):
+        _run(VIDEO_CUT_RENDER_TRANSFORM, project, edited, *panels[1:])
+
+
 # --- video_cut.finish -------------------------------------------------------------------
 
 
