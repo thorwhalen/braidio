@@ -518,7 +518,9 @@ def render_video(
         for i in indices:
             panel = panels[i]
             canvas = prep(
-                panel.still, workdir / f"{i:03d}_{Path(panel.still).stem}.jpg", size=size
+                panel.still,
+                workdir / f"{i:03d}_{Path(panel.still).stem}.jpg",
+                size=size,
             )
             triples.append((str(canvas), path_of(canvas, i, panel), panel.duration))
         return ken_burns_film(

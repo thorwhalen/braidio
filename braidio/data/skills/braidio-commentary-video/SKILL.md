@@ -58,6 +58,7 @@ cut instead of a still under a move — a screen recording, say:
 
 ```python
 from braidio.video import Footage, Panel
+
 Panel(12.0, 18.5, "poster.png", footage=Footage("screen.mp4", in_s=41.2))
 ```
 

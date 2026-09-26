@@ -649,7 +649,9 @@ def panel_footage(project, panel: Annotation):
     footage = panel.body.get("footage")
     if not footage:
         return None
-    path = media_path(project.root, footage, what=f"video cut: footage of panel {panel.id}")
+    path = media_path(
+        project.root, footage, what=f"video cut: footage of panel {panel.id}"
+    )
     return Footage(str(path), float(footage.get("in_s", 0.0)))
 
 

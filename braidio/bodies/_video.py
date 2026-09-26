@@ -133,7 +133,9 @@ class FootageRefV1(BaseModel):
     model_config = {"frozen": True, "extra": "forbid"}
 
     artifact_id: str = Field(..., description="Content id of the video artifact.")
-    url: Optional[str] = Field(None, description="Where it was recorded, as a fallback.")
+    url: Optional[str] = Field(
+        None, description="Where it was recorded, as a fallback."
+    )
     in_s: float = Field(0.0, ge=0.0, description="In-point in the footage, seconds.")
 
 

@@ -1323,7 +1323,10 @@ def _import_into_project(
                         order=panel.order,
                         track_id=track_id,
                         footage=(
-                            {**footage_refs[panel.footage.key], "in_s": panel.footage.in_s}
+                            {
+                                **footage_refs[panel.footage.key],
+                                "in_s": panel.footage.in_s,
+                            }
                             if panel.footage
                             else None
                         ),
