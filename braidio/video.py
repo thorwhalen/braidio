@@ -677,7 +677,9 @@ def segment_argv(
     w, h = size
     chain = (
         f"setpts=PTS-STARTPTS,fps={fps},"
-        f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
+        # out_range=tv: footage from JPEG frames (a screencast) is full range;
+        # the delivered film is TV range, which every player shows correctly
+        f"scale={w}:{h}:force_original_aspect_ratio=decrease:out_range=tv,"
         f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1,format=yuv420p,"
         f"tpad=stop_mode=clone:stop=-1,trim=end_frame={frames},setpts=PTS-STARTPTS"
     )
@@ -711,7 +713,8 @@ def concat_argv(
         "-f", "concat", "-safe", "0", "-i", str(listing), "-i", str(audio_path),
         "-map", "0:v", "-map", "1:a",
         "-c:v", "libx264", "-preset", "medium", "-crf", str(crf),
-        "-pix_fmt", "yuv420p", "-r", str(fps), "-c:a", "aac", "-b:a", "192k",
+        "-pix_fmt", "yuv420p",
+        "-r", str(fps), "-c:a", "aac", "-b:a", "192k",
         "-t", f"{total_frames / fps:.3f}", "-movflags", "+faststart", str(out_path),
     ]  # fmt: skip
 
