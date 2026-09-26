@@ -521,6 +521,8 @@ def _check_stored_paths(panels, settings: dict) -> None:
     w, h = settings["size"]
     aspect = w / h
     for panel in panels:
+        if panel.body.get("footage"):
+            continue  # its move is not rendered, so its path frames nothing
         stored = panel.body.get("path") or {}
         authored = stored.get("output_aspect")
         if authored is not None and not math.isclose(
@@ -539,6 +541,19 @@ def _motion_cache_key(transform, *, audio_id, settings, panels, stills) -> str:
     parts = [str(audio_id), _json(settings), resolver_identity()]
     for panel, still in zip(panels, stills):
         start, end = _interval_s(panel)
+        footage = panel.body.get("footage")
+        if footage:
+            # Only what reaches a pixel: the recording, where it starts, and the
+            # span. A move edit on footage renders nothing, so it re-renders
+            # nothing. (A still panel's key below is exactly what it always was.)
+            parts += [
+                "footage",
+                str(footage["artifact_id"]),
+                f"{float(footage.get('in_s', 0)):.3f}",
+                f"{start:.3f}",
+                f"{end:.3f}",
+            ]
+            continue
         parts += [
             str(still.body["artifact_id"]),
             _json(still.body.get("crop")),
@@ -550,9 +565,6 @@ def _motion_cache_key(transform, *, audio_id, settings, panels, stills) -> str:
             _json(panel.body.get("path")),
             str(panel.body.get("seed")),
         ]
-        footage = panel.body.get("footage")
-        if footage:  # appended only when set: a still panel's key is unchanged
-            parts += [str(footage["artifact_id"]), f"{float(footage.get('in_s', 0)):.3f}"]
     return transform_cache_key(transform, "video-cut-motion", *parts)
 
 
@@ -624,13 +636,21 @@ def _panel_source(project, panel: Annotation, index: dict, workdir: Path) -> Pat
     )
 
 
-def _panel_footage(project, panel: Annotation, video):
-    """The recorded video a footage panel plays, or ``None`` for a still panel."""
+def panel_footage(project, panel: Annotation):
+    """The recorded video a footage panel plays (a ``braidio.video.Footage``),
+    or ``None`` for a still panel.
+
+    Ask this before :func:`panel_path`: a footage panel plays its recording as a
+    straight cut, so no camera move is rendered over it, and a preview should
+    play ``footage.path`` from ``footage.in_s`` rather than move over the poster.
+    """
+    from braidio.video import Footage
+
     footage = panel.body.get("footage")
     if not footage:
         return None
     path = media_path(project.root, footage, what=f"video cut: footage of panel {panel.id}")
-    return video.Footage(str(path), float(footage.get("in_s", 0.0)))
+    return Footage(str(path), float(footage.get("in_s", 0.0)))
 
 
 def _recorded_suffix(ann: Annotation) -> str:
@@ -659,6 +679,10 @@ def panel_path(project, panel: Annotation, *, size: tuple[int, int]):
     ``size`` is the delivery ``(width, height)`` — the cut's
     ``settings["size"]``. Reads the still's bytes and writes the canvas into
     the project's frame cache.
+
+    A footage panel renders no move: check :func:`panel_footage` first. For
+    one, this still answers (the move over its poster), so a caller that
+    predates footage keeps working, but the answer describes nothing in the film.
     """
     resolver_identity()  # refuses an old burns with the message the render gives
     size = (int(size[0]), int(size[1]))
@@ -766,7 +790,7 @@ class VideoCutRender(BaseTransform):
                     end,
                     str(src),
                     zoom=float(panel.body["zoom"]),
-                    footage=_panel_footage(project, panel, video),
+                    footage=panel_footage(project, panel),
                 )
             )
 

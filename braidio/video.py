@@ -55,7 +55,8 @@ __all__ = [
     "prepare_still",
     "save_atomically",
     "render_video",
-    "footage_argv",
+    "concat_argv",
+    "segment_argv",
     "frame_counts",
     "runs",
 ]
@@ -455,6 +456,7 @@ def render_video(
     prepare: Callable[..., Path] | None = None,
     path_for: Callable[..., object] | None = None,
     runner: Callable[..., object] | None = None,
+    footage_duration: Callable[[str], float] | None = None,
     **write_kwargs,
 ) -> Path:
     """Render ``panels`` as one film and mux ``audio_path`` under it.
@@ -463,8 +465,10 @@ def render_video(
     as a straight cut. A film of stills only is one ``burns.ken_burns_film``
     pass rather than per-panel renders plus a concat: that avoids a re-encode
     seam at every cut and a frozen frame at every panel tail. A film with
-    footage renders each run of consecutive stills that way (silent), then
-    cuts runs and footage together in one ffmpeg pass (:func:`footage_argv`).
+    footage renders each run of consecutive stills that way (silent), cuts each
+    run and each footage panel into a piece of exactly its frames, one at a time
+    so memory stays flat (:func:`segment_argv`), and joins the pieces under the
+    audio in one final encode (:func:`concat_argv`).
 
     Args:
         panels: the stills (or footage) and their screen time, in order.
@@ -479,7 +483,10 @@ def render_video(
             region so a slow push stays on the subject.
         runner: runs an ffmpeg argv (default :func:`subprocess.run` with
             ``check=True``); only the footage path shells out.
-        **write_kwargs: forwarded to ``burns.ken_burns_film``.
+        footage_duration: a footage file's length in seconds (default: ffprobe);
+            an in-point at or past it is refused before anything renders.
+        **write_kwargs: forwarded to ``burns.ken_burns_film`` (the still runs;
+            the footage path encodes its own pieces).
 
     Returns:
         The written mp4 path.
@@ -526,31 +533,83 @@ def render_video(
         return still_film(range(len(panels)), out_path, audio_path)
 
     import subprocess
+    import tempfile
 
     run = runner or (lambda argv: subprocess.run(argv, check=True))
+    probe = footage_duration or _probe_duration
+    _check_in_points(panels, probe)
     workdir.mkdir(parents=True, exist_ok=True)
     frames = frame_counts(panels, fps=fps)
-    segments, counts = [], []
-    for kind, indices in runs(panels):
-        if kind == "footage":
-            footage = panels[indices[0]].footage
-            segments.append((footage.path, footage.in_s))
-        else:
-            run_path = workdir / f"_stills_{indices[0]:03d}-{indices[-1]:03d}.mp4"
-            still_film(indices, run_path, None)
-            segments.append((str(run_path), 0.0))
-        counts.append(sum(frames[i] for i in indices))
-    run(
-        footage_argv(
-            segments,
-            counts,
-            audio_path=audio_path,
-            out_path=out_path,
-            size=size,
-            fps=fps,
+    # Private to this render: two renders sharing a project's workdir never
+    # pick up each other's pieces, and nothing is left behind.
+    with tempfile.TemporaryDirectory(prefix="_cut_", dir=workdir) as tmp:
+        tmp = Path(tmp)
+        pieces = []
+        for n, (kind, indices) in enumerate(runs(panels)):
+            if kind == "footage":
+                footage = panels[indices[0]].footage
+                source, in_s = footage.path, footage.in_s
+            else:
+                source, in_s = tmp / f"stills_{n:04d}.mp4", 0.0
+                still_film(indices, source, None)
+            piece = tmp / f"piece_{n:04d}.mp4"
+            # one piece at a time: memory stays flat however many cuts there are
+            run(
+                segment_argv(
+                    source,
+                    in_s,
+                    sum(frames[i] for i in indices),
+                    out_path=piece,
+                    size=size,
+                    fps=fps,
+                )
+            )
+            pieces.append(piece)
+        listing = tmp / "pieces.txt"
+        listing.write_text("".join(f"file '{p.name}'\n" for p in pieces))
+        run(
+            concat_argv(
+                listing,
+                audio_path=audio_path,
+                out_path=out_path,
+                total_frames=sum(frames),
+                fps=fps,
+            )
         )
-    )
     return out_path
+
+
+def _probe_duration(path) -> float:
+    import subprocess
+
+    out = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+         "-of", "csv=p=0", str(path)],
+        capture_output=True, text=True, check=True,
+    ).stdout  # fmt: skip
+    return float(out.strip())
+
+
+def _check_in_points(panels: Sequence[Panel], probe: Callable[[str], float]) -> None:
+    """Refuse an in-point at or past the end of its footage.
+
+    ffmpeg seeked past the end yields no frames at all, so nothing is held and
+    the cut comes out short, sliding every later panel off its narration.
+    (Footage that merely runs out *during* a panel is fine: its last frame is
+    held.)
+    """
+    lengths: dict[str, float] = {}
+    for i, panel in enumerate(panels):
+        if panel.footage is None:
+            continue
+        path = panel.footage.path
+        if path not in lengths:
+            lengths[path] = probe(path)
+        if panel.footage.in_s >= lengths[path]:
+            raise ValueError(
+                f"panel {i} ({panel.start:.2f}-{panel.end:.2f}s) starts its footage at "
+                f"{panel.footage.in_s:.2f}s, but {path} is only {lengths[path]:.2f}s long"
+            )
 
 
 def runs(panels: Sequence[Panel]) -> list[tuple[str, list[int]]]:
@@ -589,60 +648,72 @@ def frame_counts(panels: Sequence[Panel], *, fps: int) -> list[int]:
     return [b - a for a, b in zip(bounds, bounds[1:])]
 
 
-def footage_argv(
-    segments: Sequence[tuple[str, float]],
-    frames: Sequence[int],
+def segment_argv(
+    source,
+    in_s: float,
+    frames: int,
     *,
-    audio_path,
     out_path,
     size: tuple[int, int] = DEFAULT_SIZE,
     fps: int = DEFAULT_FPS,
     ffmpeg: str = "ffmpeg",
-    crf: int = 18,
 ) -> list[str]:
-    """The one ffmpeg call that cuts ``segments`` together under ``audio_path``.
+    """One cut: exactly ``frames`` frames of ``source`` from ``in_s``, as a piece.
 
-    Each segment is ``(video path, in-point seconds)`` and plays for exactly
-    ``frames[i]`` frames: seeked at the input (fast, and exact in modern
-    ffmpeg), resampled to ``fps``, fitted inside ``size`` without cropping
-    (letterboxed on black), and — should the source run out early — held on its
-    last frame rather than cutting short, so the picture never slides off the
-    narration.
+    Seeked at the input (fast, and exact in modern ffmpeg), resampled to
+    ``fps``, fitted inside ``size`` without cropping (letterboxed on black),
+    and — should the source run out early — held on its last frame rather than
+    cutting short, so the picture never slides off the narration. Pieces are
+    near-lossless (they are re-encoded once more, by :func:`concat_argv`).
 
-    >>> argv = footage_argv([("rec.mp4", 2.5)], [60], audio_path="a.wav",
-    ...                     out_path="o.mp4", size=(1080, 1920), fps=30)
+    >>> argv = segment_argv("rec.mp4", 2.5, 60, out_path="p.mp4", size=(1080, 1920))
     >>> argv[argv.index("-ss") + 1], argv[argv.index("-t") + 1]
     ('2.500', '3.000')
-    >>> "trim=end_frame=60" in argv[argv.index("-filter_complex") + 1]
+    >>> "trim=end_frame=60" in argv[argv.index("-vf") + 1]
     True
     """
-    if len(segments) != len(frames):
-        raise ValueError(f"{len(segments)} segments but {len(frames)} frame counts")
-    if not segments:
-        raise ValueError("footage_argv needs at least one segment")
+    if frames <= 0:
+        raise ValueError(f"a cut of {source} @ {in_s}s must have frames, got {frames}")
     w, h = size
-    argv = [ffmpeg, "-v", "error", "-y"]
-    chains = []
-    for i, ((path, in_s), n) in enumerate(zip(segments, frames)):
-        if n <= 0:
-            raise ValueError(f"segment {i} ({path} @ {in_s}s) has {n} frames")
-        # a second of slack: the tail is held by tpad and cut by trim anyway
-        argv += ["-ss", f"{in_s:.3f}", "-t", f"{n / fps + 1.0:.3f}", "-i", str(path)]
-        chains.append(
-            f"[{i}:v]setpts=PTS-STARTPTS,fps={fps},"
-            f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
-            f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1,format=yuv420p,"
-            f"tpad=stop_mode=clone:stop=-1,trim=end_frame={n},setpts=PTS-STARTPTS[v{i}]"
-        )
-    labels = "".join(f"[v{i}]" for i in range(len(segments)))
-    graph = ";".join(chains) + f";{labels}concat=n={len(segments)}:v=1:a=0[v]"
-    total_s = sum(frames) / fps
-    argv += ["-i", str(audio_path), "-filter_complex", graph]
-    argv += ["-map", "[v]", "-map", f"{len(segments)}:a"]
-    argv += ["-c:v", "libx264", "-preset", "medium", "-crf", str(crf)]
-    argv += ["-pix_fmt", "yuv420p", "-r", str(fps), "-c:a", "aac", "-b:a", "192k"]
-    argv += ["-t", f"{total_s:.3f}", "-movflags", "+faststart", str(out_path)]
-    return argv
+    chain = (
+        f"setpts=PTS-STARTPTS,fps={fps},"
+        f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
+        f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1,format=yuv420p,"
+        f"tpad=stop_mode=clone:stop=-1,trim=end_frame={frames},setpts=PTS-STARTPTS"
+    )
+    # a second of slack: the tail is held by tpad and cut by trim anyway
+    return [
+        ffmpeg, "-v", "error", "-y",
+        "-ss", f"{in_s:.3f}", "-t", f"{frames / fps + 1.0:.3f}", "-i", str(source),
+        "-vf", chain, "-an", "-r", str(fps),
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "10", str(out_path),
+    ]  # fmt: skip
+
+
+def concat_argv(
+    listing,
+    *,
+    audio_path,
+    out_path,
+    total_frames: int,
+    fps: int = DEFAULT_FPS,
+    ffmpeg: str = "ffmpeg",
+    crf: int = 18,
+) -> list[str]:
+    """Join the pieces a concat ``listing`` names, under ``audio_path``, as the delivered mp4.
+
+    >>> argv = concat_argv("l.txt", audio_path="a.wav", out_path="o.mp4", total_frames=90)
+    >>> argv[argv.index("-t") + 1], argv[argv.index("-f") + 1]
+    ('3.000', 'concat')
+    """
+    return [
+        ffmpeg, "-v", "error", "-y",
+        "-f", "concat", "-safe", "0", "-i", str(listing), "-i", str(audio_path),
+        "-map", "0:v", "-map", "1:a",
+        "-c:v", "libx264", "-preset", "medium", "-crf", str(crf),
+        "-pix_fmt", "yuv420p", "-r", str(fps), "-c:a", "aac", "-b:a", "192k",
+        "-t", f"{total_frames / fps:.3f}", "-movflags", "+faststart", str(out_path),
+    ]  # fmt: skip
 
 
 def with_credits(

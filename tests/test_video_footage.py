@@ -17,7 +17,7 @@ from braidio.video import (
     HAS_VIDEO,
     Footage,
     Panel,
-    footage_argv,
+    segment_argv,
     frame_counts,
     render_video,
     runs,
@@ -107,11 +107,47 @@ def test_frame_counts_round_boundaries_not_durations():
     assert sum(counts) == round(35 / 3 * FPS)
 
 
-def test_footage_argv_refuses_mismatched_or_empty_segments():
-    with pytest.raises(ValueError):
-        footage_argv([("a.mp4", 0.0)], [], audio_path="a.wav", out_path="o.mp4")
-    with pytest.raises(ValueError):
-        footage_argv([("a.mp4", 0.0)], [0], audio_path="a.wav", out_path="o.mp4")
+def test_a_cut_must_have_frames():
+    with pytest.raises(ValueError, match="must have frames"):
+        segment_argv("a.mp4", 0.0, 0, out_path="o.mp4")
+
+
+def test_an_in_point_past_the_footage_is_refused_before_rendering(tmp_path):
+    """Seeked past its end, ffmpeg yields no frames: the cut would come out short
+    and every later panel would slide off its narration."""
+    calls = []
+    panels = [
+        Panel(0.0, 1.0, "p.png", footage=Footage("rec.mp4", 10.0)),
+        Panel(1.0, 2.0, "p.png", footage=Footage("rec.mp4", 65.0)),
+    ]
+    with pytest.raises(ValueError, match="only 60.00s long"):
+        render_video(
+            panels, audio_path="a.wav", out_path=tmp_path / "o.mp4",
+            runner=calls.append, footage_duration=lambda path: 60.0,
+        )
+    assert calls == []
+
+
+def test_a_render_leaves_no_pieces_behind_and_shares_none(tmp_path):
+    """Pieces live in a directory private to one render, so two renders into one
+    project's workdir cannot pick up each other's, and none is left over."""
+    import os
+
+    seen = []
+
+    def runner(argv):
+        seen.append(argv[-1])
+        Path(argv[-1]).write_bytes(b"x")
+
+    for out in ("a.mp4", "b.mp4"):
+        render_video(
+            [Panel(0.0, 1.0, "p.png", footage=Footage("rec.mp4", 0.0))],
+            audio_path="a.wav", out_path=tmp_path / out, workdir=tmp_path / "work",
+            runner=runner, footage_duration=lambda path: 5.0,
+        )
+    pieces = [s for s in seen if "piece_" in s]
+    assert len(pieces) == 2 and os.path.dirname(pieces[0]) != os.path.dirname(pieces[1])
+    assert list((tmp_path / "work").iterdir()) == []
 
 
 def test_a_panel_without_footage_is_a_still_panel():
@@ -119,6 +155,21 @@ def test_a_panel_without_footage_is_a_still_panel():
 
 
 # --- rendered ---------------------------------------------------------------
+
+
+@needs_ffmpeg
+def test_many_cuts_of_one_recording_stay_on_the_frame(media, tmp_path):
+    """60 one-frame-apart cuts: the film is exactly as long as the panels say."""
+    source, audio = media
+    panels = [
+        Panel(i * 0.05, (i + 1) * 0.05, "p.png", footage=Footage(str(source), (i % 30) * 0.1))
+        for i in range(60)
+    ]
+    out = render_video(
+        panels, audio_path=audio, out_path=tmp_path / "many.mp4", size=SIZE, fps=FPS,
+        workdir=tmp_path / "work",
+    )
+    assert _probe(out)["frames"] == 90
 
 
 @needs_ffmpeg

@@ -54,7 +54,7 @@ render_video(panels, audio_path="ep.mp3", out_path="ep.mp4")
 ```
 
 **Footage, not just stills.** A panel may play recorded video as a straight
-cut instead of a still under a move — a screen recording, a clip of a talk:
+cut instead of a still under a move — a screen recording, say:
 
 ```python
 from braidio.video import Footage, Panel
@@ -63,7 +63,11 @@ Panel(12.0, 18.5, "poster.png", footage=Footage("screen.mp4", in_s=41.2))
 
 It plays `screen.mp4` from 41.2 s for the panel's 6.5 s, fitted (never
 cropped) into the frame; the still is its poster, and its move is not
-rendered. Mix freely with still panels. In the graph it is
+rendered. Mix freely with still panels. **The poster carries the footage's
+rights**: make it a frame of the footage and give its still record the
+footage's licence and attribution — the `published` gate and the credits
+roll read the still, and nothing else would know where the footage came
+from. An in-point at or past the end of its footage is refused. In the graph it is
 `video-panel/v1`'s `footage` (`artifact_id`, `url`, `in_s`), and a
 `ProductionManifest` declares `footage` records that panels name by key —
 walkthru's screen-recorded tours are made this way.

@@ -316,7 +316,9 @@ class VideoPanelBodyV1(BaseModel):
         None,
         description=(
             "Play this recorded video over the panel's span as a straight cut. "
-            "The still stays the panel's poster; move/zoom/focus are not rendered."
+            "The still stays the panel's poster (a frame of the footage) and "
+            "carries its rights: the licence gates and the credits read the "
+            "still. move/zoom/focus are not rendered."
         ),
     )
 

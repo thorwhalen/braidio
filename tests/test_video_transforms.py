@@ -525,10 +525,25 @@ def test_a_footage_panel_renders_its_footage_and_keys_the_cache_on_it(
     ]
     assert key2 not in (key0, key1)
 
-    _run(VIDEO_CUT_RENDER_TRANSFORM, project, moved, *panels[1:])
+    # a move edit on a footage panel renders nothing, so it re-keys nothing
+    new_move = "drift_left" if moved.body["move"] != "drift_left" else "push_in"
+    removed = _rewrite_in_place(
+        project, moved, body={**moved.body, "move": new_move, "zoom": 1.9}
+    )
+    key3 = _plan(VIDEO_CUT_RENDER_TRANSFORM, project, removed, *panels[1:])[1][0].body[
+        "cache_key"
+    ]
+    assert key3 == key2
+
+    _run(VIDEO_CUT_RENDER_TRANSFORM, project, removed, *panels[1:])
     rendered = patched_render[-1]["panels"]
     assert rendered[0].footage == braidio.video.Footage(str(recording), 3.0)
     assert all(p.footage is None for p in rendered[1:])
+
+    from braidio.transforms import panel_footage
+
+    assert panel_footage(project, removed) == braidio.video.Footage(str(recording), 3.0)
+    assert panel_footage(project, panels[1]) is None
 
 
 def test_a_footage_panel_whose_video_is_gone_names_it(
