@@ -231,6 +231,8 @@ class ImportReport:
     stills_written: int = 0
     stills_unchanged: int = 0
     episodes: int = 0
+    #: Footage files (recorded video footage panels cut from) written.
+    footage: int = 0
     panels_by_cut: dict[str, int] = field(default_factory=dict)
     labels_by_cut: dict[str, int] = field(default_factory=dict)
     cuts_written: list[str] = field(default_factory=list)
@@ -285,6 +287,7 @@ class ImportReport:
             "stills_written": self.stills_written,
             "stills_unchanged": self.stills_unchanged,
             "episodes": self.episodes,
+            "footage": self.footage,
             "panels_by_cut": dict(self.panels_by_cut),
             "panels_total": self.panels_total,
             "labels_by_cut": dict(self.labels_by_cut),
@@ -929,6 +932,19 @@ def _import_into_project(
             f"panels name stills the manifest does not hold: {unknown_keys}"
         )
 
+    footage_paths = {f.key: src / f.path for f in manifest.footage}
+    missing = sorted(k for k, p in footage_paths.items() if not p.is_file())
+    if missing:
+        raise ImportError_(f"footage files are not on disk: {missing}")
+    used_footage = {
+        p.footage.key for cut in manifest.cuts for p in cut.panels if p.footage
+    }
+    unknown_footage = sorted(used_footage - manifest.footage_keys)
+    if unknown_footage:
+        raise ImportError_(
+            f"panels name footage the manifest does not hold: {unknown_footage}"
+        )
+
     audio_paths = {}
     for cut in manifest.cuts:
         audio_paths[cut.audio.path] = src / cut.audio.path
@@ -1248,6 +1264,32 @@ def _import_into_project(
         )
         report.episodes += 1
 
+    # --- footage: recorded video that panels cut from ------------------------
+    footage_refs: dict[str, dict] = {}
+    for footage in manifest.footage:
+        dest = footage_paths[footage.key]
+        if copy_media:
+            dest = _place_into(
+                dest,
+                root / "data" / "footage",
+                _safe_name(footage.key) + dest.suffix,
+                report,
+            )
+        artifact = _artifact_for(dest, kind="video", duration_s=footage.duration_s)
+        _register(
+            dest,
+            artifact.asset_id,
+            kind="video",
+            width=footage.width,
+            height=footage.height,
+            duration_s=footage.duration_s,
+        )
+        footage_refs[footage.key] = {
+            "artifact_id": artifact.asset_id,
+            "url": file_url(dest),
+        }
+    report.footage = len(footage_refs)
+
     # --- per cut: panels, cards, the cut records ----------------------------
     for cut in manifest.cuts:
         episode_id = episode_ids[cut.audio.path]
@@ -1280,6 +1322,11 @@ def _import_into_project(
                         beat_id=beat,
                         order=panel.order,
                         track_id=track_id,
+                        footage=(
+                            {**footage_refs[panel.footage.key], "in_s": panel.footage.in_s}
+                            if panel.footage
+                            else None
+                        ),
                     ).model_dump(mode="json"),
                     body_schema_uri=VIDEO_PANEL_V1,
                     provenance=_provenance([episode_id]),

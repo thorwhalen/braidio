@@ -53,6 +53,25 @@ panels = [Panel(s.start, s.end, pick(s)) for s in spans]  # 3. YOUR choice of im
 render_video(panels, audio_path="ep.mp3", out_path="ep.mp4")
 ```
 
+**Footage, not just stills.** A panel may play recorded video as a straight
+cut instead of a still under a move — a screen recording, say:
+
+```python
+from braidio.video import Footage, Panel
+Panel(12.0, 18.5, "poster.png", footage=Footage("screen.mp4", in_s=41.2))
+```
+
+It plays `screen.mp4` from 41.2 s for the panel's 6.5 s, fitted (never
+cropped) into the frame; the still is its poster, and its move is not
+rendered. Mix freely with still panels. **The poster carries the footage's
+rights**: make it a frame of the footage and give its still record the
+footage's licence and attribution — the `published` gate and the credits
+roll read the still, and nothing else would know where the footage came
+from. An in-point at or past the end of its footage is refused. In the graph it is
+`video-panel/v1`'s `footage` (`artifact_id`, `url`, `in_s`), and a
+`ProductionManifest` declares `footage` records that panels name by key —
+walkthru's screen-recorded tours are made this way.
+
 **Never eyeball panel timings off a transcript.** `return_timeline=True` gives the
 renderer's own `[start, duration)` per beat; `plan_spans` cuts on those boundaries
 (splitting long beats, merging short ones) so the picture changes where the
@@ -385,7 +404,7 @@ lives in the project graph instead, as four `lacing` bodies on the
 | Body | What it is | The interval |
 |---|---|---|
 | `still/v1` | an image + its **rights** (the seven `illustration.RIGHTS_FIELDS`, same names) + its **editorial label** (`labelled`, `subject`) + an optional `crop` | none |
-| `video-panel/v1` | a still shown over a span, with an **authored** move (`move`, `zoom`, `focus`, `seed`, or an explicit `path`) | a `MediaRef` on the episode audio |
+| `video-panel/v1` | a still shown over a span, with an **authored** move (`move`, `zoom`, `focus`, `seed`, or an explicit `path`) — or, with `footage`, recorded video played as a straight cut (the still is its poster) | a `MediaRef` on the episode audio |
 | `video-cut/v1` | a rendered mp4 — `stage="motion"` (frames) or `"delivered"` (text composited) — with `panel_ids`, `audio_artifact_id`, `profile`, `published` | none |
 | `label-track/v1` | a timed card that is not per-still: `title` / `context` / `tag` / `note` | a `MediaRef` on the episode audio |
 

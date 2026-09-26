@@ -30,11 +30,13 @@ Breaking and additive changes fail in different tests, with different advice:
   exists but isn't pinned, and tells you whether it is additive (optional,
   with a default) or breaking (required).
 
-Two of the 21 bodies (``still/v1``, ``video-panel/v1``) nest one carrier
+Two of the 21 bodies (``still/v1``, ``video-panel/v1``) nest a carrier
 model, ``RectV1`` (a normalized ``x``/``y``/``w``/``h`` region — the same keys
 as ``burns.Rect`` and a ``BurnsPath`` keyframe rect). It is not a registered
 body, so it has no URI, but its shape IS on the wire inside those two bodies,
-so it is pinned in ``PINNED_NESTED`` the way artful pins ``PanelImage``. Every
+so it is pinned in ``PINNED_NESTED`` the way artful pins ``PanelImage``.
+``video-panel/v1`` also nests ``FootageRefV1`` (the recorded video a footage
+panel plays), pinned the same way. Every
 other field is a scalar, an enum, a homogeneous ``array``/``tuple``, or an
 open ``object``.
 """
@@ -80,6 +82,7 @@ from braidio.bodies import (
     NarrationRenderBodyV1,
     NarrativeBeatBodyV1,
     ProductionStructureBodyV1,
+    FootageRefV1,
     RectV1,
     RenderProfileBodyV1,
     SceneBreakBodyV1,
@@ -194,7 +197,7 @@ OWNED: dict[str, type] = {
 #: the wire all the same). Pinned by name; ``_nested_shapes`` reads them from
 #: the owning bodies' ``$defs`` so a carrier that stops being referenced is
 #: noticed too.
-NESTED: dict[str, type] = {"RectV1": RectV1}
+NESTED: dict[str, type] = {"FootageRefV1": FootageRefV1, "RectV1": RectV1}
 
 
 @pytest.mark.parametrize("uri", sorted(OWNED))
@@ -432,6 +435,7 @@ PINNED: dict[str, dict] = {
             "beat_id": "string|null = null",
             "disclaimed": "boolean = false",
             "focus": "RectV1|null = null",
+            "footage": "FootageRefV1|null = null",
             "rationale": "string|null = null",
             "relevance": "number(maximum=1.0, minimum=0.0)|null = null",
             "role": "enum[contextual|decorative|literal]|null = null",
@@ -479,6 +483,14 @@ PINNED: dict[str, dict] = {
 
 #: The nested carriers' shapes — same rules, same advice.
 PINNED_NESTED: dict[str, dict] = {
+    "FootageRefV1": {
+        "required": frozenset({"artifact_id"}),
+        "fields": {
+            "artifact_id": "string",
+            "in_s": "number(minimum=0.0) = 0.0",
+            "url": "string|null = null",
+        },
+    },
     "RectV1": {
         "required": frozenset({"h", "w", "x", "y"}),
         "fields": {

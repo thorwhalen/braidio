@@ -1841,3 +1841,75 @@ def test_rendered_moves_refuse_auto(tmp_path, source):
         _run(tmp_path, source, overrides=_rendered("push_in", "auto"))
     # refused before anything was written, not half-way through the panels
     assert not (tmp_path / "project").exists()
+
+
+# --- footage panels: recorded video the delivered cut plays as straight cuts --
+
+
+def _with_footage(*in_points):
+    """The demo manifest with a screen recording that each panel cuts from."""
+    cut = dict(_doc()["cuts"][0])
+    cut["panels"] = [
+        {**panel, "move": "hold", "zoom": 1.0, "footage": {"key": "screen", "in_s": s}}
+        for panel, s in zip(cut["panels"], in_points)
+    ]
+    return {
+        "moves": "rendered",
+        "footage": [
+            {"key": "screen", "path": "screen.mp4", "width": 1920, "height": 1080,
+             "fps": 30, "duration_s": 21.0}
+        ],
+        "cuts": [cut],
+    }
+
+
+@needs_illustration
+def test_footage_panels_import_with_their_footage_catalogued(tmp_path, source):
+    """Each panel keeps its still (the poster) and gains the recording it plays
+    from its in-point; the recording is copied in and found by content."""
+    from braidio.transforms._common import TIER_VIDEO_PANEL, media_path
+
+    (source / "demo" / "screen.mp4").write_bytes(b"fake-screen-recording")
+    report = _run(tmp_path, source, overrides=_with_footage(0.4, 10.9))
+    assert report.footage == 1 and report.to_dict()["footage"] == 1
+    panels = sorted(
+        _annotations(tmp_path / "project", TIER_VIDEO_PANEL),
+        key=lambda a: a.body["order"],
+    )
+    assert [p.body["footage"]["in_s"] for p in panels] == [0.4, 10.9]
+    assert all(p.body["still_id"] for p in panels)
+    ref = panels[0].body["footage"]
+    assert ref == panels[1].body["footage"] | {"in_s": 0.4}
+    found = media_path(tmp_path / "project", ref, what="footage")
+    assert found.read_bytes() == b"fake-screen-recording"
+    assert tmp_path / "project" in found.resolve().parents
+
+
+@needs_illustration
+def test_a_still_panel_imports_without_footage(tmp_path, source):
+    from braidio.transforms._common import TIER_VIDEO_PANEL
+
+    report = _run(tmp_path, source)
+    assert report.footage == 0
+    assert all(
+        p.body.get("footage") is None
+        for p in _annotations(tmp_path / "project", TIER_VIDEO_PANEL)
+    )
+
+
+def test_footage_the_manifest_does_not_hold_is_refused_before_writing(tmp_path, source):
+    from braidio.importing import ImportError_
+
+    (source / "demo" / "screen.mp4").write_bytes(b"x")
+    overrides = _with_footage(0.0, 10.0)
+    overrides["cuts"][0]["panels"][1]["footage"]["key"] = "elsewhere"
+    with pytest.raises(ImportError_, match="footage the manifest does not hold"):
+        _run(tmp_path, source, overrides=overrides)
+    assert not (tmp_path / "project").exists()
+
+
+def test_footage_missing_on_disk_is_refused(tmp_path, source):
+    from braidio.importing import ImportError_
+
+    with pytest.raises(ImportError_, match="footage files are not on disk"):
+        _run(tmp_path, source, overrides=_with_footage(0.0, 10.0))

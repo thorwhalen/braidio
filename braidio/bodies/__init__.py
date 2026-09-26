@@ -56,6 +56,7 @@ from braidio.bodies._video import (  # noqa: F401  (import registers)
     VIDEO_PANEL_V1,
     VIDEO_CUT_V1,
     LABEL_TRACK_V1,
+    FootageRefV1,
     RectV1,
     StillBodyV1,
     VideoPanelBodyV1,
