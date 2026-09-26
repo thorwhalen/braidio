@@ -244,3 +244,30 @@ def test_stills_and_footage_mix_in_one_film(media, tmp_path):
     )
     assert _probe(out)["frames"] == 90
     assert _colour_at(out, 1.5, tmp_path) == "blue"
+
+
+@needs_ffmpeg
+def test_full_range_footage_is_delivered_in_tv_range(tmp_path):
+    """A screencast's frames are JPEGs, so its video is full-range yuvj420p; the
+    delivered film must be the TV-range yuv420p every player shows correctly."""
+    src = tmp_path / "screen.mp4"
+    _ffmpeg(
+        "-f", "lavfi", "-i", "color=c=red:s=160x90:r=30:d=2",
+        "-vf", "scale=out_range=pc,format=yuvj420p", str(src),
+    )
+    audio = tmp_path / "a.wav"
+    _ffmpeg("-f", "lavfi", "-i", "sine=frequency=440:duration=2", str(audio))
+    out = render_video(
+        [Panel(0.0, 1.0, "p.png", footage=Footage(str(src), 0.5))],
+        audio_path=audio, out_path=tmp_path / "o.mp4", size=SIZE, fps=FPS,
+        workdir=tmp_path / "work",
+    )
+    fmt = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+         "stream=pix_fmt,color_range", "-of", "csv=p=0", str(out)],
+        capture_output=True, text=True, check=True,
+    ).stdout.strip()
+    # TV range: the pixels are converted, and the film is not flagged full range
+    # (an unflagged stream is limited range to every player)
+    pix_fmt, color_range = fmt.split(",")
+    assert pix_fmt == "yuv420p" and color_range in ("tv", "unknown")
