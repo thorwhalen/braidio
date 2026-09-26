@@ -28,26 +28,45 @@ and never shows dead black bars.
 
 ### Functions
 
-| [`assign_stills`](#braidio.video.assign_stills)(spans, stills, \*[, zoom])       | Attach stills to `spans`, cycling so none repeats back-to-back.      |
-|-------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| [`credits_card`](#braidio.video.credits_card)(lines, dst, \*[, heading, ...])   | Render an end card listing `lines`, **fitted** so none is lost.      |
-| [`missing_dependencies`](#braidio.video.missing_dependencies)()                         | Which `braidio[video]` dependencies are absent (empty when ready).   |
-| [`plan_spans`](#braidio.video.plan_spans)(timeline, \*[, min_panel_s, ...])   | Cut `timeline` into contiguous spans of roughly one still each.      |
-| [`prepare_still`](#braidio.video.prepare_still)(src, dst, \*[, size])            | Composite `src` onto a blurred fill of itself at exactly `size`.     |
-| [`save_atomically`](#braidio.video.save_atomically)(img, dst, \*\*encode)          | `img.save(dst)` through a sibling temp file and an atomic rename.    |
-| [`render_video`](#braidio.video.render_video)(panels, \*, audio_path, out_path) | Render `panels` as one Ken Burns film and mux `audio_path` under it. |
+| [`assign_stills`](#braidio.video.assign_stills)(spans, stills, \*[, zoom])         | Attach stills to `spans`, cycling so none repeats back-to-back.                     |
+|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| [`credits_card`](#braidio.video.credits_card)(lines, dst, \*[, heading, ...])     | Render an end card listing `lines`, **fitted** so none is lost.                     |
+| [`missing_dependencies`](#braidio.video.missing_dependencies)()                           | Which `braidio[video]` dependencies are absent (empty when ready).                  |
+| [`plan_spans`](#braidio.video.plan_spans)(timeline, \*[, min_panel_s, ...])     | Cut `timeline` into contiguous spans of roughly one still each.                     |
+| [`prepare_still`](#braidio.video.prepare_still)(src, dst, \*[, size])              | Composite `src` onto a blurred fill of itself at exactly `size`.                    |
+| [`save_atomically`](#braidio.video.save_atomically)(img, dst, \*\*encode)            | `img.save(dst)` through a sibling temp file and an atomic rename.                   |
+| [`render_video`](#braidio.video.render_video)(panels, \*, audio_path, out_path)   | Render `panels` as one film and mux `audio_path` under it.                          |
+| [`concat_argv`](#braidio.video.concat_argv)(listing, \*, audio_path, ...[, ...]) | Join the pieces a concat `listing` names, under `audio_path`, as the delivered mp4. |
+| [`segment_argv`](#braidio.video.segment_argv)(source, in_s, frames, \*, out_path) | One cut: exactly `frames` frames of `source` from `in_s`, as a piece.               |
+| [`frame_counts`](#braidio.video.frame_counts)(panels, \*, fps)                    | Frames per panel, rounded on the ABSOLUTE timeline so they never drift.             |
+| [`runs`](#braidio.video.runs)(panels)                                     | Group consecutive panels into `("footage" | "stills", indices)` runs.               |
 
 ### Classes
 
-| [`Panel`](#braidio.video.Panel)(start, end, still[, style, zoom, label])   | A [`Span`](#braidio.video.Span) with a still and its camera move.   |
-|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| [`Span`](#braidio.video.Span)(start, end, beat_index[, kind, label])      | A stretch of screen time, before any image is chosen for it.                                |
+| [`Footage`](#braidio.video.Footage)(path[, in_s])                        | Recorded video a panel plays as it is — a straight cut, no camera move.                                     |
+|-----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| [`Panel`](#braidio.video.Panel)(start, end, still[, style, zoom, ...]) | A [`Span`](#braidio.video.Span) with a still and its camera move — or with footage. |
+| [`Span`](#braidio.video.Span)(start, end, beat_index[, kind, label])  | A stretch of screen time, before any image is chosen for it.                                                |
 
-### *class* braidio.video.Panel(start, end, still, style='push', zoom=1.18, label='')
+### *class* braidio.video.Footage(path, in_s=0.0)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
-A [`Span`](#braidio.video.Span) with a still and its camera move.
+Recorded video a panel plays as it is — a straight cut, no camera move.
+
+`in_s` is where in `path` the panel’s span starts; the panel’s own
+duration says how much of it plays. A screen recording, a clip of a talk,
+a phone video: anything ffmpeg reads.
+
+### *class* braidio.video.Panel(start, end, still, style='push', zoom=1.18, label='', footage=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A [`Span`](#braidio.video.Span) with a still and its camera move — or with footage.
+
+With `footage` set, the panel plays that video over its span and
+`still`/`style`/`zoom` are not rendered: `still` stays the panel’s
+poster (what a storyboard or a picker shows for it).
 
 ### *class* braidio.video.Span(start, end, beat_index, kind='', label='')
 
@@ -81,6 +100,19 @@ are interchangeable texture.
 ['push', 'drift', 'push']
 ```
 
+### braidio.video.concat_argv(listing, , audio_path, out_path, total_frames, fps=30, ffmpeg='ffmpeg', crf=18)
+
+Join the pieces a concat `listing` names, under `audio_path`, as the delivered mp4.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+```pycon
+>>> argv = concat_argv("l.txt", audio_path="a.wav", out_path="o.mp4", total_frames=90)
+>>> argv[argv.index("-t") + 1], argv[argv.index("-f") + 1]
+('3.000', 'concat')
+```
+
 ### braidio.video.credits_card(lines, dst, , heading='Credits', footer='', size=(1920, 1080))
 
 Render an end card listing `lines`, **fitted** so none is lost.
@@ -102,6 +134,23 @@ fix it. Pass a bigger `size` or split across two cards.
 
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
+### braidio.video.frame_counts(panels, , fps)
+
+Frames per panel, rounded on the ABSOLUTE timeline so they never drift.
+
+Rounding each duration alone would let a film of many short panels slide
+off its narration by a frame per cut; rounding each boundary keeps every
+cut within half a frame of where the audio says it is.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
+
+```pycon
+>>> ps = [Panel(0, 1.01, "a"), Panel(1.01, 2.02, "b"), Panel(2.02, 3.03, "c")]
+>>> frame_counts(ps, fps=30)
+[30, 31, 30]
+```
 
 ### braidio.video.missing_dependencies()
 
@@ -160,16 +209,21 @@ build does not redo the work.
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
-### braidio.video.render_video(panels, , audio_path, out_path, size=(1920, 1080), fps=30, workdir=None, prepare=None, path_for=None, \*\*write_kwargs)
+### braidio.video.render_video(panels, , audio_path, out_path, size=(1920, 1080), fps=30, workdir=None, prepare=None, path_for=None, runner=None, footage_duration=None, \*\*write_kwargs)
 
-Render `panels` as one Ken Burns film and mux `audio_path` under it.
+Render `panels` as one film and mux `audio_path` under it.
 
-One `burns.ken_burns_film` pass rather than per-panel renders plus a concat:
-that avoids a re-encode seam at every cut and a frozen frame at every panel
-tail.
+Stills get a Ken Burns move; panels with [`Footage`](#braidio.video.Footage) play their video
+as a straight cut. A film of stills only is one `burns.ken_burns_film`
+pass rather than per-panel renders plus a concat: that avoids a re-encode
+seam at every cut and a frozen frame at every panel tail. A film with
+footage renders each run of consecutive stills that way (silent), cuts each
+run and each footage panel into a piece of exactly its frames, one at a time
+so memory stays flat ([`segment_argv()`](#braidio.video.segment_argv)), and joins the pieces under the
+audio in one final encode ([`concat_argv()`](#braidio.video.concat_argv)).
 
 * **Parameters:**
-  * **panels** ([`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`Panel`](#braidio.video.Panel)]) – the stills and their screen time, in order.
+  * **panels** ([`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`Panel`](#braidio.video.Panel)]) – the stills (or footage) and their screen time, in order.
   * **audio_path** – the finished mix. Its length should match the panels; pad it
     first if the film ends on a credits card.
   * **out_path** – mp4 to write.
@@ -180,11 +234,32 @@ tail.
   * **path_for** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis), [`object`](https://docs.python.org/3/builtins/functions.html#object)]]) – `(image_path, index, panel) -> BurnsPath`. Default is
     `burns.content_aware_path_for`, which frames on the image’s salient
     region so a slow push stays on the subject.
-  * **\*\*write_kwargs** – forwarded to `burns.ken_burns_film`.
+  * **runner** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis), [`object`](https://docs.python.org/3/builtins/functions.html#object)]]) – runs an ffmpeg argv (default [`subprocess.run()`](https://docs.python.org/3/library/subprocess.html#subprocess.run) with
+    `check=True`); only the footage path shells out.
+  * **footage_duration** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`float`](https://docs.python.org/3/builtins/functions.html#float)]]) – a footage file’s length in seconds (default: ffprobe);
+    an in-point at or past it is refused before anything renders.
+  * **\*\*write_kwargs** – forwarded to `burns.ken_burns_film` (the still runs;
+    the footage path encodes its own pieces).
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 * **Returns:**
   The written mp4 path.
+
+### braidio.video.runs(panels)
+
+Group consecutive panels into `("footage" | "stills", indices)` runs.
+
+Each footage panel is its own run (it has its own in-point); consecutive
+stills share one, rendered as a single Ken Burns pass.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]]]
+
+```pycon
+>>> P = lambda f=None: Panel(0, 1, "a.jpg", footage=f)
+>>> runs([P(), P(), P(Footage("v.mp4")), P(Footage("v.mp4", 3)), P()])
+[('stills', [0, 1]), ('footage', [2]), ('footage', [3]), ('stills', [4])]
+```
 
 ### braidio.video.save_atomically(img, dst, \*\*encode)
 
@@ -196,3 +271,24 @@ otherwise cache the truncation under its content key for good.
 
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
+### braidio.video.segment_argv(source, in_s, frames, , out_path, size=(1920, 1080), fps=30, ffmpeg='ffmpeg')
+
+One cut: exactly `frames` frames of `source` from `in_s`, as a piece.
+
+Seeked at the input (fast, and exact in modern ffmpeg), resampled to
+`fps`, fitted inside `size` without cropping (letterboxed on black),
+and — should the source run out early — held on its last frame rather than
+cutting short, so the picture never slides off the narration. Pieces are
+near-lossless (they are re-encoded once more, by [`concat_argv()`](#braidio.video.concat_argv)).
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+```pycon
+>>> argv = segment_argv("rec.mp4", 2.5, 60, out_path="p.mp4", size=(1080, 1920))
+>>> argv[argv.index("-ss") + 1], argv[argv.index("-t") + 1]
+('2.500', '3.000')
+>>> "trim=end_frame=60" in argv[argv.index("-vf") + 1]
+True
+```

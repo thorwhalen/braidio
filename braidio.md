@@ -1,4 +1,4 @@
-> built 2026-09-25 12:11 UTC from cb2a887 (main) · braidio 0.0.61. Details: build_info.json
+> built 2026-09-26 16:50 UTC from 0ef2c70 (main) · braidio 0.0.62. Details: build_info.json
 
 # index.html.md
 
@@ -2255,17 +2255,17 @@ films never had (thorwhalen/braidio#72).
 
 ### Classes
 
-| [`ProductionManifest`](_autosummary/braidio.importing.html.md#braidio.importing.ProductionManifest)(\*\*data)                | A finished production, normalized — the importer's only input shape.    |
-|----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| [`RightsPosition`](_autosummary/braidio.importing.html.md#braidio.importing.RightsPosition)(\*\*data)                    | A production's rights finding, argued rather than assumed (plan §10).   |
-| [`StillRecord`](_autosummary/braidio.importing.html.md#braidio.importing.StillRecord)(\*\*data)                       | One image with its rights and its editorial label — the still/v1 input. |
-| [`PanelRecord`](_autosummary/braidio.importing.html.md#braidio.importing.PanelRecord)(\*\*data)                       | A still over a span of one cut's episode audio.                         |
-| [`LabelRecord`](_autosummary/braidio.importing.html.md#braidio.importing.LabelRecord)(\*\*data)                       | A timed editorial card that is not per-still (title, context, tag).     |
-| [`CutRecord`](_autosummary/braidio.importing.html.md#braidio.importing.CutRecord)(\*\*data)                         | One finished rendering, with the panels and cards it was made from.     |
-| [`ImportReport`](_autosummary/braidio.importing.html.md#braidio.importing.ImportReport)(production, project_root, ...) | What one import did, and what it could not settle.                      |
-| [`BeatRecord`](_autosummary/braidio.importing.html.md#braidio.importing.BeatRecord)(\*\*data)                        | One member of a rendered episode — the unit a panel is cut against.     |
-| [`TakeRecord`](_autosummary/braidio.importing.html.md#braidio.importing.TakeRecord)(\*\*data)                        | The audio a listener actually hears for one beat — the recording.       |
-| [`CatalogReport`](_autosummary/braidio.importing.html.md#braidio.importing.CatalogReport)([rows_written, ...])          | What registering a project's media did, and what it could not hold.     |
+| [`ProductionManifest`](_autosummary/braidio.importing.html.md#braidio.importing.ProductionManifest)(\*\*data)                | A finished production, normalized — the importer's only input shape.                       |
+|----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| [`RightsPosition`](_autosummary/braidio.importing.html.md#braidio.importing.RightsPosition)(\*\*data)                    | A production's rights finding, argued rather than assumed (plan §10).                      |
+| [`StillRecord`](_autosummary/braidio.importing.html.md#braidio.importing.StillRecord)(\*\*data)                       | One image with its rights and its editorial label — the still/v1 input.                    |
+| [`PanelRecord`](_autosummary/braidio.importing.html.md#braidio.importing.PanelRecord)(\*\*data)                       | A still over a span of one cut's episode audio — or footage, with the still as its poster. |
+| [`LabelRecord`](_autosummary/braidio.importing.html.md#braidio.importing.LabelRecord)(\*\*data)                       | A timed editorial card that is not per-still (title, context, tag).                        |
+| [`CutRecord`](_autosummary/braidio.importing.html.md#braidio.importing.CutRecord)(\*\*data)                         | One finished rendering, with the panels and cards it was made from.                        |
+| [`ImportReport`](_autosummary/braidio.importing.html.md#braidio.importing.ImportReport)(production, project_root, ...) | What one import did, and what it could not settle.                                         |
+| [`BeatRecord`](_autosummary/braidio.importing.html.md#braidio.importing.BeatRecord)(\*\*data)                        | One member of a rendered episode — the unit a panel is cut against.                        |
+| [`TakeRecord`](_autosummary/braidio.importing.html.md#braidio.importing.TakeRecord)(\*\*data)                        | The audio a listener actually hears for one beat — the recording.                          |
+| [`CatalogReport`](_autosummary/braidio.importing.html.md#braidio.importing.CatalogReport)([rows_written, ...])          | What registering a project's media did, and what it could not hold.                        |
 
 ### Exceptions
 
@@ -2337,7 +2337,7 @@ Bases: [`Exception`](https://docs.python.org/3/builtins/exceptions.html#Exceptio
 
 Raised when a manifest cannot be imported faithfully.
 
-### *class* braidio.importing.ImportReport(production, project_root, title, rights_position, stills_written=0, stills_unchanged=0, episodes=0, panels_by_cut=<factory>, labels_by_cut=<factory>, cuts_written=<factory>, published_links=<factory>, untitled_stills=<factory>, bare_attributions=<factory>, license_codes=<factory>, beat_ids_renumbered=0, media_copied=0, bytes_copied=0, beats_by_cut=<factory>, takes_by_cut=<factory>, beats_without_text=<factory>, takes_missing=<factory>, segments_without_source=<factory>, catalog=<factory>, gaps=<factory>, notes=<factory>)
+### *class* braidio.importing.ImportReport(production, project_root, title, rights_position, stills_written=0, stills_unchanged=0, episodes=0, footage=0, panels_by_cut=<factory>, labels_by_cut=<factory>, cuts_written=<factory>, published_links=<factory>, untitled_stills=<factory>, bare_attributions=<factory>, license_codes=<factory>, beat_ids_renumbered=0, media_copied=0, bytes_copied=0, beats_by_cut=<factory>, takes_by_cut=<factory>, beats_without_text=<factory>, takes_missing=<factory>, segments_without_source=<factory>, catalog=<factory>, gaps=<factory>, notes=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -2366,6 +2366,10 @@ narration / clip / break.
 `"<cut>/<index>"` for every narration beat whose authored text did
 not survive. Imported with an EMPTY text, never the snippet — so the
 count is the only place the loss is visible. See the module docstring.
+
+#### footage *: [int](https://docs.python.org/3/builtins/functions.html#int)* *= 0*
+
+Footage files (recorded video footage panels cut from) written.
 
 #### media_copied *: [int](https://docs.python.org/3/builtins/functions.html#int)* *= 0*
 
@@ -2414,7 +2418,8 @@ Configuration for the model, should be a dictionary conforming to [`ConfigDict`]
 
 Bases: `BaseModel`
 
-A still over a span of one cut’s episode audio.
+A still over a span of one cut’s episode audio — or footage, with the
+still as its poster.
 
 #### model_config *: [ClassVar](https://docs.python.org/3/library/typing.html#typing.ClassVar)[ConfigDict]* *= {'extra': 'forbid', 'frozen': True}*
 
@@ -4250,26 +4255,45 @@ and never shows dead black bars.
 
 ### Functions
 
-| [`assign_stills`](_autosummary/braidio.video.html.md#braidio.video.assign_stills)(spans, stills, \*[, zoom])       | Attach stills to `spans`, cycling so none repeats back-to-back.      |
-|-------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| [`credits_card`](_autosummary/braidio.video.html.md#braidio.video.credits_card)(lines, dst, \*[, heading, ...])   | Render an end card listing `lines`, **fitted** so none is lost.      |
-| [`missing_dependencies`](_autosummary/braidio.video.html.md#braidio.video.missing_dependencies)()                         | Which `braidio[video]` dependencies are absent (empty when ready).   |
-| [`plan_spans`](_autosummary/braidio.video.html.md#braidio.video.plan_spans)(timeline, \*[, min_panel_s, ...])   | Cut `timeline` into contiguous spans of roughly one still each.      |
-| [`prepare_still`](_autosummary/braidio.video.html.md#braidio.video.prepare_still)(src, dst, \*[, size])            | Composite `src` onto a blurred fill of itself at exactly `size`.     |
-| [`save_atomically`](_autosummary/braidio.video.html.md#braidio.video.save_atomically)(img, dst, \*\*encode)          | `img.save(dst)` through a sibling temp file and an atomic rename.    |
-| [`render_video`](_autosummary/braidio.video.html.md#braidio.video.render_video)(panels, \*, audio_path, out_path) | Render `panels` as one Ken Burns film and mux `audio_path` under it. |
+| [`assign_stills`](_autosummary/braidio.video.html.md#braidio.video.assign_stills)(spans, stills, \*[, zoom])         | Attach stills to `spans`, cycling so none repeats back-to-back.                     |
+|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| [`credits_card`](_autosummary/braidio.video.html.md#braidio.video.credits_card)(lines, dst, \*[, heading, ...])     | Render an end card listing `lines`, **fitted** so none is lost.                     |
+| [`missing_dependencies`](_autosummary/braidio.video.html.md#braidio.video.missing_dependencies)()                           | Which `braidio[video]` dependencies are absent (empty when ready).                  |
+| [`plan_spans`](_autosummary/braidio.video.html.md#braidio.video.plan_spans)(timeline, \*[, min_panel_s, ...])     | Cut `timeline` into contiguous spans of roughly one still each.                     |
+| [`prepare_still`](_autosummary/braidio.video.html.md#braidio.video.prepare_still)(src, dst, \*[, size])              | Composite `src` onto a blurred fill of itself at exactly `size`.                    |
+| [`save_atomically`](_autosummary/braidio.video.html.md#braidio.video.save_atomically)(img, dst, \*\*encode)            | `img.save(dst)` through a sibling temp file and an atomic rename.                   |
+| [`render_video`](_autosummary/braidio.video.html.md#braidio.video.render_video)(panels, \*, audio_path, out_path)   | Render `panels` as one film and mux `audio_path` under it.                          |
+| [`concat_argv`](_autosummary/braidio.video.html.md#braidio.video.concat_argv)(listing, \*, audio_path, ...[, ...]) | Join the pieces a concat `listing` names, under `audio_path`, as the delivered mp4. |
+| [`segment_argv`](_autosummary/braidio.video.html.md#braidio.video.segment_argv)(source, in_s, frames, \*, out_path) | One cut: exactly `frames` frames of `source` from `in_s`, as a piece.               |
+| [`frame_counts`](_autosummary/braidio.video.html.md#braidio.video.frame_counts)(panels, \*, fps)                    | Frames per panel, rounded on the ABSOLUTE timeline so they never drift.             |
+| [`runs`](_autosummary/braidio.video.html.md#braidio.video.runs)(panels)                                     | Group consecutive panels into `("footage" | "stills", indices)` runs.               |
 
 ### Classes
 
-| [`Panel`](_autosummary/braidio.video.html.md#braidio.video.Panel)(start, end, still[, style, zoom, label])   | A [`Span`](_autosummary/braidio.video.html.md#braidio.video.Span) with a still and its camera move.   |
-|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| [`Span`](_autosummary/braidio.video.html.md#braidio.video.Span)(start, end, beat_index[, kind, label])      | A stretch of screen time, before any image is chosen for it.                                |
+| [`Footage`](_autosummary/braidio.video.html.md#braidio.video.Footage)(path[, in_s])                        | Recorded video a panel plays as it is — a straight cut, no camera move.                                     |
+|-----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| [`Panel`](_autosummary/braidio.video.html.md#braidio.video.Panel)(start, end, still[, style, zoom, ...]) | A [`Span`](_autosummary/braidio.video.html.md#braidio.video.Span) with a still and its camera move — or with footage. |
+| [`Span`](_autosummary/braidio.video.html.md#braidio.video.Span)(start, end, beat_index[, kind, label])  | A stretch of screen time, before any image is chosen for it.                                                |
 
-### *class* braidio.video.Panel(start, end, still, style='push', zoom=1.18, label='')
+### *class* braidio.video.Footage(path, in_s=0.0)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
-A [`Span`](_autosummary/braidio.video.html.md#braidio.video.Span) with a still and its camera move.
+Recorded video a panel plays as it is — a straight cut, no camera move.
+
+`in_s` is where in `path` the panel’s span starts; the panel’s own
+duration says how much of it plays. A screen recording, a clip of a talk,
+a phone video: anything ffmpeg reads.
+
+### *class* braidio.video.Panel(start, end, still, style='push', zoom=1.18, label='', footage=None)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A [`Span`](_autosummary/braidio.video.html.md#braidio.video.Span) with a still and its camera move — or with footage.
+
+With `footage` set, the panel plays that video over its span and
+`still`/`style`/`zoom` are not rendered: `still` stays the panel’s
+poster (what a storyboard or a picker shows for it).
 
 ### *class* braidio.video.Span(start, end, beat_index, kind='', label='')
 
@@ -4303,6 +4327,19 @@ are interchangeable texture.
 ['push', 'drift', 'push']
 ```
 
+### braidio.video.concat_argv(listing, , audio_path, out_path, total_frames, fps=30, ffmpeg='ffmpeg', crf=18)
+
+Join the pieces a concat `listing` names, under `audio_path`, as the delivered mp4.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+```pycon
+>>> argv = concat_argv("l.txt", audio_path="a.wav", out_path="o.mp4", total_frames=90)
+>>> argv[argv.index("-t") + 1], argv[argv.index("-f") + 1]
+('3.000', 'concat')
+```
+
 ### braidio.video.credits_card(lines, dst, , heading='Credits', footer='', size=(1920, 1080))
 
 Render an end card listing `lines`, **fitted** so none is lost.
@@ -4324,6 +4361,23 @@ fix it. Pass a bigger `size` or split across two cards.
 
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
+### braidio.video.frame_counts(panels, , fps)
+
+Frames per panel, rounded on the ABSOLUTE timeline so they never drift.
+
+Rounding each duration alone would let a film of many short panels slide
+off its narration by a frame per cut; rounding each boundary keeps every
+cut within half a frame of where the audio says it is.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
+
+```pycon
+>>> ps = [Panel(0, 1.01, "a"), Panel(1.01, 2.02, "b"), Panel(2.02, 3.03, "c")]
+>>> frame_counts(ps, fps=30)
+[30, 31, 30]
+```
 
 ### braidio.video.missing_dependencies()
 
@@ -4382,16 +4436,21 @@ build does not redo the work.
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
-### braidio.video.render_video(panels, , audio_path, out_path, size=(1920, 1080), fps=30, workdir=None, prepare=None, path_for=None, \*\*write_kwargs)
+### braidio.video.render_video(panels, , audio_path, out_path, size=(1920, 1080), fps=30, workdir=None, prepare=None, path_for=None, runner=None, footage_duration=None, \*\*write_kwargs)
 
-Render `panels` as one Ken Burns film and mux `audio_path` under it.
+Render `panels` as one film and mux `audio_path` under it.
 
-One `burns.ken_burns_film` pass rather than per-panel renders plus a concat:
-that avoids a re-encode seam at every cut and a frozen frame at every panel
-tail.
+Stills get a Ken Burns move; panels with [`Footage`](_autosummary/braidio.video.html.md#braidio.video.Footage) play their video
+as a straight cut. A film of stills only is one `burns.ken_burns_film`
+pass rather than per-panel renders plus a concat: that avoids a re-encode
+seam at every cut and a frozen frame at every panel tail. A film with
+footage renders each run of consecutive stills that way (silent), cuts each
+run and each footage panel into a piece of exactly its frames, one at a time
+so memory stays flat ([`segment_argv()`](_autosummary/braidio.video.html.md#braidio.video.segment_argv)), and joins the pieces under the
+audio in one final encode ([`concat_argv()`](_autosummary/braidio.video.html.md#braidio.video.concat_argv)).
 
 * **Parameters:**
-  * **panels** ([`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`Panel`](_autosummary/braidio.video.html.md#braidio.video.Panel)]) – the stills and their screen time, in order.
+  * **panels** ([`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`Panel`](_autosummary/braidio.video.html.md#braidio.video.Panel)]) – the stills (or footage) and their screen time, in order.
   * **audio_path** – the finished mix. Its length should match the panels; pad it
     first if the film ends on a credits card.
   * **out_path** – mp4 to write.
@@ -4402,11 +4461,32 @@ tail.
   * **path_for** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis), [`object`](https://docs.python.org/3/builtins/functions.html#object)]]) – `(image_path, index, panel) -> BurnsPath`. Default is
     `burns.content_aware_path_for`, which frames on the image’s salient
     region so a slow push stays on the subject.
-  * **\*\*write_kwargs** – forwarded to `burns.ken_burns_film`.
+  * **runner** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis), [`object`](https://docs.python.org/3/builtins/functions.html#object)]]) – runs an ffmpeg argv (default [`subprocess.run()`](https://docs.python.org/3/library/subprocess.html#subprocess.run) with
+    `check=True`); only the footage path shells out.
+  * **footage_duration** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`float`](https://docs.python.org/3/builtins/functions.html#float)]]) – a footage file’s length in seconds (default: ffprobe);
+    an in-point at or past it is refused before anything renders.
+  * **\*\*write_kwargs** – forwarded to `burns.ken_burns_film` (the still runs;
+    the footage path encodes its own pieces).
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 * **Returns:**
   The written mp4 path.
+
+### braidio.video.runs(panels)
+
+Group consecutive panels into `("footage" | "stills", indices)` runs.
+
+Each footage panel is its own run (it has its own in-point); consecutive
+stills share one, rendered as a single Ken Burns pass.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]]]
+
+```pycon
+>>> P = lambda f=None: Panel(0, 1, "a.jpg", footage=f)
+>>> runs([P(), P(), P(Footage("v.mp4")), P(Footage("v.mp4", 3)), P()])
+[('stills', [0, 1]), ('footage', [2]), ('footage', [3]), ('stills', [4])]
+```
 
 ### braidio.video.save_atomically(img, dst, \*\*encode)
 
@@ -4418,6 +4498,27 @@ otherwise cache the truncation under its content key for good.
 
 * **Return type:**
   [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+
+### braidio.video.segment_argv(source, in_s, frames, , out_path, size=(1920, 1080), fps=30, ffmpeg='ffmpeg')
+
+One cut: exactly `frames` frames of `source` from `in_s`, as a piece.
+
+Seeked at the input (fast, and exact in modern ffmpeg), resampled to
+`fps`, fitted inside `size` without cropping (letterboxed on black),
+and — should the source run out early — held on its last frame rather than
+cutting short, so the picture never slides off the narration. Pieces are
+near-lossless (they are re-encoded once more, by [`concat_argv()`](_autosummary/braidio.video.html.md#braidio.video.concat_argv)).
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+```pycon
+>>> argv = segment_argv("rec.mp4", 2.5, 60, out_path="p.mp4", size=(1080, 1920))
+>>> argv[argv.index("-ss") + 1], argv[argv.index("-t") + 1]
+('2.500', '3.000')
+>>> "trim=end_frame=60" in argv[argv.index("-vf") + 1]
+True
+```
 
 
 # _autosummary/braidio.weave.html.md
@@ -4599,20 +4700,18 @@ Return a copy with fields overridden (e.g. `cfg.with_(min_turn=1)`).
 
 # About this build
 
-This documentation was built on **2026-09-25 12:11 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/cb2a887ca149f1605b2fe076b7ed8ed07a9a7ab9"><code>cb2a887</code></a> on branch <code>main</code>, for **braidio 0.0.61** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-26 16:50 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/0ef2c70f66896ca7edbb950f2716f76b408cdaa5"><code>0ef2c70</code></a> on branch <code>main</code>, for **braidio 0.0.62** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.61) is ahead of the latest release on PyPI (0.0.60): these docs describe unreleased code.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/cb2a887ca149f1605b2fe076b7ed8ed07a9a7ab9"><code>cb2a887ca149f1605b2fe076b7ed8ed07a9a7ab9</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/braidio/commit/0ef2c70f66896ca7edbb950f2716f76b408cdaa5"><code>0ef2c70f66896ca7edbb950f2716f76b408cdaa5</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.0.61</code>                                                                                                                                       |
+| Tags at this commit | <code>0.0.62</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/braidio</code>                                                                                                        |
 
@@ -4621,9 +4720,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/braidio</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/36132976344">36132976344</a>   |
+| Run          | <a href="https://github.com/thorwhalen/braidio/actions/runs/36256627237">36256627237</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>050454c2fe4bf82fa181d80813752b7f203cdeab</code> (in the history of the built commit) |
+| Event commit | <code>ac3853d374bb6bee8e886ac7fbb248c850c574c3</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4648,13 +4747,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/braidio/0.0.60/">0.0.60</a>, older than the documented version (0.0.61).
+Latest release: <a href="https://pypi.org/project/braidio/0.0.62/">0.0.62</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/braidio && cd braidio
-git checkout cb2a887ca149f1605b2fe076b7ed8ed07a9a7ab9
+git checkout 0ef2c70f66896ca7edbb950f2716f76b408cdaa5
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

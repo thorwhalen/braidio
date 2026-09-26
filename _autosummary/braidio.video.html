@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=e95a51ae"></script>
+    <script src="../_static/documentation_options.js?v=dea2dbc4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="braidio.tts" href="braidio.tts.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.61" />
+  <meta name="docsearch:version" content="0.0.62" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -452,7 +452,19 @@ and never shows dead black bars.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">img.save(dst)</span></code> through a sibling temp file and an atomic rename.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#braidio.video.render_video" title="braidio.video.render_video"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_video</span></code></a>(panels, *, audio_path, out_path)</p></td>
-<td><p>Render <code class="docutils literal notranslate"><span class="pre">panels</span></code> as one Ken Burns film and mux <code class="docutils literal notranslate"><span class="pre">audio_path</span></code> under it.</p></td>
+<td><p>Render <code class="docutils literal notranslate"><span class="pre">panels</span></code> as one film and mux <code class="docutils literal notranslate"><span class="pre">audio_path</span></code> under it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.video.concat_argv" title="braidio.video.concat_argv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">concat_argv</span></code></a>(listing, *, audio_path, ...[, ...])</p></td>
+<td><p>Join the pieces a concat <code class="docutils literal notranslate"><span class="pre">listing</span></code> names, under <code class="docutils literal notranslate"><span class="pre">audio_path</span></code>, as the delivered mp4.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.video.segment_argv" title="braidio.video.segment_argv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">segment_argv</span></code></a>(source, in_s, frames, *, out_path)</p></td>
+<td><p>One cut: exactly <code class="docutils literal notranslate"><span class="pre">frames</span></code> frames of <code class="docutils literal notranslate"><span class="pre">source</span></code> from <code class="docutils literal notranslate"><span class="pre">in_s</span></code>, as a piece.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.video.frame_counts" title="braidio.video.frame_counts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frame_counts</span></code></a>(panels, *, fps)</p></td>
+<td><p>Frames per panel, rounded on the ABSOLUTE timeline so they never drift.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.video.runs" title="braidio.video.runs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runs</span></code></a>(panels)</p></td>
+<td><p>Group consecutive panels into <code class="docutils literal notranslate"><span class="pre">(&quot;footage&quot;</span> <span class="pre">|</span> <span class="pre">&quot;stills&quot;,</span> <span class="pre">indices)</span></code> runs.</p></td>
 </tr>
 </tbody>
 </table>
@@ -460,20 +472,38 @@ and never shows dead black bars.</p>
 <p class="rubric">Classes</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.video.Panel" title="braidio.video.Panel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Panel</span></code></a>(start, end, still[, style, zoom, label])</p></td>
-<td><p>A <a class="reference internal" href="#braidio.video.Span" title="braidio.video.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">Span</span></code></a> with a still and its camera move.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.video.Footage" title="braidio.video.Footage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Footage</span></code></a>(path[, in_s])</p></td>
+<td><p>Recorded video a panel plays as it is — a straight cut, no camera move.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#braidio.video.Span" title="braidio.video.Span"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Span</span></code></a>(start, end, beat_index[, kind, label])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#braidio.video.Panel" title="braidio.video.Panel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Panel</span></code></a>(start, end, still[, style, zoom, ...])</p></td>
+<td><p>A <a class="reference internal" href="#braidio.video.Span" title="braidio.video.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">Span</span></code></a> with a still and its camera move — or with footage.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#braidio.video.Span" title="braidio.video.Span"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Span</span></code></a>(start, end, beat_index[, kind, label])</p></td>
 <td><p>A stretch of screen time, before any image is chosen for it.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py class">
-<dt class="sig sig-object py" id="braidio.video.Panel">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.video.</span></span><span class="sig-name descname"><span class="pre">Panel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">still</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'push'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zoom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.18</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/video.html#Panel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.video.Panel" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="braidio.video.Footage">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.video.</span></span><span class="sig-name descname"><span class="pre">Footage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/video.html#Footage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.video.Footage" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>A <a class="reference internal" href="#braidio.video.Span" title="braidio.video.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">Span</span></code></a> with a still and its camera move.</p>
+<p>Recorded video a panel plays as it is — a straight cut, no camera move.</p>
+<p><code class="docutils literal notranslate"><span class="pre">in_s</span></code> is where in <code class="docutils literal notranslate"><span class="pre">path</span></code> the panel’s span starts; the panel’s own
+duration says how much of it plays. A screen recording, a clip of a talk,
+a phone video: anything ffmpeg reads.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="braidio.video.Panel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.video.</span></span><span class="sig-name descname"><span class="pre">Panel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">still</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'push'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zoom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.18</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">footage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/video.html#Panel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.video.Panel" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A <a class="reference internal" href="#braidio.video.Span" title="braidio.video.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">Span</span></code></a> with a still and its camera move — or with footage.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">footage</span></code> set, the panel plays that video over its span and
+<code class="docutils literal notranslate"><span class="pre">still</span></code>/<code class="docutils literal notranslate"><span class="pre">style</span></code>/<code class="docutils literal notranslate"><span class="pre">zoom</span></code> are not rendered: <code class="docutils literal notranslate"><span class="pre">still</span></code> stays the panel’s
+poster (what a storyboard or a picker shows for it).</p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -514,6 +544,22 @@ are interchangeable texture.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="braidio.video.concat_argv">
+<span class="sig-prename descclassname"><span class="pre">braidio.video.</span></span><span class="sig-name descname"><span class="pre">concat_argv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">listing</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">audio_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_frames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ffmpeg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ffmpeg'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">18</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/video.html#concat_argv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.video.concat_argv" title="Link to this definition">#</a></dt>
+<dd><p>Join the pieces a concat <code class="docutils literal notranslate"><span class="pre">listing</span></code> names, under <code class="docutils literal notranslate"><span class="pre">audio_path</span></code>, as the delivered mp4.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">argv</span> <span class="o">=</span> <span class="n">concat_argv</span><span class="p">(</span><span class="s2">"l.txt"</span><span class="p">,</span> <span class="n">audio_path</span><span class="o">=</span><span class="s2">"a.wav"</span><span class="p">,</span> <span class="n">out_path</span><span class="o">=</span><span class="s2">"o.mp4"</span><span class="p">,</span> <span class="n">total_frames</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">argv</span><span class="p">[</span><span class="n">argv</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"-t"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">argv</span><span class="p">[</span><span class="n">argv</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"-f"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+<span class="go">('3.000', 'concat')</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="braidio.video.credits_card">
 <span class="sig-prename descclassname"><span class="pre">braidio.video.</span></span><span class="sig-name descname"><span class="pre">credits_card</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">heading</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Credits'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">footer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1920,</span> <span class="pre">1080)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/video.html#credits_card"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.video.credits_card" title="Link to this definition">#</a></dt>
 <dd><p>Render an end card listing <code class="docutils literal notranslate"><span class="pre">lines</span></code>, <strong>fitted</strong> so none is lost.</p>
@@ -534,6 +580,25 @@ fix it. Pass a bigger <code class="docutils literal notranslate"><span class="pr
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.video.frame_counts">
+<span class="sig-prename descclassname"><span class="pre">braidio.video.</span></span><span class="sig-name descname"><span class="pre">frame_counts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">panels</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/video.html#frame_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.video.frame_counts" title="Link to this definition">#</a></dt>
+<dd><p>Frames per panel, rounded on the ABSOLUTE timeline so they never drift.</p>
+<p>Rounding each duration alone would let a film of many short panels slide
+off its narration by a frame per cut; rounding each boundary keeps every
+cut within half a frame of where the audio says it is.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span> <span class="o">=</span> <span class="p">[</span><span class="n">Panel</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.01</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">),</span> <span class="n">Panel</span><span class="p">(</span><span class="mf">1.01</span><span class="p">,</span> <span class="mf">2.02</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">),</span> <span class="n">Panel</span><span class="p">(</span><span class="mf">2.02</span><span class="p">,</span> <span class="mf">3.03</span><span class="p">,</span> <span class="s2">"c"</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">frame_counts</span><span class="p">(</span><span class="n">ps</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="go">[30, 31, 30]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -604,15 +669,20 @@ build does not redo the work.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="braidio.video.render_video">
-<span class="sig-prename descclassname"><span class="pre">braidio.video.</span></span><span class="sig-name descname"><span class="pre">render_video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">panels</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">audio_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1920,</span> <span class="pre">1080)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_for</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">write_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/video.html#render_video"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.video.render_video" title="Link to this definition">#</a></dt>
-<dd><p>Render <code class="docutils literal notranslate"><span class="pre">panels</span></code> as one Ken Burns film and mux <code class="docutils literal notranslate"><span class="pre">audio_path</span></code> under it.</p>
-<p>One <code class="docutils literal notranslate"><span class="pre">burns.ken_burns_film</span></code> pass rather than per-panel renders plus a concat:
-that avoids a re-encode seam at every cut and a frozen frame at every panel
-tail.</p>
+<span class="sig-prename descclassname"><span class="pre">braidio.video.</span></span><span class="sig-name descname"><span class="pre">render_video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">panels</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">audio_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1920,</span> <span class="pre">1080)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_for</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">footage_duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">write_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/video.html#render_video"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.video.render_video" title="Link to this definition">#</a></dt>
+<dd><p>Render <code class="docutils literal notranslate"><span class="pre">panels</span></code> as one film and mux <code class="docutils literal notranslate"><span class="pre">audio_path</span></code> under it.</p>
+<p>Stills get a Ken Burns move; panels with <a class="reference internal" href="#braidio.video.Footage" title="braidio.video.Footage"><code class="xref py py-class docutils literal notranslate"><span class="pre">Footage</span></code></a> play their video
+as a straight cut. A film of stills only is one <code class="docutils literal notranslate"><span class="pre">burns.ken_burns_film</span></code>
+pass rather than per-panel renders plus a concat: that avoids a re-encode
+seam at every cut and a frozen frame at every panel tail. A film with
+footage renders each run of consecutive stills that way (silent), cuts each
+run and each footage panel into a piece of exactly its frames, one at a time
+so memory stays flat (<a class="reference internal" href="#braidio.video.segment_argv" title="braidio.video.segment_argv"><code class="xref py py-func docutils literal notranslate"><span class="pre">segment_argv()</span></code></a>), and joins the pieces under the
+audio in one final encode (<a class="reference internal" href="#braidio.video.concat_argv" title="braidio.video.concat_argv"><code class="xref py py-func docutils literal notranslate"><span class="pre">concat_argv()</span></code></a>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>panels</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="#braidio.video.Panel" title="braidio.video.Panel"><code class="xref py py-class docutils literal notranslate"><span class="pre">Panel</span></code></a>]</span>) – the stills and their screen time, in order.</p></li>
+<li><p><strong>panels</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="#braidio.video.Panel" title="braidio.video.Panel"><code class="xref py py-class docutils literal notranslate"><span class="pre">Panel</span></code></a>]</span>) – the stills (or footage) and their screen time, in order.</p></li>
 <li><p><strong>audio_path</strong> – the finished mix. Its length should match the panels; pad it
 first if the film ends on a credits card.</p></li>
 <li><p><strong>out_path</strong> – mp4 to write.</p></li>
@@ -623,7 +693,12 @@ first if the film ends on a credits card.</p></li>
 <li><p><strong>path_for</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a>]]</span>) – <code class="docutils literal notranslate"><span class="pre">(image_path,</span> <span class="pre">index,</span> <span class="pre">panel)</span> <span class="pre">-&gt;</span> <span class="pre">BurnsPath</span></code>. Default is
 <code class="docutils literal notranslate"><span class="pre">burns.content_aware_path_for</span></code>, which frames on the image’s salient
 region so a slow push stays on the subject.</p></li>
-<li><p><strong>**write_kwargs</strong> – forwarded to <code class="docutils literal notranslate"><span class="pre">burns.ken_burns_film</span></code>.</p></li>
+<li><p><strong>runner</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/constants.html#Ellipsis" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a>]]</span>) – runs an ffmpeg argv (default <a class="reference external" href="https://docs.python.org/3/library/subprocess.html#subprocess.run" title="(in Python v3.14)"><code class="xref py py-func docutils literal notranslate"><span class="pre">subprocess.run()</span></code></a> with
+<code class="docutils literal notranslate"><span class="pre">check=True</span></code>); only the footage path shells out.</p></li>
+<li><p><strong>footage_duration</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>], <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]</span>) – a footage file’s length in seconds (default: ffprobe);
+an in-point at or past it is refused before anything renders.</p></li>
+<li><p><strong>**write_kwargs</strong> – forwarded to <code class="docutils literal notranslate"><span class="pre">burns.ken_burns_film</span></code> (the still runs;
+the footage path encodes its own pieces).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -633,6 +708,24 @@ region so a slow push stays on the subject.</p></li>
 <dd class="field-odd"><p>The written mp4 path.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.video.runs">
+<span class="sig-prename descclassname"><span class="pre">braidio.video.</span></span><span class="sig-name descname"><span class="pre">runs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">panels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/video.html#runs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.video.runs" title="Link to this definition">#</a></dt>
+<dd><p>Group consecutive panels into <code class="docutils literal notranslate"><span class="pre">(&quot;footage&quot;</span> <span class="pre">|</span> <span class="pre">&quot;stills&quot;,</span> <span class="pre">indices)</span></code> runs.</p>
+<p>Each footage panel is its own run (it has its own in-point); consecutive
+stills share one, rendered as a single Ken Burns pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]]]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">f</span><span class="o">=</span><span class="kc">None</span><span class="p">:</span> <span class="n">Panel</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"a.jpg"</span><span class="p">,</span> <span class="n">footage</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">runs</span><span class="p">([</span><span class="n">P</span><span class="p">(),</span> <span class="n">P</span><span class="p">(),</span> <span class="n">P</span><span class="p">(</span><span class="n">Footage</span><span class="p">(</span><span class="s2">"v.mp4"</span><span class="p">)),</span> <span class="n">P</span><span class="p">(</span><span class="n">Footage</span><span class="p">(</span><span class="s2">"v.mp4"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">P</span><span class="p">()])</span>
+<span class="go">[('stills', [0, 1]), ('footage', [2]), ('footage', [3]), ('stills', [4])]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -647,6 +740,29 @@ otherwise cache the truncation under its content key for good.</p>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="braidio.video.segment_argv">
+<span class="sig-prename descclassname"><span class="pre">braidio.video.</span></span><span class="sig-name descname"><span class="pre">segment_argv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1920,</span> <span class="pre">1080)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ffmpeg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ffmpeg'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/video.html#segment_argv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.video.segment_argv" title="Link to this definition">#</a></dt>
+<dd><p>One cut: exactly <code class="docutils literal notranslate"><span class="pre">frames</span></code> frames of <code class="docutils literal notranslate"><span class="pre">source</span></code> from <code class="docutils literal notranslate"><span class="pre">in_s</span></code>, as a piece.</p>
+<p>Seeked at the input (fast, and exact in modern ffmpeg), resampled to
+<code class="docutils literal notranslate"><span class="pre">fps</span></code>, fitted inside <code class="docutils literal notranslate"><span class="pre">size</span></code> without cropping (letterboxed on black),
+and — should the source run out early — held on its last frame rather than
+cutting short, so the picture never slides off the narration. Pieces are
+near-lossless (they are re-encoded once more, by <a class="reference internal" href="#braidio.video.concat_argv" title="braidio.video.concat_argv"><code class="xref py py-func docutils literal notranslate"><span class="pre">concat_argv()</span></code></a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">argv</span> <span class="o">=</span> <span class="n">segment_argv</span><span class="p">(</span><span class="s2">"rec.mp4"</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="n">out_path</span><span class="o">=</span><span class="s2">"p.mp4"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1080</span><span class="p">,</span> <span class="mi">1920</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">argv</span><span class="p">[</span><span class="n">argv</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"-ss"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">argv</span><span class="p">[</span><span class="n">argv</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"-t"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+<span class="go">('2.500', '3.000')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s2">"trim=end_frame=60"</span> <span class="ow">in</span> <span class="n">argv</span><span class="p">[</span><span class="n">argv</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">"-vf"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>
@@ -698,15 +814,20 @@ otherwise cache the truncation under its content key for good.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.Footage"><code class="docutils literal notranslate"><span class="pre">Footage</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.Panel"><code class="docutils literal notranslate"><span class="pre">Panel</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.Span"><code class="docutils literal notranslate"><span class="pre">Span</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.assign_stills"><code class="docutils literal notranslate"><span class="pre">assign_stills()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.concat_argv"><code class="docutils literal notranslate"><span class="pre">concat_argv()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.credits_card"><code class="docutils literal notranslate"><span class="pre">credits_card()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.frame_counts"><code class="docutils literal notranslate"><span class="pre">frame_counts()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.missing_dependencies"><code class="docutils literal notranslate"><span class="pre">missing_dependencies()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.plan_spans"><code class="docutils literal notranslate"><span class="pre">plan_spans()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.prepare_still"><code class="docutils literal notranslate"><span class="pre">prepare_still()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.render_video"><code class="docutils literal notranslate"><span class="pre">render_video()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.runs"><code class="docutils literal notranslate"><span class="pre">runs()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.save_atomically"><code class="docutils literal notranslate"><span class="pre">save_atomically()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#braidio.video.segment_argv"><code class="docutils literal notranslate"><span class="pre">segment_argv()</span></code></a></li>
 </ul>
   </nav></div>
 

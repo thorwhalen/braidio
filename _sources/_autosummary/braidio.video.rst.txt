@@ -15,11 +15,16 @@ braidio.video
       prepare_still
       save_atomically
       render_video
+      concat_argv
+      segment_argv
+      frame_counts
+      runs
    
    .. rubric:: Classes
 
    .. autosummary::
    
+      Footage
       Panel
       Span
    

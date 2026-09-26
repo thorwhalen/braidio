@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../../_static/documentation_options.js?v=e95a51ae"></script>
+    <script src="../../../_static/documentation_options.js?v=dea2dbc4"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -409,7 +409,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.61" />
+  <meta name="docsearch:version" content="0.0.62" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -830,10 +830,38 @@ window.runMermaid = runMermaid;</script>
 
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">FootageRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A recorded video panels may play as straight cuts (a screen recording).</span>
+
+<span class="sd">    Declared once, like a still, and named by ``key`` from each panel that</span>
+<span class="sd">    plays a stretch of it (:class:`PanelFootage`).</span>
+<span class="sd">    """</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"frozen"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"extra"</span><span class="p">:</span> <span class="s2">"forbid"</span><span class="p">}</span>
+
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Relative to source_dir; never absolute."</span><span class="p">)</span>
+    <span class="n">width</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">height</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">fps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">duration_s</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">note</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PanelFootage</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Which footage a panel plays, from where. It plays for the panel's span."""</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"frozen"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"extra"</span><span class="p">:</span> <span class="s2">"forbid"</span><span class="p">}</span>
+
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">in_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="PanelRecord">
 <a class="viewcode-back" href="../../../_autosummary/braidio.importing.html#braidio.importing.PanelRecord">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PanelRecord</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""A still over a span of one cut's episode audio."""</span>
+<span class="w">    </span><span class="sd">"""A still over a span of one cut's episode audio — or footage, with the</span>
+<span class="sd">    still as its poster."""</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"frozen"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"extra"</span><span class="p">:</span> <span class="s2">"forbid"</span><span class="p">}</span>
 
@@ -855,7 +883,10 @@ window.runMermaid = runMermaid;</script>
     <span class="n">beat_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"'beat:N' — the timeline member index, or None."</span>
     <span class="p">)</span>
-    <span class="n">order</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+    <span class="n">order</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># Set: the panel plays this footage as a straight cut and its move is not</span>
+    <span class="c1"># rendered (the still stays its poster). None: a still under a move.</span>
+    <span class="n">footage</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PanelFootage</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
@@ -1005,6 +1036,10 @@ window.runMermaid = runMermaid;</script>
         <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"The production's canonical mix (a cut may use another)."</span>
     <span class="p">)</span>
     <span class="n">stills</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">StillRecord</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">footage</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">FootageRecord</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">tuple</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Recorded video that footage panels cut from (see PanelFootage)."</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">cuts</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">CutRecord</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
     <span class="n">gaps</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">tuple</span><span class="p">,</span>
@@ -1026,7 +1061,11 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">still_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">key</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stills</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">key</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stills</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">footage_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">key</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">footage</span><span class="p">)</span></div>
 
 
 

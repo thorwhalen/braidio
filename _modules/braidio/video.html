@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=e95a51ae"></script>
+    <script src="../../_static/documentation_options.js?v=dea2dbc4"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -409,7 +409,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.61" />
+  <meta name="docsearch:version" content="0.0.62" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -760,6 +760,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"HAS_VIDEO"</span><span class="p">,</span>
+    <span class="s2">"Footage"</span><span class="p">,</span>
     <span class="s2">"Panel"</span><span class="p">,</span>
     <span class="s2">"Span"</span><span class="p">,</span>
     <span class="s2">"assign_stills"</span><span class="p">,</span>
@@ -769,6 +770,10 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"prepare_still"</span><span class="p">,</span>
     <span class="s2">"save_atomically"</span><span class="p">,</span>
     <span class="s2">"render_video"</span><span class="p">,</span>
+    <span class="s2">"concat_argv"</span><span class="p">,</span>
+    <span class="s2">"segment_argv"</span><span class="p">,</span>
+    <span class="s2">"frame_counts"</span><span class="p">,</span>
+    <span class="s2">"runs"</span><span class="p">,</span>
 <span class="p">]</span>
 
 <span class="c1">#: Default frame. 16:9 at 1080p is what every consumer player and upload wants.</span>
@@ -862,11 +867,32 @@ window.runMermaid = runMermaid;</script>
 
 
 
+<div class="viewcode-block" id="Footage">
+<a class="viewcode-back" href="../../_autosummary/braidio.video.html#braidio.video.Footage">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Footage</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Recorded video a panel plays as it is — a straight cut, no camera move.</span>
+
+<span class="sd">    ``in_s`` is where in ``path`` the panel's span starts; the panel's own</span>
+<span class="sd">    duration says how much of it plays. A screen recording, a clip of a talk,</span>
+<span class="sd">    a phone video: anything ffmpeg reads.</span>
+<span class="sd">    """</span>
+
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">in_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span></div>
+
+
+
 <div class="viewcode-block" id="Panel">
 <a class="viewcode-back" href="../../_autosummary/braidio.video.html#braidio.video.Panel">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Panel</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""A :class:`Span` with a still and its camera move."""</span>
+<span class="w">    </span><span class="sd">"""A :class:`Span` with a still and its camera move — or with footage.</span>
+
+<span class="sd">    With ``footage`` set, the panel plays that video over its span and</span>
+<span class="sd">    ``still``/``style``/``zoom`` are not rendered: ``still`` stays the panel's</span>
+<span class="sd">    poster (what a storyboard or a picker shows for it).</span>
+<span class="sd">    """</span>
 
     <span class="n">start</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">end</span><span class="p">:</span> <span class="nb">float</span>
@@ -874,6 +900,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">style</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"push"</span>
     <span class="n">zoom</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.18</span>
     <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">footage</span><span class="p">:</span> <span class="n">Footage</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">duration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -1172,16 +1199,23 @@ window.runMermaid = runMermaid;</script>
     <span class="n">workdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">prepare</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">path_for</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">runner</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">footage_duration</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">write_kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Render ``panels`` as one Ken Burns film and mux ``audio_path`` under it.</span>
+<span class="w">    </span><span class="sd">"""Render ``panels`` as one film and mux ``audio_path`` under it.</span>
 
-<span class="sd">    One ``burns.ken_burns_film`` pass rather than per-panel renders plus a concat:</span>
-<span class="sd">    that avoids a re-encode seam at every cut and a frozen frame at every panel</span>
-<span class="sd">    tail.</span>
+<span class="sd">    Stills get a Ken Burns move; panels with :class:`Footage` play their video</span>
+<span class="sd">    as a straight cut. A film of stills only is one ``burns.ken_burns_film``</span>
+<span class="sd">    pass rather than per-panel renders plus a concat: that avoids a re-encode</span>
+<span class="sd">    seam at every cut and a frozen frame at every panel tail. A film with</span>
+<span class="sd">    footage renders each run of consecutive stills that way (silent), cuts each</span>
+<span class="sd">    run and each footage panel into a piece of exactly its frames, one at a time</span>
+<span class="sd">    so memory stays flat (:func:`segment_argv`), and joins the pieces under the</span>
+<span class="sd">    audio in one final encode (:func:`concat_argv`).</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        panels: the stills and their screen time, in order.</span>
+<span class="sd">        panels: the stills (or footage) and their screen time, in order.</span>
 <span class="sd">        audio_path: the finished mix. Its length should match the panels; pad it</span>
 <span class="sd">            first if the film ends on a credits card.</span>
 <span class="sd">        out_path: mp4 to write.</span>
@@ -1191,47 +1225,253 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        path_for: ``(image_path, index, panel) -&gt; BurnsPath``. Default is</span>
 <span class="sd">            ``burns.content_aware_path_for``, which frames on the image's salient</span>
 <span class="sd">            region so a slow push stays on the subject.</span>
-<span class="sd">        **write_kwargs: forwarded to ``burns.ken_burns_film``.</span>
+<span class="sd">        runner: runs an ffmpeg argv (default :func:`subprocess.run` with</span>
+<span class="sd">            ``check=True``); only the footage path shells out.</span>
+<span class="sd">        footage_duration: a footage file's length in seconds (default: ffprobe);</span>
+<span class="sd">            an in-point at or past it is refused before anything renders.</span>
+<span class="sd">        **write_kwargs: forwarded to ``burns.ken_burns_film`` (the still runs;</span>
+<span class="sd">            the footage path encodes its own pieces).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        The written mp4 path.</span>
 <span class="sd">    """</span>
-    <span class="n">_require</span><span class="p">()</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">burns</span><span class="w"> </span><span class="kn">import</span> <span class="n">content_aware_path_for</span><span class="p">,</span> <span class="n">ken_burns_film</span>
-
     <span class="k">if</span> <span class="ow">not</span> <span class="n">panels</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"render_video needs at least one panel"</span><span class="p">)</span>
 
     <span class="n">out_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_path</span><span class="p">)</span>
     <span class="n">workdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span> <span class="k">if</span> <span class="n">workdir</span> <span class="k">else</span> <span class="n">out_path</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"_frames"</span>
-    <span class="n">prepare</span> <span class="o">=</span> <span class="n">prepare</span> <span class="ow">or</span> <span class="n">prepare_still</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">default_path_for</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">panel</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">content_aware_path_for</span><span class="p">(</span>
-            <span class="nb">str</span><span class="p">(</span><span class="n">image</span><span class="p">),</span>
-            <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-            <span class="n">output_aspect</span><span class="o">=</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-            <span class="n">zoom</span><span class="o">=</span><span class="n">panel</span><span class="o">.</span><span class="n">zoom</span><span class="p">,</span>
-            <span class="n">mode</span><span class="o">=</span><span class="s2">"in"</span> <span class="k">if</span> <span class="n">panel</span><span class="o">.</span><span class="n">style</span> <span class="o">==</span> <span class="s2">"push"</span> <span class="k">else</span> <span class="s2">"auto"</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="n">path_for</span> <span class="o">=</span> <span class="n">path_for</span> <span class="ow">or</span> <span class="n">default_path_for</span>
-
-    <span class="n">triples</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">panel</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">panels</span><span class="p">):</span>
-        <span class="n">canvas</span> <span class="o">=</span> <span class="n">prepare</span><span class="p">(</span>
-            <span class="n">panel</span><span class="o">.</span><span class="n">still</span><span class="p">,</span> <span class="n">workdir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">still</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">.jpg"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span>
-        <span class="p">)</span>
-        <span class="n">triples</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">canvas</span><span class="p">),</span> <span class="n">path_for</span><span class="p">(</span><span class="n">canvas</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">panel</span><span class="p">),</span> <span class="n">panel</span><span class="o">.</span><span class="n">duration</span><span class="p">))</span>
-
     <span class="n">out_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">ken_burns_film</span><span class="p">(</span>
-        <span class="n">triples</span><span class="p">,</span>
-        <span class="n">saveas</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">out_path</span><span class="p">),</span>
-        <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span>
-        <span class="n">audio_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">audio_path</span><span class="p">),</span>
-        <span class="o">**</span><span class="n">write_kwargs</span><span class="p">,</span>
-    <span class="p">)</span></div>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">still_film</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">saveas</span><span class="p">,</span> <span class="n">audio</span><span class="p">):</span>
+        <span class="n">_require</span><span class="p">()</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">burns</span><span class="w"> </span><span class="kn">import</span> <span class="n">content_aware_path_for</span><span class="p">,</span> <span class="n">ken_burns_film</span>
+
+        <span class="n">prep</span> <span class="o">=</span> <span class="n">prepare</span> <span class="ow">or</span> <span class="n">prepare_still</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">default_path_for</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">panel</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">content_aware_path_for</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">image</span><span class="p">),</span>
+                <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+                <span class="n">output_aspect</span><span class="o">=</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">zoom</span><span class="o">=</span><span class="n">panel</span><span class="o">.</span><span class="n">zoom</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="s2">"in"</span> <span class="k">if</span> <span class="n">panel</span><span class="o">.</span><span class="n">style</span> <span class="o">==</span> <span class="s2">"push"</span> <span class="k">else</span> <span class="s2">"auto"</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">path_of</span> <span class="o">=</span> <span class="n">path_for</span> <span class="ow">or</span> <span class="n">default_path_for</span>
+        <span class="n">triples</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="n">panel</span> <span class="o">=</span> <span class="n">panels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">canvas</span> <span class="o">=</span> <span class="n">prep</span><span class="p">(</span>
+                <span class="n">panel</span><span class="o">.</span><span class="n">still</span><span class="p">,</span>
+                <span class="n">workdir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">still</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">.jpg"</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">triples</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">canvas</span><span class="p">),</span> <span class="n">path_of</span><span class="p">(</span><span class="n">canvas</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">panel</span><span class="p">),</span> <span class="n">panel</span><span class="o">.</span><span class="n">duration</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ken_burns_film</span><span class="p">(</span>
+            <span class="n">triples</span><span class="p">,</span>
+            <span class="n">saveas</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">saveas</span><span class="p">),</span>
+            <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span>
+            <span class="n">audio_path</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">audio</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">audio</span><span class="p">),</span>
+            <span class="o">**</span><span class="n">write_kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">footage</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">panels</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">still_film</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">panels</span><span class="p">)),</span> <span class="n">out_path</span><span class="p">,</span> <span class="n">audio_path</span><span class="p">)</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+
+    <span class="n">run</span> <span class="o">=</span> <span class="n">runner</span> <span class="ow">or</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">argv</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="n">probe</span> <span class="o">=</span> <span class="n">footage_duration</span> <span class="ow">or</span> <span class="n">_probe_duration</span>
+    <span class="n">_check_in_points</span><span class="p">(</span><span class="n">panels</span><span class="p">,</span> <span class="n">probe</span><span class="p">)</span>
+    <span class="n">workdir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">frames</span> <span class="o">=</span> <span class="n">frame_counts</span><span class="p">(</span><span class="n">panels</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">)</span>
+    <span class="c1"># Private to this render: two renders sharing a project's workdir never</span>
+    <span class="c1"># pick up each other's pieces, and nothing is left behind.</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"_cut_"</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">workdir</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="n">pieces</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">runs</span><span class="p">(</span><span class="n">panels</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"footage"</span><span class="p">:</span>
+                <span class="n">footage</span> <span class="o">=</span> <span class="n">panels</span><span class="p">[</span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">footage</span>
+                <span class="n">source</span><span class="p">,</span> <span class="n">in_s</span> <span class="o">=</span> <span class="n">footage</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">footage</span><span class="o">.</span><span class="n">in_s</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">source</span><span class="p">,</span> <span class="n">in_s</span> <span class="o">=</span> <span class="n">tmp</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"stills_</span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">.mp4"</span><span class="p">,</span> <span class="mf">0.0</span>
+                <span class="n">still_film</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">piece</span> <span class="o">=</span> <span class="n">tmp</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"piece_</span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">.mp4"</span>
+            <span class="c1"># one piece at a time: memory stays flat however many cuts there are</span>
+            <span class="n">run</span><span class="p">(</span>
+                <span class="n">segment_argv</span><span class="p">(</span>
+                    <span class="n">source</span><span class="p">,</span>
+                    <span class="n">in_s</span><span class="p">,</span>
+                    <span class="nb">sum</span><span class="p">(</span><span class="n">frames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">),</span>
+                    <span class="n">out_path</span><span class="o">=</span><span class="n">piece</span><span class="p">,</span>
+                    <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+                    <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">piece</span><span class="p">)</span>
+        <span class="n">listing</span> <span class="o">=</span> <span class="n">tmp</span> <span class="o">/</span> <span class="s2">"pieces.txt"</span>
+        <span class="n">listing</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"file '</span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">'</span><span class="se">\n</span><span class="s2">"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pieces</span><span class="p">))</span>
+        <span class="n">run</span><span class="p">(</span>
+            <span class="n">concat_argv</span><span class="p">(</span>
+                <span class="n">listing</span><span class="p">,</span>
+                <span class="n">audio_path</span><span class="o">=</span><span class="n">audio_path</span><span class="p">,</span>
+                <span class="n">out_path</span><span class="o">=</span><span class="n">out_path</span><span class="p">,</span>
+                <span class="n">total_frames</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">frames</span><span class="p">),</span>
+                <span class="n">fps</span><span class="o">=</span><span class="n">fps</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">out_path</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_probe_duration</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">"ffprobe"</span><span class="p">,</span> <span class="s2">"-v"</span><span class="p">,</span> <span class="s2">"error"</span><span class="p">,</span> <span class="s2">"-show_entries"</span><span class="p">,</span> <span class="s2">"format=duration"</span><span class="p">,</span>
+         <span class="s2">"-of"</span><span class="p">,</span> <span class="s2">"csv=p=0"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)],</span>
+        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">stdout</span>  <span class="c1"># fmt: skip</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_in_points</span><span class="p">(</span><span class="n">panels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Panel</span><span class="p">],</span> <span class="n">probe</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Refuse an in-point at or past the end of its footage.</span>
+
+<span class="sd">    ffmpeg seeked past the end yields no frames at all, so nothing is held and</span>
+<span class="sd">    the cut comes out short, sliding every later panel off its narration.</span>
+<span class="sd">    (Footage that merely runs out *during* a panel is fine: its last frame is</span>
+<span class="sd">    held.)</span>
+<span class="sd">    """</span>
+    <span class="n">lengths</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">panel</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">panels</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">panel</span><span class="o">.</span><span class="n">footage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">panel</span><span class="o">.</span><span class="n">footage</span><span class="o">.</span><span class="n">path</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lengths</span><span class="p">:</span>
+            <span class="n">lengths</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">probe</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">panel</span><span class="o">.</span><span class="n">footage</span><span class="o">.</span><span class="n">in_s</span> <span class="o">&gt;=</span> <span class="n">lengths</span><span class="p">[</span><span class="n">path</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"panel </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">panel</span><span class="o">.</span><span class="n">start</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">panel</span><span class="o">.</span><span class="n">end</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s) starts its footage at "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">panel</span><span class="o">.</span><span class="n">footage</span><span class="o">.</span><span class="n">in_s</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s, but </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> is only </span><span class="si">{</span><span class="n">lengths</span><span class="p">[</span><span class="n">path</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s long"</span>
+            <span class="p">)</span>
+
+
+<div class="viewcode-block" id="runs">
+<a class="viewcode-back" href="../../_autosummary/braidio.video.html#braidio.video.runs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">runs</span><span class="p">(</span><span class="n">panels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Panel</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]:</span>
+<span class="w">    </span><span class="sd">"""Group consecutive panels into ``("footage" | "stills", indices)`` runs.</span>
+
+<span class="sd">    Each footage panel is its own run (it has its own in-point); consecutive</span>
+<span class="sd">    stills share one, rendered as a single Ken Burns pass.</span>
+
+<span class="sd">    &gt;&gt;&gt; P = lambda f=None: Panel(0, 1, "a.jpg", footage=f)</span>
+<span class="sd">    &gt;&gt;&gt; runs([P(), P(), P(Footage("v.mp4")), P(Footage("v.mp4", 3)), P()])</span>
+<span class="sd">    [('stills', [0, 1]), ('footage', [2]), ('footage', [3]), ('stills', [4])]</span>
+<span class="sd">    """</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">panel</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">panels</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">panel</span><span class="o">.</span><span class="n">footage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">"footage"</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+        <span class="k">elif</span> <span class="n">out</span> <span class="ow">and</span> <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"stills"</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">"stills"</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="frame_counts">
+<a class="viewcode-back" href="../../_autosummary/braidio.video.html#braidio.video.frame_counts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">frame_counts</span><span class="p">(</span><span class="n">panels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Panel</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Frames per panel, rounded on the ABSOLUTE timeline so they never drift.</span>
+
+<span class="sd">    Rounding each duration alone would let a film of many short panels slide</span>
+<span class="sd">    off its narration by a frame per cut; rounding each boundary keeps every</span>
+<span class="sd">    cut within half a frame of where the audio says it is.</span>
+
+<span class="sd">    &gt;&gt;&gt; ps = [Panel(0, 1.01, "a"), Panel(1.01, 2.02, "b"), Panel(2.02, 3.03, "c")]</span>
+<span class="sd">    &gt;&gt;&gt; frame_counts(ps, fps=30)</span>
+<span class="sd">    [30, 31, 30]</span>
+<span class="sd">    """</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">panels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="o">*</span> <span class="n">fps</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">end</span> <span class="o">*</span> <span class="n">fps</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">panels</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">:])]</span></div>
+
+
+
+<div class="viewcode-block" id="segment_argv">
+<a class="viewcode-back" href="../../_autosummary/braidio.video.html#braidio.video.segment_argv">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">segment_argv</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">,</span>
+    <span class="n">in_s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">frames</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">out_path</span><span class="p">,</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_SIZE</span><span class="p">,</span>
+    <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_FPS</span><span class="p">,</span>
+    <span class="n">ffmpeg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ffmpeg"</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""One cut: exactly ``frames`` frames of ``source`` from ``in_s``, as a piece.</span>
+
+<span class="sd">    Seeked at the input (fast, and exact in modern ffmpeg), resampled to</span>
+<span class="sd">    ``fps``, fitted inside ``size`` without cropping (letterboxed on black),</span>
+<span class="sd">    and — should the source run out early — held on its last frame rather than</span>
+<span class="sd">    cutting short, so the picture never slides off the narration. Pieces are</span>
+<span class="sd">    near-lossless (they are re-encoded once more, by :func:`concat_argv`).</span>
+
+<span class="sd">    &gt;&gt;&gt; argv = segment_argv("rec.mp4", 2.5, 60, out_path="p.mp4", size=(1080, 1920))</span>
+<span class="sd">    &gt;&gt;&gt; argv[argv.index("-ss") + 1], argv[argv.index("-t") + 1]</span>
+<span class="sd">    ('2.500', '3.000')</span>
+<span class="sd">    &gt;&gt;&gt; "trim=end_frame=60" in argv[argv.index("-vf") + 1]</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">frames</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"a cut of </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> @ </span><span class="si">{</span><span class="n">in_s</span><span class="si">}</span><span class="s2">s must have frames, got </span><span class="si">{</span><span class="n">frames</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">size</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"setpts=PTS-STARTPTS,fps=</span><span class="si">{</span><span class="n">fps</span><span class="si">}</span><span class="s2">,"</span>
+        <span class="sa">f</span><span class="s2">"scale=</span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">h</span><span class="si">}</span><span class="s2">:force_original_aspect_ratio=decrease,"</span>
+        <span class="sa">f</span><span class="s2">"pad=</span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">h</span><span class="si">}</span><span class="s2">:(ow-iw)/2:(oh-ih)/2,setsar=1,format=yuv420p,"</span>
+        <span class="sa">f</span><span class="s2">"tpad=stop_mode=clone:stop=-1,trim=end_frame=</span><span class="si">{</span><span class="n">frames</span><span class="si">}</span><span class="s2">,setpts=PTS-STARTPTS"</span>
+    <span class="p">)</span>
+    <span class="c1"># a second of slack: the tail is held by tpad and cut by trim anyway</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">ffmpeg</span><span class="p">,</span> <span class="s2">"-v"</span><span class="p">,</span> <span class="s2">"error"</span><span class="p">,</span> <span class="s2">"-y"</span><span class="p">,</span>
+        <span class="s2">"-ss"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">in_s</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"-t"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">frames</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">fps</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1.0</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"-i"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">),</span>
+        <span class="s2">"-vf"</span><span class="p">,</span> <span class="n">chain</span><span class="p">,</span> <span class="s2">"-an"</span><span class="p">,</span> <span class="s2">"-r"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">fps</span><span class="p">),</span>
+        <span class="s2">"-c:v"</span><span class="p">,</span> <span class="s2">"libx264"</span><span class="p">,</span> <span class="s2">"-preset"</span><span class="p">,</span> <span class="s2">"veryfast"</span><span class="p">,</span> <span class="s2">"-crf"</span><span class="p">,</span> <span class="s2">"10"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_path</span><span class="p">),</span>
+    <span class="p">]</span>  <span class="c1"># fmt: skip</span></div>
+
+
+
+<div class="viewcode-block" id="concat_argv">
+<a class="viewcode-back" href="../../_autosummary/braidio.video.html#braidio.video.concat_argv">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">concat_argv</span><span class="p">(</span>
+    <span class="n">listing</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">audio_path</span><span class="p">,</span>
+    <span class="n">out_path</span><span class="p">,</span>
+    <span class="n">total_frames</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">fps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_FPS</span><span class="p">,</span>
+    <span class="n">ffmpeg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ffmpeg"</span><span class="p">,</span>
+    <span class="n">crf</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">18</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Join the pieces a concat ``listing`` names, under ``audio_path``, as the delivered mp4.</span>
+
+<span class="sd">    &gt;&gt;&gt; argv = concat_argv("l.txt", audio_path="a.wav", out_path="o.mp4", total_frames=90)</span>
+<span class="sd">    &gt;&gt;&gt; argv[argv.index("-t") + 1], argv[argv.index("-f") + 1]</span>
+<span class="sd">    ('3.000', 'concat')</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">ffmpeg</span><span class="p">,</span> <span class="s2">"-v"</span><span class="p">,</span> <span class="s2">"error"</span><span class="p">,</span> <span class="s2">"-y"</span><span class="p">,</span>
+        <span class="s2">"-f"</span><span class="p">,</span> <span class="s2">"concat"</span><span class="p">,</span> <span class="s2">"-safe"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">,</span> <span class="s2">"-i"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">listing</span><span class="p">),</span> <span class="s2">"-i"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">audio_path</span><span class="p">),</span>
+        <span class="s2">"-map"</span><span class="p">,</span> <span class="s2">"0:v"</span><span class="p">,</span> <span class="s2">"-map"</span><span class="p">,</span> <span class="s2">"1:a"</span><span class="p">,</span>
+        <span class="s2">"-c:v"</span><span class="p">,</span> <span class="s2">"libx264"</span><span class="p">,</span> <span class="s2">"-preset"</span><span class="p">,</span> <span class="s2">"medium"</span><span class="p">,</span> <span class="s2">"-crf"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">crf</span><span class="p">),</span>
+        <span class="s2">"-pix_fmt"</span><span class="p">,</span> <span class="s2">"yuv420p"</span><span class="p">,</span> <span class="s2">"-r"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">fps</span><span class="p">),</span> <span class="s2">"-c:a"</span><span class="p">,</span> <span class="s2">"aac"</span><span class="p">,</span> <span class="s2">"-b:a"</span><span class="p">,</span> <span class="s2">"192k"</span><span class="p">,</span>
+        <span class="s2">"-t"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">total_frames</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">fps</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"-movflags"</span><span class="p">,</span> <span class="s2">"+faststart"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_path</span><span class="p">),</span>
+    <span class="p">]</span>  <span class="c1"># fmt: skip</span></div>
 
 
 

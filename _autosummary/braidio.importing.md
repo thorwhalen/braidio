@@ -52,17 +52,17 @@ films never had (thorwhalen/braidio#72).
 
 ### Classes
 
-| [`ProductionManifest`](#braidio.importing.ProductionManifest)(\*\*data)                | A finished production, normalized — the importer's only input shape.    |
-|----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| [`RightsPosition`](#braidio.importing.RightsPosition)(\*\*data)                    | A production's rights finding, argued rather than assumed (plan §10).   |
-| [`StillRecord`](#braidio.importing.StillRecord)(\*\*data)                       | One image with its rights and its editorial label — the still/v1 input. |
-| [`PanelRecord`](#braidio.importing.PanelRecord)(\*\*data)                       | A still over a span of one cut's episode audio.                         |
-| [`LabelRecord`](#braidio.importing.LabelRecord)(\*\*data)                       | A timed editorial card that is not per-still (title, context, tag).     |
-| [`CutRecord`](#braidio.importing.CutRecord)(\*\*data)                         | One finished rendering, with the panels and cards it was made from.     |
-| [`ImportReport`](#braidio.importing.ImportReport)(production, project_root, ...) | What one import did, and what it could not settle.                      |
-| [`BeatRecord`](#braidio.importing.BeatRecord)(\*\*data)                        | One member of a rendered episode — the unit a panel is cut against.     |
-| [`TakeRecord`](#braidio.importing.TakeRecord)(\*\*data)                        | The audio a listener actually hears for one beat — the recording.       |
-| [`CatalogReport`](#braidio.importing.CatalogReport)([rows_written, ...])          | What registering a project's media did, and what it could not hold.     |
+| [`ProductionManifest`](#braidio.importing.ProductionManifest)(\*\*data)                | A finished production, normalized — the importer's only input shape.                       |
+|----------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| [`RightsPosition`](#braidio.importing.RightsPosition)(\*\*data)                    | A production's rights finding, argued rather than assumed (plan §10).                      |
+| [`StillRecord`](#braidio.importing.StillRecord)(\*\*data)                       | One image with its rights and its editorial label — the still/v1 input.                    |
+| [`PanelRecord`](#braidio.importing.PanelRecord)(\*\*data)                       | A still over a span of one cut's episode audio — or footage, with the still as its poster. |
+| [`LabelRecord`](#braidio.importing.LabelRecord)(\*\*data)                       | A timed editorial card that is not per-still (title, context, tag).                        |
+| [`CutRecord`](#braidio.importing.CutRecord)(\*\*data)                         | One finished rendering, with the panels and cards it was made from.                        |
+| [`ImportReport`](#braidio.importing.ImportReport)(production, project_root, ...) | What one import did, and what it could not settle.                                         |
+| [`BeatRecord`](#braidio.importing.BeatRecord)(\*\*data)                        | One member of a rendered episode — the unit a panel is cut against.                        |
+| [`TakeRecord`](#braidio.importing.TakeRecord)(\*\*data)                        | The audio a listener actually hears for one beat — the recording.                          |
+| [`CatalogReport`](#braidio.importing.CatalogReport)([rows_written, ...])          | What registering a project's media did, and what it could not hold.                        |
 
 ### Exceptions
 
@@ -134,7 +134,7 @@ Bases: [`Exception`](https://docs.python.org/3/builtins/exceptions.html#Exceptio
 
 Raised when a manifest cannot be imported faithfully.
 
-### *class* braidio.importing.ImportReport(production, project_root, title, rights_position, stills_written=0, stills_unchanged=0, episodes=0, panels_by_cut=<factory>, labels_by_cut=<factory>, cuts_written=<factory>, published_links=<factory>, untitled_stills=<factory>, bare_attributions=<factory>, license_codes=<factory>, beat_ids_renumbered=0, media_copied=0, bytes_copied=0, beats_by_cut=<factory>, takes_by_cut=<factory>, beats_without_text=<factory>, takes_missing=<factory>, segments_without_source=<factory>, catalog=<factory>, gaps=<factory>, notes=<factory>)
+### *class* braidio.importing.ImportReport(production, project_root, title, rights_position, stills_written=0, stills_unchanged=0, episodes=0, footage=0, panels_by_cut=<factory>, labels_by_cut=<factory>, cuts_written=<factory>, published_links=<factory>, untitled_stills=<factory>, bare_attributions=<factory>, license_codes=<factory>, beat_ids_renumbered=0, media_copied=0, bytes_copied=0, beats_by_cut=<factory>, takes_by_cut=<factory>, beats_without_text=<factory>, takes_missing=<factory>, segments_without_source=<factory>, catalog=<factory>, gaps=<factory>, notes=<factory>)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -163,6 +163,10 @@ narration / clip / break.
 `"<cut>/<index>"` for every narration beat whose authored text did
 not survive. Imported with an EMPTY text, never the snippet — so the
 count is the only place the loss is visible. See the module docstring.
+
+#### footage *: [int](https://docs.python.org/3/builtins/functions.html#int)* *= 0*
+
+Footage files (recorded video footage panels cut from) written.
 
 #### media_copied *: [int](https://docs.python.org/3/builtins/functions.html#int)* *= 0*
 
@@ -211,7 +215,8 @@ Configuration for the model, should be a dictionary conforming to [`ConfigDict`]
 
 Bases: `BaseModel`
 
-A still over a span of one cut’s episode audio.
+A still over a span of one cut’s episode audio — or footage, with the
+still as its poster.
 
 #### model_config *: [ClassVar](https://docs.python.org/3/library/typing.html#typing.ClassVar)[ConfigDict]* *= {'extra': 'forbid', 'frozen': True}*
 
