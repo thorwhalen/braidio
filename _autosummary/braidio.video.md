@@ -50,7 +50,7 @@ and never shows dead black bars.
 
 ### *class* braidio.video.Footage(path, in_s=0.0)
 
-Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+Bases: `object`
 
 Recorded video a panel plays as it is — a straight cut, no camera move.
 
@@ -60,7 +60,7 @@ a phone video: anything ffmpeg reads.
 
 ### *class* braidio.video.Panel(start, end, still, style='push', zoom=1.18, label='', footage=None)
 
-Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+Bases: `object`
 
 A [`Span`](#braidio.video.Span) with a still and its camera move — or with footage.
 
@@ -70,7 +70,7 @@ poster (what a storyboard or a picker shows for it).
 
 ### *class* braidio.video.Span(start, end, beat_index, kind='', label='')
 
-Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+Bases: `object`
 
 A stretch of screen time, before any image is chosen for it.
 
@@ -88,7 +88,7 @@ and `beat_index` to choose. This function is what you want when the stills
 are interchangeable texture.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Panel`](#braidio.video.Panel)]
+  `list`[[`Panel`](#braidio.video.Panel)]
 
 ### Examples
 
@@ -105,7 +105,7 @@ are interchangeable texture.
 Join the pieces a concat `listing` names, under `audio_path`, as the delivered mp4.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+  `list`[`str`]
 
 ```pycon
 >>> argv = concat_argv("l.txt", audio_path="a.wav", out_path="o.mp4", total_frames=90)
@@ -133,7 +133,7 @@ which is the right failure, because a caller who cannot see the problem cannot
 fix it. Pass a bigger `size` or split across two cards.
 
 * **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+  `Path`
 
 ### braidio.video.frame_counts(panels, , fps)
 
@@ -144,7 +144,7 @@ off its narration by a frame per cut; rounding each boundary keeps every
 cut within half a frame of where the audio says it is.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]
+  `list`[`int`]
 
 ```pycon
 >>> ps = [Panel(0, 1.01, "a"), Panel(1.01, 2.02, "b"), Panel(2.02, 3.03, "c")]
@@ -157,7 +157,7 @@ cut within half a frame of where the audio says it is.
 Which `braidio[video]` dependencies are absent (empty when ready).
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+  `list`[`str`]
 
 ### braidio.video.plan_spans(timeline, , min_panel_s=5.0, max_panel_s=9.0)
 
@@ -174,10 +174,10 @@ The result is gapless and ordered: `spans[i].end == spans[i + 1].start`.
 
 * **Parameters:**
   * **timeline** – a [`TimelineBreakdown`](braidio.timeline.md#braidio.timeline.TimelineBreakdown).
-  * **min_panel_s** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – below this, a beat is merged into the following span.
-  * **max_panel_s** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – above this, a beat is split into equal parts.
+  * **min_panel_s** (`float`) – below this, a beat is merged into the following span.
+  * **max_panel_s** (`float`) – above this, a beat is split into equal parts.
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Span`](#braidio.video.Span)]
+  `list`[[`Span`](#braidio.video.Span)]
 * **Returns:**
   Spans covering the whole production, in playback order.
 
@@ -207,7 +207,7 @@ aspect. Idempotent: an existing `dst` is returned untouched, so re-running a
 build does not redo the work.
 
 * **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+  `Path`
 
 ### braidio.video.render_video(panels, , audio_path, out_path, size=(1920, 1080), fps=30, workdir=None, prepare=None, path_for=None, runner=None, footage_duration=None, \*\*write_kwargs)
 
@@ -223,25 +223,25 @@ so memory stays flat ([`segment_argv()`](#braidio.video.segment_argv)), and join
 audio in one final encode ([`concat_argv()`](#braidio.video.concat_argv)).
 
 * **Parameters:**
-  * **panels** ([`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`Panel`](#braidio.video.Panel)]) – the stills (or footage) and their screen time, in order.
+  * **panels** (`Sequence`[[`Panel`](#braidio.video.Panel)]) – the stills (or footage) and their screen time, in order.
   * **audio_path** – the finished mix. Its length should match the panels; pad it
     first if the film ends on a credits card.
   * **out_path** – mp4 to write.
-  * **size** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`int`](https://docs.python.org/3/builtins/functions.html#int)]) – frame geometry and rate.
-  * **fps** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – frame geometry and rate.
+  * **size** (`tuple`[`int`, `int`]) – frame geometry and rate.
+  * **fps** (`int`) – frame geometry and rate.
   * **workdir** – where prepared canvases are cached (default: next to `out_path`).
-  * **prepare** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]]) – still -> frame-sized image. Default [`prepare_still()`](#braidio.video.prepare_still).
-  * **path_for** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis), [`object`](https://docs.python.org/3/builtins/functions.html#object)]]) – `(image_path, index, panel) -> BurnsPath`. Default is
+  * **prepare** (`Optional`[`Callable`[`...`, `Path`]]) – still -> frame-sized image. Default [`prepare_still()`](#braidio.video.prepare_still).
+  * **path_for** (`Optional`[`Callable`[`...`, `object`]]) – `(image_path, index, panel) -> BurnsPath`. Default is
     `burns.content_aware_path_for`, which frames on the image’s salient
     region so a slow push stays on the subject.
-  * **runner** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[`...`](https://docs.python.org/3/builtins/constants.html#Ellipsis), [`object`](https://docs.python.org/3/builtins/functions.html#object)]]) – runs an ffmpeg argv (default [`subprocess.run()`](https://docs.python.org/3/library/subprocess.html#subprocess.run) with
+  * **runner** (`Optional`[`Callable`[`...`, `object`]]) – runs an ffmpeg argv (default `subprocess.run()` with
     `check=True`); only the footage path shells out.
-  * **footage_duration** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`float`](https://docs.python.org/3/builtins/functions.html#float)]]) – a footage file’s length in seconds (default: ffprobe);
+  * **footage_duration** (`Optional`[`Callable`[[`str`], `float`]]) – a footage file’s length in seconds (default: ffprobe);
     an in-point at or past it is refused before anything renders.
   * **\*\*write_kwargs** – forwarded to `burns.ken_burns_film` (the still runs;
     the footage path encodes its own pieces).
 * **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+  `Path`
 * **Returns:**
   The written mp4 path.
 
@@ -253,7 +253,7 @@ Each footage panel is its own run (it has its own in-point); consecutive
 stills share one, rendered as a single Ken Burns pass.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]]]
+  `list`[`tuple`[`str`, `list`[`int`]]]
 
 ```pycon
 >>> P = lambda f=None: Panel(0, 1, "a.jpg", footage=f)
@@ -270,7 +270,7 @@ ask for it at once, and a reader that opens a half-written JPEG would
 otherwise cache the truncation under its content key for good.
 
 * **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+  `Path`
 
 ### braidio.video.segment_argv(source, in_s, frames, , out_path, size=(1920, 1080), fps=30, ffmpeg='ffmpeg')
 
@@ -283,7 +283,7 @@ cutting short, so the picture never slides off the narration. Pieces are
 near-lossless (they are re-encoded once more, by [`concat_argv()`](#braidio.video.concat_argv)).
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+  `list`[`str`]
 
 ```pycon
 >>> argv = segment_argv("rec.mp4", 2.5, 60, out_path="p.mp4", size=(1080, 1920))

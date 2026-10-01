@@ -27,7 +27,7 @@ disfluency (backchannels, interruptions, fragments) — the model won’t invent
 
 ### *class* braidio.conversation.ConversationCast(roles=<factory>, model_id='eleven_v3', settings=<factory>)
 
-Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+Bases: `object`
 
 Role → voice mapping + model/settings for a conversational exchange.
 
@@ -57,7 +57,7 @@ ElevenLabs call = $0 real spend) — what lets the graph path attribute real
 cost (braidio#8). Default `False` keeps the `Path` return.
 
 * **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path) | [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
+  `Path` | `tuple`[`Path`, `bool`]
 
 ### braidio.conversation.render_turns_sequential(turns, cast=ConversationCast(roles={'A': 'cgSgspJ2msm6clMCkdW9', 'B': 'iP95p4xoKVk53GoZ742B'}, model_id='eleven_v3', settings={'stability': 0.45}), , api_key=None, out_path, work_dir='data/tts/conversation', voice_settings=None, gap_s=0.25)
 
@@ -69,4 +69,4 @@ what tends to sound like alternating monologues (the thing to beat).
 keeps the `$ELEVENLABS_API_KEY` fallback.
 
 * **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+  `Path`

@@ -22,11 +22,11 @@ recorded choices.
 
 ### *class* braidio.weave_config.WeaveConfig(voices=('JBFqnCBsd6RMkjVDRZzb', ), pool_label='single', voice_seed=7, avoid_immediate_repeat=True, model_id='eleven_multilingual_v2', voice_settings=<factory>, segmentation_unit='beat', min_turn=2, max_turn=4, speed_base=1.0, speed_jitter=0.04, crossfade_s=0.12, gap_turn_s=0.0, overlap_turn_s=0.0, clip_pre_roll_s=0.4, clip_post_roll_s=0.3, clip_fade_in_s=0.5, clip_fade_out_s=0.8, clip_min_len_s=2.2, clip_edge_overlap_s=0.5, duck_db=-15.0, target_lufs=-16.0, true_peak_dbtp=-1.0, sample_rate=44100)
 
-Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+Bases: `object`
 
 All editing choices for a narration+segment weave. Frozen + serializable.
 
-#### *property* paces_narration *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+#### *property* paces_narration *: bool*
 
 Whether a render cuts each narration beat into separately-spoken turns.
 
@@ -47,7 +47,7 @@ True
 Stable serialization for a `render-config` provenance node (#26).
 
 * **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+  `dict`[`str`, `Any`]
 
 #### with_(\*\*changes)
 

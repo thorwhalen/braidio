@@ -35,4 +35,4 @@ there the field is the switch that turns pacing on — see
 [`braidio.pacing`](braidio.pacing.md#module-braidio.pacing).
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Voice`](braidio.multivoice.md#braidio.multivoice.Voice), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
+  `list`[`tuple`[[`Voice`](braidio.multivoice.md#braidio.multivoice.Voice), `str`]]

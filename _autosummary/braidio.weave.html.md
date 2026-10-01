@@ -36,7 +36,7 @@ This is the audio counterpart of a video timeline; it consumes plain file paths
 
 ### *class* braidio.weave.TimelineItem(kind, path, placement='sequential', duck_db=0.0, spotlight=False)
 
-Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+Bases: `object`
 
 One part on the weave timeline.
 
@@ -66,7 +66,7 @@ out (no steady body):
   swallow it (a 1.5 s clip gets ~0.3 s fades, not 0.5 s + 0.8 s).
 
 * **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+  `Path`
 
 ### braidio.weave.layout_placed(kinds, durs, placements, , clip_edge_overlap_s, narration_crossfade_s)
 
@@ -80,7 +80,7 @@ sequential part) and does **not** advance it — so it overlays what follows.
 Clamped ≥ 0.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
+  `list`[`float`]
 
 ### braidio.weave.layout_starts(kinds, durs, , clip_edge_overlap_s, narration_crossfade_s)
 
@@ -88,7 +88,7 @@ Start offset (s) of each part (all sequential). Thin wrapper over
 [`layout_placed()`](#braidio.weave.layout_placed) — kept for callers that don’t use placement.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
+  `list`[`float`]
 
 ### braidio.weave.weave_timeline(items, out_path, , clip_edge_overlap_s=0.5, narration_crossfade_s=0.12, target_lufs=-16.0, true_peak=-1.0, sample_rate=44100, bed=None)
 
@@ -105,4 +105,4 @@ whole-span file. Falls back to a plain concat feel when
 `clip_edge_overlap_s == 0` and there’s nothing to overlay.
 
 * **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+  `Path`

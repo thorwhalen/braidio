@@ -36,11 +36,11 @@ X that does Z”) isn’t reliably regex-detectable and is intentionally omitted
 
 ### *class* braidio.style.Finding(pattern, match, start)
 
-Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+Bases: `object`
 
 One flagged platitude.
 
-### braidio.style.PLATITUDE_PATTERNS *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Pattern](https://docs.python.org/3/library/re.html#re.Pattern)]* *= {'director-cue': re.compile('\\\\b(?:listen to|notice|watch|catch)\\\\s+(?:how|what|the)\\\\b', re.IGNORECASE), 'heres-the': re.compile("\\\\bhere'?s the\\\\b", re.IGNORECASE), 'machinery-naming': re.compile('\\\\bthe (?:turn|tell|button|trick|move|thesis)\\\\b', re.IGNORECASE), 'negation-just': re.compile("\\\\bisn'?t just\\\\b", re.IGNORECASE), 'reduction': re.compile("\\\\b(?:that'?s the whole|the whole \\\\w+ in|in (?:two|three|four|five|six|seven|eight|nine|ten|\\\\d+) words)\\\\b", re.IGNORECASE)}*
+### braidio.style.PLATITUDE_PATTERNS *: dict[str, Pattern]* *= {'director-cue': re.compile('\\\\b(?:listen to|notice|watch|catch)\\\\s+(?:how|what|the)\\\\b', re.IGNORECASE), 'heres-the': re.compile("\\\\bhere'?s the\\\\b", re.IGNORECASE), 'machinery-naming': re.compile('\\\\bthe (?:turn|tell|button|trick|move|thesis)\\\\b', re.IGNORECASE), 'negation-just': re.compile("\\\\bisn'?t just\\\\b", re.IGNORECASE), 'reduction': re.compile("\\\\b(?:that'?s the whole|the whole \\\\w+ in|in (?:two|three|four|five|six|seven|eight|nine|ten|\\\\d+) words)\\\\b", re.IGNORECASE)}*
 
 name → compiled pattern for the detectable overused moves.
 
@@ -59,14 +59,14 @@ Only meaningful on a delivery whose model renders tags at all
 `eleven_multilingual_v2` the tags are inert text and this number is a lie.
 
 * **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+  `float`
 
 ### braidio.style.audio_tags(text)
 
 Every inline `[audio tag]` in `text`, in order.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+  `list`[`str`]
 
 ### braidio.style.audit_expressiveness(text)
 
@@ -77,18 +77,18 @@ gate [`audit_platitudes()`](#braidio.style.audit_platitudes) is not: platitudes 
 this catches a script that will be read flatly however good the words are.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+  `list`[`str`]
 
 ### braidio.style.audit_platitudes(text)
 
 Return every [`Finding`](#braidio.style.Finding) in `text`, in document order.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Finding`](#braidio.style.Finding)]
+  `list`[[`Finding`](#braidio.style.Finding)]
 
 ### braidio.style.platitude_rate(text, , per=1000)
 
 Flagged hits per `per` words (default 1000). 0.0 for empty text.
 
 * **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+  `float`

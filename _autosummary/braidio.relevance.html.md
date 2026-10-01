@@ -49,7 +49,7 @@ True
 | [`resolve_scorer`](#braidio.relevance.resolve_scorer)(spec)                     | A scorer from a registered name, a callable, or `None` (the default).          |
 | [`scorer_id`](#braidio.relevance.scorer_id)(spec)                          | The id a panel records for `spec`: its registered name, else its qualname.     |
 
-### braidio.relevance.RELEVANCE_SCORERS *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Callable](https://docs.python.org/3/library/typing.html#typing.Callable)[[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Sequence](https://docs.python.org/3/library/typing.html#typing.Sequence)[[Mapping](https://docs.python.org/3/library/typing.html#typing.Mapping)]], [Sequence](https://docs.python.org/3/library/typing.html#typing.Sequence)[[float](https://docs.python.org/3/builtins/functions.html#float)]]]* *= {'lexical': <function lexical_relevance>}*
+### braidio.relevance.RELEVANCE_SCORERS *: dict[str, Callable[[str, Sequence[Mapping]], Sequence[float]]]* *= {'lexical': <function lexical_relevance>}*
 
 Registered scorers by id. The id is what a panel records in `scorer`.
 
@@ -57,7 +57,7 @@ Registered scorers by id. The id is what a panel records in `scorer`.
 
 `(anchor_text, still_bodies) -> one score in [0, 1] per still`.
 
-alias of `Callable`[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)]], [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+alias of `Callable`[[`str`, `Sequence`[`Mapping`]], `Sequence`[`float`]]
 
 ### braidio.relevance.lexical_relevance(anchor_text, stills)
 
@@ -67,7 +67,7 @@ The maximum over `NAMING_FIELDS`, so a long Commons title does not
 dilute a short, exact subject.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
+  `list`[`float`]
 
 ```pycon
 >>> beach = {"key": "central-park-decay",
@@ -82,7 +82,7 @@ dilute a short, exact subject.
 Make `scorer` addressable by `name` (e.g. an illustration rerank adapter).
 
 * **Return type:**
-  [`None`](https://docs.python.org/3/builtins/constants.html#None)
+  `None`
 
 ```pycon
 >>> register_relevance_scorer("lexical", lexical_relevance)  # idempotent
@@ -93,14 +93,14 @@ Make `scorer` addressable by `name` (e.g. an illustration rerank adapter).
 A scorer from a registered name, a callable, or `None` (the default).
 
 * **Return type:**
-  [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)]], [`Sequence`](https://docs.python.org/3/library/typing.html#typing.Sequence)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+  `Callable`[[`str`, `Sequence`[`Mapping`]], `Sequence`[`float`]]
 
 ### braidio.relevance.scorer_id(spec)
 
 The id a panel records for `spec`: its registered name, else its qualname.
 
 * **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+  `str`
 
 ```pycon
 >>> scorer_id(None), scorer_id(lexical_relevance)

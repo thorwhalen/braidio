@@ -65,4 +65,4 @@ environment without mutating it. Segment beats never call ElevenLabs, so the
 key does not touch them.
 
 * **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path) | [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`object`](https://docs.python.org/3/builtins/functions.html#object)]
+  `Path` | `tuple`[`Path`, `object`]

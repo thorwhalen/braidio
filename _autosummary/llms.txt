@@ -13,7 +13,6 @@
 - [braidio.defaults](braidio.defaults.html.md): User-overridable, persisted defaults for how braidio renders a voice.
 - [braidio.delivery](braidio.delivery.html.md): Narration &#42;delivery&#42; presets — model + voice settings (issue #10, expressiveness).
 - [braidio.formats](braidio.formats.html.md): Ready-made &#42;&#42;format templates&#42;&#42; — high-quality presets under standard names.
-- [braidio.importing](braidio.importing.html.md): Bring a finished commentary production into a braidio project graph.
 - [braidio.kinds](braidio.kinds.html.md): Production kinds braidio defines. Pure (no optional deps).
 - [braidio.multivoice](braidio.multivoice.html.md): Multi-voice narration: cycle a pool of voices across segments (issue #10).
 - [braidio.music](braidio.music.html.md): Music bed — an instrumental underscore laid under the whole production, ducked.

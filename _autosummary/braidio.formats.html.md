@@ -46,7 +46,7 @@ history is braidio#25.
 
 ### *class* braidio.formats.Format(id, name, summary, aka=(), cast=None, narration_voice=None, narration_delivery=Delivery(name='v2-presenter', model_id='eleven_multilingual_v2', voice_settings={'stability': 0.35, 'similarity_boost': 0.75, 'style': 0.35, 'use_speaker_boost': True, 'speed': 0.98}, supports_audio_tags=False, supports_speed=True, note='Host/presenter commentary — lively (== v2-tuned), for the spine voice.'), weave=<factory>, structure=<factory>, roles=<factory>, clip_placement='before', music_bed='light', scripting='')
 
-Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+Bases: `object`
 
 A named commentary-format preset: a bundle of high-quality defaults.
 
@@ -60,7 +60,7 @@ bed intensity applied when a `bed_asset` is supplied.
 Render `script` with this format’s defaults (see [`render_format()`](#braidio.formats.render_format)).
 
 * **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+  `Path`
 
 ### braidio.formats.describe_asset_application(fmt, script, , bed_asset=None, sting_asset=None)
 
@@ -79,7 +79,7 @@ go unused in one script and play in another under the same format — that
 case is reported here, not refused.
 
 * **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`bool`](https://docs.python.org/3/builtins/functions.html#bool) | [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)]
+  `dict`[`str`, `bool` | `str` | `None`]
 
 ### braidio.formats.render_format(fmt, script, , source, out_path=None, profile=Profile.PERSONAL, bed_asset=None, sting_asset=None, \*\*overrides)
 
@@ -107,7 +107,7 @@ the bed, a format’s `scene_marker` is only the *default* — an individual
 reported (see [`describe_asset_application()`](#braidio.formats.describe_asset_application)).
 
 * **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
+  `Path`
 
 ### braidio.formats.sting_would_play(structure, script, sting_asset)
 
@@ -120,4 +120,4 @@ no format at all — e.g. the graph path’s `_graph_structure` with no
 build in that case (braidio#53).
 
 * **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+  `bool`

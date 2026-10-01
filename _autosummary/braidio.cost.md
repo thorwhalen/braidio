@@ -49,7 +49,7 @@ recomputed if the rate changes.
 
 ### *class* braidio.cost.CostLine(label, kind, characters, usd, model_id)
 
-Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+Bases: `object`
 
 One billable line of an estimate (a narration beat or a dialogue beat).
 
@@ -59,7 +59,7 @@ is consistent across the federation.
 
 ### *class* braidio.cost.CostRollup(characters, usd, unpriced, lines=())
 
-Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+Bases: `object`
 
 A production’s estimated TTS spend, exact on characters, honest on dollars.
 
@@ -68,18 +68,18 @@ billable text had no configured rate (so `usd` is a lower bound). No billable
 lines (e.g. an all-segment script) gives `characters=0, usd=0.0,
 unpriced=False`. Named `CostRollup` to match `falaw.CostRollup`.
 
-#### *property* summary *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
+#### *property* summary *: str*
 
 One-line human summary (handy for a CLI/MCP preview).
 
-### braidio.cost.DEFAULT_USD_PER_1K_CHARS *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 0.3*
+### braidio.cost.DEFAULT_USD_PER_1K_CHARS *: float* *= 0.3*
 
 Default USD per 1000 characters when nothing else is configured. Approximate:
 ElevenLabs bills per credit and the $/credit depends on your plan, so set
 [`RATE_ENV_VAR`](#braidio.cost.RATE_ENV_VAR) to your plan’s real rate. Kept slightly conservative so a
 budget over- rather than under-estimates spend.
 
-### braidio.cost.MODEL_USD_PER_1K_CHARS *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [float](https://docs.python.org/3/builtins/functions.html#float)]* *= {}*
+### braidio.cost.MODEL_USD_PER_1K_CHARS *: dict[str, float]* *= {}*
 
 Confirmed per-model rate overrides (USD per 1000 chars). A model listed here
 is priced at its own rate — winning over the env override and the default —
@@ -102,7 +102,7 @@ like `[excited]` — so this is just `len(text)`. A named function keeps the
 billing definition in one place if it ever needs to change.
 
 * **Return type:**
-  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+  `int`
 
 ```pycon
 >>> billable_chars("hello")
@@ -138,7 +138,7 @@ Empty text is genuinely free (`0.0`) regardless of the rate; non-empty text
 is `None` only when [`usd_per_1k_chars()`](#braidio.cost.usd_per_1k_chars) is unpriced.
 
 * **Return type:**
-  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
+  `Optional`[`float`]
 
 ```pycon
 >>> tts_cost_usd("")
@@ -156,4 +156,4 @@ disabled (one of `_UNPRICED_SENTINELS`) or is not a finite, non-negative
 number — a bad rate must never silently become a dishonest negative/NaN spend.
 
 * **Return type:**
-  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
+  `Optional`[`float`]

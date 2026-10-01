@@ -49,14 +49,14 @@ thread a per-user BYO key without touching the process environment.
 (braidio#8). Default `False` keeps the `Path` return.
 
 * **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path) | [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
+  `Path` | `tuple`[`Path`, `bool`]
 
 ### braidio.tts.resolve_voice_id(voice_id=None)
 
 Voice id from arg → `VOICE_ENV_VAR` env → default.
 
 * **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+  `str`
 
 ### braidio.tts.text_to_dialogue(turns, , model_id='eleven_v3', output_format='mp3_44100_128', settings=None, seed=None, api_key=None, cache=True, refresh=False, return_cache_status=False)
 
@@ -80,13 +80,13 @@ seedless call freezes one random take — pass a `seed` for reproducibility.
 * **Parameters:**
   * **turns** – ordered `(voice_id, text)` pairs (or `{"voice_id", "text"}`).
     Keep each request under ~2000 chars total (API limit).
-  * **settings** ([`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict) | [`None`](https://docs.python.org/3/builtins/constants.html#None)) – optional model settings dict (e.g. `{"stability": 0.45}`).
-  * **return_cache_status** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – when `True`, return `(audio, was_cached)` where
+  * **settings** (`dict` | `None`) – optional model settings dict (e.g. `{"stability": 0.45}`).
+  * **return_cache_status** (`bool`) – when `True`, return `(audio, was_cached)` where
     `was_cached` is `True` iff the bytes came from the on-disk cache
     (no ElevenLabs call = $0 real spend) — the same attribution
     [`narrate()`](#braidio.tts.narrate) offers (braidio#8). Default `False` keeps the
     `bytes` return.
 * **Return type:**
-  [`bytes`](https://docs.python.org/3/builtins/stdtypes.html#bytes) | [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`bytes`](https://docs.python.org/3/builtins/stdtypes.html#bytes), [`bool`](https://docs.python.org/3/builtins/functions.html#bool)]
+  `bytes` | `tuple`[`bytes`, `bool`]
 * **Returns:**
   raw audio bytes in `output_format`.

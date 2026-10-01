@@ -19,11 +19,11 @@ consistency); `eleven_v3` adds inline audio tags for real expressive control.
 
 ### *class* braidio.delivery.Delivery(name, model_id, voice_settings=<factory>, supports_audio_tags=False, supports_speed=True, note='')
 
-Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+Bases: `object`
 
 A named narration delivery: which model + voice settings to synthesize with.
 
-#### supports_speed *: [bool](https://docs.python.org/3/builtins/functions.html#bool)* *= True*
+#### supports_speed *: bool* *= True*
 
 Whether the model honors `voice_settings["speed"]`. \*\*False for eleven
 v3\*\*, which has no speed control at all (“Speed is not available for the

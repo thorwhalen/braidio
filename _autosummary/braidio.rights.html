@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=7ada5fdd"></script>
+    <script src="../_static/documentation_options.js?v=b153cf10"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="braidio.render" href="braidio.render.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.63" />
+  <meta name="docsearch:version" content="0.0.64" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -325,7 +325,6 @@
 <li class="toctree-l2"><a class="reference internal" href="braidio.defaults.html">braidio.defaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.delivery.html">braidio.delivery</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.formats.html">braidio.formats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="braidio.importing.html">braidio.importing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.kinds.html">braidio.kinds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.multivoice.html">braidio.multivoice</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.music.html">braidio.music</a></li>
@@ -502,7 +501,7 @@ render paths cannot drift into disagreeing about what “unspecified” means.</
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.rights.PlannedBeat">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.rights.</span></span><span class="sig-name descname"><span class="pre">PlannedBeat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">turns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/rights.html#PlannedBeat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.rights.PlannedBeat" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A beat resolved for a profile — what the renderer actually plays.</p>
 <p><code class="docutils literal notranslate"><span class="pre">kind</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;narration&quot;</span></code> (synthesize <code class="docutils literal notranslate"><span class="pre">content</span></code>), <code class="docutils literal notranslate"><span class="pre">&quot;clip&quot;</span></code> (resolve
 <code class="docutils literal notranslate"><span class="pre">content</span></code> as a segment reference and cut audio), <code class="docutils literal notranslate"><span class="pre">&quot;dialogue&quot;</span></code> (synthesize
@@ -516,14 +515,14 @@ renderer marks it with music). <code class="docutils literal notranslate"><span 
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.rights.Profile">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.rights.</span></span><span class="sig-name descname"><span class="pre">Profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/rights.html#Profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.rights.Profile" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>Which projection of the production we render.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.rights.RenderPlan">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.rights.</span></span><span class="sig-name descname"><span class="pre">RenderPlan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">substituted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/rights.html#RenderPlan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.rights.RenderPlan" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -531,7 +530,7 @@ renderer marks it with music). <code class="docutils literal notranslate"><span 
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.rights.RightsPolicy">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.rights.</span></span><span class="sig-name descname"><span class="pre">RightsPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forbidden_texts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">RightsPolicy.&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publishable_clip_rights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">frozenset({'public-domain'})</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/rights.html#RightsPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.rights.RightsPolicy" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Injected rights configuration for the published profile.</p>
 <p><code class="docutils literal notranslate"><span class="pre">forbidden_texts</span></code> yields the strings that must not appear verbatim in
 published narration (e.g. copyrighted lyric lines). <code class="docutils literal notranslate"><span class="pre">publishable_clip_rights</span></code>
@@ -543,7 +542,7 @@ is the set of segment <code class="docutils literal notranslate"><span class="pr
 <dl class="py exception">
 <dt class="sig sig-object py" id="braidio.rights.RightsViolation">
 <span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.rights.</span></span><span class="sig-name descname"><span class="pre">RightsViolation</span></span><a class="reference internal" href="../_modules/braidio/rights.html#RightsViolation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.rights.RightsViolation" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></p>
 <p>A render would play source audio the profile it claims forbids.</p>
 <p>Raised where a rights decision is <em>verified</em> rather than made — today by the
 graph path’s episode transform, which checks the members it is about to
@@ -563,7 +562,7 @@ weave time to verify that the members it inherited still match the profile
 the production now declares — one rule, asked twice, never copied.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -576,7 +575,7 @@ the production now declares — one rule, asked twice, never copied.</p>
 narration beat contains forbidden verbatim text.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -590,7 +589,7 @@ words with it (case-insensitive, word-level). Single words and short common
 phrases don’t trip it — only substantial verbatim quoting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -616,7 +615,7 @@ check. <a class="reference internal" href="#braidio.rights.segment_is_publishabl
 unwrapped, never a parallel rule.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -627,7 +626,7 @@ unwrapped, never a parallel rule.</p>
 <dd><p>Whether <code class="docutils literal notranslate"><span class="pre">beat</span></code>’s audio may play in the published cut.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>

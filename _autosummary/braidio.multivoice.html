@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=7ada5fdd"></script>
+    <script src="../_static/documentation_options.js?v=b153cf10"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="braidio.kinds" href="braidio.kinds.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.63" />
+  <meta name="docsearch:version" content="0.0.64" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -325,7 +325,6 @@
 <li class="toctree-l2"><a class="reference internal" href="braidio.defaults.html">braidio.defaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.delivery.html">braidio.delivery</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.formats.html">braidio.formats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="braidio.importing.html">braidio.importing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.kinds.html">braidio.kinds</a></li>
 <li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">braidio.multivoice</a></li>
 <li class="toctree-l2"><a class="reference internal" href="braidio.music.html">braidio.music</a></li>
@@ -455,7 +454,7 @@ those need curation — the premade pools below are the safe default.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.multivoice.Voice">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.multivoice.</span></span><span class="sig-name descname"><span class="pre">Voice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/multivoice.html#Voice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.multivoice.Voice" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A pooled narration voice.</p>
 <dl class="field-list simple">
 </dl>
@@ -468,7 +467,7 @@ those need curation — the premade pools below are the safe default.</p>
 repeats (so it isn’t a rigid round-robin).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#braidio.multivoice.Voice" title="braidio.multivoice.Voice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Voice</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#braidio.multivoice.Voice" title="braidio.multivoice.Voice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Voice</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -483,7 +482,7 @@ into one utterance so prosody is continuous within a speaker. Turn sizes are
 seeded-random within the range.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -506,7 +505,7 @@ upcoming parameters (tracked as issues) — this renders turns sequentially.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference internal" href="#braidio.multivoice.Voice" title="braidio.multivoice.Voice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Voice</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<a class="reference internal" href="#braidio.multivoice.Voice" title="braidio.multivoice.Voice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Voice</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -519,7 +518,7 @@ upcoming parameters (tracked as issues) — this renders turns sequentially.</p>
 so connected clauses stay with one speaker.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
