@@ -98,7 +98,6 @@ from braidio.importing._catalog import (
     CatalogBackendMismatch,  # noqa: F401  (re-exported: callers catch it)
     CatalogReport,
     assert_local_backend,
-    _link_or_copy,
     CrossDeviceCatalog,  # noqa: F401  (re-exported: callers catch it)
     hash_file,
     register_artifact,

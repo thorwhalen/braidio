@@ -1574,11 +1574,21 @@ def test_panel_path_is_the_path_the_render_uses(
 
 
 def _register(project, ann, path):
+    """Register a still the way the importer does: from a copy inside the project.
+
+    The catalog hardlinks, so it refuses a file that lives outside the project
+    (nw.media_catalog); the importer copies media in before registering.
+    """
+    import shutil
+
     from braidio.importing._catalog import CatalogReport, register_artifact
 
+    inside = project.root / "media" / Path(path).name
+    inside.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(path, inside)
     register_artifact(
         project.root,
-        path,
+        inside,
         artifact_id=ann.body["artifact_id"],
         kind="image",
         generated_at="2026-09-25T00:00:00Z",
