@@ -5,21 +5,19 @@ orphan: true
 
 # About this build
 
-This documentation was built on **2026-10-01 09:16 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/9ff1b965cb791c55429521f35e0ce3dec4b7b9e4"><code>9ff1b96</code></a> on branch <code>main</code>, for **braidio 0.0.64** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-03 08:00 UTC** from commit <a href="https://github.com/thorwhalen/braidio/commit/c2a2531f7cd36cde2997b803f9f04f76991fa65a"><code>c2a2531</code></a> on branch <code>main</code>, for **braidio 0.0.65** (from <code>pyproject.toml</code>).
 
-:::{warning}
-The documentation and the package may be misaligned:
-
-- The documented version (0.0.64) is ahead of the latest release on PyPI (0.0.63): these docs describe unreleased code.
+:::{note}
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 :::
 
 ## Source
 
 | | |
 |---|---|
-| Commit | <a href="https://github.com/thorwhalen/braidio/commit/9ff1b965cb791c55429521f35e0ce3dec4b7b9e4"><code>9ff1b965cb791c55429521f35e0ce3dec4b7b9e4</code></a> |
+| Commit | <a href="https://github.com/thorwhalen/braidio/commit/c2a2531f7cd36cde2997b803f9f04f76991fa65a"><code>c2a2531f7cd36cde2997b803f9f04f76991fa65a</code></a> |
 | Branch | <code>main</code> |
-| Tags at this commit | <code>0.0.64</code> |
+| Tags at this commit | <code>0.0.65</code> |
 | Working tree | clean |
 | Remote | <code>https://github.com/thorwhalen/braidio</code> |
 
@@ -28,9 +26,9 @@ The documentation and the package may be misaligned:
 | | |
 |---|---|
 | Repository | <code>thorwhalen/braidio</code> |
-| Run | <a href="https://github.com/thorwhalen/braidio/actions/runs/36841152732">36841152732</a> |
+| Run | <a href="https://github.com/thorwhalen/braidio/actions/runs/37107919114">37107919114</a> |
 | Ref | <code>refs/heads/main</code> |
-| Event commit | <code>15d2109c83647dcecb7ab403e1e83572be14a7c9</code> (in the history of the built commit) |
+| Event commit | <code>617400aff9d4266cbf774683de3f27a826658e42</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -55,13 +53,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/braidio/0.0.63/">0.0.63</a>, older than the documented version (0.0.64).
+Latest release: <a href="https://pypi.org/project/braidio/0.0.65/">0.0.65</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/braidio && cd braidio
-git checkout 9ff1b965cb791c55429521f35e0ce3dec4b7b9e4
+git checkout c2a2531f7cd36cde2997b803f9f04f76991fa65a
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

@@ -31,7 +31,7 @@ those need curation — the premade pools below are the safe default.
 
 ### *class* braidio.multivoice.Voice(id, name, gender, accent='', note='')
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A pooled narration voice.
 
@@ -41,7 +41,7 @@ Assign a voice to each of `n` turns — random, seeded, no immediate
 repeats (so it isn’t a rigid round-robin).
 
 * **Return type:**
-  `list`[[`Voice`](#braidio.multivoice.Voice)]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Voice`](#braidio.multivoice.Voice)]
 
 ### braidio.multivoice.group_turns(segments, , min_turn=1, max_turn=1, seed=0)
 
@@ -53,7 +53,7 @@ into one utterance so prosody is continuous within a speaker. Turn sizes are
 seeded-random within the range.
 
 * **Return type:**
-  `list`[`str`]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### braidio.multivoice.render_multivoice(segments, pool, , out_path, api_key=None, work_dir='data/tts/multivoice', seed=7, min_turn=2, max_turn=4, avoid_immediate_repeat=True, model_id='eleven_multilingual_v2', base_settings=None, speed_base=1.0, speed_jitter=0.04, crossfade_s=0.1, gap_s=0.0, target_lufs=-16.0)
 
@@ -73,7 +73,7 @@ overlapping/interrupting speakers and clip ducking are separate,
 upcoming parameters (tracked as issues) — this renders turns sequentially.
 
 * **Return type:**
-  `list`[`tuple`[[`Voice`](#braidio.multivoice.Voice), `str`]]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Voice`](#braidio.multivoice.Voice), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
 ### braidio.multivoice.split_segments(text)
 
@@ -83,4 +83,4 @@ Splits on sentence-final `.?!` (not the `…` used for in-thought pacing),
 so connected clauses stay with one speaker.
 
 * **Return type:**
-  `list`[`str`]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]

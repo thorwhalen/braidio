@@ -37,13 +37,13 @@ output after the fact.
 
 ### *class* braidio.timeline.BeatSpan(index, kind, label='', source_start=None, source_end=None, duration=0.0, start=0.0)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One beat’s place on the timeline.
 
 ### *class* braidio.timeline.TimelineBreakdown(beats=<factory>, title='', settings=None)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 The ordered beats of a production, with per-kind totals and an HTML view.
 
@@ -61,7 +61,7 @@ where the nw/lacing provenance layer is not in play at all.
 It is always plain JSON types, so a consumer that already persists the
 breakdown gets the record for free.
 
-#### *property* duration *: float*
+#### *property* duration *: [float](https://docs.python.org/3/builtins/functions.html#float)*
 
 Total timeline length (s) — the max beat end, accounting for overlaps.
 
@@ -87,21 +87,21 @@ True
 Fraction of spoken+clip time per `kind` (sums to 1).
 
 * **Return type:**
-  `dict`[`str`, `float`]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
 
 #### to_html(title=None, subtitle='')
 
 A self-contained HTML view: totals bar, walking-order timeline, table.
 
 * **Return type:**
-  `str`
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 #### totals()
 
 Seconds spent per `kind` (insertion-ordered by first appearance).
 
 * **Return type:**
-  `dict`[`str`, `float`]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
 
 ### braidio.timeline.build_timeline(, kinds, durations, placements=None, labels=None, source_spans=None, clip_edge_overlap_s=0.5, narration_crossfade_s=0.12, title='', settings=None)
 
@@ -141,7 +141,7 @@ call), the concat path resolves its crossfade from either the config or the
 a weave choice.
 
 * **Return type:**
-  `dict`[`str`, `Any`]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
 
 ```pycon
 >>> from braidio.delivery import V2_TUNED

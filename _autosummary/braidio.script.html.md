@@ -27,7 +27,7 @@ media-agnostic projection a renderer consumes; how a reference maps to audio is 
 
 ### *class* braidio.script.Dialogue(turns, label='')
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A multi-speaker commentary exchange (the conversational register).
 
@@ -39,7 +39,7 @@ people talking to each other. This is our own commentary → always publishable
 
 ### *class* braidio.script.Narration(text, style=None, published_text=None, lead_gap_s=0.0, voice=None, voice_settings=None)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A spoken narration beat (authored, synthesized by TTS).
 
@@ -59,7 +59,7 @@ when `None`.
 
 ### *class* braidio.script.SceneBreak(label='', marker=None)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A structural boundary between sections — the “new scene” beat.
 
@@ -77,13 +77,13 @@ A scene break synthesizes nothing, so it costs nothing.
 
 ### *class* braidio.script.Script(title, id_slug, beats=<factory>)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 An ordered production script.
 
 ### *class* braidio.script.SegmentBeat(reference, label='', rights='owned-local', published_substitute=None, placement='before', spotlight=None)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A span of source media to weave in, addressed by an opaque `reference`.
 
@@ -113,4 +113,4 @@ bed the flag is inert.
 All narration (default text) of a script, as sentence-level segments.
 
 * **Return type:**
-  `list`[`str`]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]

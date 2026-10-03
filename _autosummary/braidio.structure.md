@@ -38,7 +38,7 @@ is never silently lost.
 
 ### *class* braidio.structure.MusicStructure(sting=None, scene_marker='sting', spotlight_clips=False, pause_s=0.8)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 How a production marks its structure with music — the render seam.
 
@@ -58,46 +58,46 @@ as it did without this layer.
 The marker a scene break renders with (its override, else the default).
 
 * **Return type:**
-  `str`
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 #### marker_of(marker)
 
 The marker a break with this per-beat override renders with.
 
 * **Return type:**
-  `str`
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 #### plays_sting(beat)
 
 Whether `beat` plays the sting (marked `"sting"` *and* one is supplied).
 
 * **Return type:**
-  `bool`
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 #### plays_sting_of(marker)
 
 Whether this per-beat marker plays the sting (and one is supplied).
 
 * **Return type:**
-  `bool`
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 #### spotlight_for(beat)
 
 Whether `beat` is spotlit (its override, else the format default).
 
 * **Return type:**
-  `bool`
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 #### spotlight_of(spotlight)
 
 Whether this per-beat override is spotlit (`None` = the format default).
 
 * **Return type:**
-  `bool`
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### *class* braidio.structure.Sting(asset_path, gain_db=-6.0, max_len_s=3.0, fade_out_s=0.5, gap_after_s=0.3)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A short musical marker played at a scene break.
 
@@ -111,7 +111,7 @@ followed by `gap_after_s` of breathing room before the talk resumes.
 Render `seconds` of stereo silence — a scene break with no sting to play.
 
 * **Return type:**
-  `Path`
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
 ### braidio.structure.prepare_sting(sting, out_path, , target_lufs, sample_rate=44100)
 
@@ -122,4 +122,4 @@ The result is already at production level (`target_lufs` then
 it again. Returns `out_path`.
 
 * **Return type:**
-  `Path`
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)

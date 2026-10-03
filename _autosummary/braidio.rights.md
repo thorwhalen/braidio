@@ -60,7 +60,7 @@ render paths cannot drift into disagreeing about what “unspecified” means.
 
 ### *class* braidio.rights.PlannedBeat(kind, content, from_index, note='', turns=None)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A beat resolved for a profile — what the renderer actually plays.
 
@@ -72,17 +72,17 @@ renderer marks it with music). `from_index` points at the source beat;
 
 ### *class* braidio.rights.Profile(\*values)
 
-Bases: `str`, `Enum`
+Bases: [`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Enum`](https://docs.python.org/3/library/enum.html#enum.Enum)
 
 Which projection of the production we render.
 
 ### *class* braidio.rights.RenderPlan(profile, beats=<factory>, dropped=<factory>, substituted=<factory>)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 ### *class* braidio.rights.RightsPolicy(forbidden_texts=<function RightsPolicy.<lambda>>, publishable_clip_rights=frozenset({'public-domain'}))
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Injected rights configuration for the published profile.
 
@@ -92,7 +92,7 @@ is the set of segment `rights` values allowed in the published cut.
 
 ### *exception* braidio.rights.RightsViolation
 
-Bases: `ValueError`
+Bases: [`ValueError`](https://docs.python.org/3/builtins/exceptions.html#ValueError)
 
 A render would play source audio the profile it claims forbids.
 
@@ -113,7 +113,7 @@ weave time to verify that the members it inherited still match the profile
 the production now declares — one rule, asked twice, never copied.
 
 * **Return type:**
-  `bool`
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### braidio.rights.content_violations(plan, forbidden, , min_words=5)
 
@@ -123,7 +123,7 @@ Fails if any planned beat plays non-publishable segment audio, or any
 narration beat contains forbidden verbatim text.
 
 * **Return type:**
-  `list`[`str`]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### braidio.rights.find_verbatim_text(text, forbidden, , min_words=5)
 
@@ -134,7 +134,7 @@ words with it (case-insensitive, word-level). Single words and short common
 phrases don’t trip it — only substantial verbatim quoting.
 
 * **Return type:**
-  `list`[`str`]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### braidio.rights.plan_production(script, profile, , publishable_clip_rights=frozenset({'public-domain'}))
 
@@ -153,11 +153,11 @@ check. [`segment_is_publishable()`](#braidio.rights.segment_is_publishable) is t
 unwrapped, never a parallel rule.
 
 * **Return type:**
-  `bool`
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### braidio.rights.segment_is_publishable(beat, publishable=frozenset({'public-domain'}))
 
 Whether `beat`’s audio may play in the published cut.
 
 * **Return type:**
-  `bool`
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)

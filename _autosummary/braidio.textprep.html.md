@@ -24,7 +24,7 @@ consumer (Hamilton and the next app) shares one implementation.
 |-----------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
 | [`strip_speaker_labels`](#braidio.textprep.strip_speaker_labels)(text)                   | Remove a leading speaker-label prefix (e.g. `"Chris: "`) if present. |
 
-### braidio.textprep.LIGATURES *: dict[str, str]* *= {'ﬀ': 'ff', 'ﬁ': 'fi', 'ﬂ': 'fl', 'ﬃ': 'ffi', 'ﬄ': 'ffl', 'ﬅ': 'ft', 'ﬆ': 'st'}*
+### braidio.textprep.LIGATURES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [str](https://docs.python.org/3/builtins/stdtypes.html#str)]* *= {'ﬀ': 'ff', 'ﬁ': 'fi', 'ﬂ': 'fl', 'ﬃ': 'ffi', 'ﬄ': 'ffl', 'ﬅ': 'ft', 'ﬆ': 'st'}*
 
 Latin ligatures that OCR emits as single code points.
 
@@ -37,7 +37,7 @@ doubled hyphen `--` into an em-dash (so TTS phrases it as a pause), and
 (by default) collapses runs of whitespace to single spaces.
 
 * **Return type:**
-  `str`
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### braidio.textprep.strip_speaker_labels(text)
 
@@ -47,4 +47,4 @@ Only strips a single leading `Word:` / `Host:` style label so it isn’t
 read aloud; leaves colons that are part of the sentence untouched.
 
 * **Return type:**
-  `str`
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

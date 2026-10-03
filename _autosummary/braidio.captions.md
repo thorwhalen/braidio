@@ -49,7 +49,7 @@ Two.
 
 ### *class* braidio.captions.Cue(start_s, end_s, text)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One subtitle: `[start_s, end_s)` and the text shown.
 
@@ -58,7 +58,7 @@ One subtitle: `[start_s, end_s)` and the text shown.
 The SRT document for `script` as laid out by `timeline`.
 
 * **Return type:**
-  `str`
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### braidio.captions.cues_for(script, timeline, , max_chars=0)
 
@@ -77,10 +77,10 @@ to begin where the previous one finished.
   * **script** – the [`Script`](braidio.script.md#braidio.script.Script) that was rendered.
   * **timeline** – the [`TimelineBreakdown`](braidio.timeline.md#braidio.timeline.TimelineBreakdown) from
     `render_production(..., return_timeline=True)`.
-  * **max_chars** (`int`) – if > 0, split sentences longer than this at whitespace, so no
+  * **max_chars** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – if > 0, split sentences longer than this at whitespace, so no
     single cue overflows a player’s two lines. 0 leaves sentences whole.
 * **Return type:**
-  `list`[[`Cue`](#braidio.captions.Cue)]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Cue`](#braidio.captions.Cue)]
 * **Returns:**
   Cues in playback order.
 
@@ -89,4 +89,4 @@ to begin where the previous one finished.
 Render `cues` as an SRT document.
 
 * **Return type:**
-  `str`
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)

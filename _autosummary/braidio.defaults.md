@@ -55,14 +55,14 @@ What braidio uses when nothing else says otherwise. `eleven_v3` so inline
 Where the user’s persisted defaults live (the file need not exist).
 
 * **Return type:**
-  `Path`
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
 ### braidio.defaults.default_delivery(explicit=None)
 
 Resolve the delivery to render with.
 
 * **Parameters:**
-  **explicit** ([`Delivery`](braidio.delivery.md#braidio.delivery.Delivery) | `str` | `None`) – a [`Delivery`](braidio.delivery.md#braidio.delivery.Delivery), or the name of one
+  **explicit** ([`Delivery`](braidio.delivery.md#braidio.delivery.Delivery) | [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)) – a [`Delivery`](braidio.delivery.md#braidio.delivery.Delivery), or the name of one
   (see `braidio.delivery.DELIVERIES`). Wins over everything.
 * **Return type:**
   [`Delivery`](braidio.delivery.md#braidio.delivery.Delivery)
@@ -81,14 +81,14 @@ True
 Resolve the narration voice id, or `None` to let the caller decide.
 
 * **Return type:**
-  `str` | `None`
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### braidio.defaults.default_voice_settings()
 
 The resolved delivery’s voice settings, as a fresh dict.
 
 * **Return type:**
-  `dict`[`str`, `Any`]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
 
 ### braidio.defaults.describe_defaults()
 
@@ -98,7 +98,7 @@ Worth printing when a render does not sound the way somebody expected: the
 commonest cause is a config file they forgot they wrote.
 
 * **Return type:**
-  `str`
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### braidio.defaults.user_config()
 
@@ -108,4 +108,4 @@ A missing file is normal. A malformed one warns *once* per path and is then
 treated as absent.
 
 * **Return type:**
-  `dict`[`str`, `Any`]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]

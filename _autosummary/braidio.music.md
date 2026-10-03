@@ -37,7 +37,7 @@ is one region rendered by [`prepare_bed()`](#braidio.music.prepare_bed) — the 
 
 ### *class* braidio.music.BedRegion(start_s, end_s, fade_in_s, fade_out_s)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One stretch of the timeline the bed plays over, with its own fades.
 
@@ -47,7 +47,7 @@ region seeks into the asset to where the music *would* have been.
 
 ### *class* braidio.music.MusicBed(asset_path, gain_db=-22.0, fade_in_s=1.5, fade_out_s=2.0, lead_in_s=2.0, start_s=0.0, loop=True, spotlight_fade_s=0.6)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 An instrumental underscore spanning the production, mixed under the talk.
 
@@ -66,7 +66,7 @@ Returns `None` for `"none"` (or an unknown intensity), so callers can do
 `bed = bed_for_intensity(asset, fmt.music_bed)` and skip when falsy.
 
 * **Return type:**
-  [`MusicBed`](#braidio.music.MusicBed) | `None`
+  [`MusicBed`](#braidio.music.MusicBed) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### braidio.music.bed_regions(bed, total_s, spotlights)
 
@@ -80,7 +80,7 @@ would be empty (a spotlight at the very top, two spotlights back to back) is
 dropped. With no spotlights the result is the single whole-span region.
 
 * **Return type:**
-  `list`[[`BedRegion`](#braidio.music.BedRegion)]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`BedRegion`](#braidio.music.BedRegion)]
 
 ### braidio.music.prepare_bed(bed, target_s, out_path, , sample_rate=44100)
 
@@ -91,7 +91,7 @@ bakes in fades + `gain_db` + stereo. The caller mixes the result delayed by
 `bed.lead_in_s`. Returns `out_path`.
 
 * **Return type:**
-  `Path`
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
 ### braidio.music.prepare_bed_regions(bed, regions, out_dir, , stem, sample_rate=44100)
 
@@ -106,4 +106,4 @@ to play there: that region is dropped (seeking past the end would yield an
 empty file the mix can’t open).
 
 * **Return type:**
-  `list`[`tuple`[`Path`, `float`]]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]

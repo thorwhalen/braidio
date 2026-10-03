@@ -41,7 +41,7 @@ Hamilton pilot; new code should prefer the [`SegmentSource`](#braidio.sources.Se
 
 ### *class* braidio.sources.NamespacedSegmentSource(sources, , sep=':', default=None)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A [`SegmentSource`](#braidio.sources.SegmentSource) that routes prefixed references to sub-sources.
 
@@ -66,19 +66,19 @@ SegmentBeat("1981: and in the naked light I saw")  # → the live master
 ```
 
 * **Parameters:**
-  * **sources** (`dict`[`str`, [`SegmentSource`](#braidio.sources.SegmentSource)]) – Namespace → sub-source. Namespaces are matched
+  * **sources** ([`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`SegmentSource`](#braidio.sources.SegmentSource)]) – Namespace → sub-source. Namespaces are matched
     case-insensitively and with surrounding whitespace stripped.
-  * **sep** (`str`) – Separator between the namespace and the reference body.
-  * **default** (`str` | `None`) – Namespace used for an *unprefixed* reference. `None` (the
+  * **sep** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Separator between the namespace and the reference body.
+  * **default** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)) – Namespace used for an *unprefixed* reference. `None` (the
     default) makes an unprefixed reference an error.
 * **Raises:**
-  **KeyError** – on an unknown namespace, or an unprefixed reference with no
+  [**KeyError**](https://docs.python.org/3/builtins/exceptions.html#KeyError) – on an unknown namespace, or an unprefixed reference with no
       `default`. This is deliberate: silently falling through to the
       wrong recording would ship one performance under commentary that
       describes another — the failure a listener cannot detect and the
       author cannot see in a diff.
 
-#### *property* namespaces *: list[str]*
+#### *property* namespaces *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
 The namespaces this source routes, in insertion order.
 
@@ -87,35 +87,35 @@ The namespaces this source routes, in insertion order.
 Split `reference` into `(namespace, body)`, applying the default.
 
 * **Return type:**
-  `tuple`[`str`, `str`]
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### *class* braidio.sources.ResolvedSegment(asset_path, start_s, end_s, score=1.0, matched_text='')
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A cuttable span of a source asset — what a [`SegmentSource`](#braidio.sources.SegmentSource) returns.
 
 ### *class* braidio.sources.Segment(start_s, end_s, score, line_start, line_end, matched_text)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A resolved window for a reference, with the matched line span.
 
 ### *class* braidio.sources.SegmentSource(\*args, \*\*kwargs)
 
-Bases: `Protocol`
+Bases: [`Protocol`](https://docs.python.org/3/library/typing.html#typing.Protocol)
 
 Resolve an opaque `reference` to a [`ResolvedSegment`](#braidio.sources.ResolvedSegment) (or None).
 
 ### *class* braidio.sources.TimedLine(index, start_s, end_s, text)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A source line with a `[start_s, end_s)` window (end may be None = tail).
 
 ### *class* braidio.sources.TimedLineSegmentSource(, lines, asset_path, song_end_s=None, min_score=0.5)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A [`SegmentSource`](#braidio.sources.SegmentSource) over time-aligned lines + one source asset.
 
@@ -142,7 +142,7 @@ against the reference’s tokens and returns the highest-scoring run clearing
 `min_score`. Handles single-line, sub-line, and multi-line references.
 
 * **Return type:**
-  [`Segment`](#braidio.sources.Segment) | `None`
+  [`Segment`](#braidio.sources.Segment) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### braidio.sources.load_timing(path)
 
@@ -155,4 +155,4 @@ Load a `{lines: [{index,start_s,end_s,text}]}` JSON into
 TimedLine\`s.
 
 * **Return type:**
-  `list`[[`TimedLine`](#braidio.sources.TimedLine)]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`TimedLine`](#braidio.sources.TimedLine)]

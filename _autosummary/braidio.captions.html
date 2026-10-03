@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=b153cf10"></script>
+    <script src="../_static/documentation_options.js?v=152b4b09"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="braidio" href="braidio.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.64" />
+  <meta name="docsearch:version" content="0.0.65" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -465,7 +465,7 @@ installed beyond braidio itself.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.captions.Cue">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.captions.</span></span><span class="sig-name descname"><span class="pre">Cue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/captions.html#Cue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.captions.Cue" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One subtitle: <code class="docutils literal notranslate"><span class="pre">[start_s,</span> <span class="pre">end_s)</span></code> and the text shown.</p>
 <dl class="field-list simple">
 </dl>
@@ -477,7 +477,7 @@ installed beyond braidio itself.</p>
 <dd><p>The SRT document for <code class="docutils literal notranslate"><span class="pre">script</span></code> as laid out by <code class="docutils literal notranslate"><span class="pre">timeline</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -499,12 +499,12 @@ to begin where the previous one finished.</p>
 <li><p><strong>script</strong> – the <a class="reference internal" href="braidio.script.html#braidio.script.Script" title="braidio.script.Script"><code class="xref py py-class docutils literal notranslate"><span class="pre">Script</span></code></a> that was rendered.</p></li>
 <li><p><strong>timeline</strong> – the <a class="reference internal" href="braidio.timeline.html#braidio.timeline.TimelineBreakdown" title="braidio.timeline.TimelineBreakdown"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimelineBreakdown</span></code></a> from
 <code class="docutils literal notranslate"><span class="pre">render_production(...,</span> <span class="pre">return_timeline=True)</span></code>.</p></li>
-<li><p><strong>max_chars</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – if &gt; 0, split sentences longer than this at whitespace, so no
+<li><p><strong>max_chars</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – if &gt; 0, split sentences longer than this at whitespace, so no
 single cue overflows a player’s two lines. 0 leaves sentences whole.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#braidio.captions.Cue" title="braidio.captions.Cue"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cue</span></code></a>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#braidio.captions.Cue" title="braidio.captions.Cue"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cue</span></code></a>]</span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Cues in playback order.</p>
@@ -518,7 +518,7 @@ single cue overflows a player’s two lines. 0 leaves sentences whole.</p></li>
 <dd><p>Render <code class="docutils literal notranslate"><span class="pre">cues</span></code> as an SRT document.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>

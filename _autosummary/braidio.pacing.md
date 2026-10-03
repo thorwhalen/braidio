@@ -57,7 +57,7 @@ one-call-per-beat behavior, and it is the default, so nothing paces unless a
 |-------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
 | [`NarrationTurn`](#braidio.pacing.NarrationTurn)(text[, gap_after_s, speed, ...]) | One synthesizable chunk of a narration beat, with its pacing. |
 
-### braidio.pacing.BOUNDARIES *: Mapping[str, [Boundary](#braidio.pacing.Boundary)]* *= {'clause': Boundary(name='clause', gap_scale=0.5, speed_scale=0.99), 'ellipsis': Boundary(name='ellipsis', gap_scale=1.4, speed_scale=0.97), 'flowing': Boundary(name='flowing', gap_scale=0.35, speed_scale=1.0), 'none': Boundary(name='none', gap_scale=0.25, speed_scale=1.0), 'paragraph': Boundary(name='paragraph', gap_scale=2.2, speed_scale=0.96), 'sentence': Boundary(name='sentence', gap_scale=1.0, speed_scale=0.98)}*
+### braidio.pacing.BOUNDARIES *: [Mapping](https://docs.python.org/3/library/typing.html#typing.Mapping)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Boundary](#braidio.pacing.Boundary)]* *= {'clause': Boundary(name='clause', gap_scale=0.5, speed_scale=0.99), 'ellipsis': Boundary(name='ellipsis', gap_scale=1.4, speed_scale=0.97), 'flowing': Boundary(name='flowing', gap_scale=0.35, speed_scale=1.0), 'none': Boundary(name='none', gap_scale=0.25, speed_scale=1.0), 'paragraph': Boundary(name='paragraph', gap_scale=2.2, speed_scale=0.96), 'sentence': Boundary(name='sentence', gap_scale=1.0, speed_scale=0.98)}*
 
 The boundary table. Scales are relative to `"sentence"` (== the configured
 `gap_turn_s`), from the punctuation→break-strength table in
@@ -65,7 +65,7 @@ The boundary table. Scales are relative to `"sentence"` (== the configured
 
 ### *class* braidio.pacing.Boundary(name, gap_scale, speed_scale)
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 How strongly a unit’s trailing punctuation closes.
 
@@ -77,7 +77,7 @@ approach to it.
 
 ### *class* braidio.pacing.NarrationTurn(text, gap_after_s=0.0, speed=None, boundary='sentence')
 
-Bases: `object`
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 One synthesizable chunk of a narration beat, with its pacing.
 
@@ -100,7 +100,7 @@ jittered speed outside it is silently useless, so the planner clamps.
 Name the boundary implied by `text`’s trailing punctuation.
 
 * **Return type:**
-  `str`
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> classify_boundary("So that's the charge sheet.")
@@ -135,7 +135,7 @@ control); a float centers a per-turn jitter of `±speed_jitter` on it,
 scaled by the boundary’s final lengthening and clamped to [`SPEED_RANGE`](#braidio.pacing.SPEED_RANGE).
 
 * **Return type:**
-  `list`[[`NarrationTurn`](#braidio.pacing.NarrationTurn)]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`NarrationTurn`](#braidio.pacing.NarrationTurn)]
 
 ```pycon
 >>> turns = plan_turns("One. Two. Three. Four.", min_turn=2, max_turn=2, gap_s=0.3)
@@ -150,7 +150,7 @@ scaled by the boundary’s final lengthening and clamped to [`SPEED_RANGE`](#bra
 Total silence a plan inserts inside the beat (for reporting / tests).
 
 * **Return type:**
-  `float`
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 ```pycon
 >>> planned_gap_total_s(plan_turns("A. B. C.", min_turn=1, max_turn=1, gap_s=0.3))
@@ -162,7 +162,7 @@ Total silence a plan inserts inside the beat (for reporting / tests).
 Split `text` on blank lines, collapsing runs of spaces within each.
 
 * **Return type:**
-  `list`[`str`]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### braidio.pacing.split_units(text, , unit='sentence')
 
@@ -173,7 +173,7 @@ turns from straddling a paragraph break (which would swallow the strongest
 pause in the beat). `unit="beat"` returns one paragraph of one unit.
 
 * **Return type:**
-  `list`[`list`[`str`]]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
 
 ```pycon
 >>> split_units("A one. A two.\n\nB one.", unit="sentence")

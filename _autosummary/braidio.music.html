@@ -43,7 +43,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=b153cf10"></script>
+    <script src="../_static/documentation_options.js?v=152b4b09"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="braidio.multivoice" href="braidio.multivoice.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.64" />
+  <meta name="docsearch:version" content="0.0.65" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -459,7 +459,7 @@ is one region rendered by <a class="reference internal" href="#braidio.music.pre
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.music.BedRegion">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.music.</span></span><span class="sig-name descname"><span class="pre">BedRegion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fade_in_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fade_out_s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/music.html#BedRegion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.music.BedRegion" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>One stretch of the timeline the bed plays over, with its own fades.</p>
 <p><code class="docutils literal notranslate"><span class="pre">start_s</span></code> / <code class="docutils literal notranslate"><span class="pre">end_s</span></code> are timeline offsets (the bed’s own <code class="docutils literal notranslate"><span class="pre">lead_in_s</span></code> is
 already applied). The bed keeps its place in the asset across a gap: a
@@ -471,7 +471,7 @@ region seeks into the asset to where the music <em>would</em> have been.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="braidio.music.MusicBed">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">braidio.music.</span></span><span class="sig-name descname"><span class="pre">MusicBed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asset_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain_db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-22.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fade_in_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fade_out_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_in_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spotlight_fade_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.6</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/braidio/music.html#MusicBed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#braidio.music.MusicBed" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>An instrumental underscore spanning the production, mixed under the talk.</p>
 <p><code class="docutils literal notranslate"><span class="pre">asset_path</span></code> is an app-supplied instrumental. <code class="docutils literal notranslate"><span class="pre">gain_db</span></code> sets how far under
 the voice it sits; <code class="docutils literal notranslate"><span class="pre">lead_in_s</span></code> posts the bed <em>after</em> speech onset so its
@@ -491,7 +491,7 @@ entrance feels motivated; <code class="docutils literal notranslate"><span class
 <code class="docutils literal notranslate"><span class="pre">bed</span> <span class="pre">=</span> <span class="pre">bed_for_intensity(asset,</span> <span class="pre">fmt.music_bed)</span></code> and skip when falsy.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#braidio.music.MusicBed" title="braidio.music.MusicBed"><code class="xref py py-class docutils literal notranslate"><span class="pre">MusicBed</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#braidio.music.MusicBed" title="braidio.music.MusicBed"><code class="xref py py-class docutils literal notranslate"><span class="pre">MusicBed</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -508,7 +508,7 @@ would be empty (a spotlight at the very top, two spotlights back to back) is
 dropped. With no spotlights the result is the single whole-span region.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#braidio.music.BedRegion" title="braidio.music.BedRegion"><code class="xref py py-class docutils literal notranslate"><span class="pre">BedRegion</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="#braidio.music.BedRegion" title="braidio.music.BedRegion"><code class="xref py py-class docutils literal notranslate"><span class="pre">BedRegion</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -522,7 +522,7 @@ bakes in fades + <code class="docutils literal notranslate"><span class="pre">ga
 <code class="docutils literal notranslate"><span class="pre">bed.lead_in_s</span></code>. Returns <code class="docutils literal notranslate"><span class="pre">out_path</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -540,7 +540,7 @@ to play there: that region is dropped (seeking past the end would yield an
 empty file the mix can’t open).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]</span></p>
 </dd>
 </dl>
 </dd></dl>
